@@ -42,14 +42,11 @@ class Category(Base):
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    description: Mapped[Optional[str]]
-    products: Mapped[List["Product"]] = relationship(back_populates="category")
+    products: Mapped[List["Product"]] = relationship(
+        default_factory=list, back_populates="category")
     in_use: Mapped[bool] = mapped_column(default=True)
-
-    # def __repr__(self) -> str:
-    #     return (
-    #         f"Category{{id={self.id!r}, name={self.name!r}, "
-    #         f"in_use={self.in_use!r}}}")
+    description: Mapped[Optional[str]] = mapped_column(
+        default=None, repr=False)
 
 
 class Supplier(Base):
@@ -106,43 +103,13 @@ class Product(Base):
     #         f"need_to_order={self.to_order}, critical={self.critical}}}")
 
 if __name__ == "__main__":
-    # Base.metadata.create_all(engine)
-    # Base.metadata.drop_all(engine)
 
     with Session() as session:
-        # user = session.execute(select(User).filter_by(username="user1")).scalar_one()
-        # user = session.execute(select(User).where(User.username=="user1")).scalar()
-        # print(user)
-        # user2.password = "2"
-        # user3 = session.get(User, 3)
-        # session.delete(user3)
+        categories = session.scalars(select(Category)).all()
+        for category in categories:
+            print(category)
+        # category = Category("Food")
+        # session.add(category)
         # session.commit()
         pass
-    # connection = engine.connect()
-    # trans = connection.begin()
-    # session = Session(join_transaction_mode="create_savepoint")
 
-    # session.add(User("user3", "3"))
-    # session.commit()
-
-    # session.close()
-
-    # trans.rollback()
-    # connection.close()
-
-
-    # with Session() as session:
-    #     for row in session.scalars(select(User).where(User.inv_sent == True)):
-    #         print(row)
-    # key = ["__test__user" + str(no) + "__" for no in range(1,6)]
-    # print(key)
-    # values = ["some_password"]
-
-    # dict_ = {f"__test__user{no}__": "some_password" for no in range(1,6)}
-
-    values = [{"username": f"__test__user{no}__", "password": "some_password"}
-             for no in range(1,6)]
-    for dic in values:
-        print(dic)
-
-    pass

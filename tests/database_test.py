@@ -1,12 +1,12 @@
 from typing import Generator
-from werkzeug.security import check_password_hash, generate_password_hash
 
 import pytest
-from sqlalchemy import event, select, insert
+from sqlalchemy import event, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import User, engine
+from database import engine, User, Category
 
 
 # region: required for SQLite to handle SAVEPOINTs for rollback after tests
@@ -76,7 +76,7 @@ def test_admin_creation(db_session: Session):
     db_session.commit()
     assert db_session.get(User, test_user.id).admin == True
 
-def test_bulk_insertion(db_session: Session):
+def test_bulk_user_insertion(db_session: Session):
     values = [{"username": f"test__user{no}", "password": "some_password"}
               for no in range(6)]
     db_session.execute(insert(User), values)
@@ -84,7 +84,6 @@ def test_bulk_insertion(db_session: Session):
     users = db_session.scalars(select(User).where(User.username.like("test__user%"))).all()
     assert len(users) == 6
     for user in users:
-        print(user)
         assert user.password == "some_password"
         assert user.products == []
         assert user.admin == False
@@ -110,7 +109,6 @@ def test_no_username_or_no_password(db_session: Session):
 # region CRUD: read and update
 def test_change_username(db_session: Session):
     test_user = db_session.execute(select(User).filter_by(username="__test__adminn__")).scalar_one()
-    assert test_user != None
     test_user.username = "__test__admin__"
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
@@ -119,7 +117,6 @@ def test_change_username(db_session: Session):
 
 def test_change_password(db_session: Session):
     test_user = db_session.execute(select(User).filter_by(username="__test__user__")).scalar_one()
-    assert test_user != None
     test_user.password = generate_password_hash("other_test_password")
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
@@ -138,7 +135,55 @@ def test_delete_user(db_session: Session):
 
 
 # region: test "categories" table
-pass
+def test_category_creation(db_session: Session):
+    test_category = Category("__test__categoryy__", description="Some description")
+    db_session.add(test_category)
+    db_session.commit()
+    assert test_category.id != None, "test_category should have an id after commit"
+    db_category = db_session.get(Category, test_category.id)
+    assert db_category.name == "__test__categoryy__"
+    assert db_category.products == []
+    assert db_category.in_use == True
+    assert db_category.description == "Some description"
+
+def test_bulk_category_insertion(db_session: Session):
+    values = [{"name": f"test__category{no}"} for no in range(6)]
+    db_session.execute(insert(Category), values)
+    db_session.commit()
+    categories = db_session.scalars(select(Category).where(Category.name.like("test__category%"))).all()
+    assert len(categories) == 6
+    for category in categories:
+        assert category.products == []
+        assert category.in_use == True
+        assert category.description == None
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_category_duplicate(db_session: Session):
+    try:
+        db_session.add(Category("__test__categoryy__"))
+    except IntegrityError:
+        db_session.rollback()
+
+@pytest.mark.xfail(raises=TypeError)
+def test_category_no_name(db_session: Session):
+    try:
+        db_session.add(Category())
+    except TypeError:
+        db_session.rollback()
+
+def test_change_category_name(db_session: Session):
+    test_category = db_session.execute(select(Category).filter_by(name="__test__categoryy__")).scalar_one()
+    test_category.name = "__test__category__"
+    assert test_category in db_session.dirty
+    # autoflush after select(get) statement
+    db_category = db_session.get(Category, test_category.id)
+    assert db_category.name == "__test__category__"
+
+def test_delete_category(db_session: Session):
+    test_category = db_session.execute(select(Category).filter_by(name="test__category0")).scalar_one()
+    db_session.delete(test_category)
+    db_category = db_session.execute(select(Category).filter_by(name="test__category0")).scalar()
+    assert db_category == None
 # endregion
 
 
