@@ -1,7 +1,2 @@
-/old DB
-.DS_Store
-/.venv
-/__pycache__
-/.vscode
-.env
-ideas.txt
+.*
+__pycache__

@@ -8,34 +8,34 @@ app = Flask(__name__)
 
 app.config.from_prefixed_env()
 
-DATABASE = 'inventory.db'
+DATABASE = "inventory.db"
 
-@app.route('/')
+@app.route("/")
 def index():
     """Index page"""
-    return 'Hello world!'
+    return "Hello world!"
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """Login page"""
-    session['username'] = request.form['username']
-    return redirect(url_for('index'))
-    return 'Please login to website'
+    session["username"] = request.form["username"]
+    return redirect(url_for("index"))
+    return "Please login to website"
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
-    session.pop('username', None)
-    flash('Succesfully logged out')
-    return redirect(url_for('index'))
+    session.pop("username", None)
+    flash("Succesfully logged out")
+    return redirect(url_for("index"))
 
 
 
 
 
-if __name__ == '__main--':
+if __name__ == "__main--":
     # with app.test_request_context():
-    #     print(url_for('index'))
-    #     print(url_for('login'))
+    #     print(url_for("index"))
+    #     print(url_for("login"))
     pass
