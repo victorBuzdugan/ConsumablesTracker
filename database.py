@@ -54,15 +54,13 @@ class Supplier(Base):
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
-    details: Mapped[Optional[str]]
-    products: Mapped[List["Product"]] = relationship(back_populates="supplier")
+    products: Mapped[List["Product"]] = relationship(
+        default_factory=list, back_populates="supplier")
     in_use: Mapped[bool] = mapped_column(default=True)
+    details: Mapped[Optional[str]] = mapped_column(
+        default=None, repr=False)
 
-    # def __repr__(self) -> str:
-    #     return (
-    #         f"Supplier{{id={self.id!r}, name={self.name!r}, "
-    #         f"in_use={self.in_use!r}}}")
-    
+
 class Product(Base):
     """Products database table mapping.
     
@@ -105,10 +103,10 @@ class Product(Base):
 if __name__ == "__main__":
 
     with Session() as session:
-        categories = session.scalars(select(Category)).all()
-        for category in categories:
-            print(category)
-        # category = Category("Food")
+        # suppliers = session.scalars(select(Supplier)).all()
+        # for supplier in suppliers:
+        #     print(supplier)
+        # category = Supplier("Carrefour")
         # session.add(category)
         # session.commit()
         pass

@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import engine, User, Category
+from database import engine, User, Category, Supplier
 
 
 # region: required for SQLite to handle SAVEPOINTs for rollback after tests
@@ -188,7 +188,55 @@ def test_delete_category(db_session: Session):
 
 
 # region: test "suppliers" table
-pass
+def test_supplier_creation(db_session: Session):
+    test_supplier = Supplier("__test__supplierr__", details="Some description")
+    db_session.add(test_supplier)
+    db_session.commit()
+    assert test_supplier.id != None, "__test__supplierr__ should have an id after commit"
+    db_supplier= db_session.get(Supplier, test_supplier.id)
+    assert db_supplier.name == "__test__supplierr__"
+    assert db_supplier.products == []
+    assert db_supplier.in_use == True
+    assert db_supplier.details == "Some description"
+
+def test_bulk_supplier_insertion(db_session: Session):
+    values = [{"name": f"test__supplier{no}"} for no in range(6)]
+    db_session.execute(insert(Supplier), values)
+    db_session.commit()
+    suppliers = db_session.scalars(select(Supplier).where(Supplier.name.like("test__supplier%"))).all()
+    assert len(suppliers) == 6
+    for supplier in suppliers:
+        assert supplier.products == []
+        assert supplier.in_use == True
+        assert supplier.details == None
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_supplier_duplicate(db_session: Session):
+    try:
+        db_session.add(Supplier("__test__supplierr__"))
+    except IntegrityError:
+        db_session.rollback()
+
+@pytest.mark.xfail(raises=TypeError)
+def test_supplier_no_name(db_session: Session):
+    try:
+        db_session.add(Supplier())
+    except TypeError:
+        db_session.rollback()
+
+def test_change_supplier_name(db_session: Session):
+    test_supplier = db_session.execute(select(Supplier).filter_by(name="__test__supplierr__")).scalar_one()
+    test_supplier.name = "__test__supplier__"
+    assert test_supplier in db_session.dirty
+    # autoflush after select(get) statement
+    db_supplier = db_session.get(Supplier, test_supplier.id)
+    assert db_supplier.name == "__test__supplier__"
+
+def test_delete_supplier(db_session: Session):
+    test_supplier = db_session.execute(select(Supplier).filter_by(name="test__supplier0")).scalar_one()
+    db_session.delete(test_supplier)
+    db_supplier = db_session.execute(select(Supplier).filter_by(name="test__supplier0")).scalar()
+    assert db_supplier == None
 # endregion
 
 
