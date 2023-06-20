@@ -49,7 +49,7 @@ def db_session() -> Generator[Session, None, None]:
 @pytest.fixture(scope="module")
 def default_user_category_supplier(db_session: Session):
     test_user = db_session.execute(
-        select(User).filter_by(username="__test__user__")).scalar_one()
+        select(User).filter_by(name="__test__user__")).scalar_one()
     test_category = db_session.execute(
         select(Category).filter_by(name="__test__category__")).scalar_one()
     test_supplier = db_session.execute(
@@ -74,7 +74,7 @@ def test_user_creation(db_session: Session):
     db_session.commit()
     assert test_user.id is not None, "test_user should have an id after commit"
     db_user = db_session.get(User, test_user.id)
-    assert db_user.username == "__test__user__", "Wrong username"
+    assert db_user.name == "__test__user__", "Wrong name"
     assert (check_password_hash(db_user.password, "test_password"),
             "Password check failed")
     assert (check_password_hash(db_user.password, "some_other_password")
@@ -95,12 +95,12 @@ def test_admin_creation(db_session: Session):
 
 
 def test_bulk_user_insertion(db_session: Session):
-    values = [{"username": f"test__user{no}", "password": "some_password"}
+    values = [{"name": f"test__user{no}", "password": "some_password"}
               for no in range(6)]
     db_session.execute(insert(User), values)
     db_session.commit()
     users = db_session.scalars(
-        select(User).where(User.username.like("test__user%"))).all()
+        select(User).where(User.name.like("test__user%"))).all()
     assert len(users) == 6
     for user in users:
         assert user.password == "some_password"
@@ -121,7 +121,7 @@ def test_username_duplicate(db_session: Session):
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_no_username(db_session: Session):
+def test_no_name(db_session: Session):
     try:
         db_session.add(User(None, "password"))
         db_session.commit()
@@ -132,7 +132,7 @@ def test_no_username(db_session: Session):
 @pytest.mark.xfail(raises=IntegrityError)
 def test_no_password(db_session: Session):
     try:
-        db_session.add(User("username", None))
+        db_session.add(User("name", None))
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
@@ -142,17 +142,17 @@ def test_no_password(db_session: Session):
 # region CRUD: read and update
 def test_change_username(db_session: Session):
     test_user = db_session.execute(
-        select(User).filter_by(username="__test__adminn__")).scalar_one()
-    test_user.username = "__test__admin__"
+        select(User).filter_by(name="__test__adminn__")).scalar_one()
+    test_user.name = "__test__admin__"
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
     db_user = db_session.get(User, test_user.id)
-    assert db_user.username == "__test__admin__"
+    assert db_user.name == "__test__admin__"
 
 
 def test_change_password(db_session: Session):
     test_user = db_session.execute(
-        select(User).filter_by(username="__test__user__")).scalar_one()
+        select(User).filter_by(name="__test__user__")).scalar_one()
     test_user.password = generate_password_hash("other_test_password")
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
@@ -165,10 +165,10 @@ def test_change_password(db_session: Session):
 # region CRUD: read and delete
 def test_delete_user(db_session: Session):
     test_user = db_session.execute(
-        select(User).filter_by(username="test__user0")).scalar_one()
+        select(User).filter_by(name="test__user0")).scalar_one()
     db_session.delete(test_user)
     db_user = db_session.execute(
-        select(User).filter_by(username="test__user0")).scalar()
+        select(User).filter_by(name="test__user0")).scalar()
     assert db_user is None
 # endregion
 # endregion
@@ -325,7 +325,7 @@ def test_product_creation(db_session: Session, default_user_category_supplier):
     db_product = db_session.get(Product, test_product.id)
     assert db_product.name == "__test__productt__"
     assert db_product.description == "Some description"
-    assert db_product.responsable.username == "__test__user__"
+    assert db_product.responsable.name == "__test__user__"
     assert db_product.category.name == "__test__category__"
     assert db_product.supplier.name == "__test__supplier__"
     assert db_product.meas_unit == "measunit"
@@ -355,7 +355,7 @@ def test_bulk_product_insertion(db_session: Session,
     assert len(products) == 6
     for product in products:
         assert product.description == "Some description"
-        assert product.responsable.username == "__test__user__"
+        assert product.responsable.name == "__test__user__"
         assert product.category.name == "__test__category__"
         assert product.supplier.name == "__test__supplier__"
         assert product.meas_unit == "measunit"

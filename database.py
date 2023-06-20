@@ -2,10 +2,10 @@
 
 from typing import List, Optional
 
-from sqlalchemy import ForeignKey, create_engine
-from sqlalchemy.orm import (DeclarativeBase, Mapped, Session, mapped_column,
-                            sessionmaker, relationship, MappedAsDataclass)
-
+from sqlalchemy import ForeignKey, create_engine, select
+from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
+                            Session, declared_attr, mapped_column,
+                            relationship, sessionmaker)
 
 # factory for creating new database connections objects
 engine = create_engine("sqlite:///inventory.db", echo=True)
@@ -30,7 +30,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    username: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(repr=False)
     products: Mapped[List["Product"]] = relationship(
         default_factory=list, back_populates="responsable")
@@ -104,4 +104,7 @@ class Product(Base):
 if __name__ == "__main__":
 
     with Session() as session:
+        items = session.scalars(select(User)).all()
+        for item in items:
+            print(item.name)
         pass
