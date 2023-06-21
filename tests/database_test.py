@@ -1,3 +1,5 @@
+"""Test with rollbacks SQLAlchemy table mapping."""
+
 from typing import Generator
 
 import pytest
@@ -69,16 +71,14 @@ def test_user_creation(db_session: Session):
     done_inv: True
     details: None
     """
-    test_user = User("__test__user__", generate_password_hash("test_password"))
+    test_user = User("__test__user__", "test_password")
     db_session.add(test_user)
     db_session.commit()
     assert test_user.id is not None, "test_user should have an id after commit"
     db_user = db_session.get(User, test_user.id)
     assert db_user.name == "__test__user__", "Wrong name"
-    assert (check_password_hash(db_user.password, "test_password"),
-            "Password check failed")
-    assert (check_password_hash(db_user.password, "some_other_password")
-            is False, "Password check should fail")
+    assert db_user.password == "test_password"
+    assert db_user.password != "some_other_password"
     assert db_user.products == [], "User shouldn't have products assigned"
     assert db_user.admin is False
     assert db_user.in_use is True
@@ -95,7 +95,8 @@ def test_admin_creation(db_session: Session):
 
 
 def test_bulk_user_insertion(db_session: Session):
-    values = [{"name": f"test__user{no}", "password": "some_password"}
+    values = [{"name": f"test__user{no}", 
+               "password": generate_password_hash("some_password")}
               for no in range(6)]
     db_session.execute(insert(User), values)
     db_session.commit()
@@ -103,7 +104,7 @@ def test_bulk_user_insertion(db_session: Session):
         select(User).where(User.name.like("test__user%"))).all()
     assert len(users) == 6
     for user in users:
-        assert user.password == "some_password"
+        assert check_password_hash(user.password, "some_password")
         assert user.products == []
         assert user.admin is False
         assert user.in_use is True
@@ -157,8 +158,7 @@ def test_change_password(db_session: Session):
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
     db_user = db_session.get(User, test_user.id)
-    assert (check_password_hash(db_user.password, "other_test_password"),
-            "Password check failed")
+    assert check_password_hash(db_user.password, "other_test_password")
 # endregion
 
 
@@ -180,8 +180,8 @@ def test_category_creation(db_session: Session):
                              description="Some description")
     db_session.add(test_category)
     db_session.commit()
-    assert (test_category.id is not None,
-            "test_category should have an id after commit")
+    assert test_category.id is not None, \
+            "test_category should have an id after commit"
     db_category = db_session.get(Category, test_category.id)
     assert db_category.name == "__test__categoryy__"
     assert db_category.products == []
@@ -245,8 +245,8 @@ def test_supplier_creation(db_session: Session):
     test_supplier = Supplier("__test__supplierr__", details="Some description")
     db_session.add(test_supplier)
     db_session.commit()
-    assert (test_supplier.id is not None,
-            "__test__supplierr__ should have an id after commit")
+    assert test_supplier.id is not None,\
+            "__test__supplierr__ should have an id after commit"
     db_supplier = db_session.get(Supplier, test_supplier.id)
     assert db_supplier.name == "__test__supplierr__"
     assert db_supplier.products == []
@@ -320,8 +320,8 @@ def test_product_creation(db_session: Session, default_user_category_supplier):
     )
     db_session.add(test_product)
     db_session.commit()
-    assert (test_product.id is not None,
-            "__test__productt__ should have an id after commit")
+    assert test_product.id is not None,\
+            "__test__productt__ should have an id after commit"
     db_product = db_session.get(Product, test_product.id)
     assert db_product.name == "__test__productt__"
     assert db_product.description == "Some description"
