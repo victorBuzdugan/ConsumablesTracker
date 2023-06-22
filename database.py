@@ -15,7 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 engine = create_engine("sqlite:///inventory.db", echo=True)
 
 # factory for Session objects
-Session = sessionmaker(bind=engine)
+dbSession = sessionmaker(bind=engine)
 
 
 class Base(MappedAsDataclass, DeclarativeBase):

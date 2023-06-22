@@ -1,41 +1,25 @@
-import sqlite3
-
 from flask import (Flask, flash, redirect, render_template, request, session,
                    url_for)
 
+from database import dbSession, User, Category, Supplier, Product
+from blueprints.auth.auth import auth_bp
+from helpers import admin_required, login_required
 
 app = Flask(__name__)
 
 app.config.from_prefixed_env()
 
-DATABASE = "inventory.db"
+app.register_blueprint(auth_bp)
+
 
 @app.route("/")
+@login_required
 def index():
-    """Index page"""
-    return "Hello world!"
+    """Index page."""
+    return "Hello World!"
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    """Login page"""
-    session["username"] = request.form["username"]
-    return redirect(url_for("index"))
-    return "Please login to website"
-
-
-@app.route("/logout")
-def logout():
-    session.pop("username", None)
-    flash("Succesfully logged out")
-    return redirect(url_for("index"))
-
-
-
-
-
-if __name__ == "__main--":
-    # with app.test_request_context():
-    #     print(url_for("index"))
-    #     print(url_for("login"))
-    pass
+# with app.test_request_context():
+#     print(app.url_map)
+#     print(url_for("index"))
+#     print(url_for("login"))

@@ -1,7 +1,5 @@
-"""Helpers functions."""
-
 from functools import wraps
-from flask import redirect, url_for, session
+from flask import session, redirect, url_for
 
 
 def login_required(f):
@@ -9,16 +7,15 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("user_id") is None:
-            return redirect(url_for("login"))
+            return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function
-
 
 def admin_required(f):
     """Decorate routes to require admin login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("user_id") is None or session.get("admin") is None:
-            return redirect(url_for("login"))
+            return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function
