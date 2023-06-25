@@ -15,7 +15,7 @@ def admin_required(f):
     """Decorate routes to require admin login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("user_id") is None or session.get("admin") is None:
+        if session.get("user_id") is None or not session.get("admin"):
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function

@@ -38,7 +38,7 @@ class User(Base):
 
     :param id: user id
     :param name: user name
-    :param password: user password
+    :param password: hashed user password
     :param products: user's assigned for inventorying list of products
     :param admin: user has administrator rights
     :param in_use: user can still be used; not obsolete
@@ -51,6 +51,7 @@ class User(Base):
     admin: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
     done_inv: Mapped[bool] = mapped_column(default=True)
+    reg_req: Mapped[bool] = mapped_column(default=True)
     details: Mapped[Optional[str]] = mapped_column(default=None, repr=False)
 
 
@@ -130,10 +131,10 @@ class Product(Base):
 
 if __name__ == "__main__":
 
-    # with Session() as session:
-    #     items = session.scalars(select(User)).all()
-    #     for item in items:
-    #         print(item.id, item.name)
-    #     pass
+    with dbSession() as db_session:
+        # user = db_session.get(User, 4)
+        # user.password = generate_password_hash("44444444")
+        # db_session.commit()
+        pass
 
     pass

@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block link %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href={{ url_for("auth.static", filename="style.css") }} rel="stylesheet">
+    <script src={{ url_for("auth.static", filename="registration_rules.js") }}></script>
+{% endblock link %}
+
+{% block title %}
+    Register
+{% endblock %}
+
+{% block main %}
+    <form action={{ url_for("auth.register") }} method="POST">
+        {{ form.csrf_token }}
+        <div class="mb-3">
+            {{ form.name(class="form-control mx-auto w-auto is-invalid", placeholder=form.name.label.text, autocomplete="off") }}
+            
+            <div class="mb-3">
+                <div class="alert px-4 py-3 mb-0 d-none" id="name-alert" role="alert" data-mdb-color="warning">
+                <ul class="list-unstyled mb-0">
+                    <li class="userrequirements userleng">
+                    <i class="fas fa-check text-success me-2"></i>
+                    <i class="fas fa-times text-danger me-3"></i>
+                    Your name must have at least 3 chars</li>
+                </ul>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            {{ form.password(class="form-control mx-auto w-auto is-invalid", placeholder=form.password.label.text) }}
+        
+        <div class="mb-3">
+            <div class="alert px-4 py-3 mb-0 d-none" id="password-alert" role="alert" data-mdb-color="warning">
+            <ul class="list-unstyled mb-0">
+                <li class="requirements leng">
+                <i class="fas fa-check text-success me-2"></i>
+                <i class="fas fa-times text-danger me-3"></i>
+                Your password must have at least 8 chars</li>
+                <li class="requirements big-letter">
+                <i class="fas fa-check text-success me-2"></i>
+                <i class="fas fa-times text-danger me-3"></i>
+                Your password must have at least 1 big letter.</li>
+                <li class="requirements num">
+                <i class="fas fa-check text-success me-2"></i>
+                <i class="fas fa-times text-danger me-3"></i>
+                Your password must have at least 1 number.</li>
+                <li class="requirements special-char">
+                <i class="fas fa-check text-success me-2"></i>
+                <i class="fas fa-times text-danger me-3"></i>
+                Your password must have at least 1 special char (!@#$%^&*_=+).</li>
+            </ul>
+            </div>
+        </div>
+
+        </div>
+
+        <div class="mb-3">
+            {{ form.confirm(class="form-control mx-auto w-auto is-invalid", placeholder=form.confirm.label.text) }}
+
+            <div class="mb-3">
+                <div class="alert px-4 py-3 mb-0 d-none" id="confirm-alert" role="alert" data-mdb-color="warning">
+                <ul class="list-unstyled mb-0">
+                    <li class="confirmrequirements confirmequal">
+                    <i class="fas fa-check text-success me-2"></i>
+                    <i class="fas fa-times text-danger me-3"></i>
+                    Passwords must match.</li>
+                </ul>
+                </div>
+            </div>
+        </div>
+        <input class="btn btn-primary" type="submit" value="Request registration">
+    </form>
+    
+{% endblock %}
