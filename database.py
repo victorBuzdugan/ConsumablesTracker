@@ -128,13 +128,3 @@ class Product(Base):
     critical: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
 
-
-if __name__ == "__main__":
-
-    with dbSession() as db_session:
-        # user = db_session.get(User, 4)
-        # user.password = generate_password_hash("44444444")
-        # db_session.commit()
-        pass
-
-    pass

@@ -11,6 +11,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from database import engine, User, Category, Supplier, Product
 
 
+pytestmark = pytest.mark.db
+
 # region: required for SQLite to handle SAVEPOINTs for rollback after tests
 @event.listens_for(engine, "connect")
 def do_connect(dbapi_connection, connection_record):
@@ -83,6 +85,7 @@ def test_user_creation(db_session: Session):
     assert db_user.admin is False
     assert db_user.in_use is True
     assert db_user.done_inv is True
+    assert db_user.reg_req is True
     assert db_user.details is None
 
 
@@ -109,6 +112,7 @@ def test_bulk_user_insertion(db_session: Session):
         assert user.admin is False
         assert user.in_use is True
         assert user.done_inv is True
+        assert user.reg_req is True
         assert user.details is None
 
 

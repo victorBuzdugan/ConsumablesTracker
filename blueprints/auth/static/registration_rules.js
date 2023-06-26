@@ -146,14 +146,10 @@ addEventListener("DOMContentLoaded", (event) => {
                 element.classList.remove("wrong");
                 element.classList.add("good");
             });
-            // passwordAlert.classList.remove("alert-warning");
-            // passwordAlert.classList.add("alert-success");
         } else {
             password.classList.remove("is-valid");
             password.classList.add("is-invalid");
 
-            // passwordAlert.classList.add("alert-warning");
-            // passwordAlert.classList.remove("alert-success");
 
             if (lengBoolean == false) {
                 leng.classList.add("wrong");

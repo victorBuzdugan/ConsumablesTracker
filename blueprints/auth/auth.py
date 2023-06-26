@@ -1,14 +1,14 @@
 """Authentification module."""
 
-from flask import Blueprint, flash, redirect, render_template, session, url_for, request, get_flashed_messages
+from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_wtf import FlaskForm
 from sqlalchemy import select
-from wtforms import StringField, PasswordField
-from wtforms.validators import InputRequired, Length, EqualTo, Regexp
 from werkzeug.security import check_password_hash, generate_password_hash
+from wtforms import PasswordField, StringField
+from wtforms.validators import EqualTo, InputRequired, Length, Regexp
 
+from database import User, dbSession
 from helpers import login_required
-from database import dbSession, User
 
 auth_bp = Blueprint("auth",
                     __name__,
@@ -16,34 +16,50 @@ auth_bp = Blueprint("auth",
                     template_folder="templates",
                     static_folder="static")
 
+
 class LoginForm(FlaskForm):
+    """Login form."""
     name = StringField(
         label="Username",
-        validators=[InputRequired()])
+        validators=[InputRequired("Username is required!")])
     password = PasswordField(
         label="Password",
-        validators=[InputRequired()])
+        validators=[InputRequired("Password is required!")])
+
 
 class RegisterForm(FlaskForm):
+    """Registration form."""
     name = StringField(
         label="Username",
-        validators=[InputRequired(),
-                    Length(min=3, max=15)])
+        validators=[
+            InputRequired("Username is required!"),
+            Length(
+                min=3,
+                max=15,
+                message="Username must be between 3 and 15 characters!")])
     password = PasswordField(
         label="Password",
-        validators=[InputRequired(),
-                    Length(min=8)])
+        validators=[
+            InputRequired("Password is required!"),
+            Length(
+                min=8,
+                message="Password should have at least 8 characters!")])
     confirm = PasswordField(
         label="Retype password",
-        validators=[InputRequired(),
-                    Length(min=8),
-                    EqualTo("password", "Passwords don't match!"),
-                    Regexp("(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
-                           message="Check password rules!")])
+        validators=[
+            InputRequired("Confirmation password is required!"),
+            Length(
+                min=8,
+                message="Password should have at least 8 characters!"),
+            EqualTo("password", "Passwords don't match!"),
+            Regexp(
+                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
+                message="Check password rules!")])
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    """Login user if conditions are met."""
     login_form: LoginForm = LoginForm()
     if login_form.validate_on_submit():
         with dbSession() as db_session:
@@ -53,20 +69,21 @@ def login():
                 user.password, login_form.password.data):
             if user.in_use:
                 if not user.reg_req:
+                    session.clear()
                     session["user_id"] = user.id
                     session["admin"] = user.admin
                     session["user_name"] = user.name
                     flash(f"Welcome {user.name}")
                     return redirect(url_for("index"))
                 else:
-                    flash("You're registration is pending. Contact an admin.",
+                    flash("Your registration is pending. Contact an admin.",
                           "warning")
             else:
                 flash("This user is not in use anymore!", "warning")
         else:
-            flash("Incorrect username or password!", "warning")
+            flash("Wrong username or password!", "warning")
     elif login_form.errors:
-        flash_errors = [error for errors in login_form.errors.values() \
+        flash_errors = [error for errors in login_form.errors.values()
                         for error in errors]
         for error in flash_errors:
             flash(error, "error")
@@ -77,6 +94,7 @@ def login():
 @auth_bp.route("/logout")
 @login_required
 def logout():
+    """Logout and clear session."""
     session.clear()
     flash("Succesfully logged out...")
     return redirect(url_for("auth.login"))
@@ -84,14 +102,15 @@ def logout():
 
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
+    """Register user if conditions are met."""
     # if user is logged in
     if session.get("user_id"):
         session.clear()
+        print("flash")
         flash("You have been logged out...", "info")
-        return redirect(url_for("auth.register"))
-    
+
     reg_form: RegisterForm = RegisterForm()
-    
+
     if reg_form.validate_on_submit():
         with dbSession() as db_session:
             user = db_session.scalar(
@@ -108,9 +127,9 @@ def register():
             else:
                 flash("Username allready exists...", "warning")
     elif reg_form.errors:
-        flash_errors = [error for errors in reg_form.errors.values() \
+        flash_errors = [error for errors in reg_form.errors.values()
                         for error in errors]
         for error in flash_errors:
             flash(error, "error")
-    
+
     return render_template("auth/register.html", form=reg_form)

@@ -16,7 +16,7 @@ app.register_blueprint(auth_bp)
 @login_required
 def index():
     """Index page."""
-    return "Hello World!"
+    return render_template("index.html")
 
 
 # with app.test_request_context():
