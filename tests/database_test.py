@@ -1,16 +1,66 @@
 """Test with rollbacks SQLAlchemy table mapping."""
 
+from typing import Generator
+
 import pytest
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, event
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import User, Category, Supplier, Product
-from tests import db_session, default_user_category_supplier
+from database import User, Category, Supplier, Product, engine
 
 
 pytestmark = pytest.mark.db
+
+
+# region: required for SQLite to handle SAVEPOINTs for rollback after tests
+@event.listens_for(engine, "connect")
+def do_connect(dbapi_connection, connection_record):
+    # disable pysqlite's emitting of the BEGIN statement entirely.
+    # also stops it from emitting COMMIT before any DDL.
+    dbapi_connection.isolation_level = None
+
+
+@event.listens_for(engine, "begin")
+def do_begin(conn):
+    # emit our own BEGIN
+    conn.exec_driver_sql("BEGIN")
+# endregion
+
+
+@pytest.fixture(scope="module")
+def db_session() -> Generator[Session, None, None]:
+    """Database connection fixture for testing (with rollback)."""
+    TestSession = sessionmaker()
+    # connect to the database using the database.py engine
+    connection = engine.connect()
+    # begin a non-ORM transaction
+    transaction = connection.begin()
+    # bind an individual Session to the connection, selecting
+    # "create_savepoint" join_transaction_mode
+    session = TestSession(
+        bind=connection, join_transaction_mode="create_savepoint")
+    yield session
+    session.close()
+    # rollback - everything that happened with the
+    # Session above (including calls to commit())
+    # is rolled back.
+    transaction.rollback()
+    # return connection to the Engine
+    connection.close()
+
+
+@pytest.fixture(scope="module")
+def default_user_category_supplier(db_session: Session):
+    """Create a default user, category and supplier."""
+    test_user = db_session.execute(
+        select(User).filter_by(name="__test__user__test__")).scalar_one()
+    test_category = db_session.execute(
+        select(Category).filter_by(name="__test__category__")).scalar_one()
+    test_supplier = db_session.execute(
+        select(Supplier).filter_by(name="__test__supplier__")).scalar_one()
+    return test_user, test_category, test_supplier
 
 
 # region: test "users" table
@@ -25,12 +75,12 @@ def test_user_creation(db_session: Session):
     done_inv: True
     details: None
     """
-    test_user = User("__test__user__", "test_password")
+    test_user = User("__test__user__test__", "test_password")
     db_session.add(test_user)
     db_session.commit()
     assert test_user.id is not None, "test_user should have an id after commit"
     db_user = db_session.get(User, test_user.id)
-    assert db_user.name == "__test__user__", "Wrong name"
+    assert db_user.name == "__test__user__test__", "Wrong name"
     assert db_user.password == "test_password"
     assert db_user.password != "some_other_password"
     assert db_user.products == [], "User shouldn't have products assigned"
@@ -71,7 +121,7 @@ def test_bulk_user_insertion(db_session: Session):
 @pytest.mark.xfail(raises=IntegrityError)
 def test_username_duplicate(db_session: Session):
     try:
-        db_session.add(User("__test__user__", "passw"))
+        db_session.add(User("__test__user__test__", "passw"))
         db_session.commit()
     except IntegrityError:
         db_session.rollback()
@@ -100,16 +150,16 @@ def test_no_password(db_session: Session):
 def test_change_username(db_session: Session):
     test_user = db_session.execute(
         select(User).filter_by(name="__test__adminn__")).scalar_one()
-    test_user.name = "__test__admin__"
+    test_user.name = "__test__admin__test__"
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
     db_user = db_session.get(User, test_user.id)
-    assert db_user.name == "__test__admin__"
+    assert db_user.name == "__test__admin__test__"
 
 
 def test_change_password(db_session: Session):
     test_user = db_session.execute(
-        select(User).filter_by(name="__test__user__")).scalar_one()
+        select(User).filter_by(name="__test__user__test__")).scalar_one()
     test_user.password = generate_password_hash("other_test_password")
     assert test_user in db_session.dirty
     # autoflush after select(get) statement
@@ -281,7 +331,7 @@ def test_product_creation(db_session: Session, default_user_category_supplier):
     db_product = db_session.get(Product, test_product.id)
     assert db_product.name == "__test__productt__"
     assert db_product.description == "Some description"
-    assert db_product.responsable.name == "__test__user__"
+    assert db_product.responsable.name == "__test__user__test__"
     assert db_product.category.name == "__test__category__"
     assert db_product.supplier.name == "__test__supplier__"
     assert db_product.meas_unit == "measunit"
@@ -311,7 +361,7 @@ def test_bulk_product_insertion(db_session: Session,
     assert len(products) == 6
     for product in products:
         assert product.description == "Some description"
-        assert product.responsable.name == "__test__user__"
+        assert product.responsable.name == "__test__user__test__"
         assert product.category.name == "__test__category__"
         assert product.supplier.name == "__test__supplier__"
         assert product.meas_unit == "measunit"
