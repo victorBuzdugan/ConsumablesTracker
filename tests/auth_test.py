@@ -4,44 +4,12 @@ import pytest
 from flask import session, g
 from flask.testing import FlaskClient
 from sqlalchemy import select
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
-from tests import client
+from tests import client, create_test_users, db_session
 from database import dbSession, User
 
 pytestmark = pytest.mark.auth
-
-
-@pytest.fixture(scope="module")
-def create_test_users():
-    reg_req_user = User(
-        name="reg_req_user",
-        password=generate_password_hash("P@ssw0rd"))
-    not_in_use_user = User(
-        name="not_in_use_user",
-        password=generate_password_hash("P@ssw0rd"),
-        reg_req=False,
-        in_use=False)
-    ___test___user___ = User(
-        name="___test___user___",
-        password=generate_password_hash("P@ssw0rd"),
-        reg_req=False)
-    with dbSession() as db_session:
-        db_session.add(reg_req_user)
-        db_session.add(not_in_use_user)
-        db_session.add(___test___user___)
-        db_session.commit()
-
-    yield
-
-    with dbSession() as db_session:
-        db_session.delete(reg_req_user)
-        db_session.delete(not_in_use_user)
-        db_session.delete(___test___user___)
-        db_session.commit()
-
-        assert not db_session.get(User, reg_req_user.id)
-        assert not db_session.get(User, not_in_use_user.id)
 
 
 # region: registration page

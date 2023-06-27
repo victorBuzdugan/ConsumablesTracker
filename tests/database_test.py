@@ -1,64 +1,16 @@
 """Test with rollbacks SQLAlchemy table mapping."""
 
-from typing import Generator
-
 import pytest
-from sqlalchemy import event, insert, select
+from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import engine, User, Category, Supplier, Product
+from database import User, Category, Supplier, Product
+from tests import db_session, default_user_category_supplier
 
 
 pytestmark = pytest.mark.db
-
-# region: required for SQLite to handle SAVEPOINTs for rollback after tests
-@event.listens_for(engine, "connect")
-def do_connect(dbapi_connection, connection_record):
-    # disable pysqlite's emitting of the BEGIN statement entirely.
-    # also stops it from emitting COMMIT before any DDL.
-    dbapi_connection.isolation_level = None
-
-
-@event.listens_for(engine, "begin")
-def do_begin(conn):
-    # emit our own BEGIN
-    conn.exec_driver_sql("BEGIN")
-# endregion
-
-
-# Database connection fixture
-@pytest.fixture(scope="module")
-def db_session() -> Generator[Session, None, None]:
-    TestSession = sessionmaker()
-    # connect to the database using the database.py engine
-    connection = engine.connect()
-    # begin a non-ORM transaction
-    transaction = connection.begin()
-    # bind an individual Session to the connection, selecting
-    # "create_savepoint" join_transaction_mode
-    session = TestSession(
-        bind=connection, join_transaction_mode="create_savepoint")
-    yield session
-    session.close()
-    # rollback - everything that happened with the
-    # Session above (including calls to commit())
-    # is rolled back.
-    transaction.rollback()
-    # return connection to the Engine
-    connection.close()
-
-
-@pytest.fixture(scope="module")
-def default_user_category_supplier(db_session: Session):
-    test_user = db_session.execute(
-        select(User).filter_by(name="__test__user__")).scalar_one()
-    test_category = db_session.execute(
-        select(Category).filter_by(name="__test__category__")).scalar_one()
-    test_supplier = db_session.execute(
-        select(Supplier).filter_by(name="__test__supplier__")).scalar_one()
-    return test_user, test_category, test_supplier
 
 
 # region: test "users" table
