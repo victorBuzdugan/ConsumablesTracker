@@ -1,8 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}
-    Log In
-{% endblock %}
+{% block title %}Log In{% endblock %}
 
 {% block main %}
     <form action={{ url_for("auth.login") }} method="POST">

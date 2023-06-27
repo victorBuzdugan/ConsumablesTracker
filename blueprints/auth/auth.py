@@ -43,7 +43,10 @@ class RegisterForm(FlaskForm):
             InputRequired("Password is required!"),
             Length(
                 min=8,
-                message="Password should have at least 8 characters!")])
+                message="Password should have at least 8 characters!"),
+            Regexp(
+                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
+                message="Check password rules!")])
     confirm = PasswordField(
         label="Retype password",
         validators=[
@@ -51,10 +54,36 @@ class RegisterForm(FlaskForm):
             Length(
                 min=8,
                 message="Password should have at least 8 characters!"),
-            EqualTo("password", "Passwords don't match!"),
+            EqualTo("password", "Passwords don't match!")])
+
+
+class ChgPasswForm(FlaskForm):
+    """Change password form."""
+    old_password = PasswordField(
+        label="Old password",
+        validators=[
+            InputRequired("Old password is required!"),
+            Length(
+                min=8,
+                message="Password should have at least 8 characters!")])
+    password = PasswordField(
+        label="New password",
+        validators=[
+            InputRequired("New password is required!"),
+            Length(
+                min=8,
+                message="Password should have at least 8 characters!"),
             Regexp(
                 r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
                 message="Check password rules!")])
+    confirm = PasswordField(
+        label="Retype password",
+        validators=[
+            InputRequired("Confirmation password is required!"),
+            Length(
+                min=8,
+                message="Password should have at least 8 characters!"),
+            EqualTo("password", "Passwords don't match!")])
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -133,3 +162,30 @@ def register():
             flash(error, "error")
 
     return render_template("auth/register.html", form=reg_form)
+
+@auth_bp.route("/change_password", methods=["GET", "POST"])
+@login_required
+def change_password():
+    """Change current user password."""
+    
+    chg_pass: ChgPasswForm = ChgPasswForm()
+
+    if chg_pass.validate_on_submit():
+        with dbSession() as db_session:
+            user = db_session.get(User, session["user_id"])
+
+            if check_password_hash(user.password, chg_pass.old_password.data):
+                user.password = generate_password_hash(chg_pass.password.data)
+                db_session.commit()
+                session.clear()
+                flash("Password changed.")
+                return redirect(url_for("auth.login"))
+            else:
+                flash("Wrong old password!", "error")
+    elif chg_pass.errors:
+        flash_errors = [error for errors in chg_pass.errors.values()
+                        for error in errors]
+        for error in flash_errors:
+            flash(error, "error")
+
+    return render_template("auth/change_password.html", form=chg_pass)

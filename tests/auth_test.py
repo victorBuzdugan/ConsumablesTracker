@@ -1,13 +1,13 @@
 """Authentification blueprint tests (register, login, logout)."""
 
 import pytest
-from flask import session, g
+from flask import g, session
 from flask.testing import FlaskClient
 from sqlalchemy import select
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from tests import client, create_test_users, db_session
-from database import dbSession, User
+from database import User, dbSession
+from tests import admin_logged_in, client, create_test_users, user_logged_in
 
 pytestmark = pytest.mark.auth
 
@@ -66,13 +66,17 @@ def test_failed_registration(
 
 
 def test_successful_registration(client: FlaskClient):
+    user = User(
+        name="__testt_userr_",
+        password="P@ssw0rd"
+    )
     with client:
         client.get("/auth/register")
         data = {
             "csrf_token": g.csrf_token,
-            "name": "__test__user__",
-            "password": "P@ssw0rd",
-            "confirm": "P@ssw0rd"}
+            "name": user.name,
+            "password": user.password,
+            "confirm": user.password}
         response = client.post(
             "/auth/register", data=data, follow_redirects=True)
     assert len(response.history) == 1
@@ -84,15 +88,15 @@ def test_successful_registration(client: FlaskClient):
 
     with dbSession() as db_session:
         test_user = db_session.scalar(
-            select(User).filter_by(name="__test__user__"))
-        assert check_password_hash(test_user.password, "P@ssw0rd")
+            select(User).filter_by(name=user.name))
+        assert check_password_hash(test_user.password, user.password)
         assert test_user.reg_req
 
         db_session.delete(test_user)
         db_session.commit()
 
         test_user = db_session.scalar(
-            select(User).filter_by(name="__test__user__"))
+            select(User).filter_by(name=user.name))
         assert test_user is None
 # endregion
 
@@ -130,12 +134,12 @@ def test_failed_login(
 def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
     with dbSession() as db_session:
         test_user = db_session.scalar(
-                select(User).filter_by(name="___test___user___"))
+                select(User).filter_by(name="__test__user__"))
     with client:
         client.get("/auth/login")
         data = {
             "csrf_token": g.csrf_token,
-            "name": "___test___user___",
+            "name": test_user.name,
             "password": "P@ssw0rd"}
         response = client.post("/auth/login", data=data, follow_redirects=True)
         assert session["user_id"] == test_user.id
@@ -145,7 +149,7 @@ def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
     assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert response.request.path == "/"
-    assert b"Welcome ___test___user___" in response.data
+    assert b"Welcome __test__user__" in response.data
 
     # logout
     with client:
@@ -162,8 +166,8 @@ def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
 def test_failed_login_no_csrf(client: FlaskClient, create_test_users):
     with client:
         data = {
-                "name": "___test___user___",
-                "password": "password"}
+                "name": "__test__user__",
+                "password": "P@ssw0rd"}
         response = client.post("/auth/login", data=data)
     assert response.status_code == 200
     assert b"The CSRF token is missing." in response.data
@@ -173,9 +177,125 @@ def test_failed_login_bad_csrf(client: FlaskClient, create_test_users):
     with client:
         data = {
             "csrf_token": "some_random_text",
-            "name": "___test___user___",
-            "password": "password"}
+            "name": "__test__user__",
+            "password": "P@ssw0rd"}
         response = client.post("/auth/login", data=data)
     assert response.status_code == 200
     assert b"The CSRF token is invalid." in response.data
 # endregion
+
+
+# region: change password
+# also tests @login_required
+def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
+    with client.session_transaction() as session:
+        assert not session.get("user_id")
+        assert not session.get("admin")
+        assert not session.get("user_name")
+    with client:
+        response = client.get("/auth/change_password", follow_redirects=True)
+        assert not session.get("user_id")
+        assert not session.get("admin")
+        assert not session.get("user_name")
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
+    assert response.status_code == 200
+    assert response.request.path == "/auth/login"
+    assert b'type="submit" value="Log In"' in response.data
+    assert b"You have to be logged in..." in response.data
+
+# also tests @login_required
+def test_change_password_landing_page_if_user_logged_in(
+        client: FlaskClient, user_logged_in):
+    with client:
+        response = client.get("/auth/change_password")
+        assert session.get("user_id")
+        assert session.get("admin") is False
+        assert session.get("user_name")
+    assert response.status_code == 200
+    assert b'type="submit" value="Change password"' in response.data
+
+
+# also tests @login_required if admin
+def test_change_password_landing_page_if_admin_logged_in(
+        client: FlaskClient, admin_logged_in):
+    with client:
+        response = client.get("/auth/change_password")
+        assert session.get("user_id")
+        assert session.get("admin")
+        assert session.get("user_name")
+    assert response.status_code == 200
+    assert b'type="submit" value="Change password"' in response.data
+
+
+@pytest.mark.parametrize(
+    ("old_password", "password", "confirm", "flash_message"), (
+    ("", "P@ssw0rdd", "P@ssw0rdd", b"Old password is required!"),
+    ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd",
+        b"Password should have at least 8 characters!"),
+    ("P@ssw0rd", "", "P@ssw0rdd", b"New password is required!"),
+    ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd",
+        b"Password should have at least 8 characters!"),
+    ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa", b"Check password rules!"),
+    ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa", b"Check password rules!"),
+    ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa", b"Check password rules!"),
+    ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa", b"Check password rules!"),
+    ("P@ssw0rd", "P@ssw0rdd", "", b"Confirmation password is required!"),
+    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r",
+        b"Password should have at least 8 characters!"),
+    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd", b"Passwords don&#39;t match!"),
+    ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd", b"Wrong old password!"),
+))
+def test_failed_change_password(
+        client: FlaskClient,
+        user_logged_in,
+        old_password, password, confirm, flash_message):
+    with client:
+        client.get("/auth/change_password")
+        data = {
+            "csrf_token": g.csrf_token,
+            "old_password": old_password,
+            "password": password,
+            "confirm": confirm}
+        response = client.post("/auth/change_password", data=data)
+    assert response.status_code == 200
+    assert flash_message in response.data
+
+
+def test_successful_change_password(client: FlaskClient, user_logged_in):
+    user_name = "__test__user__"
+    old_password = "P@ssw0rd"
+    new_password = "P@ssw0rdd"
+    with client:
+        client.get("/auth/change_password")
+        data = {
+            "csrf_token": g.csrf_token,
+            "old_password": old_password,
+            "password": new_password,
+            "confirm": new_password}
+        response = client.post(
+            "/auth/change_password", data=data, follow_redirects=True)
+        assert not session.get("user_id")
+        assert not session.get("admin")
+        assert not session.get("user_name")
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
+    assert response.status_code == 200
+    assert response.request.path == "/auth/login"
+    assert b"Password changed." in response.data
+
+    with dbSession() as db_session:
+        test_user = db_session.scalar(
+            select(User).filter_by(name=user_name))
+        assert check_password_hash(test_user.password, new_password)
+        test_user.password = generate_password_hash(old_password)
+        db_session.commit()
+        test_user = db_session.scalar(
+            select(User).filter_by(name=user_name))
+        assert check_password_hash(test_user.password, old_password)
+# endregion
+
+
+
+
+# TODO test admin required need a page with @admin_required

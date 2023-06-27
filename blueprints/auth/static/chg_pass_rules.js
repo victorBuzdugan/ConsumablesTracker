@@ -1,10 +1,11 @@
 addEventListener("DOMContentLoaded", (event) => {
-    const username = document.getElementById("name");
-    const usernameAlert = document.getElementById("name-alert");
-    const userRequirements = document.querySelectorAll(".userrequirements");
-    let lengUserBoolean;
-    let userLeng = document.querySelector(".userleng");
-    
+
+    const old_password = document.getElementById("old_password");
+    const old_passwordAlert = document.getElementById("old_password-alert");
+    const old_passwordRequirements = document.querySelectorAll(".old_passwordrequirements");
+    let presentOldPasswordBoolean;
+    let confirmpresent = document.querySelector(".confirmpresent");
+
     const confirm = document.getElementById("confirm");
     const confirmAlert = document.getElementById("confirm-alert");
     const confirmRequirements = document.querySelectorAll(".confirmrequirements");
@@ -22,14 +23,14 @@ addEventListener("DOMContentLoaded", (event) => {
     const specialChars = "!@#$%^&*_=+";
     const numbers = "0123456789";
 
-    userRequirements.forEach((element) => element.classList.add("wrong"));
+    old_passwordRequirements.forEach((element) => element.classList.add("wrong"));
     confirmRequirements.forEach((element) => element.classList.add("wrong"));
     requirements.forEach((element) => element.classList.add("wrong"));
 
-    username.addEventListener("focus", () => {
-        usernameAlert.classList.remove("d-none");
-        if (!username.classList.contains("is-valid")) {
-            username.classList.add("is-invalid");
+    old_password.addEventListener("focus", () => {
+        old_passwordAlert.classList.remove("d-none");
+        if (!old_password.classList.contains("is-valid")) {
+            old_password.classList.add("is-invalid");
         }
     });
     confirm.addEventListener("focus", () => {
@@ -45,37 +46,38 @@ addEventListener("DOMContentLoaded", (event) => {
         }
     });
 
-    username.addEventListener("input", () => {
-        let value = username.value;
-        if (value.length < 3) {
-            lengUserBoolean = false;
-        } else if (value.length > 2) {
-            lengUserBoolean = true;
+    old_password.addEventListener("input", () => {
+        let value = old_password.value;
+
+        if (value.length < 8) {
+            presentOldPasswordBoolean = false;
+        } else if (value.length > 7) {
+            presentOldPasswordBoolean = true;
         }
 
-        if (lengUserBoolean == true) {
-            username.classList.remove("is-invalid");
-            username.classList.add("is-valid");
-            usernameAlert.classList.add("d-none");
+        if (presentOldPasswordBoolean == true) {
+            old_password.classList.remove("is-invalid");
+            old_password.classList.add("is-valid");
+            old_passwordAlert.classList.add("d-none");
 
-            userRequirements.forEach((element) => {
+            old_passwordRequirements.forEach((element) => {
                 element.classList.remove("wrong");
                 element.classList.add("good");
             });
         } else {
-            username.classList.remove("is-valid");
-            username.classList.add("is-invalid");
+            old_password.classList.remove("is-valid");
+            old_password.classList.add("is-invalid");
 
-            if (lengUserBoolean == false) {
-                userLeng.classList.add("wrong");
-                userLeng.classList.remove("good");
+            if (presentOldPasswordBoolean == false) {
+                confirmpresent.classList.add("wrong");
+                confirmpresent.classList.remove("good");
             } else {
-                userLeng.classList.add("good");
-                userLeng.classList.remove("wrong");
+                confirmpresent.classList.add("good");
+                confirmpresent.classList.remove("wrong");
             }
         }
     });
-    
+
     confirm.addEventListener("input", () => {
         let value = confirm.value;
         let passvalue = password.value;
@@ -189,10 +191,10 @@ addEventListener("DOMContentLoaded", (event) => {
     });
 
     
-    username.addEventListener("blur", () => {
-        usernameAlert.classList.add("d-none");
+    old_password.addEventListener("blur", () => {
+        old_passwordAlert.classList.add("d-none");
     });
-    
+
     confirm.addEventListener("blur", () => {
         confirmAlert.classList.add("d-none");
     });
