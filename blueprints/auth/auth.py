@@ -1,4 +1,4 @@
-"""Authentification module."""
+"""Authentification blueprint."""
 
 from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_wtf import FlaskForm
@@ -103,7 +103,7 @@ def login():
                     session["admin"] = user.admin
                     session["user_name"] = user.name
                     flash(f"Welcome {user.name}")
-                    return redirect(url_for("index"))
+                    return redirect(url_for("main.index"))
                 else:
                     flash("Your registration is pending. Contact an admin.",
                           "warning")

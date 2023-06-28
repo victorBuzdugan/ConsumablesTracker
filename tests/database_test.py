@@ -88,6 +88,7 @@ def test_user_creation(db_session: Session):
     assert db_user.in_use is True
     assert db_user.done_inv is True
     assert db_user.reg_req is True
+    assert db_user.req_inv is False
     assert db_user.details is None
 
 
@@ -115,6 +116,7 @@ def test_bulk_user_insertion(db_session: Session):
         assert user.in_use is True
         assert user.done_inv is True
         assert user.reg_req is True
+        assert user.req_inv is False
         assert user.details is None
 
 

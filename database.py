@@ -43,6 +43,8 @@ class User(Base):
     :param admin: user has administrator rights
     :param in_use: user can still be used; not obsolete
     :param done_inv: user has sent the inventory
+    :param reg_req: user has requested registration
+    :param req_inv: user has requested inventorying
     :param details: user details, extra info
     """
     password: Mapped[str] = mapped_column(repr=False)
@@ -52,6 +54,7 @@ class User(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
     done_inv: Mapped[bool] = mapped_column(default=True)
     reg_req: Mapped[bool] = mapped_column(default=True)
+    req_inv: Mapped[bool] = mapped_column(default=False)
     details: Mapped[Optional[str]] = mapped_column(default=None, repr=False)
 
 

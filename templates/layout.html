@@ -14,7 +14,7 @@
 <body>
     <nav class="bg-light border navbar navbar-expand-md navbar-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/"><span class="blue">C</span><span class="red">$</span><span class="yellow">5</span><span class="green">0</span> <span class="red">Finance</span></a>
+            <a class="navbar-brand " href="/">Consumables Tracker</a>
             <button aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbar" data-bs-toggle="collapse" type="button">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -42,36 +42,37 @@
     </nav>
 
     
-    <header>
+    <header class="text-center">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% for category, message in messages %}
                 {% if category == "error" %}
-                    <div class="alert alert-danger mb-0 text-center" role="alert">
-                        {{ message }}
-                    </div>
+                    <div class="alert alert-danger mb-1 alert-dismissible fade show" role="alert">
                 {% elif category == "warning" %}
-                    <div class="alert alert-warning mb-0 text-center" role="alert">
-                        {{ message }}
-                    </div>
+                    <div class="alert alert-warning mb-1 alert-dismissible fade show" role="alert">
                 {% elif category == "message" %}
-                    <div class="alert alert-success mb-0 text-center" role="alert">
-                        {{ message }}
-                    </div>
+                    <div class="alert alert-success mb-1 alert-dismissible fade show" role="alert">
                 {% else %}
-                    <div class="alert alert-info mb-0 text-center" role="alert">
-                        {{ message }}
-                    </div>
+                    <div class="alert alert-info mb-1 alert-dismissible fade show" role="alert">
                 {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close d-inline-block" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
             {% endfor %}
         {% endwith %}
-    </header>
+        
+        <div class="my-3 ">
+            <h2>{% block page_title %}{% endblock %}</h2>
+        </div>
 
-    <main class="container-fluid py-5 text-center">
-        {% block main %}{% endblock %}
+    </header>
+    
+    <main class="container-fluid py-3 text-center">
+        {% block main %}
+        {% endblock %}
     </main>
 
-    <footer class="mb-5 small text-center text-muted">
-        Data provided by <a href="https://iexcloud.io/">IEX</a>
+    <footer class="mt-4 small text-center text-muted">
+        © {{ now.year }} Copyright
     </footer>
 </body>
 </html>

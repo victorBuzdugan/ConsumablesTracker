@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+
+{% block title %}Main{% endblock %}
+
+{% block page_title %}Index{% endblock %}
+
+{% block main %}
+
+
+    <div class="card mx-auto mb-3" style="max-width: 40rem;">
+        <div class="card-header">
+            <strong>User dashboard</strong>
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Logged in as <span class="text-secondary">{{ session.user_name }}</span></li>
+            <li class="list-group-item">You have <span class="text-secondary">{{ stats.products }} products</span> assigned</li>
+            <li class="list-group-item">
+                {% if stats.req_inv %}
+                    <span class="text-warning">You requested a inventory check</span>
+                {% else %}
+                    {% if stats.done_inv %}
+                        <span class="text-secondary">Inventory check not required</span>
+                    {% else %}
+                        {# TODO link to inventory check #}
+                        <span class="text-danger">Check inventory</span>
+                    {% endif %}
+                {% endif %}
+            </li>
+        </ul>
+    </div>
+
+    {% if session.admin %}
+        <div class="card mx-auto mb-3" style="max-width: 40rem;">
+            <div class="card-header">
+                <strong>Admin dashboard</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    {% if admin.req_inv_users %}
+                        {# TODO link to users #}
+                        <span class="text-danger">{{ admin.req_inv_users }} requested a inventory check</span>
+                    {% else %}
+                        No user requested a inventory check
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    {% if admin.done_inv_users %}
+                        {# TODO link to users #}
+                        <span class="text-warning">{{ admin.done_inv_users }} have to ckeck inventory</span>
+                    {% else %}
+                        No user have to check inventory
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    {% if admin.reg_req_users %}
+                        {# TODO link to users #}
+                        <span class="text-danger">{{ admin.reg_req_users }} requested registration</span>
+                    {% else %}
+                        No user requested registration
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+
+        <div class="card mx-auto mb-3" style="max-width: 40rem;">
+            <div class="card-header">
+                <strong>Statistics</strong>
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    {# TODO link to users #}
+                    There are <span class="text-secondary">{{ admin.in_use_users }} users</span> in use
+                </li>
+                <li class="list-group-item">
+                    {# TODO link to categories #}
+                    There are <span class="text-secondary">{{ admin.in_use_categories }} categories</span> in use
+                </li>
+                <li class="list-group-item">
+                    {# TODO link to suppliers #}
+                    There are <span class="text-secondary">{{ admin.in_use_suppliers }} suppliers</span> in use
+                </li>
+                <li class="list-group-item">
+                    {# TODO link to products #}
+                    There are <span class="text-secondary">{{ admin.in_use_products }} products</span> in use
+                </li>
+            </ul>
+        </div>
+    {% endif %}
+    
+{% endblock %}
