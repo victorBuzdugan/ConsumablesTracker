@@ -1,89 +1,29 @@
-"""Test with rollbacks SQLAlchemy table mapping."""
-
-from typing import Generator
+"""Test SQLAlchemy tables mapping."""
 
 import pytest
-from sqlalchemy import insert, select, event
+from sqlalchemy import insert, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, sessionmaker
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import User, Category, Supplier, Product, engine
+from database import dbSession, User, Category, Supplier, Product
+from tests import create_test_db
 
 
 pytestmark = pytest.mark.db
 
 
-# region: required for SQLite to handle SAVEPOINTs for rollback after tests
-@event.listens_for(engine, "connect")
-def do_connect(dbapi_connection, connection_record):
-    # disable pysqlite's emitting of the BEGIN statement entirely.
-    # also stops it from emitting COMMIT before any DDL.
-    dbapi_connection.isolation_level = None
-
-
-@event.listens_for(engine, "begin")
-def do_begin(conn):
-    # emit our own BEGIN
-    conn.exec_driver_sql("BEGIN")
-# endregion
-
-
-@pytest.fixture(scope="module")
-def db_session() -> Generator[Session, None, None]:
-    """Database connection fixture for testing (with rollback)."""
-    TestSession = sessionmaker()
-    # connect to the database using the database.py engine
-    connection = engine.connect()
-    # begin a non-ORM transaction
-    transaction = connection.begin()
-    # bind an individual Session to the connection, selecting
-    # "create_savepoint" join_transaction_mode
-    session = TestSession(
-        bind=connection, join_transaction_mode="create_savepoint")
-    yield session
-    session.close()
-    # rollback - everything that happened with the
-    # Session above (including calls to commit())
-    # is rolled back.
-    transaction.rollback()
-    # return connection to the Engine
-    connection.close()
-
-
-@pytest.fixture(scope="module")
-def default_user_category_supplier(db_session: Session):
-    """Create a default user, category and supplier."""
-    test_user = db_session.execute(
-        select(User).filter_by(name="__test__user__test__")).scalar_one()
-    test_category = db_session.execute(
-        select(Category).filter_by(name="__test__category__")).scalar_one()
-    test_supplier = db_session.execute(
-        select(Supplier).filter_by(name="__test__supplier__")).scalar_one()
-    return test_user, test_category, test_supplier
-
-
 # region: test "users" table
-# region CRUD: create/insert and read
-def test_user_creation(db_session: Session):
-    """Test default user creation and database insertion.
-
-    It's expected that a user should be created with the default parameters:
-    products: empty list
-    admin: false
-    in_use: True
-    done_inv: True
-    details: None
-    """
-    test_user = User("__test__user__test__", "test_password")
-    db_session.add(test_user)
-    db_session.commit()
-    assert test_user.id is not None, "test_user should have an id after commit"
-    db_user = db_session.get(User, test_user.id)
-    assert db_user.name == "__test__user__test__", "Wrong name"
-    assert db_user.password == "test_password"
-    assert db_user.password != "some_other_password"
-    assert db_user.products == [], "User shouldn't have products assigned"
+def test_user_creation(create_test_db):
+    """Test default user creation and database insertion."""
+    user = User("user11", generate_password_hash("P@ssw0rd"))
+    with dbSession() as db_session:
+        db_session.add(user)
+        db_session.commit()
+        assert user.id is not None
+        db_user = db_session.get(User, user.id)
+        assert db_user.products == []
+    assert db_user.name == user.name
+    assert check_password_hash(db_user.password, "P@ssw0rd")
     assert db_user.admin is False
     assert db_user.in_use is True
     assert db_user.done_inv is True
@@ -92,483 +32,508 @@ def test_user_creation(db_session: Session):
     assert db_user.details is None
 
 
-def test_admin_creation(db_session: Session):
+def test_change_username(create_test_db):
+    with dbSession() as db_session:
+        user = db_session.scalar(
+            select(User).filter_by(name="user11"))
+        user.name = "user1"
+        assert user in db_session.dirty
+        db_session.commit()
+        db_user = db_session.get(User, user.id)
+    assert db_user.name == "user1"
+
+
+def test_change_password(create_test_db):
+    with dbSession() as db_session:
+        user = db_session.scalar(
+            select(User).filter_by(name="user1"))
+        user.password = generate_password_hash("P@ssw0rd1")
+        assert user in db_session.dirty
+        db_session.commit()
+        db_user = db_session.get(User, user.id)
+    assert check_password_hash(db_user.password, "P@ssw0rd1")
+
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_no_name(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(User(None, "password"))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_no_password(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(User("name", None))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_username_duplicate(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(User("user1", "passw"))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+def test_bulk_user_insertion(create_test_db):
+    values = [{"name": f"user{no}", 
+               "password": generate_password_hash(f"P@ssw0rd{no}")}
+              for no in range(2,7)]
+    with dbSession() as db_session:
+        db_session.execute(insert(User), values)
+        db_session.commit()
+        users = db_session.scalars(
+            select(User).where(User.name.like("user%"))).all()
+        assert len(users) == 6
+        for user in users:
+            assert check_password_hash(user.password, f"P@ssw0rd{user.id}")
+            assert user.products == []
+            assert user.admin is False
+            assert user.in_use is True
+            assert user.done_inv is True
+            assert user.reg_req is True
+            assert user.req_inv is False
+            assert user.details is None
+
+
+def test_admin_creation(create_test_db):
     """Test user creation with admin credentials (admin: True)"""
-    test_user = User("__test__adminn__", "test_password", admin=True)
-    db_session.add(test_user)
-    db_session.commit()
-    assert db_session.get(User, test_user.id).admin is True
-
-
-def test_bulk_user_insertion(db_session: Session):
-    values = [{"name": f"test__user{no}", 
-               "password": generate_password_hash("some_password")}
-              for no in range(6)]
-    db_session.execute(insert(User), values)
-    db_session.commit()
-    users = db_session.scalars(
-        select(User).where(User.name.like("test__user%"))).all()
-    assert len(users) == 6
-    for user in users:
-        assert check_password_hash(user.password, "some_password")
-        assert user.products == []
-        assert user.admin is False
-        assert user.in_use is True
-        assert user.done_inv is True
-        assert user.reg_req is True
-        assert user.req_inv is False
-        assert user.details is None
-
-
-@pytest.mark.xfail(raises=IntegrityError)
-def test_username_duplicate(db_session: Session):
-    try:
-        db_session.add(User("__test__user__test__", "passw"))
+    user = User(
+        "admin1",
+        generate_password_hash("P@ssw0rd"),
+        admin=True)
+    with dbSession() as db_session:
+        db_session.add(user)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+        assert db_session.get(User, user.id).admin is True
 
 
-@pytest.mark.xfail(raises=IntegrityError)
-def test_no_name(db_session: Session):
-    try:
-        db_session.add(User(None, "password"))
+def test_delete_user(create_test_db):
+    with dbSession() as db_session:
+        user = db_session.scalar(
+            select(User).filter_by(name="user6"))
+        db_session.delete(user)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
-
-
-@pytest.mark.xfail(raises=IntegrityError)
-def test_no_password(db_session: Session):
-    try:
-        db_session.add(User("name", None))
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
-# endregion
-
-
-# region CRUD: read and update
-def test_change_username(db_session: Session):
-    test_user = db_session.execute(
-        select(User).filter_by(name="__test__adminn__")).scalar_one()
-    test_user.name = "__test__admin__test__"
-    assert test_user in db_session.dirty
-    # autoflush after select(get) statement
-    db_user = db_session.get(User, test_user.id)
-    assert db_user.name == "__test__admin__test__"
-
-
-def test_change_password(db_session: Session):
-    test_user = db_session.execute(
-        select(User).filter_by(name="__test__user__test__")).scalar_one()
-    test_user.password = generate_password_hash("other_test_password")
-    assert test_user in db_session.dirty
-    # autoflush after select(get) statement
-    db_user = db_session.get(User, test_user.id)
-    assert check_password_hash(db_user.password, "other_test_password")
-# endregion
-
-
-# region CRUD: read and delete
-def test_delete_user(db_session: Session):
-    test_user = db_session.execute(
-        select(User).filter_by(name="test__user0")).scalar_one()
-    db_session.delete(test_user)
-    db_user = db_session.execute(
-        select(User).filter_by(name="test__user0")).scalar()
-    assert db_user is None
-# endregion
+        db_user = db_session.get(User, user.id)
+        assert db_user is None
 # endregion
 
 
 # region: test "categories" table
-def test_category_creation(db_session: Session):
-    test_category = Category("__test__categoryy__",
-                             description="Some description")
-    db_session.add(test_category)
-    db_session.commit()
-    assert test_category.id is not None, \
-            "test_category should have an id after commit"
-    db_category = db_session.get(Category, test_category.id)
-    assert db_category.name == "__test__categoryy__"
-    assert db_category.products == []
-    assert db_category.in_use is True
-    assert db_category.description == "Some description"
+def test_category_creation(create_test_db):
+    category = Category(
+        "category11",
+        description="Some description")
+    with dbSession() as db_session:
+        db_session.add(category)
+        db_session.commit()
+        assert category.id is not None
+        db_category = db_session.get(Category, category.id)
+        assert db_category.name == category.name
+        assert db_category.products == []
+        assert db_category.in_use is True
+        assert db_category.description == category.description
 
 
-def test_bulk_category_insertion(db_session: Session):
-    values = [{"name": f"test__category{no}"} for no in range(6)]
-    db_session.execute(insert(Category), values)
-    db_session.commit()
-    categories = db_session.scalars(
-        select(Category).where(Category.name.like("test__category%"))).all()
-    assert len(categories) == 6
-    for category in categories:
-        assert category.products == []
-        assert category.in_use is True
-        assert category.description is None
+def test_change_category_name(create_test_db):
+    with dbSession() as db_session:
+        category = db_session.scalar(
+            select(Category).filter_by(name="category11"))
+        category.name = "category1"
+        assert category in db_session.dirty
+        db_session.commit()
+        db_category = db_session.get(Category, category.id)
+        assert db_category.name == "category1"
+        
+
+@pytest.mark.xfail(raises=IntegrityError)
+def test_category_duplicate(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(Category("category1"))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_category_duplicate(db_session: Session):
-    try:
-        db_session.add(Category("__test__categoryy__"))
+def test_category_no_name(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(Category(None))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+def test_bulk_category_insertion(create_test_db):
+    values = [{"name": f"category{no}"} for no in range(2,7)]
+    with dbSession() as db_session:
+        db_session.execute(insert(Category), values)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+        categories = db_session.scalars(
+            select(Category).where(Category.name.like("category%"))).all()
+        assert len(categories) == 6
+        for category in categories:
+            assert category.products == []
+            assert category.in_use is True
+            if category.id == 1:
+                continue
+            assert category.description is None
 
 
-@pytest.mark.xfail(raises=IntegrityError)
-def test_category_no_name(db_session: Session):
-    try:
-        db_session.add(Category(None))
+def test_delete_category(create_test_db):
+    with dbSession() as db_session:
+        category = db_session.scalar(
+            select(Category).filter_by(name="category6"))
+        db_session.delete(category)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
-
-
-def test_change_category_name(db_session: Session):
-    test_category = db_session.execute(
-        select(Category).filter_by(name="__test__categoryy__")).scalar_one()
-    test_category.name = "__test__category__"
-    assert test_category in db_session.dirty
-    # autoflush after select(get) statement
-    db_category = db_session.get(Category, test_category.id)
-    assert db_category.name == "__test__category__"
-
-
-def test_delete_category(db_session: Session):
-    test_category = db_session.execute(
-        select(Category).filter_by(name="test__category0")).scalar_one()
-    db_session.delete(test_category)
-    db_category = db_session.execute(
-        select(Category).filter_by(name="test__category0")).scalar()
+        db_category = db_session.scalar(
+            select(Category).filter_by(name="category6"))
     assert db_category is None
 # endregion
 
 
 # region: test "suppliers" table
-def test_supplier_creation(db_session: Session):
-    test_supplier = Supplier("__test__supplierr__", details="Some description")
-    db_session.add(test_supplier)
-    db_session.commit()
-    assert test_supplier.id is not None,\
-            "__test__supplierr__ should have an id after commit"
-    db_supplier = db_session.get(Supplier, test_supplier.id)
-    assert db_supplier.name == "__test__supplierr__"
-    assert db_supplier.products == []
-    assert db_supplier.in_use is True
-    assert db_supplier.details == "Some description"
+def test_supplier_creation(create_test_db):
+    supplier = Supplier("supplier11", details="Some description")
+    with dbSession() as db_session:
+        db_session.add(supplier)
+        db_session.commit()
+        assert supplier.id is not None
+        db_supplier = db_session.get(Supplier, supplier.id)
+        assert db_supplier.name == supplier.name
+        assert db_supplier.products == []
+        assert db_supplier.in_use is True
+        assert db_supplier.details == supplier.details
 
 
-def test_bulk_supplier_insertion(db_session: Session):
-    values = [{"name": f"test__supplier{no}"} for no in range(6)]
-    db_session.execute(insert(Supplier), values)
-    db_session.commit()
-    suppliers = db_session.scalars(
-        select(Supplier).where(Supplier.name.like("test__supplier%"))).all()
-    assert len(suppliers) == 6
-    for supplier in suppliers:
-        assert supplier.products == []
-        assert supplier.in_use is True
-        assert supplier.details is None
+def test_change_supplier_name(create_test_db):
+    with dbSession() as db_session:
+        supplier = db_session.scalar(
+            select(Supplier).filter_by(name="supplier11"))
+        supplier.name = "supplier1"
+        assert supplier in db_session.dirty
+        db_session.commit()
+        db_supplier = db_session.get(Supplier, supplier.id)
+        assert db_supplier.name == "supplier1"
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_supplier_duplicate(db_session: Session):
-    try:
-        db_session.add(Supplier("__test__supplierr__"))
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_supplier_duplicate(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(Supplier("supplier1"))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_supplier_no_name(db_session: Session):
-    try:
-        db_session.add(Supplier(None))
+def test_supplier_no_name(create_test_db):
+    with dbSession() as db_session:
+        try:
+            db_session.add(Supplier(None))
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+def test_bulk_supplier_insertion(create_test_db):
+    values = [{"name": f"supplier{no}"} for no in range(2,7)]
+    with dbSession() as db_session:
+        db_session.execute(insert(Supplier), values)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+        suppliers = db_session.scalars(
+            select(Supplier).where(Supplier.name.like("supplier%"))).all()
+        assert len(suppliers) == 6
+        for supplier in suppliers:
+            assert supplier.products == []
+            assert supplier.in_use is True
+            if supplier.id == 1:
+                continue
+            assert supplier.details is None
 
 
-def test_change_supplier_name(db_session: Session):
-    test_supplier = db_session.execute(
-        select(Supplier).filter_by(name="__test__supplierr__")).scalar_one()
-    test_supplier.name = "__test__supplier__"
-    assert test_supplier in db_session.dirty
-    # autoflush after select(get) statement
-    db_supplier = db_session.get(Supplier, test_supplier.id)
-    assert db_supplier.name == "__test__supplier__"
-
-
-def test_delete_supplier(db_session: Session):
-    test_supplier = db_session.execute(
-        select(Supplier).filter_by(name="test__supplier0")).scalar_one()
-    db_session.delete(test_supplier)
-    db_supplier = db_session.execute(
-        select(Supplier).filter_by(name="test__supplier0")).scalar()
+def test_delete_supplier(create_test_db):
+    with dbSession() as db_session:
+        supplier = db_session.scalar(
+            select(Supplier).filter_by(name="supplier6"))
+        db_session.delete(supplier)
+        db_session.commit()
+        db_supplier = db_session.scalar(
+            select(Supplier).filter_by(name="supplier6"))
     assert db_supplier is None
 # endregion
 
 
 # region: test "products" table
-def test_product_creation(db_session: Session, default_user_category_supplier):
-    test_product = Product(
-        name="__test__productt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=10,
-        ord_qty=20,
-        critical=True
-    )
-    db_session.add(test_product)
-    db_session.commit()
-    assert test_product.id is not None,\
-            "__test__productt__ should have an id after commit"
-    db_product = db_session.get(Product, test_product.id)
-    assert db_product.name == "__test__productt__"
-    assert db_product.description == "Some description"
-    assert db_product.responsable.name == "__test__user__test__"
-    assert db_product.category.name == "__test__category__"
-    assert db_product.supplier.name == "__test__supplier__"
-    assert db_product.meas_unit == "measunit"
-    assert db_product.min_stock == 10
-    assert db_product.ord_qty == 20
-    assert db_product.to_order is False
-    assert db_product.critical is True
-    assert db_product.in_use is True
+def test_product_creation(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="product11",
+            description="Some description1",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=10,
+            ord_qty=20,
+            critical=False)
+        db_session.add(product)
+        db_session.commit()
+        assert product.id is not None
+        db_product = db_session.get(Product, product.id)
+        assert db_product.name == "product11"
+        assert db_product.description == "Some description1"
+        assert db_product.responsable.name == "user1"
+        assert db_product.category.name == "category1"
+        assert db_product.supplier.name == "supplier1"
+        assert db_product.meas_unit == "measunit"
+        assert db_product.min_stock == 10
+        assert db_product.ord_qty == 20
+        assert db_product.to_order is False
+        assert db_product.critical is False
+        assert db_product.in_use is True
 
 
-def test_bulk_product_insertion(db_session: Session,
-                                default_user_category_supplier):
-    values = [
-        {"name": f"test__product{no}",
-            "description": "Some description",
-            "responsable_id": default_user_category_supplier[0].id,
-            "category_id": default_user_category_supplier[1].id,
-            "supplier_id": default_user_category_supplier[2].id,
-            "meas_unit": "measunit",
-            "min_stock": 10,
-            "ord_qty": 20} for no in range(6)
-        ]
-    db_session.execute(insert(Product), values)
-    db_session.commit()
-    products = db_session.scalars(
-        select(Product).where(Product.name.like("test__product%"))).all()
-    assert len(products) == 6
-    for product in products:
-        assert product.description == "Some description"
-        assert product.responsable.name == "__test__user__test__"
-        assert product.category.name == "__test__category__"
-        assert product.supplier.name == "__test__supplier__"
-        assert product.meas_unit == "measunit"
-        assert product.min_stock == 10
-        assert product.ord_qty == 20
-        assert product.to_order is False
-        assert product.critical is False
-        assert product.in_use is True
+def test_change_product_name(create_test_db):
+    with dbSession() as db_session:
+        product = db_session.scalar(
+            select(Product).filter_by(name="product11"))
+        product.name = "product1"
+        assert product in db_session.dirty
+        db_session.commit()
+        db_product = db_session.get(Product, product.id)
+        assert db_product.name == "product1"
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_duplicate_name(db_session: Session,
-                                default_user_category_supplier):
-    test_product = Product(
-        name="__test__productt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=1,
-        ord_qty=1
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_duplicate_name(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="product1",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=1,
+            ord_qty=1
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_name(db_session: Session,
-                         default_user_category_supplier):
-    test_product = Product(
-        name=None,
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=2,
-        ord_qty=2
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_name(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name=None,
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=2,
+            ord_qty=2
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_description(db_session: Session,
-                                default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description=None,
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=3,
-        ord_qty=3
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_description(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description=None,
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=3,
+            ord_qty=3
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_responsable(db_session: Session,
-                                default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=None,
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=4,
-        ord_qty=4
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_responsable(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=None,
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=4,
+            ord_qty=4
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_category(db_session: Session,
-                             default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=None,
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=5,
-        ord_qty=5,
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_category(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=None,
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=5,
+            ord_qty=5,
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_supplier(db_session: Session,
-                             default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=None,
-        meas_unit="measunit",
-        min_stock=6,
-        ord_qty=6
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_supplier(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=None,
+            meas_unit="measunit",
+            min_stock=6,
+            ord_qty=6
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_meas_unit(db_session: Session,
-                              default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit=None,
-        min_stock=7,
-        ord_qty=7
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_meas_unit(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit=None,
+            min_stock=7,
+            ord_qty=7
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_min_stock(db_session: Session,
-                              default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=None,
-        ord_qty=8,
-    )
-    try:
-        db_session.add(test_product)
-        db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+def test_product_no_min_stock(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=None,
+            ord_qty=8,
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
 
 
 @pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_ord_qty(db_session: Session,
-                            default_user_category_supplier):
-    test_product = Product(
-        name="__test__producttt__",
-        description="Some description",
-        responsable=default_user_category_supplier[0],
-        category=default_user_category_supplier[1],
-        supplier=default_user_category_supplier[2],
-        meas_unit="measunit",
-        min_stock=9,
-        ord_qty=None,
-    )
-    try:
-        db_session.add(test_product)
+def test_product_no_ord_qty(create_test_db):
+    with dbSession() as db_session:
+        product = Product(
+            name="__test__producttt__",
+            description="Some description",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="measunit",
+            min_stock=9,
+            ord_qty=None,
+        )
+        try:
+            db_session.add(product)
+            db_session.commit()
+        except IntegrityError:
+            db_session.rollback()
+
+
+def test_bulk_product_insertion(create_test_db):
+    with dbSession() as db_session:
+        values_user1 = [
+            {"name": f"product{no}",
+                "description": f"Some description{no}",
+                "responsable_id": 1,
+                "category_id": 1,
+                "supplier_id": 1,
+                "meas_unit": "measunit",
+                "min_stock": 10,
+                "ord_qty": 20} for no in range(2,7)
+            ]
+        db_session.execute(insert(Product), values_user1)
         db_session.commit()
-    except IntegrityError:
-        db_session.rollback()
+        products = db_session.scalars(
+            select(Product).where(Product.name.like("product%"))).all()
+        assert len(products) == 6
+        for product in products:
+            assert product.description == f"Some description{product.id}"
+            assert product.responsable.name == "user1"
+            assert product.category.name == "category1"
+            assert product.supplier.name == "supplier1"
+            assert product.meas_unit == "measunit"
+            assert product.min_stock == 10
+            assert product.ord_qty == 20
+            assert product.to_order is False
+            assert product.critical is False
+            assert product.in_use is True
 
 
-def test_change_product_name(db_session: Session):
-    test_product = db_session.execute(
-        select(Product).filter_by(name="__test__productt__")).scalar_one()
-    test_product.name = "__test__product__"
-    assert test_product in db_session.dirty
-    # autoflush after select(get) statement
-    db_product = db_session.get(Product, test_product.id)
-    assert db_product.name == "__test__product__"
-
-
-def test_delete_product(db_session: Session):
-    test_product = db_session.execute(
-        select(Product).filter_by(name="test__product0")).scalar_one()
-    db_session.delete(test_product)
-    db_product = db_session.execute(
-        select(Product).filter_by(name="test__product0")).scalar()
-    assert db_product is None
+def test_delete_product(create_test_db):
+    with dbSession() as db_session:
+        product = db_session.scalar(
+            select(Product).filter_by(name="product6"))
+        db_session.delete(product)
+        db_session.commit()
+        db_product = db_session.scalar(
+            select(Product).filter_by(name="product6"))
+        assert db_product is None
 # endregion

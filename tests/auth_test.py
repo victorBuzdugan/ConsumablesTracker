@@ -1,4 +1,4 @@
-"""Authentification blueprint tests (register, login, logout)."""
+"""Authentification blueprint tests."""
 
 import pytest
 from flask import g, session
@@ -7,7 +7,9 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import User, dbSession
-from tests import admin_logged_in, client, create_test_users, user_logged_in
+from tests import (admin_logged_in, client, create_test_categories,
+                   create_test_db, create_test_suppliers, create_test_users,
+                   user_logged_in, create_test_products)
 
 pytestmark = pytest.mark.auth
 
@@ -47,11 +49,10 @@ def test_clear_session_if_user_logged_in(client: FlaskClient):
     ("aaa", "#1aaaaaa", "#1aaaaaa", b"Check password rules!"),
     ("aaa", "#Aaaaaaa", "#Aaaaaaa", b"Check password rules!"),
     ("aaa", "1Aaaaaaa", "1Aaaaaaa", b"Check password rules!"),
-    ("reg_req_user", "P@ssw0rd", "P@ssw0rd", b"Username allready exists..."),
+    ("user5", "P@ssw0rd", "P@ssw0rd", b"Username allready exists..."),
 ))
 def test_failed_registration(
         client: FlaskClient,
-        create_test_users,
         name, password, confirm, flash_message):
     with client:
         client.get("/auth/register")
@@ -113,13 +114,13 @@ def test_login_landing_page(client: FlaskClient):
     ("a", "", b"Password is required!"),
     ("a", "a", b"Wrong username or password!"),
     ("a", "password", b"Wrong username or password!"),
-    ("reg_req_user", "a", b"Wrong username or password!"),
-    ("not_in_use_user", "P@ssw0rd", b"This user is not in use anymore!"),
-    ("reg_req_user", "P@ssw0rd",
+    ("user5", "a", b"Wrong username or password!"),
+    ("user6", "Q!666666", b"This user is not in use anymore!"),
+    ("user5", "Q!555555",
         b"Your registration is pending. Contact an admin."),
 ))
 def test_failed_login(
-        client: FlaskClient, create_test_users, name, password, flash_message):
+        client: FlaskClient, name, password, flash_message):
     with client:
         client.get("/auth/login")
         data = {
@@ -131,16 +132,16 @@ def test_failed_login(
     assert flash_message in response.data
 
 
-def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
+def test_succesfull_login_and_logout(client: FlaskClient):
     with dbSession() as db_session:
         test_user = db_session.scalar(
-                select(User).filter_by(name="__test__user__"))
+                select(User).filter_by(name="user4"))
     with client:
         client.get("/auth/login")
         data = {
             "csrf_token": g.csrf_token,
             "name": test_user.name,
-            "password": "P@ssw0rd"}
+            "password": "Q!444444"}
         response = client.post("/auth/login", data=data, follow_redirects=True)
         assert session["user_id"] == test_user.id
         assert session["admin"] == test_user.admin
@@ -149,7 +150,7 @@ def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
     assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert response.request.path == "/"
-    assert b"Welcome __test__user__" in response.data
+    assert b"Welcome user4" in response.data
 
     # logout
     with client:
@@ -163,21 +164,21 @@ def test_succesfull_login_and_logout(client: FlaskClient, create_test_users):
     assert response.request.path == "/auth/login"
 
 
-def test_failed_login_no_csrf(client: FlaskClient, create_test_users):
+def test_failed_login_no_csrf(client: FlaskClient):
     with client:
         data = {
-                "name": "__test__user__",
+                "name": "user4",
                 "password": "P@ssw0rd"}
         response = client.post("/auth/login", data=data)
     assert response.status_code == 200
     assert b"The CSRF token is missing." in response.data
 
 
-def test_failed_login_bad_csrf(client: FlaskClient, create_test_users):
+def test_failed_login_bad_csrf(client: FlaskClient):
     with client:
         data = {
             "csrf_token": "some_random_text",
-            "name": "__test__user__",
+            "name": "user4",
             "password": "P@ssw0rd"}
         response = client.post("/auth/login", data=data)
     assert response.status_code == 200
@@ -263,9 +264,9 @@ def test_failed_change_password(
 
 
 def test_successful_change_password(client: FlaskClient, user_logged_in):
-    user_name = "__test__user__"
-    old_password = "P@ssw0rd"
-    new_password = "P@ssw0rdd"
+    user_name = "user4"
+    old_password = "Q!444444"
+    new_password = "Q!4444444"
     with client:
         client.get("/auth/change_password")
         data = {

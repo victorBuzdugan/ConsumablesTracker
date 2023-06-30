@@ -21,12 +21,6 @@ def inject_now():
 app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)
 
-# @app.route("/")
-# @login_required
-# def index():
-#     """Index page."""
-#     return render_template("index.html")
-
 
 # with app.test_request_context():
 #     print(app.url_map)
