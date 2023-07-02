@@ -108,8 +108,10 @@ def admin_logged_in(client: FlaskClient):
 def create_test_categories():
     """Insert into db a set of test categories."""
     categories = []
-    categories.append(Category("Household", description="Household consumables"))
-    categories.append(Category("Personal", description="Personal consumables"))
+    categories.append(Category("Household",
+                               description="Household consumables"))
+    categories.append(Category("Personal",
+                               description="Personal consumables"))
     categories.append(Category("Electonics"))
     categories.append(Category("Kids"))
     categories.append(Category("Health"))

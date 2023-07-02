@@ -11,6 +11,7 @@ main_bp = Blueprint("main",
                     __name__,
                     template_folder="templates")
 
+
 @main_bp.route("/")
 @login_required
 def index():
@@ -31,24 +32,21 @@ def index():
             done_inv_users = db_session.scalars(
                 select(User.name).filter_by(done_inv=False)).all()
             admin["done_inv_users"] = ", ".join(done_inv_users)
-            
+
             reg_req_users = db_session.scalars(
                 select(User.name).filter_by(reg_req=True)).all()
             admin["reg_req_users"] = ", ".join(reg_req_users)
 
-            in_use_users = db_session.scalars(
-                select(User.name).filter_by(in_use=True)).all()
-            in_use_categories = db_session.scalars(
-                select(Category.name).filter_by(in_use=True)).all()
-            in_use_suppliers = db_session.scalars(
-                select(Supplier.name).filter_by(in_use=True)).all()
-            in_use_products = db_session.scalars(
-                select(Product.name).filter_by(in_use=True)).all()
-            
-            admin["in_use_users"] = len(in_use_users)
-            admin["in_use_categories"] = len(in_use_categories)
-            admin["in_use_suppliers"] = len(in_use_suppliers)
-            admin["in_use_products"] = len(in_use_products)
-
+            admin["in_use_users"] = (
+                db_session.query(User).filter_by(in_use=True).count())
+            admin["in_use_categories"] = (
+                db_session.query(Category).filter_by(in_use=True).count())
+            admin["in_use_suppliers"] = (
+                db_session.query(Supplier).filter_by(in_use=True).count())
+            admin["in_use_products"] = (
+                db_session.query(Product).filter_by(in_use=True).count())
+            admin["critical_products"] = (
+                db_session.query(Product).filter_by(
+                    in_use=True, critical=True).count())
 
     return render_template("main/index.html", stats=stats, admin=admin)
