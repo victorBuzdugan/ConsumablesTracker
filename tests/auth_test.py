@@ -295,8 +295,3 @@ def test_successful_change_password(client: FlaskClient, user_logged_in):
             select(User).filter_by(name=user_name))
         assert check_password_hash(test_user.password, old_password)
 # endregion
-
-
-
-
-# TODO test admin required need a page with @admin_required

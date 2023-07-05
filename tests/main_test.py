@@ -1,4 +1,4 @@
-"""main blueprint tests."""
+"""Main blueprint tests."""
 
 import pytest
 from flask import session
@@ -77,7 +77,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
             db_session.commit()
             
 
-def test_index_admin_logged_in_admin_dashboard(client: FlaskClient, admin_logged_in):
+def test_index_admin_logged_in_admin_dashboard_request_inventory(client: FlaskClient, admin_logged_in):
     with client:
         response = client.get("/")
         with dbSession() as db_session:
@@ -100,6 +100,11 @@ def test_index_admin_logged_in_admin_dashboard(client: FlaskClient, admin_logged
             db_session.get(User, 4).req_inv = False
             db_session.commit()
             
+
+def test_index_admin_logged_in_admin_dashboard_users_check_inventory(client: FlaskClient, admin_logged_in):
+    with client:
+        response = client.get("/")
+        with dbSession() as db_session:
             response = client.get("/")
             assert "No user have to check inventory" in response.text
             
@@ -119,6 +124,11 @@ def test_index_admin_logged_in_admin_dashboard(client: FlaskClient, admin_logged
             db_session.get(User, 2).done_inv = True
             db_session.commit()
 
+
+def test_index_admin_logged_in_admin_dashboard_requested_registration(client: FlaskClient, admin_logged_in):
+    with client:
+        response = client.get("/")
+        with dbSession() as db_session:
             response = client.get("/")
             assert (f"{db_session.get(User, 5).name}" +
                     " requested registration") in response.text
@@ -135,6 +145,29 @@ def test_index_admin_logged_in_admin_dashboard(client: FlaskClient, admin_logged
             db_session.commit()
             response = client.get("/")
             assert "No user requested registration" in response.text
+
+
+def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(client: FlaskClient, admin_logged_in):
+    with client:
+        response = client.get("/")
+        with dbSession() as db_session:
+            db_session.get(Product, 1).to_order = True
+            db_session.get(Product, 2).to_order = True
+            db_session.get(Product, 3).to_order = True
+            db_session.commit()
+            response = client.get("/")
+            assert '<span class="text-danger">There are 3 products that need to be ordered' in response.text
+
+            db_session.get(Product, 2).to_order = False
+            db_session.commit()
+            response = client.get("/")
+            assert '<span class="text-danger">There are 2 products that need to be ordered' in response.text
+
+            db_session.get(Product, 1).to_order = False
+            db_session.get(Product, 3).to_order = False
+            db_session.commit()
+            response = client.get("/")
+            assert "There are no products that need to be ordered" in response.text
 
 
 def test_index_admin_logged_in_statistics(client: FlaskClient, admin_logged_in):

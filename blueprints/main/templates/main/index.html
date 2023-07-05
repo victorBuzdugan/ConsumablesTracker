@@ -21,8 +21,7 @@
                     {% if stats.done_inv %}
                         <span class="text-secondary">Inventory check not required</span>
                     {% else %}
-                        {# TODO link to inventory check #}
-                        <span class="text-danger">Check inventory</span>
+                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href={{ url_for("inv.inventory") }}>Check inventory</a>
                     {% endif %}
                 {% endif %}
             </li>
@@ -57,6 +56,14 @@
                         <span class="text-danger">{{ admin.reg_req_users }} requested registration</span>
                     {% else %}
                         No user requested registration
+                    {% endif %}
+                </li>
+                <li class="list-group-item">
+                    {% if admin.to_order_products %}
+                        {# TODO link to order products #}
+                        <span class="text-danger">There are {{ admin.to_order_products }} products that need to be ordered</span>
+                    {% else %}
+                        There are no products that need to be ordered
                     {% endif %}
                 </li>
             </ul>

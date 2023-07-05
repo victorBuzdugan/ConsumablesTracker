@@ -37,6 +37,10 @@ def index():
                 select(User.name).filter_by(reg_req=True)).all()
             admin["reg_req_users"] = ", ".join(reg_req_users)
 
+            admin["to_order_products"] = (
+                db_session.query(Product).\
+                filter_by(in_use=True, to_order=True).count())
+
             admin["in_use_users"] = (
                 db_session.query(User).filter_by(in_use=True).count())
             admin["in_use_categories"] = (
