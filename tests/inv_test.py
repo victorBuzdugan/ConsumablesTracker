@@ -31,7 +31,8 @@ def test_inv_user_logged_in_no_check_inventory(client: FlaskClient, user_logged_
         response = client.get("/inventory")
         assert b"checked" not in response.data
         assert b"Inventory check not required" in response.data
-        assert f'<span class="text-secondary">{session.get("user_name")}</span> inventory check' in response.text
+        assert b'Inventory check' in response.data
+        assert f'<span class="text-secondary">{session.get("user_name")}</span>' in response.text
         assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' in response.data
         assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
         assert b"Critical products are highlighted in red" not in response.data
@@ -69,7 +70,8 @@ def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logge
         response = client.get("/inventory")
         assert b"checked" not in response.data
         assert b"Inventory check not required" in response.data
-        assert f'<span class="text-secondary">{session.get("user_name")}</span> inventory check' in response.text
+        assert b'Inventory check' in response.data
+        assert f'<span class="text-secondary">{session.get("user_name")}</span>' in response.text
         assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' in response.data
         assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
         assert b"Critical products are highlighted in red" not in response.data
@@ -290,7 +292,8 @@ def test_oth_user_admin_logged_in_no_check_inventory(
     assert response.status_code == 200
     assert b"You have to be an admin..." not in response.data
     assert b'type="submit" value="Log In"' not in response.data
-    assert f'<span class="text-secondary">{oth_user.name}</span> inventory check' in response.text
+    assert b'Inventory check' in response.data
+    assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
 
     # check if a random product and critical product from this user is on the page
     with dbSession() as db_session:
@@ -358,7 +361,8 @@ def test_oth_user_admin_logged_in_yes_check_inventory(client: FlaskClient, admin
     with client:
         response = client.get(f"/inventory/{oth_user.name}")
         assert session.get("admin")
-    assert f'<span class="text-secondary">{oth_user.name}</span> inventory check' in response.text
+    assert b'Inventory check' in response.data
+    assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
     assert b"checked" not in response.data
     assert b"disabled" in response.data
     assert b"Inventory check not required" in response.data
@@ -374,7 +378,8 @@ def test_oth_user_admin_logged_in_yes_check_inventory(client: FlaskClient, admin
             select(Product)\
             .filter_by(responsable_id=oth_user.id, in_use=True))
     response = client.get(f"/inventory/{oth_user.name}")
-    assert f'<span class="text-secondary">{oth_user.name}</span> inventory check' in response.text
+    assert b'Inventory check' in response.data
+    assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
     assert b"checked" not in response.data
     assert b"disabled" not in response.data
     assert b"Inventory check not required" not in response.data
@@ -395,7 +400,8 @@ def test_oth_user_send_inventory_yes_check_inventory(client: FlaskClient, admin_
     
     response = client.get(f"/inventory/{oth_user.name}")
     assert b"Inventory check not required" not in response.data
-    assert f'<span class="text-secondary">{oth_user.name}</span> inventory check' in response.text
+    assert b'Inventory check' in response.data
+    assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
     assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
 
     # 22 is not assigned to this user
@@ -433,7 +439,8 @@ def test_oth_user_send_inventory_yes_check_inventory_no_csrf(client: FlaskClient
     
     response = client.get(f"/inventory/{oth_user.name}")
     assert b"Inventory check not required" not in response.data
-    assert f'<span class="text-secondary">{oth_user.name}</span> inventory check' in response.text
+    assert b'Inventory check' in response.data
+    assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
     assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
 
     with client:
