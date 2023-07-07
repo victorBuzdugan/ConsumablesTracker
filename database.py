@@ -8,7 +8,7 @@ from sqlalchemy import ForeignKey, create_engine, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             Session, declared_attr, mapped_column,
-                            relationship, sessionmaker)
+                            relationship, sessionmaker, validates, synonym)
 from werkzeug.security import check_password_hash, generate_password_hash
 
 # factory for creating new database connections objects
@@ -56,6 +56,104 @@ class User(Base):
     reg_req: Mapped[bool] = mapped_column(default=True)
     req_inv: Mapped[bool] = mapped_column(default=False)
     details: Mapped[Optional[str]] = mapped_column(default=None, repr=False)
+
+    username = synonym("name")
+
+    @property
+    def inv_status(self) -> str:
+        """Check user's inventory status."""
+        if self.done_inv:
+            return "sent"
+        return "not sent"
+
+    @validates("products")
+    def validate_products(self,
+                          key: Optional[list[Product]],
+                          value: Product
+                          ) -> Optional[Product]:
+        """A user that's not in use or has a pending registration
+        can't have products assigned."""
+        if value and not self.in_use:
+            raise ValueError(
+                "'retired' users can't have products attached")
+        if value and self.reg_req:
+            raise ValueError(
+                "user with pending registration can't have products attached")
+        return value
+
+    @validates("admin")
+    def validate_admin(self, key: bool, value: bool
+                       ) -> Optional[bool]:
+        """A user that requested registration can't be admin."""
+        if value and self.reg_req:
+            raise ValueError("user with pending registration can't be admin")
+        return value
+    
+    @validates("in_use")
+    def validate_in_use(self, key: bool, value: bool
+                        ) -> Optional[bool]:
+        """A user that is 'responsible' for some products can't 'retire'.
+        Set properties if user is not in use anymore."""
+        if not value and self.products:
+            raise ValueError(
+                "user can't 'retire' if is responsible for products")
+        if not value:
+            self.done_inv = True
+            self.reg_req = False
+            self.req_inv = False
+        return value
+    
+    @validates("done_inv")
+    def validate_done_inv(self, key: bool, value: bool
+                          ) -> Optional[bool]:
+        """Rules for inventory check release.
+        Cancel the request for inventorying.
+        """
+        if not value and not self.in_use:
+            raise ValueError("'retired' user can't check inventory")
+        if not value and self.reg_req:
+            raise ValueError(
+                "user with pending registration can't check inventory")
+        if not value and not self.products:
+            raise ValueError(
+                "user without products attached can't check inventory")
+        if not value:
+            self.req_inv = False
+        return value
+    
+    @validates("reg_req")
+    def validate_reg_req(self, key: bool, value: bool
+                         ) -> Optional[bool]:
+        """Rules for registration request."""
+        if value and self.admin:
+            raise ValueError(
+                "admin users can't request registration")
+        if value and self.products:
+            raise ValueError(
+                "users with products attached can't request registration")
+        if value and not self.in_use:
+            raise ValueError(
+                "'retired' users can't request registration")
+        return value
+    
+    @validates("req_inv")
+    def validate_req_inv(self, key: bool, value: bool
+                         ) -> Optional[bool]:
+        """Rules for check inventory request."""
+        if value and self.admin:
+            raise ValueError("admins don't need to request inventorying")
+        if value and not self.in_use:
+            raise ValueError("'retired' users can't request inventorying")
+        if value and not self.done_inv:
+            raise ValueError("user can allready check inventory")
+        if value and self.reg_req:
+            raise ValueError(
+                "user with pending registration can't request inventorying")
+        if value and not self.products:
+            raise ValueError(
+                "users without products can't request inventorying")
+        return value
+
 
 
 class Category(Base):
@@ -131,3 +229,97 @@ class Product(Base):
     critical: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
 
+    
+    @validates("responsable_id")
+    def validate_responsable_id(self, key: int, user_id: int) -> Optional[int]:
+        if not user_id:
+            raise ValueError(
+                "user can't be deleted or does not exist")
+        with dbSession() as db_session:
+            user = db_session.get(User, user_id)
+            if not user:
+                raise ValueError("user does not exist")
+            if not user.in_use:
+                raise ValueError(
+                    "'retired' users can't have products attached")
+            if user.reg_req:
+                raise ValueError(
+                    "user with pending registration " +
+                    "can't have products attached")
+        return user_id
+
+    @validates("responsable")
+    def validate_responsable(self,
+                             key: User,
+                             user: Optional[User]
+                             ) -> Optional[User]:
+        if not user:
+            raise ValueError(
+                "user does not exist")
+        if not user.in_use:
+            raise ValueError(
+                "'retired' users can't have products attached")
+        if user.reg_req:
+            raise ValueError(
+                "user with pending registration can't have products attached")
+        return user
+    
+    @validates("category_id")
+    def validate_category_id(self,
+                             key: int,
+                             category_id: int
+                             ) -> Optional[int]:
+        if not category_id:
+            raise ValueError(
+                "category can't be deleted or does not exist")
+        with dbSession() as db_session:
+            category = db_session.get(Category, category_id)
+            if not category:
+                raise ValueError("category does not exist")
+            if not category.in_use:
+                raise ValueError(
+                    "not in use category can't have products attached")
+        return category_id
+
+    @validates("category")
+    def validate_category(self,
+                            key: Category,
+                            category: Optional[Category]
+                            ) -> Optional[Category]:
+        if not category:
+            raise ValueError(
+                "category does not exist")
+        if not category.in_use:
+            raise ValueError(
+                "not in use category can't have products attached")
+        return category
+    
+    @validates("supplier_id")
+    def validate_supplier_id(self,
+                             key: int,
+                             supplier_id: int
+                             ) -> Optional[int]:
+        if not supplier_id:
+            raise ValueError(
+                "supplier can't be deleted or does not exist")
+        with dbSession() as db_session:
+            supplier = db_session.get(Supplier, supplier_id)
+            if not supplier:
+                raise ValueError("supplier does not exist")
+            if not supplier.in_use:
+                raise ValueError(
+                    "not in use supplier can't have products attached")
+        return supplier_id
+
+    @validates("supplier")
+    def validate_supplier(self,
+                            key: Supplier,
+                            supplier: Optional[Supplier]
+                            ) -> Optional[Supplier]:
+        if not supplier:
+            raise ValueError(
+                "supplier does not exist")
+        if not supplier.in_use:
+            raise ValueError(
+                "not in use supplier can't have products attached")
+        return supplier

@@ -39,11 +39,11 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
             db_session.commit()
             response = client.get("/")
             assert "Check inventory" in response.text
+            user.done_inv = True
             user.req_inv = True
             db_session.commit()
             response = client.get("/")
             assert "You requested a inventory check" in response.text
-            user.done_inv = True
             user.req_inv = False
             db_session.commit()
         assert "Admin dashboard" not in response.text
@@ -68,14 +68,8 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
             response = client.get("/")
             assert "Check inventory" in response.text
             user.done_inv = True
+            db_session.commit()
 
-            user.req_inv = True
-            db_session.commit()
-            response = client.get("/")
-            assert "You requested a inventory check" in response.text
-            user.req_inv = False
-            db_session.commit()
-            
 
 def test_index_admin_logged_in_admin_dashboard_request_inventory(client: FlaskClient, admin_logged_in):
     with client:
@@ -133,18 +127,23 @@ def test_index_admin_logged_in_admin_dashboard_requested_registration(client: Fl
             assert (f"{db_session.get(User, 5).name}" +
                     " requested registration") in response.text
             
-            db_session.get(User, 4).reg_req = True
+            db_session.get(User, 6).in_use = True
+            db_session.get(User, 6).reg_req = True
             db_session.commit()
             response = client.get("/")
-            assert (f"{db_session.get(User, 4).name}, " +
-                    f"{db_session.get(User, 5).name}" +
+            assert (f"{db_session.get(User, 5).name}, " +
+                    f"{db_session.get(User, 6).name}" +
                     " requested registration") in response.text
             
-            db_session.get(User, 4).reg_req = False
             db_session.get(User, 5).reg_req = False
+            db_session.get(User, 6).reg_req = False
             db_session.commit()
             response = client.get("/")
             assert "No user requested registration" in response.text
+
+            db_session.get(User, 5).reg_req = True
+            db_session.get(User, 6).in_use = False
+            db_session.commit()
 
 
 def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(client: FlaskClient, admin_logged_in):
