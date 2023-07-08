@@ -31,7 +31,6 @@ def inventory():
             products = db_session.scalars(
                 select(Product)
                 .filter_by(responsable_id=user.id, in_use=True)
-                .order_by(Product.category_id)
                 ).all()
             for product in products:
                 if str(product.id) in request.form:
@@ -54,7 +53,7 @@ def inventory():
         products = db_session.scalars(
             select(Product)
             .filter_by(responsable_id=user.id, in_use=True)
-            .order_by(Product.category_id)
+            .order_by(Product.category_id, Product.name)
             ).all()
 
     return render_template(
@@ -62,8 +61,7 @@ def inventory():
         products=products, form=inv_form, user=user)
 
 
-# TODO links for this to admin users
-@inv_bp.route("/inventory/<username>", methods=["GET", "POST"])
+@inv_bp.route("/<username>_inventory", methods=["GET", "POST"])
 @admin_required
 def inventory_user(username):
     """Inventory check page for other users."""
@@ -85,7 +83,6 @@ def inventory_user(username):
             products = db_session.scalars(
                 select(Product)
                 .filter_by(responsable_id=user.id, in_use=True)
-                .order_by(Product.category_id)
                 ).all()
             for product in products:
                 if str(product.id) in request.form:
@@ -108,7 +105,7 @@ def inventory_user(username):
         products = db_session.scalars(
             select(Product)
             .filter_by(responsable_id=user.id, in_use=True)
-            .order_by(Product.category_id)
+            .order_by(Product.category_id, Product.name)
             ).all()
 
     return render_template(
@@ -125,8 +122,13 @@ def inventory_request():
               "warning")
     else:
         with dbSession() as db_session:
-            db_session.get(User, session.get("user_id")).req_inv = True
-            db_session.commit()
-        flash("Inventory check request sent")
+            user = db_session.get(User, session.get("user_id"))
+            if user.done_inv:
+                user.req_inv = True
+                db_session.commit()
+                flash("Inventory check request sent")
+            else:
+                flash("You allready can check the inventory!", "warning")
+                return redirect(url_for("inv.inventory"))
 
     return redirect(url_for("main.index"))

@@ -21,15 +21,17 @@
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session["user_id"] %}
                     <ul class="navbar-nav me-auto mt-2">
+                        <li class="nav-item"><a class="nav-link" href={{ url_for("inv.inventory") }}>Inventory</a></li>
+                        {% if session["admin"] %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Inventory
-                            </a>
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">New</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href={{ url_for("inv.inventory") }}>Inventory check</a></li>
-                                <li><a class="dropdown-item" href={{ url_for("inv.inventory_request") }}>Request inventory</a></li>
+                                <li><a class="dropdown-item" href={{ url_for("users.new_user") }}>User</a></li>
+                                <li><a class="dropdown-item" href="#">Category</a></li>
+                                <li><a class="dropdown-item" href="#">Supplier</a></li>
+                                <li><a class="dropdown-item" href="#">Product</a></li>
                             </ul>
-                        <li class="nav-item"><a class="nav-link" href="/deposit">Deposit</a></li>
+                        {% endif %}
                     </ul>
                     <ul class="navbar-nav ms-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href={{ url_for("auth.change_password") }}>Change password</a></li>

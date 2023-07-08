@@ -12,56 +12,71 @@
             <strong>User dashboard</strong>
         </div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Logged in as <span class="text-secondary">{{ session.user_name }}</span></li>
-            <li class="list-group-item">You have <span class="text-secondary">{{ stats.products }} products</span> assigned</li>
+            <li class="list-group-item">Logged in as <span class="text-secondary">{{ user.name }}</span></li>
+            <li class="list-group-item">You have <span class="text-secondary">{{ user.products|length }} products</span> assigned</li>
             <li class="list-group-item">
-                {% if stats.req_inv %}
+                {% if user.req_inv %}
                     <span class="text-warning">You requested a inventory check</span>
                 {% else %}
-                    {% if stats.done_inv %}
+                    {% if user.done_inv %}
                         <span class="text-secondary">Inventory check not required</span>
                     {% else %}
-                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href={{ url_for("inv.inventory") }}>Check inventory</a>
+                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('inv.inventory') }}">Check inventory</a>
                     {% endif %}
                 {% endif %}
             </li>
         </ul>
     </div>
-
+    {% if not user.admin and user.done_inv and not user.req_inv %}
+        <a class="btn btn-primary" role="button" href="{{ url_for('inv.inventory_request') }}">Request inventory</a>
+    {% endif %}
     {% if session.admin %}
         <div class="card mx-auto mb-3" style="max-width: 40rem;">
             <div class="card-header">
                 <strong>Admin dashboard</strong>
             </div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item">
-                    {% if admin.req_inv_users %}
-                        {# TODO link to users #}
-                        <span class="text-danger">{{ admin.req_inv_users }} requested a inventory check</span>
-                    {% else %}
-                        No user requested a inventory check
-                    {% endif %}
+                <li class="list-group-item p-2 pb-0">
+                    <div class="table-responsive mx-auto" style="width: auto;">
+                        <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
+                            <caption class="text-center pb-0">*Bolded users have administrative privileges.</caption>
+                            <caption class="text-center pb-0">*Strikethrough users are no longer in use.</caption>
+                            <thead>
+                                <tr>
+                                    <th class="px-3">Name</th>
+                                    <th class="px-3">Products Assigned</th>
+                                    <th class="px-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td><span class="{% if not user.in_use %}text-decoration-line-through{% endif %}{% if user.admin %} fw-bolder{% endif %}">{{ user.name }}</span></td>
+                                    <td>{{ user.in_use_products }}</td>
+                                    <td>
+                                        {% if not user.done_inv %}
+                                            <a class="link-info link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                            href="{{ url_for('inv.inventory_user', username=user.name) }}">check inventory</a>
+                                        {% endif %}
+                                        {% if user.req_inv %}
+                                            <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                            href="{{ url_for('users.approve_check_inv', username=user.name) }}">requested inventory</a>
+                                        {% endif %}
+                                        {% if user.reg_req %}
+                                            <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
+                                            href="{{ url_for('users.approve_reg', username=user.name) }}">requested registration</a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </li>
                 <li class="list-group-item">
-                    {% if admin.done_inv_users %}
-                        {# TODO link to users #}
-                        <span class="text-warning">{{ admin.done_inv_users }} have to ckeck inventory</span>
-                    {% else %}
-                        No user have to check inventory
-                    {% endif %}
-                </li>
-                <li class="list-group-item">
-                    {% if admin.reg_req_users %}
-                        {# TODO link to users #}
-                        <span class="text-danger">{{ admin.reg_req_users }} requested registration</span>
-                    {% else %}
-                        No user requested registration
-                    {% endif %}
-                </li>
-                <li class="list-group-item">
-                    {% if admin.to_order_products %}
+                    {% if stats.products_to_order %}
                         {# TODO link to order products #}
-                        <span class="text-danger">There are {{ admin.to_order_products }} products that need to be ordered</span>
+                        <span class="text-danger">There are {{ stats.products_to_order }} products that need to be ordered</span>
                     {% else %}
                         There are no products that need to be ordered
                     {% endif %}
@@ -75,20 +90,19 @@
             </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
-                    {# TODO link to users #}
-                    There are <span class="text-secondary">{{ admin.in_use_users }} users</span> in use
+                    There are <span class="text-secondary">{{ stats.users_in_use }} users</span> in use
                 </li>
                 <li class="list-group-item">
                     {# TODO link to categories #}
-                    There are <span class="text-secondary">{{ admin.in_use_categories }} categories</span> in use
+                    There are <span class="text-secondary">{{ stats.categories_in_use }} categories</span> in use
                 </li>
                 <li class="list-group-item">
                     {# TODO link to suppliers #}
-                    There are <span class="text-secondary">{{ admin.in_use_suppliers }} suppliers</span> in use
+                    There are <span class="text-secondary">{{ stats.suppliers_in_use }} suppliers</span> in use
                 </li>
                 <li class="list-group-item">
                     {# TODO link to products #}
-                    There are <span class="text-secondary">{{ admin.in_use_products }} products</span> in use of which <span class="text-secondary">{{ admin.critical_products }}</span> are critical.
+                    There are <span class="text-secondary">{{ stats.products_in_use }} products</span> in use of which <span class="text-secondary">{{ stats.critical_products }}</span> are critical.
                 </li>
             </ul>
         </div>

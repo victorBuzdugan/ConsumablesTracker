@@ -65,6 +65,13 @@ class User(Base):
         if self.done_inv:
             return "sent"
         return "not sent"
+    
+    @property
+    def in_use_products(self) -> int:
+        """Return total in use products for user."""
+        with dbSession() as db_session:
+            return db_session.query(Product).\
+                filter_by(in_use=True, responsable_id=self.id).count()
 
     @validates("products")
     def validate_products(self,

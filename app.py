@@ -7,6 +7,7 @@ from database import dbSession, User, Category, Supplier, Product
 from blueprints.auth.auth import auth_bp
 from blueprints.main.main import main_bp
 from blueprints.inv.inv import inv_bp
+from blueprints.users.users import users_bp
 from helpers import admin_required, login_required
 
 app = Flask(__name__)
@@ -22,9 +23,4 @@ def inject_now():
 app.register_blueprint(auth_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(inv_bp)
-
-
-# with app.test_request_context():
-#     print(app.url_map)
-#     print(url_for("index"))
-#     print(url_for("login"))
+app.register_blueprint(users_bp)

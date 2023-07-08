@@ -154,6 +154,20 @@ def test_inv_status_property(client):
         db_session.commit()
 
 
+def test_in_use_products_property(client):
+    with dbSession() as db_session:
+        user = db_session.get(User, 2)
+        user_initial_products = len(user.products)
+        product = db_session.scalar(
+            select(Product).
+            filter_by(in_use=True, responsable_id = user.id))
+        product.in_use = False
+        db_session.commit()
+        assert db_session.get(User, user.id).in_use_products == user_initial_products - 1
+        db_session.get(Product, product.id).in_use = True
+        db_session.commit()
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_delete_user_with_products_attached(client):
     with dbSession() as db_session:
@@ -200,7 +214,7 @@ def test_validate_admin(client):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_validate_in_use(client):
+def test_validate_user_in_use(client):
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         assert user.in_use
@@ -513,8 +527,6 @@ def test_bulk_supplier_insertion(client):
         for supplier in suppliers:
             assert supplier.products == []
             assert supplier.in_use is True
-            if supplier.id == 1:
-                continue
             assert supplier.details is None
             # teardown
             db_session.delete(supplier)
@@ -793,10 +805,8 @@ def test_product_change_responsible(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_user = product.responsable
-        if old_user.id == 1:
-            new_user = db_session.get(User, 2)
-        else:
-            new_user = db_session.get(User, 1)
+        assert old_user.id == 2
+        new_user = db_session.get(User, 1)
         product.responsable = new_user
         db_session.commit()
         db_product = db_session.get(Product, product.id)
@@ -810,10 +820,8 @@ def test_product_change_category(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_category = product.category
-        if old_category.id == 1:
-            new_category = db_session.get(Category, 2)
-        else:
-            new_category = db_session.get(Category, 1)
+        assert old_category.id == 1
+        new_category = db_session.get(Category, 2)
         product.category = new_category
         db_session.commit()
         db_product = db_session.get(Product, product.id)
@@ -827,10 +835,8 @@ def test_product_change_supplier(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_supplier = product.supplier
-        if old_supplier.id == 1:
-            new_supplier = db_session.get(Supplier, 2)
-        else:
-            new_supplier = db_session.get(Supplier, 1)
+        assert old_supplier.id == 3
+        new_supplier = db_session.get(Supplier, 1)
         product.supplier = new_supplier
         db_session.commit()
         db_product = db_session.get(Product, product.id)
@@ -990,7 +996,7 @@ def test_validate_to_order(client):
 
 
 @pytest.mark.xfail(raises=ValueError)
-def test_validate_in_use(client):
+def test_validate_product_in_use(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         product.to_order = True
