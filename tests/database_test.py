@@ -180,7 +180,6 @@ def test_validate_user_products(client, user_id, err_message):
         user = db_session.get(User, user_id)
         try:
             user.products.append(product)
-            # product.responsable_id = user_id
         except ValueError as err:
             db_session.rollback()
             assert err_message in err.args
@@ -419,6 +418,32 @@ def test_delete_category_with_products_attached(client):
             db_session.rollback()
             assert "category can't be deleted or does not exist" in err.args
             assert db_session.get(Category, category.id)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_category_products(client):
+    with dbSession() as db_session:
+        product = db_session.get(Product, 1)
+        category = db_session.get(Category, 8)
+        try:
+            category.products.append(product)
+        except ValueError as err:
+            db_session.rollback()
+            assert "not in use categories can't have products attached" in err.args
+            assert db_session.get(Product, 1).category == product.category
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_category_not_in_use(client):
+    with dbSession() as db_session:
+        category = db_session.get(Category, 1)
+        assert category.in_use
+        try:
+            category.in_use = False
+        except ValueError as err:
+            db_session.rollback()
+            assert "not in use categories can't have products attached" in err.args
+            assert category.in_use
 # endregion
 
 
@@ -507,6 +532,31 @@ def test_delete_supplier_with_products_attached(client):
             db_session.rollback()
             assert "supplier can't be deleted or does not exist" in err.args
             assert db_session.get(Supplier, supplier.id)
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_supplier_products(client):
+    with dbSession() as db_session:
+        product = db_session.get(Product, 1)
+        supplier = db_session.get(Supplier, 5)
+        try:
+            supplier.products.append(product)
+        except ValueError as err:
+            db_session.rollback()
+            assert "not in use supplier can't have products attached" in err.args
+            assert db_session.get(Product, 1).supplier == product.supplier
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_supplier_not_in_use(client):
+    with dbSession() as db_session:
+        supplier = db_session.get(Supplier, 1)
+        assert supplier.in_use
+        try:
+            supplier.in_use = False
+        except ValueError as err:
+            db_session.rollback()
+            assert "not in use supplier can't have products attached" in err.args
+            assert supplier.in_use
 # endregion
 
 
@@ -693,46 +743,6 @@ def test_product_no_meas_unit(client):
             meas_unit=None,
             min_stock=7,
             ord_qty=7
-        )
-        try:
-            db_session.add(product)
-            db_session.commit()
-        except IntegrityError:
-            db_session.rollback()
-
-
-@pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_min_stock(client):
-    with dbSession() as db_session:
-        product = Product(
-            name="__test__producttt__",
-            description="Some description",
-            responsable=db_session.get(User, 1),
-            category=db_session.get(Category, 1),
-            supplier=db_session.get(Supplier, 1),
-            meas_unit="measunit",
-            min_stock=None,
-            ord_qty=8,
-        )
-        try:
-            db_session.add(product)
-            db_session.commit()
-        except IntegrityError:
-            db_session.rollback()
-
-
-@pytest.mark.xfail(raises=IntegrityError)
-def test_product_no_ord_qty(client):
-    with dbSession() as db_session:
-        product = Product(
-            name="__test__producttt__",
-            description="Some description",
-            responsable=db_session.get(User, 1),
-            category=db_session.get(Category, 1),
-            supplier=db_session.get(Supplier, 1),
-            meas_unit="measunit",
-            min_stock=9,
-            ord_qty=None,
         )
         try:
             db_session.add(product)
@@ -938,7 +948,56 @@ def test_validate_product_supplier(client, supplier_id, err_message):
             assert db_session.get(Product, 1).supplier_id == product.supplier_id
 
 
+@pytest.mark.xfail(raises=ValueError)
+@pytest.mark.parametrize(
+    ("min_stock", "ord_qty", "err_message"), (
+    ("", 1, "minimum stock must be ≥ 0"),
+    (None, 1, "minimum stock must be ≥ 0"),
+    ("0", 1, "minimum stock must be ≥ 0"),
+    (-3, 1, "minimum stock must be ≥ 0"),
+    (0, "", "order quantity must be ≥ 1"),
+    (0, None, "order quantity must be ≥ 1"),
+    (0, "1", "order quantity must be ≥ 1"),
+    (0, 0, "order quantity must be ≥ 1"),
+    (0, -3, "order quantity must be ≥ 1"),
+    ))
+def test_validate_min_stock_and_ord_qty(client, min_stock, ord_qty, err_message):
+    with dbSession() as db_session:
+        try:
+            product = Product(
+                "some product",
+                "some description",
+                db_session.get(User, 1),
+                db_session.get(Category, 1),
+                db_session.get(Supplier, 1),
+                "pc",
+                min_stock,
+                ord_qty
+            )
+        except ValueError as err:
+            assert err_message in err.args
+            assert not db_session.scalar(select(Product).filter_by(name="some product"))
 
 
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_to_order(client):
+    with dbSession() as db_session:
+        try:
+            db_session.get(Product, 43).to_order = True
+        except ValueError as err:
+            assert "can't order not in use products" in err.args
+            assert not db_session.get(Product, 43).to_order
+
+
+@pytest.mark.xfail(raises=ValueError)
+def test_validate_in_use(client):
+    with dbSession() as db_session:
+        product = db_session.get(Product, 1)
+        product.to_order = True
+        try:
+            product.in_use = False
+        except ValueError as err:
+            assert "can't 'retire' a product that needs to be ordered" in err.args
+            assert product.in_use
 # endregion
 # endregion

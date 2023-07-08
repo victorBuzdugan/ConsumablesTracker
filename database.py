@@ -170,6 +170,26 @@ class Category(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
     description: Mapped[Optional[str]] = mapped_column(
         default=None, repr=False)
+    
+    @validates("products")
+    def validate_products(self,
+                          key: Optional[list[Product]],
+                          value: Product
+                          ) -> Optional[Product]:
+        """A category that's not in use can't have products assigned."""
+        if value and not self.in_use:
+            raise ValueError(
+                "not in use categories can't have products attached")
+        return value
+    
+    @validates("in_use")
+    def validate_in_use(self, key: bool, value: bool
+                        ) -> Optional[bool]:
+        """A category that has products can't 'retire'."""
+        if not value and self.products:
+            raise ValueError(
+                "not in use categories can't have products attached")
+        return value
 
 
 
@@ -187,6 +207,26 @@ class Supplier(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
     details: Mapped[Optional[str]] = mapped_column(
         default=None, repr=False)
+    
+    @validates("products")
+    def validate_products(self,
+                          key: Optional[list[Product]],
+                          value: Product
+                          ) -> Optional[Product]:
+        """A supplier that's not in use can't have products assigned."""
+        if value and not self.in_use:
+            raise ValueError(
+                "not in use supplier can't have products attached")
+        return value
+    
+    @validates("in_use")
+    def validate_in_use(self, key: bool, value: bool
+                        ) -> Optional[bool]:
+        """A supplier that has products can't 'retire'."""
+        if not value and self.products:
+            raise ValueError(
+                "not in use supplier can't have products attached")
+        return value
 
 
 
@@ -323,3 +363,34 @@ class Product(Base):
             raise ValueError(
                 "not in use supplier can't have products attached")
         return supplier
+    
+    @validates("min_stock")
+    def validate_min_stock(self, key: int, value: int) -> Optional[int]:
+        try:
+            if not (value >= 0):
+                raise ValueError("minimum stock must be ≥ 0")
+        except TypeError:
+            raise ValueError("minimum stock must be ≥ 0")
+        return value
+    
+    @validates("ord_qty")
+    def validate_ord_qty(self, key: int, value: int) -> Optional[int]:
+        try:
+            if not (value >= 1):
+                raise ValueError("order quantity must be ≥ 1")
+        except TypeError:
+            raise ValueError("order quantity must be ≥ 1")
+        return value
+    
+    @validates("to_order")
+    def validate_to_order(self, key: bool, value: bool) -> Optional[bool]:
+        if value and not self.in_use:
+            raise ValueError("can't order not in use products")
+        return value
+    
+    @validates("in_use")
+    def validate_in_use(self, key: bool, value: bool) -> Optional[bool]:
+        if not value and self.to_order:
+            raise ValueError(
+                "can't 'retire' a product that needs to be ordered")
+        return value
