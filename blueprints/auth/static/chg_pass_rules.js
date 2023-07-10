@@ -67,6 +67,7 @@ addEventListener("DOMContentLoaded", (event) => {
         } else {
             old_password.classList.remove("is-valid");
             old_password.classList.add("is-invalid");
+            old_passwordAlert.classList.remove("d-none");
 
             if (presentOldPasswordBoolean == false) {
                 confirmpresent.classList.add("wrong");
@@ -99,6 +100,7 @@ addEventListener("DOMContentLoaded", (event) => {
         } else {
             confirm.classList.remove("is-valid");
             confirm.classList.add("is-invalid");
+            confirmAlert.classList.remove("d-none");
 
             if (equalConfirmBoolean == false) {
                 confirmEqual.classList.add("wrong");
@@ -154,6 +156,7 @@ addEventListener("DOMContentLoaded", (event) => {
         } else {
             password.classList.remove("is-valid");
             password.classList.add("is-invalid");
+            passwordAlert.classList.remove("d-none");
 
 
             if (lengBoolean == false) {

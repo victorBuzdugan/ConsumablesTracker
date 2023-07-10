@@ -1,3 +1,20 @@
 .alert-dismissible {
     padding-right: 1.25rem;
     }
+
+.wrong .fa-check
+{
+    display: none;
+}
+
+li.good {
+    color: green;
+}
+
+.form-floating {
+    max-width: 246px;
+}
+
+div.form-floating label {
+    color: var(--bs-tertiary-color);
+}

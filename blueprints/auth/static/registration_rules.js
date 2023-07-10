@@ -65,6 +65,7 @@ addEventListener("DOMContentLoaded", (event) => {
         } else {
             username.classList.remove("is-valid");
             username.classList.add("is-invalid");
+            usernameAlert.classList.remove("d-none");
 
             if (lengUserBoolean == false) {
                 userLeng.classList.add("wrong");
@@ -93,6 +94,7 @@ addEventListener("DOMContentLoaded", (event) => {
             confirmRequirements.forEach((element) => {
                 element.classList.remove("wrong");
                 element.classList.add("good");
+                confirmAlert.classList.remove("d-none");
             });
         } else {
             confirm.classList.remove("is-valid");
@@ -152,6 +154,7 @@ addEventListener("DOMContentLoaded", (event) => {
         } else {
             password.classList.remove("is-valid");
             password.classList.add("is-invalid");
+            passwordAlert.classList.remove("d-none");
 
 
             if (lengBoolean == false) {

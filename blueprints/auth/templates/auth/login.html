@@ -3,14 +3,20 @@
 {% block title %}Log In{% endblock %}
 
 {% block main %}
-    <form action={{ url_for("auth.login") }} method="POST">
+    <form class="mx-auto" action="{{ url_for('auth.login') }}" method="POST">
+        
         {{ form.csrf_token }}
-        <div class="mb-3">
-            {{ form.name(class="form-control mx-auto w-auto", placeholder=form.name.label.text, autocomplete="off", autofocus=true) }}
+        
+        <div class="form-floating mb-3 mx-auto">
+            {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
+            <label>Username</label>
         </div>
-        <div class="mb-3">
-            {{ form.password(class="form-control mx-auto w-auto", placeholder=form.password.label.text) }}
+
+        <div class="form-floating mb-3 mx-auto">
+            {{ form.password(class="form-control", placeholder=form.password.label.text) }}
+            <label>Password</label>
         </div>
+
         <input class="btn btn-primary" type="submit" value="Log In">
     </form>
 {% endblock %}
