@@ -23,6 +23,9 @@ addEventListener("DOMContentLoaded", (event) => {
     const specialChars = "!@#$%^&*_=+";
     const numbers = "0123456789";
 
+    const submit_button = document.getElementById("submit_button");
+    let okOldPass, okPass, okConf;
+
     old_passwordRequirements.forEach((element) => element.classList.add("wrong"));
     confirmRequirements.forEach((element) => element.classList.add("wrong"));
     requirements.forEach((element) => element.classList.add("wrong"));
@@ -51,8 +54,10 @@ addEventListener("DOMContentLoaded", (event) => {
 
         if (value.length < 8) {
             presentOldPasswordBoolean = false;
+            okOldPass = false;
         } else if (value.length > 7) {
             presentOldPasswordBoolean = true;
+            okOldPass = true;
         }
 
         if (presentOldPasswordBoolean == true) {
@@ -77,15 +82,22 @@ addEventListener("DOMContentLoaded", (event) => {
                 confirmpresent.classList.remove("wrong");
             }
         }
+        if (okOldPass == true && okPass == true && okConf == true) {
+            submit_button.removeAttribute("disabled");
+        } else {
+            submit_button.setAttribute("disabled", "");
+        };
     });
 
     confirm.addEventListener("input", () => {
         let value = confirm.value;
         let passvalue = password.value;
-        if (value ==  passvalue) {
+        if (value == passvalue && value.length > 7) {
             equalConfirmBoolean = true;
+            okConf = true;
         } else {
             equalConfirmBoolean = false;
+            okConf = false;
         }
 
         if (equalConfirmBoolean == true) {
@@ -110,6 +122,11 @@ addEventListener("DOMContentLoaded", (event) => {
                 confirmEqual.classList.remove("wrong");
             }
         }
+        if (okOldPass == true && okPass == true && okConf == true) {
+            submit_button.removeAttribute("disabled");
+        } else {
+            submit_button.setAttribute("disabled", "");
+        };
     });
 
     password.addEventListener("input", () => {
@@ -148,6 +165,7 @@ addEventListener("DOMContentLoaded", (event) => {
             password.classList.remove("is-invalid");
             password.classList.add("is-valid");
             passwordAlert.classList.add("d-none");
+            okPass = true;
 
             requirements.forEach((element) => {
                 element.classList.remove("wrong");
@@ -157,6 +175,7 @@ addEventListener("DOMContentLoaded", (event) => {
             password.classList.remove("is-valid");
             password.classList.add("is-invalid");
             passwordAlert.classList.remove("d-none");
+            okPass = false;
 
 
             if (lengBoolean == false) {
@@ -191,6 +210,11 @@ addEventListener("DOMContentLoaded", (event) => {
                 specialChar.classList.remove("wrong");
             }
         }
+        if (okOldPass == true && okPass == true && okConf == true) {
+            submit_button.removeAttribute("disabled");
+        } else {
+            submit_button.setAttribute("disabled", "");
+        };
     });
 
     

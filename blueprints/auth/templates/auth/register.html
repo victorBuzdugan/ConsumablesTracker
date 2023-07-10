@@ -12,7 +12,7 @@
         {{ form.csrf_token }}
 
         <div class="form-floating mb-3 mx-auto">
-            {{ form.name(class="form-control is-invalid", placeholder=form.name.label.text, autocomplete="off") }}
+            {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
             <label>Username</label>
             <div class="invalid-feedback">
                 <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
@@ -25,7 +25,7 @@
         </div>
 
         <div class="form-floating mb-3 mx-auto">
-            {{ form.password(class="form-control is-invalid", placeholder=form.password.label.text) }}
+            {{ form.password(class="form-control", placeholder=form.password.label.text) }}
             <label>Password</label>
             <div class="invalid-feedback">
                 <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
@@ -44,7 +44,7 @@
         </div>
 
         <div class="form-floating mb-3 mx-auto">
-            {{ form.confirm(class="form-control is-invalid", placeholder=form.confirm.label.text) }}
+            {{ form.confirm(class="form-control", placeholder=form.confirm.label.text) }}
             <label>Retype password</label>
             <div class="invalid-feedback">
                 <div class="alert d-none p-0" id="confirm-alert" role="alert" data-mdb-color="warning">
@@ -56,7 +56,7 @@
             </div>
         </div>
 
-        <input class="btn btn-primary" type="submit" value="Request registration">
+        <input class="btn btn-primary" id="submit_button" type="submit" value="Request registration" disabled>
     </form>
 
 {% endblock %}
