@@ -1,7 +1,7 @@
 """Authentification blueprint tests."""
 
 import pytest
-from flask import g, session
+from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -16,21 +16,20 @@ pytestmark = pytest.mark.auth
 
 # region: registration page
 def test_registration_landing_page(client: FlaskClient):
-    response = client.get("/auth/register")
-    assert response.status_code == 200
-    assert b'type="submit" value="Request registration"' in response.data
-
-
-def test_clear_session_if_user_logged_in(client: FlaskClient):
-    with client.session_transaction() as session:
-        assert not session.get("user_id")
-        session["user_id"] = 1000
     with client:
-        assert session.get("user_id") == 1000
-        response = client.get("/auth/register")
+        client.get("/")
+        response = client.get(url_for("auth.register"))
+        assert response.status_code == 200
+        assert b'type="submit" value="Request registration"' in response.data
+
+
+def test_clear_session_if_user_logged_in(client: FlaskClient, user_logged_in):
+    with client:
+        client.get("/")
+        assert session.get("user_id")
+        response = client.get(url_for("auth.register"))
         assert response.status_code == 200
         assert b'You have been logged out...' in response.data
-    with client.session_transaction() as session:
         assert not session.get("user_id")
 
 
@@ -55,7 +54,8 @@ def test_failed_registration(
         client: FlaskClient,
         name, password, confirm, flash_message):
     with client:
-        client.get("/auth/register")
+        client.get("/")
+        client.get(url_for("auth.register"))
         data = {
             "csrf_token": g.csrf_token,
             "name": name,
@@ -72,7 +72,8 @@ def test_successful_registration(client: FlaskClient):
         password="P@ssw0rd"
     )
     with client:
-        client.get("/auth/register")
+        client.get("/")
+        client.get(url_for("auth.register"))
         data = {
             "csrf_token": g.csrf_token,
             "name": user.name,
@@ -80,12 +81,12 @@ def test_successful_registration(client: FlaskClient):
             "confirm": user.password}
         response = client.post(
             "/auth/register", data=data, follow_redirects=True)
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b"Registration request sent. Please contact an admin." \
-        in response.data
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"Registration request sent. Please contact an admin." \
+            in response.data
 
     with dbSession() as db_session:
         test_user = db_session.scalar(
@@ -104,9 +105,11 @@ def test_successful_registration(client: FlaskClient):
 
 # region: login and logout methods
 def test_login_landing_page(client: FlaskClient):
-    response = client.get("/auth/login")
-    assert response.status_code == 200
-    assert b'type="submit" value="Log In"' in response.data
+    with client:
+        client.get("/")
+        response = client.get(url_for("auth.login"))
+        assert response.status_code == 200
+        assert b'type="submit" value="Log In"' in response.data
 
 
 @pytest.mark.parametrize(("name", "password", "flash_message"), (
@@ -122,7 +125,8 @@ def test_login_landing_page(client: FlaskClient):
 def test_failed_login(
         client: FlaskClient, name, password, flash_message):
     with client:
-        client.get("/auth/login")
+        client.get("/")
+        client.get(url_for("auth.login"))
         data = {
             "csrf_token": g.csrf_token,
             "name": name,
@@ -137,7 +141,8 @@ def test_succesfull_login_and_logout(client: FlaskClient):
         test_user = db_session.scalar(
                 select(User).filter_by(name="user4"))
     with client:
-        client.get("/auth/login")
+        client.get("/")
+        client.get(url_for("auth.login"))
         data = {
             "csrf_token": g.csrf_token,
             "name": test_user.name,
@@ -154,14 +159,15 @@ def test_succesfull_login_and_logout(client: FlaskClient):
 
     # logout
     with client:
-        response = client.get("/auth/logout", follow_redirects=True)
+        client.get("/")
+        response = client.get(url_for("auth.logout"), follow_redirects=True)
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
 
 
 def test_failed_login_no_csrf(client: FlaskClient):
@@ -189,27 +195,28 @@ def test_failed_login_bad_csrf(client: FlaskClient):
 # region: change password
 # also tests @login_required
 def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
-    with client.session_transaction() as session:
-        assert not session.get("user_id")
-        assert not session.get("admin")
-        assert not session.get("user_name")
     with client:
-        response = client.get("/auth/change_password", follow_redirects=True)
+        client.get("/")
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b'type="submit" value="Log In"' in response.data
-    assert b"You have to be logged in..." in response.data
+        response = client.get(url_for("auth.change_password"), follow_redirects=True)
+        assert not session.get("user_id")
+        assert not session.get("admin")
+        assert not session.get("user_name")
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b'type="submit" value="Log In"' in response.data
+        assert b"You have to be logged in..." in response.data
 
 # also tests @login_required
 def test_change_password_landing_page_if_user_logged_in(
         client: FlaskClient, user_logged_in):
     with client:
-        response = client.get("/auth/change_password")
+        client.get("/")
+        response = client.get(url_for("auth.change_password"))
         assert session.get("user_id")
         assert session.get("admin") is False
         assert session.get("user_name")
@@ -221,7 +228,8 @@ def test_change_password_landing_page_if_user_logged_in(
 def test_change_password_landing_page_if_admin_logged_in(
         client: FlaskClient, admin_logged_in):
     with client:
-        response = client.get("/auth/change_password")
+        client.get("/")
+        response = client.get(url_for("auth.change_password"))
         assert session.get("user_id")
         assert session.get("admin")
         assert session.get("user_name")
@@ -252,13 +260,14 @@ def test_failed_change_password(
         user_logged_in,
         old_password, password, confirm, flash_message):
     with client:
-        client.get("/auth/change_password")
+        client.get("/")
+        client.get(url_for("auth.change_password"))
         data = {
             "csrf_token": g.csrf_token,
             "old_password": old_password,
             "password": password,
             "confirm": confirm}
-        response = client.post("/auth/change_password", data=data)
+        response = client.post(url_for("auth.change_password"), data=data)
     assert response.status_code == 200
     assert flash_message in response.data
 
@@ -268,22 +277,23 @@ def test_successful_change_password(client: FlaskClient, user_logged_in):
     old_password = "Q!444444"
     new_password = "Q!4444444"
     with client:
-        client.get("/auth/change_password")
+        client.get("/")
+        client.get(url_for("auth.change_password"))
         data = {
             "csrf_token": g.csrf_token,
             "old_password": old_password,
             "password": new_password,
             "confirm": new_password}
         response = client.post(
-            "/auth/change_password", data=data, follow_redirects=True)
+            url_for("auth.change_password"), data=data, follow_redirects=True)
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b"Password changed." in response.data
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"Password changed." in response.data
 
     with dbSession() as db_session:
         test_user = db_session.scalar(

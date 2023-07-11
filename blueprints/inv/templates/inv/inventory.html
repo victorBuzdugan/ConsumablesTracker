@@ -33,7 +33,7 @@ Inventory check
                     <td {% if product.critical %}class="text-danger"{% endif %}>{{ product.min_stock }} {{ product.meas_unit }}</td>
                     <td>
                         <div class="form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id={{ product.id }} name={{ product.id }} {% if user.done_inv %}disabled{% endif %} {% if product.to_order %}checked{% endif %}>
+                            <input class="form-check-input" type="checkbox" role="switch" id="{{ product.id }}" name="{{ product.id }}" {% if user.done_inv %}disabled{% endif %} {% if product.to_order %}checked{% endif %}>
                         </div>
                     </td>
                 </tr>

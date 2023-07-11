@@ -163,7 +163,8 @@ def register():
 
     return render_template("auth/register.html", form=reg_form)
 
-@auth_bp.route("/change_password", methods=["GET", "POST"])
+
+@auth_bp.route("/change-password", methods=["GET", "POST"])
 @login_required
 def change_password():
     """Change current user password."""

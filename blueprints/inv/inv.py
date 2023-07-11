@@ -61,7 +61,7 @@ def inventory():
         products=products, form=inv_form, user=user)
 
 
-@inv_bp.route("/<username>_inventory", methods=["GET", "POST"])
+@inv_bp.route("/<username>/inventory", methods=["GET", "POST"])
 @admin_required
 def inventory_user(username):
     """Inventory check page for other users."""
@@ -113,7 +113,7 @@ def inventory_user(username):
         products=products, form=inv_form, user=user)
 
 
-@inv_bp.route("/inventory_request")
+@inv_bp.route("/inventory/request")
 @login_required
 def inventory_request():
     """Inventory request action."""

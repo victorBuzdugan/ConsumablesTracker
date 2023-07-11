@@ -16,19 +16,22 @@ pytestmark = pytest.mark.inv
 # region: inventory tests for current user
 def test_inv_user_not_logged_in(client: FlaskClient):
     """Try to access the inventory page but not logged in."""
-    response = client.get("/inventory", follow_redirects=True)
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b"You have to be logged in..." in response.data
-    assert b'type="submit" value="Log In"' in response.data
+    with client:
+        response = client.get("/")
+        response = client.get(url_for("inv.inventory"), follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"You have to be logged in..." in response.data
+        assert b'type="submit" value="Log In"' in response.data
 
 
 def test_inv_user_logged_in_no_check_inventory(client: FlaskClient, user_logged_in):
     """Access inventory page with a user, no trigger for inventory check."""
     with client:
-        response = client.get("/inventory")
+        client.get("/")
+        response = client.get(url_for("inv.inventory"))
         assert b"checked" not in response.data
         assert b"Inventory check not required" in response.data
         assert b'Inventory check' in response.data
@@ -56,10 +59,8 @@ def test_inv_user_logged_in_no_check_inventory(client: FlaskClient, user_logged_
             # disabled and checked tags for a to_order product
             product.to_order = True
             db_session.commit()
-            response = client.get("/inventory")
-            assert (f"id={product.id}" +
-                    f" name={product.id}" +
-                    " disabled checked") in response.text
+            response = client.get(url_for("inv.inventory"))
+            assert (f'id="{product.id}" name="{product.id}" disabled checked') in response.text
             product.to_order = False
             db_session.commit()
             
@@ -67,7 +68,8 @@ def test_inv_user_logged_in_no_check_inventory(client: FlaskClient, user_logged_
 def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logged_in):
     """Access inventory page with an admin, no trigger for inventory check."""
     with client:
-        response = client.get("/inventory")
+        response = client.get("/")
+        response = client.get(url_for("inv.inventory"))
         assert b"checked" not in response.data
         assert b"Inventory check not required" in response.data
         assert b'Inventory check' in response.data
@@ -93,10 +95,8 @@ def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logge
             
             product.to_order = True
             db_session.commit()
-            response = client.get("/inventory")
-            assert (f"id={product.id}" +
-                    f" name={product.id}" +
-                    " disabled checked") in response.text
+            response = client.get(url_for("inv.inventory"))
+            assert (f'id="{product.id}" name="{product.id}" disabled checked') in response.text
             product.to_order = False
             db_session.commit()
 
@@ -105,10 +105,8 @@ def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logge
                 .count()
             product.in_use = False
             db_session.commit()
-            response = client.get("/inventory")
-            assert (f"id={product.id}" +
-                    f" name={product.id}" +
-                    " disabled checked") not in response.text
+            response = client.get(url_for("inv.inventory"))
+            assert (f'id="{product.id}" name="{product.id}" disabled checked') not in response.text
             assert db_session.query(Product)\
                 .filter_by(responsable_id=session.get("user_id"), in_use=True)\
                 .count() == products_len - 1
@@ -123,7 +121,7 @@ def test_inv_user_logged_in_yes_check_inventory(client: FlaskClient, user_logged
         with dbSession() as db_session:
             db_session.get(User, session.get("user_id")).done_inv = False
             db_session.commit()
-        response = client.get("/inventory")
+        response = client.get(url_for("inv.inventory"))
         assert b"checked" not in response.data
         assert b"Inventory check not required" not in response.data
         assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' not in response.data
@@ -147,10 +145,8 @@ def test_inv_user_logged_in_yes_check_inventory(client: FlaskClient, user_logged
             
             product.to_order = True
             db_session.commit()
-            response = client.get("/inventory")
-            assert (f"id={product.id}" +
-                    f" name={product.id}" +
-                    "  checked") in response.text
+            response = client.get(url_for("inv.inventory"))
+            assert (f'id="{product.id}" name="{product.id}"  checked') in response.text
             product.to_order = False
             db_session.get(User, session.get("user_id")).done_inv = True
             db_session.commit()
@@ -159,14 +155,15 @@ def test_inv_user_logged_in_yes_check_inventory(client: FlaskClient, user_logged
 def test_send_inventory_yes_check_inventory(client: FlaskClient, user_logged_in):
     """Send inventory, trigger for inventory check."""
     with client:
-        response = client.get("/inventory")
+        client.get("/")
+        response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" in response.data
-        # trigger inventory check  
+        # trigger inventory check
         with dbSession() as db_session:
             db_session.get(User, session.get("user_id")).done_inv = False
             db_session.commit()
         
-        response = client.get("/inventory")
+        response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" not in response.data
         assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
 
@@ -177,7 +174,7 @@ def test_send_inventory_yes_check_inventory(client: FlaskClient, user_logged_in)
             "22": "on",
             "34": "on"}
         response = client.post(
-            "/inventory", data=data, follow_redirects=True)
+            url_for("inv.inventory"), data=data, follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
@@ -198,14 +195,15 @@ def test_send_inventory_yes_check_inventory(client: FlaskClient, user_logged_in)
 def test_send_inventory_yes_check_inventory_no_csrf(client: FlaskClient, user_logged_in):
     """Send inventory, trigger for inventory check, post without csrf."""
     with client:
-        response = client.get("/inventory")
+        client.get("/")
+        response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" in response.data
         # trigger inventory check  
         with dbSession() as db_session:
             db_session.get(User, session.get("user_id")).done_inv = False
             db_session.commit()
         
-        response = client.get("/inventory")
+        response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" not in response.data
         assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
 
@@ -230,7 +228,8 @@ def test_send_inventory_yes_check_inventory_no_csrf(client: FlaskClient, user_lo
 def test_send_inventory_no_check_inventory(client: FlaskClient, user_logged_in):
     """Try to force send inventory, no trigger for inventory check."""
     with client:
-        response = client.get("/inventory")
+        client.get("/")
+        response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" in response.data
         assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
         
@@ -262,7 +261,7 @@ def test_oth_user_not_logged_in(client: FlaskClient):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == "/auth/login"
+        assert response.request.path == url_for("auth.login")
         assert b"You have to be an admin..." in response.data
         assert b'type="submit" value="Log In"' in response.data
 
@@ -274,12 +273,12 @@ def test_oth_user_user_logged_in(client: FlaskClient, user_logged_in):
         assert session.get("user_id")
         response = client.get(
             f"{url_for('inv.inventory_user', username='user1')}", follow_redirects=True)
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b"You have to be an admin..." in response.data
-    assert b'type="submit" value="Log In"' in response.data
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"You have to be an admin..." in response.data
+        assert b'type="submit" value="Log In"' in response.data
 
 @pytest.mark.parametrize(("oth_user",), (("user2",), ("user3",), ("user4",)))
 def test_oth_user_admin_logged_in_no_check_inventory(
@@ -321,15 +320,15 @@ def test_oth_user_admin_logged_in_no_check_inventory(
             f"{product_crit.min_stock} {product_crit.meas_unit}") in response.text
 
     # disabled and checked tags for a to_order product
-    with dbSession() as db_session:
-        db_session.get(Product, product.id).to_order = True
-        db_session.commit()
-        response = client.get(f"/{oth_user.name}_inventory")
-        assert (f"id={product.id}" +
-                f" name={product.id}" +
-                " disabled checked") in response.text
-        db_session.get(Product, product.id).to_order = False
-        db_session.commit()
+    with client:
+        with dbSession() as db_session:
+            db_session.get(Product, product.id).to_order = True
+            db_session.commit()
+            client.get("/")
+            response = client.get(url_for("inv.inventory_user", username=oth_user.name))
+            assert (f'id="{product.id}" name="{product.id}" disabled checked') in response.text
+            db_session.get(Product, product.id).to_order = False
+            db_session.commit()
 
 
 @pytest.mark.parametrize(
@@ -503,12 +502,12 @@ def test_inventory_request_not_logged_in(client: FlaskClient):
         assert not session.get("user_name")
         response = client.get(
             f"{url_for('inv.inventory_request')}", follow_redirects=True)
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/auth/login"
-    assert b"You have to be logged in..." in response.data
-    assert b'type="submit" value="Log In"' in response.data
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"You have to be logged in..." in response.data
+        assert b'type="submit" value="Log In"' in response.data
 
 
 def test_inventory_request_admin_logged_in(client: FlaskClient, admin_logged_in):
