@@ -21,3 +21,9 @@ def admin_required(f):
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function
+
+def flash_errors(form_errors: dict) -> None:
+    flash_errors = [error for errors in form_errors.values()
+                    for error in errors]
+    for error in flash_errors:
+        flash(error, "error")

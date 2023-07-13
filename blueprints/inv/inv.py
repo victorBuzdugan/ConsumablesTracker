@@ -7,7 +7,7 @@ from markupsafe import escape
 from sqlalchemy import select
 
 from database import Product, User, dbSession
-from helpers import admin_required, login_required
+from helpers import admin_required, login_required, flash_errors
 
 inv_bp = Blueprint(
     "inv",
@@ -42,10 +42,7 @@ def inventory():
         flash("Inventory has been submitted")
         return redirect(url_for("main.index"))
     elif inv_form.errors:
-        flash_errors = [error for errors in inv_form.errors.values()
-                        for error in errors]
-        for error in flash_errors:
-            flash(error, "error")
+        flash_errors(inv_form.errors)
     elif user.done_inv:
         flash("Inventory check not required", "info")
 
@@ -94,10 +91,7 @@ def inventory_user(username):
         flash("Inventory has been submitted")
         return redirect(url_for("main.index"))
     elif inv_form.errors:
-        flash_errors = [error for errors in inv_form.errors.values()
-                        for error in errors]
-        for error in flash_errors:
-            flash(error, "error")
+        flash_errors(inv_form.errors)
     elif user.done_inv:
         flash("Inventory check not required", "info")
 

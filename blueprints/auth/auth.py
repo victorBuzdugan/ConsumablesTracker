@@ -8,7 +8,7 @@ from wtforms import PasswordField, StringField
 from wtforms.validators import EqualTo, InputRequired, Length, Regexp
 
 from database import User, dbSession
-from helpers import login_required
+from helpers import login_required, flash_errors
 
 auth_bp = Blueprint("auth",
                     __name__,
@@ -112,10 +112,7 @@ def login():
         else:
             flash("Wrong username or password!", "warning")
     elif login_form.errors:
-        flash_errors = [error for errors in login_form.errors.values()
-                        for error in errors]
-        for error in flash_errors:
-            flash(error, "error")
+        flash_errors(login_form.errors)
 
     return render_template("auth/login.html", form=login_form)
 
@@ -156,10 +153,7 @@ def register():
             else:
                 flash("Username allready exists...", "warning")
     elif reg_form.errors:
-        flash_errors = [error for errors in reg_form.errors.values()
-                        for error in errors]
-        for error in flash_errors:
-            flash(error, "error")
+        flash_errors(reg_form.errors)
 
     return render_template("auth/register.html", form=reg_form)
 
@@ -184,9 +178,6 @@ def change_password():
             else:
                 flash("Wrong old password!", "error")
     elif chg_pass.errors:
-        flash_errors = [error for errors in chg_pass.errors.values()
-                        for error in errors]
-        for error in flash_errors:
-            flash(error, "error")
+        flash_errors(chg_pass.errors)
 
     return render_template("auth/change_password.html", form=chg_pass)

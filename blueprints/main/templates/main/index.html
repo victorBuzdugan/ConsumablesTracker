@@ -51,7 +51,9 @@
                             <tbody>
                                 {% for user in users %}
                                 <tr>
-                                    <td><span class="{% if not user.in_use %}text-decoration-line-through{% endif %}{% if user.admin %} fw-bolder{% endif %}">{{ user.name }}</span></td>
+                                    <td><span class="{% if not user.in_use %}text-decoration-line-through{% endif %}{% if user.admin %} fw-bolder{% endif %}"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('users.edit_user', username=user.name) }}">{{ user.name }}</a>
+                                        </span>
+                                    </td>
                                     <td>{{ user.in_use_products }}</td>
                                     <td>
                                         {% if not user.done_inv %}

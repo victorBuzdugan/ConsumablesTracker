@@ -7,36 +7,46 @@
 {% block title %}Log In{% endblock %}
 
 {% block main %}
-    <form class="mx-auto" action="{{ url_for('auth.login') }}" method="POST">
-        
-        {{ form.csrf_token }}
-        
-        <div class="form-floating mb-3 mx-auto">
-            {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
-            <label>Username</label>
-            <div class="invalid-feedback">
-                <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
-                <ul class="list-unstyled mb-0">
-                    <li class="userrequirements userleng">
-                    Enter username</li>
-                </ul>
-                </div>
-            </div>
+<div class="card mx-auto" style="max-width: 20rem;">
+    <form class="" action="{{ url_for('auth.login') }}" method="POST">
+        <div class="card-header h5 py-2">
+            Login
         </div>
 
-        <div class="form-floating mb-3 mx-auto">
-            {{ form.password(class="form-control", placeholder=form.password.label.text) }}
-            <label>Password</label>
-            <div class="invalid-feedback">
-                <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
-                <ul class="list-unstyled mb-0">
-                    <li class="requirements leng">
-                    Enter password</li>
-                </ul>
+        <div class="card-body">
+            {{ form.csrf_token }}
+            
+            <div class="form-floating mb-3">
+                {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
+                <label>Username</label>
+                <div class="invalid-feedback">
+                    <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
+                        <ul class="list-unstyled mb-0">
+                            <li class="userrequirements userleng">
+                            Enter username</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <input class="btn btn-primary" id="submit_button" type="submit" value="Log In" disabled>
+            <div class="form-floating mb-3">
+                {{ form.password(class="form-control", placeholder=form.password.label.text) }}
+                <label>Password</label>
+                <div class="invalid-feedback">
+                    <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
+                        <ul class="list-unstyled mb-0">
+                            <li class="requirements leng">
+                            Enter password</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <span class="text-body-tertiary">All fields are required</span>
+        </div>
+        
+        <div class="card-footer py-3">
+            <input class="btn btn-primary px-4" id="submit_button" type="submit" value="Log In" disabled>
+        </div>
     </form>
+</div>
 {% endblock %}

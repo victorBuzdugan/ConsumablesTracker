@@ -7,56 +7,65 @@
 {% block title %}Register{% endblock %}
 
 {% block main %}
-    <form class="mx-auto" action="{{ url_for('auth.register') }}" method="POST">
-        
-        {{ form.csrf_token }}
-
-        <div class="form-floating mb-3 mx-auto">
-            {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
-            <label>Username</label>
-            <div class="invalid-feedback">
-                <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
-                <ul class="list-unstyled mb-0">
-                    <li class="userrequirements userleng">
-                    Must have at least 3 chars</li>
-                </ul>
-                </div>
-            </div>
+<div class="card mx-auto" style="max-width: 20rem;">
+    <form class="" action="{{ url_for('auth.register') }}" method="POST">
+        <div class="card-header h5 py-2">
+            Register
         </div>
 
-        <div class="form-floating mb-3 mx-auto">
-            {{ form.password(class="form-control", placeholder=form.password.label.text) }}
-            <label>Password</label>
-            <div class="invalid-feedback">
-                <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
-                <ul class="list-unstyled mb-0">
-                    <li class="requirements leng">
-                    Must have at least 8 chars</li>
-                    <li class="requirements big-letter">
-                    Must have at least 1 big letter</li>
-                    <li class="requirements num">
-                    Must have at least 1 number</li>
-                    <li class="requirements special-char">
-                    Must have at least 1 special char (!@#$%^&*_=+).</li>
-                </ul>
+        <div class="card-body">
+            {{ form.csrf_token }}
+
+            <div class="form-floating mb-3">
+                {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
+                <label>Username</label>
+                <div class="invalid-feedback">
+                    <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
+                    <ul class="list-unstyled mb-0">
+                        <li class="userrequirements userleng">
+                        Must have at least 3 chars</li>
+                    </ul>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="form-floating mb-3 mx-auto">
-            {{ form.confirm(class="form-control", placeholder=form.confirm.label.text) }}
-            <label>Retype password</label>
-            <div class="invalid-feedback">
-                <div class="alert d-none p-0" id="confirm-alert" role="alert" data-mdb-color="warning">
-                <ul class="list-unstyled mb-0">
-                    <li class="confirmrequirements confirmequal">
-                    Passwords don't match</li>
-                </ul>
+            <div class="form-floating mb-3">
+                {{ form.password(class="form-control", placeholder=form.password.label.text) }}
+                <label>Password</label>
+                <div class="invalid-feedback">
+                    <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
+                    <ul class="list-unstyled mb-0">
+                        <li class="requirements leng">
+                        Must have at least 8 chars</li>
+                        <li class="requirements big-letter">
+                        Must have at least 1 big letter</li>
+                        <li class="requirements num">
+                        Must have at least 1 number</li>
+                        <li class="requirements special-char">
+                        Must have at least 1 special char (!@#$%^&*_=+).</li>
+                    </ul>
+                    </div>
                 </div>
             </div>
+
+            <div class="form-floating mb-3">
+                {{ form.confirm(class="form-control", placeholder=form.confirm.label.text) }}
+                <label>Retype password</label>
+                <div class="invalid-feedback">
+                    <div class="alert d-none p-0" id="confirm-alert" role="alert" data-mdb-color="warning">
+                    <ul class="list-unstyled mb-0">
+                        <li class="confirmrequirements confirmequal">
+                        Passwords don't match</li>
+                    </ul>
+                    </div>
+                </div>
+            </div>
+            <span class="text-body-tertiary">All fields are required</span>
         </div>
 
-        <input class="btn btn-primary" id="submit_button" type="submit" value="Request registration" disabled>
+        <div class="card-footer py-3">
+            <input class="btn btn-primary px-4" id="submit_button" type="submit" value="Request registration" disabled>
+        </div>
     </form>
-
+</div>
 {% endblock %}
