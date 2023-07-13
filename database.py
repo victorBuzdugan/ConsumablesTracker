@@ -55,7 +55,7 @@ class User(Base):
     done_inv: Mapped[bool] = mapped_column(default=True)
     reg_req: Mapped[bool] = mapped_column(default=True)
     req_inv: Mapped[bool] = mapped_column(default=False)
-    details: Mapped[Optional[str]] = mapped_column(default=None, repr=False)
+    details: Mapped[Optional[str]] = mapped_column(default="", repr=False)
 
     username = synonym("name")
 
@@ -72,6 +72,13 @@ class User(Base):
         with dbSession() as db_session:
             return db_session.query(Product).\
                 filter_by(in_use=True, responsable_id=self.id).count()
+
+    @property
+    def all_products(self) -> int:
+        """Return total in use products for user."""
+        with dbSession() as db_session:
+            return db_session.query(Product).\
+                filter_by(responsable_id=self.id).count()
 
     @validates("products")
     def validate_products(self,
@@ -176,7 +183,7 @@ class Category(Base):
         default_factory=list, back_populates="category", repr=False)
     in_use: Mapped[bool] = mapped_column(default=True)
     description: Mapped[Optional[str]] = mapped_column(
-        default=None, repr=False)
+        default="", repr=False)
     
     @validates("products")
     def validate_products(self,
@@ -213,7 +220,7 @@ class Supplier(Base):
         default_factory=list, back_populates="supplier", repr=False)
     in_use: Mapped[bool] = mapped_column(default=True)
     details: Mapped[Optional[str]] = mapped_column(
-        default=None, repr=False)
+        default="", repr=False)
     
     @validates("products")
     def validate_products(self,

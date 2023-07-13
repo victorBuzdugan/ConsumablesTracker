@@ -26,12 +26,12 @@ def test_user_creation(client):
         assert db_user
         assert db_user.name == user.name
         assert check_password_hash(db_user.password, "P@ssw0rd")
-        assert db_user.admin is False
-        assert db_user.in_use is True
-        assert db_user.done_inv is True
-        assert db_user.reg_req is True
-        assert db_user.req_inv is False
-        assert db_user.details is None
+        assert not db_user.admin
+        assert db_user.in_use
+        assert db_user.done_inv
+        assert db_user.reg_req
+        assert not db_user.req_inv
+        assert not db_user.details
         # teardown
         db_session.delete(db_user)
         db_session.commit()
@@ -115,12 +115,12 @@ def test_bulk_user_insertion(client):
         for user in users:
             assert check_password_hash(user.password, f"P@ssw0rd{user.id}")
             assert user.products == []
-            assert user.admin is False
-            assert user.in_use is True
-            assert user.done_inv is True
-            assert user.reg_req is True
-            assert user.req_inv is False
-            assert user.details is None
+            assert not user.admin
+            assert user.in_use
+            assert user.done_inv
+            assert user.reg_req
+            assert not user.req_inv
+            assert not user.details
             # teardown
             db_session.delete(user)
         db_session.commit()
@@ -157,13 +157,13 @@ def test_inv_status_property(client):
 def test_in_use_products_property(client):
     with dbSession() as db_session:
         user = db_session.get(User, 2)
-        user_initial_products = len(user.products)
+        assert user.all_products == len(user.products)
         product = db_session.scalar(
             select(Product).
             filter_by(in_use=True, responsable_id = user.id))
         product.in_use = False
         db_session.commit()
-        assert db_session.get(User, user.id).in_use_products == user_initial_products - 1
+        assert db_session.get(User, user.id).in_use_products == user.all_products - 1
         db_session.get(Product, product.id).in_use = True
         db_session.commit()
 
@@ -414,8 +414,8 @@ def test_bulk_category_insertion(client):
         assert len(categories) == 3
         for category in categories:
             assert category.products == []
-            assert category.in_use is True
-            assert category.description is None
+            assert category.in_use
+            assert not category.description
             # teardown
             db_session.delete(category)
         db_session.commit()
@@ -526,8 +526,8 @@ def test_bulk_supplier_insertion(client):
         assert len(suppliers) == 3
         for supplier in suppliers:
             assert supplier.products == []
-            assert supplier.in_use is True
-            assert supplier.details is None
+            assert supplier.in_use
+            assert not supplier.details
             # teardown
             db_session.delete(supplier)
         db_session.commit()
