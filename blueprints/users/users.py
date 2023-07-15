@@ -5,11 +5,13 @@ from flask import (Blueprint, flash, redirect, render_template, request,
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload, raiseload
-from wtforms import PasswordField, StringField, BooleanField, SubmitField, TextAreaField, IntegerField
-from wtforms.validators import EqualTo, InputRequired, Length, Regexp, Optional
+from wtforms import (BooleanField, IntegerField, PasswordField, StringField,
+                     SubmitField, TextAreaField)
+from wtforms.validators import InputRequired, Length, Optional, Regexp
 
-from database import User, Product, dbSession
+from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
+                                  USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
+from database import User, dbSession
 from helpers import admin_required, flash_errors
 
 # TESTME
@@ -57,11 +59,11 @@ class EditUserForm(FlaskForm):
     name = StringField(
         label="Username",
         validators=[
-            InputRequired("Username is required!"),
+            InputRequired(msg["usr_req"]),
             Length(
-                min=3,
-                max=15,
-                message="Username must be between 3 and 15 characters!")],
+                min=USER_MIN_LENGTH,
+                max=USER_MAX_LENGTH,
+                message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
             "placeholder": "Username",
@@ -72,12 +74,10 @@ class EditUserForm(FlaskForm):
         validators=[
             Optional(),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
-            Regexp(
-                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
-                message=("Password must have 1 big letter, " +
-                         "1 number, 1 special char (!@#$%^&*_=+)!"))],
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
+            Regexp(PASSW_REGEX, message=("Password must have 1 big letter, " +
+                         f"1 number, 1 special char ({PASSW_SYMB})!"))],
         render_kw={
             "class": "form-control",
             "placeholder": "Password",
@@ -193,7 +193,6 @@ def edit_user(username):
     edit_user_form: EditUserForm = EditUserForm()
     
     if edit_user_form.validate_on_submit():
-        # TODO
         with dbSession().no_autoflush as db_session:
             user = db_session.scalar(
                 select(User).
@@ -211,6 +210,11 @@ def edit_user(username):
                         return redirect(url_for("auth.logout"))
                     return redirect(url_for("main.index"))
             else:
+                # parse first in_use
+                try:
+                    user.in_use = edit_user_form.in_use.data
+                except ValueError as error:
+                    flash(str(error), "warning")
                 try:
                     user.name = edit_user_form.name.data
                     if session.get("user_id") == user.id:
@@ -228,18 +232,13 @@ def edit_user(username):
                     user.done_inv = not edit_user_form.check_inv.data
                 except ValueError as error:
                     flash(str(error), "warning")
-                try:
-                    user.in_use = edit_user_form.in_use.data
-                except ValueError as error:
-                    flash(str(error), "warning")
                 if db_session.is_modified(user):
                     flash("User updated")
                     db_session.commit()
                     if (session.get("user_id") == user.id and 
                         not user.admin):
                         return redirect(url_for("auth.logout"))
-                    return redirect(
-                        url_for("users.edit_user", username=user.name))
+                return redirect(url_for("users.edit_user", username=user.name))
     elif edit_user_form.errors:
         flash_errors(edit_user_form.errors)
 
@@ -250,11 +249,11 @@ def edit_user(username):
     if user:
         edit_user_form = EditUserForm(obj=user)
         # on 'POST' WTForms defaults to blank input if values were not posted
-        edit_user_form.reg_req.data = user.reg_req
-        edit_user_form.req_inv.data = user.req_inv
-        edit_user_form.check_inv.data = user.check_inv
-        edit_user_form.admin.data = user.admin
-        edit_user_form.in_use.data = user.in_use
+        # edit_user_form.reg_req.data = user.reg_req
+        # edit_user_form.req_inv.data = user.req_inv
+        # edit_user_form.check_inv.data = user.check_inv
+        # edit_user_form.admin.data = user.admin
+        # edit_user_form.in_use.data = user.in_use
     else:
         flash(f"User '{username}' does not exist!", "error")
         return redirect(url_for("main.index"))
