@@ -561,7 +561,7 @@ def test_inventory_request_user_logged_in_yes_check_inventory(client: FlaskClien
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for('inv.inventory')
-        assert b"You allready can check the inventory!" in response.data
+        assert b"User can allready check inventory" in response.data
         assert b"Critical products are highlighted in red" in response.data
         with dbSession() as db_session:
             assert not db_session.get(User, session.get("user_id")).req_inv

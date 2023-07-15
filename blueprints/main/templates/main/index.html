@@ -27,7 +27,7 @@
             </li>
         </ul>
     </div>
-    {% if not session.admin and user.done_inv and not user.req_inv %}
+    {% if not session.admin and user.in_use_products and user.done_inv and not user.req_inv %}
         <a class="btn btn-primary" role="button" href="{{ url_for('inv.inventory_request') }}">Request inventory</a>
     {% endif %}
     {% if session.admin %}

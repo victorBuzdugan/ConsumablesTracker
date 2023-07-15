@@ -117,12 +117,12 @@ def inventory_request():
     else:
         with dbSession() as db_session:
             user = db_session.get(User, session.get("user_id"))
-            if user.done_inv:
+            try:
                 user.req_inv = True
-                db_session.commit()
                 flash("Inventory check request sent")
-            else:
-                flash("You allready can check the inventory!", "warning")
+                db_session.commit()
+            except ValueError as error:
+                flash(str(error), "warning")
                 return redirect(url_for("inv.inventory"))
 
     return redirect(url_for("main.index"))
