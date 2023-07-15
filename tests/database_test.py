@@ -203,6 +203,24 @@ def test_validate_admin(client):
 
 
 @pytest.mark.xfail(raises=ValueError)
+def test_validate_last_admin(client):
+    with dbSession() as db_session:
+        db_session.get(User, 1).admin = False
+        db_session.commit()
+        assert db_session.query(User).filter_by(admin=True).count() == 1
+        user = db_session.get(User, 2)
+        assert user.admin
+        try:
+            user.admin = False
+        except ValueError as err:
+            db_session.rollback()
+            assert "You are the last admin!" in str(err)
+            assert user.admin
+            db_session.get(User, 1).admin = True
+            db_session.commit()
+
+
+@pytest.mark.xfail(raises=ValueError)
 def test_validate_user_in_use(client):
     with dbSession() as db_session:
         user = db_session.get(User, 1)
@@ -483,7 +501,7 @@ def test_validate_category_products(client):
             category.products.append(product)
         except ValueError as err:
             db_session.rollback()
-            assert "Not in use categories can't have products attached" in str(err)
+            assert "Not in use category can't have products attached" in str(err)
             assert db_session.get(Product, 1).category == product.category
 
 
@@ -496,7 +514,7 @@ def test_validate_category_not_in_use(client):
             category.in_use = False
         except ValueError as err:
             db_session.rollback()
-            assert "Not in use categories can't have products attached" in str(err)
+            assert "Not in use category can't have products attached" in str(err)
             assert category.in_use
 # endregion
 
@@ -838,7 +856,7 @@ def test_bulk_product_insertion(client):
         db_session.commit()
 
 
-def test_product_change_responsible(client):
+def test_product_change_responsable(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_user = product.responsable
@@ -900,6 +918,82 @@ def test_validate_product_responsable_id(client, user_id, err_message):
             db_session.rollback()
             assert err_message in str(err)
             assert db_session.get(Product, 1).responsable_id == product.responsable_id
+
+
+def test_validate_product_responsable_id_last_product(client):
+    with dbSession() as db_session:
+        product = db_session.get(Product, 1)
+        orig_resp_id = product.responsable_id
+        user = db_session.get(User, 5)
+        user.reg_req = False
+        db_session.commit()
+
+        product.responsable_id = user.id
+        db_session.commit()
+        assert user.all_products == 1
+        assert user.done_inv
+        assert not user.req_inv
+        assert product.responsable_id == user.id
+        user.done_inv = False
+        db_session.commit()
+        product.responsable_id = orig_resp_id
+        db_session.refresh(user)
+        assert user.done_inv
+        
+        product.responsable_id = user.id
+        db_session.commit()
+        assert user.all_products == 1
+        assert user.done_inv
+        assert not user.req_inv
+        assert product.responsable_id == user.id
+        user.req_inv = True
+        db_session.commit()
+        product.responsable_id = orig_resp_id
+        db_session.refresh(user)
+        assert not user.req_inv
+
+        # teardown
+        product.responsable_id = orig_resp_id
+        user.reg_req = True
+        db_session.commit()
+
+
+def test_validate_product_responsable_last_product(client):
+    with dbSession() as db_session:
+        product = db_session.get(Product, 1)
+        orig_resp = product.responsable
+        user = db_session.get(User, 5)
+        user.reg_req = False
+        db_session.commit()
+
+        product.responsable = user
+        db_session.commit()
+        assert user.all_products == 1
+        assert user.done_inv
+        assert not user.req_inv
+        assert product.responsable == user
+        user.done_inv = False
+        db_session.commit()
+        product.responsable = orig_resp
+        db_session.refresh(user)
+        assert user.done_inv
+        
+        product.responsable = user
+        db_session.commit()
+        assert user.all_products == 1
+        assert user.done_inv
+        assert not user.req_inv
+        assert product.responsable == user
+        user.req_inv = True
+        db_session.commit()
+        product.responsable = orig_resp
+        db_session.refresh(user)
+        assert not user.req_inv
+
+        # teardown
+        product.responsable = orig_resp
+        user.reg_req = True
+        db_session.commit()
 
 
 @pytest.mark.xfail(raises=ValueError)

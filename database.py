@@ -33,6 +33,19 @@ class Base(MappedAsDataclass, DeclarativeBase):
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
 
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for duplicate or empty name."""
+        element = type(self)
+        if not value:
+            raise ValueError(f"{element.__name__} must have a name")
+        if value != self.name:
+            with dbSession() as db_session:
+                if db_session.scalar(select(element).filter_by(name=value)):
+                    raise ValueError(
+                        f"{element.__name__} {value} allready exists")
+        return value
+
 
 class User(Base):
     """User database table mapping.
@@ -69,8 +82,8 @@ class User(Base):
     ------------
     
     1. in_use || !products
-[x][ ]    - A user cannot be retired if still has products assigned
-[x][ ]    - A product cannot be assigned to a retired user
+    - A user cannot be retired if still has products assigned
+    - A product cannot be assigned to a retired user
     | products | in_use |     |
     |:--------:|:------:|:---:|
     |     0    |  False |     |
@@ -79,9 +92,9 @@ class User(Base):
     |    > 0   |  True  |     |
     
     2. products || done_inv
-[ ][ ]    - A user without products cannot check inventory;
+    - A user without products cannot check inventory;
         if a user doesn't have anymore products assigned set done_inv to True
-[x][ ]    - Check inventory cannot be triggered for a user without products 
+    - Check inventory cannot be triggered for a user without products 
     | products | done_inv |     |
     |:--------:|:--------:|:---:|
     |     0    |   False  | NOK |
@@ -90,8 +103,8 @@ class User(Base):
     |    > 0   |   True   |     |
     
     3. !reg_req || !products
-[x][ ]    - A product cannot be assigned to a user that requested registration
-[x][ ]    - Request registration cannot be triggered for a user with products
+    - A product cannot be assigned to a user that requested registration
+    - Request registration cannot be triggered for a user with products
     | products | reg_req |     |
     |:--------:|:-------:|:---:|
     |     0    |  False  |     |
@@ -100,9 +113,9 @@ class User(Base):
     |    > 0   |   True  | NOK |
 
     4. products || !req_inv
-[ ][ ]    - A user without products cannot request inventorying;
+    - A user without products cannot request inventorying;
         if a user doesn't have anymore products assigned set req_inv to False
-[x][ ]    - Request inventorying cannot be triggered for a user without products
+    - Request inventorying cannot be triggered for a user without products
     | products | req_inv |     |
     |:--------:|:-------:|:---:|
     |     0    |  False  |     |
@@ -111,8 +124,8 @@ class User(Base):
     |    > 0   |   True  |     |
 
     5. !reg_req || !admin
-[x][ ]    - An admin cannot request registration
-[x][ ]    - A user who requested registration cannot be admin
+    - An admin cannot request registration
+    - A user who requested registration cannot be admin
     | admin | reg_req |     |
     |:-----:|:-------:|:---:|
     | False |  False  |     |
@@ -121,8 +134,8 @@ class User(Base):
     |  True |   True  | NOK |
 
     6. !req_inv || !admin
-[x][ ]    - An admin cannot request inventory check
-[x][ ]    - Check inventory cannot be triggered for an admin
+    - An admin cannot request inventory check
+    - Check inventory cannot be triggered for an admin
     | admin | req_inv |     |
     |:-----:|:-------:|:---:|
     | False |  False  |     |
@@ -131,8 +144,8 @@ class User(Base):
     |  True |   True  | NOK |
 
     7. in_use || done_inv
-[x][ ]    - A retired user cannot check inventory
-[x][ ]    - Check inventory cannot be triggered for a retired user
+    - A retired user cannot check inventory
+    - Check inventory cannot be triggered for a retired user
     | in_use | done_inv |     |
     |:------:|:--------:|:---:|
     |  False |   False  | NOK |
@@ -141,8 +154,8 @@ class User(Base):
     |  True  |   True   |     |
 
     8. in_use || !reg_req
-[x][ ]    - A retired user cannot request registration
-[x][ ]    - Request registration cannot be triggered for a retired user
+    - A retired user cannot request registration
+    - Request registration cannot be triggered for a retired user
     | in_use | reg_req |     |
     |:------:|:-------:|:---:|
     |  False |  False  |     |
@@ -151,8 +164,8 @@ class User(Base):
     |  True  |   True  |     |
 
     9. in_use || !req_inv
-[x][ ]    - A retired user cannot request inventory check
-[x][ ]    - Check inventory cannot be triggered for a retired user
+    - A retired user cannot request inventory check
+    - Check inventory cannot be triggered for a retired user
     | in_use | req_inv |     |
     |:------:|:-------:|:---:|
     |  False |  False  |     |
@@ -161,8 +174,8 @@ class User(Base):
     |  True  |   True  |     |
 
     10. done_inv || !reg_req
-[x][ ]    - A user that requested registration cannot check inventory
-[x][ ]    - A user that checks inventory cannot request registration
+    - A user that requested registration cannot check inventory
+    - A user that checks inventory cannot request registration
     | done_inv | reg_req |     |
     |:--------:|:-------:|:---:|
     |   False  |  False  |     |
@@ -171,8 +184,8 @@ class User(Base):
     |   True   |   True  |     |
 
     11. done_inv || !req_inv
-[x][ ]    - A user that checks inventory cannot request check inventory
-[x][ ]    - If check inventory triggered cancel request check
+    - A user that checks inventory cannot request check inventory
+    - If check inventory triggered cancel request check
     | done_inv | req_inv |     |
     |:--------:|:-------:|:---:|
     |   False  |  False  |     |
@@ -181,8 +194,8 @@ class User(Base):
     |   True   |   True  |     |
 
     12. !req_inv || !reg_req
-[x][ ]    - A user that requested registration cannot request inventory check
-[x][ ]    - A user that requested inventory cannot request registration
+    - A user that requested registration cannot request inventory check
+    - A user that requested inventory cannot request registration
     | reg_req | req_inv |     |
     |:-------:|:-------:|:---:|
     |  False  |  False  |     |
@@ -220,17 +233,6 @@ class User(Base):
     def check_inv(self) -> bool:
         """Check inventory flag. Reverese of `done_inv`"""
         return not self.done_inv
-  
-    @validates("name")
-    def validate_name(self, key: str, value: str) -> Optional[str]:
-        """Check for duplicate or empty name."""
-        if not value:
-            raise ValueError("User must have a name")
-        if value != self.name:
-            with dbSession() as db_session:
-                if db_session.scalar(select(User).filter_by(name=value)):
-                    raise ValueError(f"User {value} allready exists")
-        return value
     
     @validates("password")
     def validate_password(self, key: str, value: str) -> Optional[str]:
@@ -240,7 +242,7 @@ class User(Base):
 
     @validates("products")
     def validate_products(self,
-                          key: Optional[list[Product]],
+                          key: str,
                           value: Product
                           ) -> Optional[Product]:
         """
@@ -257,19 +259,27 @@ class User(Base):
         return value
 
     @validates("admin")
-    def validate_admin(self, key: bool, value: bool
+    def validate_admin(self, key: str, value: bool
                        ) -> Optional[bool]:
         """
         - A user who requested registration cannot be admin
         - Check inventory cannot be triggered for an admin
         """
-        if value and self.reg_req:
-            raise ValueError("User with pending registration can't be admin")
-        self.req_inv = False
+        if value:
+            if self.reg_req:
+                raise ValueError("User with pending registration " +
+                                 "can't be admin")
+            self.req_inv = False
+        if not value:
+            with dbSession() as db_session:
+                admins = db_session.scalars(
+                    select(User).filter_by(admin=True)).all()
+                if len(admins) == 1 and admins[0].id == self.id:
+                    raise ValueError("You are the last admin!")
         return value
     
     @validates("in_use")
-    def validate_in_use(self, key: bool, value: bool
+    def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
         """
         - A user cannot be retired if still has products assigned
@@ -288,7 +298,7 @@ class User(Base):
         return value
 
     @validates("done_inv")
-    def validate_done_inv(self, key: bool, value: bool) -> Optional[bool]:
+    def validate_done_inv(self, key: str, value: bool) -> Optional[bool]:
         """
         - A user without products cannot check inventory
         - A retired user cannot check inventory
@@ -301,14 +311,14 @@ class User(Base):
             if self.reg_req:
                 raise ValueError(
                     "User with pending registration can't check inventory")
-            if not self.products:
+            if not self.in_use_products:
                 raise ValueError(
                     "User without products attached can't check inventory")
             self.req_inv = False
         return value
     
     @validates("reg_req")
-    def validate_reg_req(self, key: bool, value: bool
+    def validate_reg_req(self, key: str, value: bool
                          ) -> Optional[bool]:
         """
         - Request registration cannot be triggered for a user with products
@@ -334,7 +344,7 @@ class User(Base):
         return value
     
     @validates("req_inv")
-    def validate_req_inv(self, key: bool, value: bool
+    def validate_req_inv(self, key: str, value: bool
                          ) -> Optional[bool]:
         """
         - Request inventorying cannot be triggered for a user without products
@@ -354,7 +364,7 @@ class User(Base):
                         "inventorying")
             if not self.done_inv:
                 raise ValueError("User can allready check inventory")
-            if not self.products:
+            if not self.in_use_products:
                 raise ValueError(
                     "Users without products can't request inventorying")
         return value
@@ -374,38 +384,26 @@ class Category(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
     description: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
-    
-
-    @validates("name")
-    def validate_name(self, key: str, value: str) -> Optional[str]:
-        """Check for duplicate or empty name."""
-        if not value:
-            raise ValueError("Category must have a name")
-        if value != self.name:
-            with dbSession() as db_session:
-                if db_session.scalar(select(Category).filter_by(name=value)):
-                    raise ValueError(f"Category {value} allready exists")
-        return value
 
 
     @validates("products")
     def validate_products(self,
-                          key: Optional[list[Product]],
+                          key: str,
                           value: Product
                           ) -> Optional[Product]:
         """A category that's not in use can't have products assigned."""
         if value and not self.in_use:
             raise ValueError(
-                "Not in use categories can't have products attached")
+                "Not in use category can't have products attached")
         return value
     
     @validates("in_use")
-    def validate_in_use(self, key: bool, value: bool
+    def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
         """A category that has products can't 'retire'."""
         if not value and self.products:
             raise ValueError(
-                "Not in use categories can't have products attached")
+                "Not in use category can't have products attached")
         return value
 
 
@@ -426,21 +424,9 @@ class Supplier(Base):
         default="", repr=False)
 
 
-    @validates("name")
-    def validate_name(self, key: str, value: str) -> Optional[str]:
-        """Check for duplicate or empty name."""
-        if not value:
-            raise ValueError("Supplier must have a name")
-        if value != self.name:
-            with dbSession() as db_session:
-                if db_session.scalar(select(Supplier).filter_by(name=value)):
-                    raise ValueError(f"Supplier {value} allready exists")
-        return value
-
-
     @validates("products")
     def validate_products(self,
-                          key: Optional[list[Product]],
+                          key: str,
                           value: Product
                           ) -> Optional[Product]:
         """A supplier that's not in use can't have products assigned."""
@@ -450,7 +436,7 @@ class Supplier(Base):
         return value
     
     @validates("in_use")
-    def validate_in_use(self, key: bool, value: bool
+    def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
         """A supplier that has products can't 'retire'."""
         if not value and self.products:
@@ -498,18 +484,6 @@ class Product(Base):
     to_order: Mapped[bool] = mapped_column(default=False)
     critical: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
-
-    
-    @validates("name")
-    def validate_name(self, key: str, value: str) -> Optional[str]:
-        """Check for duplicate or empty name."""
-        if not value:
-            raise ValueError("Product must have a name")
-        if value != self.name:
-            with dbSession() as db_session:
-                if db_session.scalar(select(Product).filter_by(name=value)):
-                    raise ValueError(f"Product {value} allready exists")
-        return value
     
     @validates("description")
     def validate_description(self, key: str, value: str) -> Optional[str]:
@@ -519,7 +493,7 @@ class Product(Base):
         return value
 
     @validates("responsable_id")
-    def validate_responsable_id(self, key: int, user_id: int) -> Optional[int]:
+    def validate_responsable_id(self, key: str, user_id: int) -> Optional[int]:
         if not user_id:
             raise ValueError(
                 "User can't be deleted or does not exist")
@@ -534,8 +508,15 @@ class Product(Base):
                 raise ValueError(
                     "User with pending registration " +
                     "can't have products attached")
+            if self.responsable_id:
+                prev_user = db_session.get(User, self.responsable_id)
+                # if it's the last product of previous responsable
+                if prev_user.in_use_products == 1:
+                    prev_user.done_inv = True
+                    prev_user.req_inv = False
+                    db_session.commit()
         return user_id
-
+    
     @validates("responsable")
     def validate_responsable(self,
                              key: User,
@@ -550,11 +531,19 @@ class Product(Base):
         if user.reg_req:
             raise ValueError(
                 "User with pending registration can't have products attached")
+        with dbSession() as db_session:
+            if self.responsable:
+                prev_user = self.responsable
+                # if it's the last product of previous responsable
+                if prev_user.in_use_products == 1:
+                    prev_user.done_inv = True
+                    prev_user.req_inv = False
+                    db_session.commit()
         return user
     
     @validates("category_id")
     def validate_category_id(self,
-                             key: int,
+                             key: str,
                              category_id: int
                              ) -> Optional[int]:
         if not category_id:
@@ -568,7 +557,7 @@ class Product(Base):
                 raise ValueError(
                     "Not in use category can't have products attached")
         return category_id
-
+    
     @validates("category")
     def validate_category(self,
                             key: Category,
@@ -584,7 +573,7 @@ class Product(Base):
     
     @validates("supplier_id")
     def validate_supplier_id(self,
-                             key: int,
+                             key: str,
                              supplier_id: int
                              ) -> Optional[int]:
         if not supplier_id:
@@ -598,7 +587,7 @@ class Product(Base):
                 raise ValueError(
                     "Not in use supplier can't have products attached")
         return supplier_id
-
+    
     @validates("supplier")
     def validate_supplier(self,
                             key: Supplier,
@@ -613,7 +602,7 @@ class Product(Base):
         return supplier
     
     @validates("min_stock")
-    def validate_min_stock(self, key: int, value: int) -> Optional[int]:
+    def validate_min_stock(self, key: str, value: int) -> Optional[int]:
         try:
             if not (value >= 0):
                 raise ValueError("Minimum stock must be ≥ 0")
@@ -622,7 +611,7 @@ class Product(Base):
         return value
     
     @validates("ord_qty")
-    def validate_ord_qty(self, key: int, value: int) -> Optional[int]:
+    def validate_ord_qty(self, key: str, value: int) -> Optional[int]:
         try:
             if not (value >= 1):
                 raise ValueError("Order quantity must be ≥ 1")
@@ -631,13 +620,13 @@ class Product(Base):
         return value
     
     @validates("to_order")
-    def validate_to_order(self, key: bool, value: bool) -> Optional[bool]:
+    def validate_to_order(self, key: str, value: bool) -> Optional[bool]:
         if value and not self.in_use:
             raise ValueError("Can't order not in use products")
         return value
     
     @validates("in_use")
-    def validate_in_use(self, key: bool, value: bool) -> Optional[bool]:
+    def validate_in_use(self, key: str, value: bool) -> Optional[bool]:
         if not value and self.to_order:
             raise ValueError(
                 "Can't 'retire' a product that needs to be ordered")
