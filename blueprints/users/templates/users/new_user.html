@@ -2,12 +2,46 @@
 
 {% block title %}New User{% endblock %}
 
-{% block page_title %}Create new user{% endblock %}
-
 {% block main %}
 
+<div class="card mx-auto" style="max-width: 30rem;">
+    <form class="" action="{{ url_for('users.new_user') }}" method="POST">
+        <div class="card-header h5 py-2">
+            Create new user
+        </div>
 
+        <div class="card-body">
+            {{ form.csrf_token }}
+            
+            <div class="input-group mb-3">
+                <label class="input-group-text" style="width: 6rem;">{{ form.name.label.text }}</label>
+                {{ form.name(class="form-control", placeholder="Required", autocomplete="off") }}
+            </div>
+            
+            <div class="input-group mb-3">
+                <label class="input-group-text" style="width: 6rem;">{{ form.password.label.text }}</label>
+                {{ form.password(class="form-control", placeholder="Required") }}
+            </div>
 
+            <div class="input-group mb-3">
+                <label class="input-group-text" style="width: 6rem;">{{ form.details.label.text }}</label>
+                {{ form.details(class="form-control", placeholder="Optional") }}
+            </div>
 
+            <div class="input-group">
+                <div class="input-group-text mx-auto">
+                    <label class="px-2">{{ form.admin.label.text }}</label>
+                    <div class="form-switch">
+                        {{ form.admin(class="form-check-input", role="switch") }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-footer">
+            {{ form.submit(class="btn btn-primary my-1") }}
+        </div>
+    </form>
+</div>
 
 {% endblock %}
