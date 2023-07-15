@@ -23,7 +23,7 @@ def index():
             filter_by(id=session.get("user_id")).
             options(joinedload(User.products), raiseload("*")))
 
-        if user.admin:
+        if session.get("admin"):
             with dbSession() as db_session:
                 users = db_session.scalars(
                     select(User).
