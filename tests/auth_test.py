@@ -1,15 +1,19 @@
 """Authentification blueprint tests."""
 
+from html import unescape
+
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
-from werkzeug.security import check_password_hash, generate_password_hash
+from werkzeug.security import check_password_hash
 
+from blueprints.auth.auth import (PASSW_MIN_LENGTH, USER_MAX_LENGTH,
+                                  USER_MIN_LENGTH, msg)
 from database import User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_suppliers, create_test_users,
-                   user_logged_in, create_test_products)
+                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.auth
 
@@ -34,21 +38,20 @@ def test_clear_session_if_user_logged_in(client: FlaskClient, user_logged_in):
 
 
 @pytest.mark.parametrize(("name", "password", "confirm", "flash_message"), (
-    ("", "a", "a", b"Username is required!"),
-    ("aa", "a", "a", b"Username must be between 3 and 15 characters!"),
-    ("aaaaaaaaaaaaaaaa", "a", "a",
-        b"Username must be between 3 and 15 characters!"),
-    ("aaa", "", "a", b"Password is required!"),
-    ("aaa", "aaaaaaa", "a", b"Password should have at least 8 characters!"),
-    ("aaa", "aaaaaaaa", "", b"Confirmation password is required!"),
-    ("aaa", "aaaaaaaa", "aaaaaaa",
-        b"Password should have at least 8 characters!"),
-    ("aaa", "aaaaaaaa", "aaaaaaab", b"Passwords don&#39;t match!"),
-    ("aaa", "aaaaaaaa", "aaaaaaaa", b"Check password rules!"),
-    ("aaa", "#1aaaaaa", "#1aaaaaa", b"Check password rules!"),
-    ("aaa", "#Aaaaaaa", "#Aaaaaaa", b"Check password rules!"),
-    ("aaa", "1Aaaaaaa", "1Aaaaaaa", b"Check password rules!"),
-    ("user5", "P@ssw0rd", "P@ssw0rd", b"Username allready exists..."),
+    ("", "a", "a", msg["usr_req"]),
+    ("aa", "a", "a", msg["usr_len"]),
+    ("aaaaaaaaaaaaaaaa", "a", "a", msg["usr_len"]),
+    ("aaa", "", "a", msg["psw_req"]),
+    ("aaa", "aaaaaaa", "a", msg["psw_len"]),
+    ("aaa", "aaaaaaaa", "", msg["psw_req"]),
+    ("aaa", "aaaaaaaa", "aaaaaaa", msg["psw_len"]),
+    ("aaa", "aaaaaaaa", "aaaaaaab", msg["psw_eq"]),
+    ("aaa", "aaaaaaaa", "aaaaaaaa", msg["psw_rules"]),
+    ("aaa", "#1aaaaaa", "#1aaaaaa", msg["psw_rules"]),
+    ("aaa", "#Aaaaaaa", "#Aaaaaaa", msg["psw_rules"]),
+    ("aaa", "1Aaaaaaa", "1Aaaaaaa", msg["psw_rules"]),
+    ("user5", "P@ssw0rd", "P@ssw0rd", f"User user5 allready exists"),
+    ("new_user", "P@ssw0rd", "P@ssw0rd", msg["usr_res"]),
 ))
 def test_failed_registration(
         client: FlaskClient,
@@ -63,7 +66,7 @@ def test_failed_registration(
             "confirm": confirm}
         response = client.post("/auth/register", data=data)
     assert response.status_code == 200
-    assert flash_message in response.data
+    assert flash_message in unescape(response.text)
 
 
 def test_successful_registration(client: FlaskClient):
@@ -113,14 +116,14 @@ def test_login_landing_page(client: FlaskClient):
 
 
 @pytest.mark.parametrize(("name", "password", "flash_message"), (
-    ("", "", b"Username is required!"),
-    ("a", "", b"Password is required!"),
-    ("a", "a", b"Wrong username or password!"),
-    ("a", "password", b"Wrong username or password!"),
-    ("user5", "a", b"Wrong username or password!"),
-    ("user6", "Q!666666", b"This user is not in use anymore!"),
+    ("", "", msg["usr_req"]),
+    ("a", "", msg["psw_req"]),
+    ("a", "a", "Wrong username or password!"),
+    ("a", "password", "Wrong username or password!"),
+    ("user5", "a", "Wrong username or password!"),
+    ("user6", "Q!666666", "This user is not in use anymore!"),
     ("user5", "Q!555555",
-        b"Your registration is pending. Contact an admin."),
+        "Your registration is pending. Contact an admin."),
 ))
 def test_failed_login(
         client: FlaskClient, name, password, flash_message):
@@ -133,7 +136,7 @@ def test_failed_login(
             "password": password}
         response = client.post("/auth/login", data=data)
     assert response.status_code == 200
-    assert flash_message in response.data
+    assert flash_message in response.text
 
 
 def test_succesfull_login_and_logout(client: FlaskClient):
@@ -239,21 +242,18 @@ def test_change_password_landing_page_if_admin_logged_in(
 
 @pytest.mark.parametrize(
     ("old_password", "password", "confirm", "flash_message"), (
-    ("", "P@ssw0rdd", "P@ssw0rdd", b"Old password is required!"),
-    ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd",
-        b"Password should have at least 8 characters!"),
-    ("P@ssw0rd", "", "P@ssw0rdd", b"New password is required!"),
-    ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd",
-        b"Password should have at least 8 characters!"),
-    ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa", b"Check password rules!"),
-    ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa", b"Check password rules!"),
-    ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa", b"Check password rules!"),
-    ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa", b"Check password rules!"),
-    ("P@ssw0rd", "P@ssw0rdd", "", b"Confirmation password is required!"),
-    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r",
-        b"Password should have at least 8 characters!"),
-    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd", b"Passwords don&#39;t match!"),
-    ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd", b"Wrong old password!"),
+    ("", "P@ssw0rdd", "P@ssw0rdd", msg["psw_req"]),
+    ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd", msg["psw_len"]),
+    ("P@ssw0rd", "", "P@ssw0rdd", msg["psw_req"]),
+    ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd", msg["psw_len"]),
+    ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa", msg["psw_rules"]),
+    ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa", msg["psw_rules"]),
+    ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa", msg["psw_rules"]),
+    ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa", msg["psw_rules"]),
+    ("P@ssw0rd", "P@ssw0rdd", "", msg["psw_req"]),
+    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r", msg["psw_len"]),
+    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd", msg["psw_eq"]),
+    ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd", "Wrong old password!"),
 ))
 def test_failed_change_password(
         client: FlaskClient,
@@ -269,7 +269,7 @@ def test_failed_change_password(
             "confirm": confirm}
         response = client.post(url_for("auth.change_password"), data=data)
     assert response.status_code == 200
-    assert flash_message in response.data
+    assert flash_message in unescape(response.text)
 
 
 def test_successful_change_password(client: FlaskClient, user_logged_in):
@@ -299,7 +299,7 @@ def test_successful_change_password(client: FlaskClient, user_logged_in):
         test_user = db_session.scalar(
             select(User).filter_by(name=user_name))
         assert check_password_hash(test_user.password, new_password)
-        test_user.password = generate_password_hash(old_password)
+        test_user.password = old_password
         db_session.commit()
         test_user = db_session.scalar(
             select(User).filter_by(name=user_name))

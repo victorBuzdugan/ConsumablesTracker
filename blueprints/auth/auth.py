@@ -3,12 +3,29 @@
 from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_wtf import FlaskForm
 from sqlalchemy import select
-from werkzeug.security import check_password_hash, generate_password_hash
-from wtforms import PasswordField, StringField
-from wtforms.validators import EqualTo, InputRequired, Length, Regexp
+from werkzeug.security import check_password_hash
+from wtforms import PasswordField, StringField, SubmitField
+from wtforms.validators import EqualTo, InputRequired, Length, NoneOf, Regexp
 
 from database import User, dbSession
-from helpers import login_required, flash_errors
+from helpers import flash_errors, login_required
+
+USER_MIN_LENGTH = 3
+USER_MAX_LENGTH = 15
+PASSW_MIN_LENGTH = 8
+PASSW_REGEX = r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}"
+PASSW_SYMB = "!@#$%^&*_=+"
+msg = {
+    "usr_req": "Username is required!",
+    "usr_len": (f"Username must be between {USER_MIN_LENGTH} and " +
+                    f"{USER_MAX_LENGTH} characters!"),
+    "usr_res": "Username is reserved!",
+    "psw_req": "Password is required!",
+    "psw_len": ("Password should have at least "
+                            f"{PASSW_MIN_LENGTH} characters!"),
+    "psw_rules": "Check password rules!",
+    "psw_eq": "Passwords don't match!",
+}
 
 auth_bp = Blueprint("auth",
                     __name__,
@@ -21,10 +38,24 @@ class LoginForm(FlaskForm):
     """Login form."""
     name = StringField(
         label="Username",
-        validators=[InputRequired("Username is required!")])
+        validators=[InputRequired(msg["usr_req"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Username",
+            "autocomplete": "off",
+            })
     password = PasswordField(
         label="Password",
-        validators=[InputRequired("Password is required!")])
+        validators=[InputRequired(msg["psw_req"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Password",
+            })
+    submit = SubmitField(
+        label="Log In",
+        render_kw={
+            "class": "btn btn-primary px-4",
+            "disabled": ""})
 
 
 class RegisterForm(FlaskForm):
@@ -32,29 +63,48 @@ class RegisterForm(FlaskForm):
     name = StringField(
         label="Username",
         validators=[
-            InputRequired("Username is required!"),
+            InputRequired(msg["usr_req"]),
             Length(
-                min=3,
-                max=15,
-                message="Username must be between 3 and 15 characters!")])
+                min=USER_MIN_LENGTH,
+                max=USER_MAX_LENGTH,
+                message=msg["usr_len"]),
+            NoneOf(("new_user", ), msg["usr_res"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Username",
+            "autocomplete": "off",
+            })
     password = PasswordField(
         label="Password",
         validators=[
-            InputRequired("Password is required!"),
+            InputRequired(msg["psw_req"]),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
             Regexp(
-                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
-                message="Check password rules!")])
+                PASSW_REGEX,
+                message=msg["psw_rules"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Password",
+            })
     confirm = PasswordField(
         label="Retype password",
         validators=[
-            InputRequired("Confirmation password is required!"),
+            InputRequired(msg["psw_req"]),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
-            EqualTo("password", "Passwords don't match!")])
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
+            EqualTo("password", msg["psw_eq"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Retype password",
+            })
+    submit = SubmitField(
+        label="Request registration",
+        render_kw={
+            "class": "btn btn-primary px-4",
+            "disabled": ""})
 
 
 class ChgPasswForm(FlaskForm):
@@ -62,28 +112,45 @@ class ChgPasswForm(FlaskForm):
     old_password = PasswordField(
         label="Old password",
         validators=[
-            InputRequired("Old password is required!"),
+            InputRequired(msg["psw_req"]),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!")])
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Old password",
+            })
     password = PasswordField(
         label="New password",
         validators=[
-            InputRequired("New password is required!"),
+            InputRequired(msg["psw_req"]),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
             Regexp(
-                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
-                message="Check password rules!")])
+                PASSW_REGEX,
+                message=msg["psw_rules"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "New password",
+            })
     confirm = PasswordField(
         label="Retype password",
         validators=[
-            InputRequired("Confirmation password is required!"),
+            InputRequired(msg["psw_req"]),
             Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
-            EqualTo("password", "Passwords don't match!")])
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
+            EqualTo("password", msg["psw_eq"])],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Retype password",
+            })
+    submit = SubmitField(
+        label="Change password",
+        render_kw={
+            "class": "btn btn-primary px-4",
+            "disabled": ""})
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
@@ -139,19 +206,15 @@ def register():
 
     if reg_form.validate_on_submit():
         with dbSession() as db_session:
-            user = db_session.scalar(
-                select(User).filter_by(name=reg_form.name.data))
-            if not user:
-                user = User(
-                    name=reg_form.name.data,
-                    password=generate_password_hash(reg_form.password.data)
-                )
+            user = User("new_user", "password")
+            try:
+                reg_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
                 flash("Registration request sent. Please contact an admin.")
                 return redirect(url_for("auth.login"))
-            else:
-                flash("Username allready exists...", "warning")
+            except ValueError as error:
+                flash(str(error), "error")
     elif reg_form.errors:
         flash_errors(reg_form.errors)
 
@@ -163,21 +226,21 @@ def register():
 def change_password():
     """Change current user password."""
     
-    chg_pass: ChgPasswForm = ChgPasswForm()
+    chg_pass_form: ChgPasswForm = ChgPasswForm()
 
-    if chg_pass.validate_on_submit():
+    if chg_pass_form.validate_on_submit():
         with dbSession() as db_session:
             user = db_session.get(User, session["user_id"])
 
-            if check_password_hash(user.password, chg_pass.old_password.data):
-                user.password = generate_password_hash(chg_pass.password.data)
+            if check_password_hash(user.password, chg_pass_form.old_password.data):
+                chg_pass_form.populate_obj(user)
                 db_session.commit()
                 session.clear()
                 flash("Password changed.")
                 return redirect(url_for("auth.login"))
             else:
                 flash("Wrong old password!", "error")
-    elif chg_pass.errors:
-        flash_errors(chg_pass.errors)
+    elif chg_pass_form.errors:
+        flash_errors(chg_pass_form.errors)
 
-    return render_template("auth/change_password.html", form=chg_pass)
+    return render_template("auth/change_password.html", form=chg_pass_form)

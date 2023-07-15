@@ -8,7 +8,7 @@
 
 {% block main %}
 <div class="card mx-auto" style="max-width: 20rem;">
-    <form class="" action="{{ url_for('auth.login') }}" method="POST">
+    <form method="POST">
         <div class="card-header h5 py-2">
             Login
         </div>
@@ -17,8 +17,8 @@
             {{ form.csrf_token }}
             
             <div class="form-floating mb-3">
-                {{ form.name(class="form-control", placeholder=form.name.label.text, autocomplete="off") }}
-                <label>Username</label>
+                {{ form.name }}
+                {{ form.name.label }}
                 <div class="invalid-feedback">
                     <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
@@ -30,8 +30,8 @@
             </div>
 
             <div class="form-floating mb-3">
-                {{ form.password(class="form-control", placeholder=form.password.label.text) }}
-                <label>Password</label>
+                {{ form.password }}
+                {{ form.password.label }}
                 <div class="invalid-feedback">
                     <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
@@ -45,7 +45,7 @@
         </div>
         
         <div class="card-footer py-3">
-            <input class="btn btn-primary px-4" id="submit_button" type="submit" value="Log In" disabled>
+            {{ form.submit }}
         </div>
     </form>
 </div>

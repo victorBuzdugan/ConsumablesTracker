@@ -22,7 +22,7 @@ addEventListener("DOMContentLoaded", (event) => {
     const specialChars = "!@#$%^&*_=+";
     const numbers = "0123456789";
 
-    const submit_button = document.getElementById("submit_button");
+    const submit_button = document.getElementById("submit");
     let okName, okPass, okConf;
 
     userRequirements.forEach((element) => element.classList.add("wrong"));

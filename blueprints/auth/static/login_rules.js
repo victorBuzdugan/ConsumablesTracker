@@ -11,7 +11,7 @@ addEventListener("DOMContentLoaded", (event) => {
     let lengBoolean;
     let leng = document.querySelector(".leng");
 
-    const submit_button = document.getElementById("submit_button");
+    const submit_button = document.getElementById("submit");
     let okName, okPass;
 
     userRequirements.forEach((element) => element.classList.add("wrong"));
