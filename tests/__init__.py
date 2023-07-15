@@ -3,7 +3,6 @@
 import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import select, create_engine
-from werkzeug.security import generate_password_hash
 
 from app import app
 from database import dbSession, Base, User, Category, Supplier, Product
@@ -39,28 +38,28 @@ def create_test_users(create_test_db):
     users = []
     users.append(User(
         "user1",
-        generate_password_hash("Q!111111"),
+        "Q!111111",
         admin=True,
         reg_req=False))
     users.append(User(
         "user2",
-        generate_password_hash("Q!222222"),
+        "Q!222222",
         admin=True,
         reg_req=False))
     users.append(User(
         "user3",
-        generate_password_hash("Q!333333"),
+        "Q!333333",
         reg_req=False))
     users.append(User(
         "user4",
-        generate_password_hash("Q!444444"),
+        "Q!444444",
         reg_req=False))
     users.append(User(
         "user5",
-        generate_password_hash("Q!555555")))
+        "Q!555555"))
     users.append(User(
         "user6",
-        generate_password_hash("Q!666666"),
+        "Q!666666",
         reg_req=False,
         in_use=False))
     with dbSession() as db_session:
