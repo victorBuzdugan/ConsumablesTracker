@@ -84,6 +84,10 @@
                     {% endif %}
                 </li>
             </ul>
+            <div class="card-footer">
+                <!-- <input class="btn btn-primary px-4" id="approve-inventory" name="approve-inventory" type="submit" value="Create user"> -->
+                <a class="btn btn-primary px-4" href="{{ url_for('users.approve_check_inv_all') }}">Start Inventorying</a>
+            </div>
         </div>
 
         <div class="card mx-auto mb-3" style="max-width: 40rem;">
