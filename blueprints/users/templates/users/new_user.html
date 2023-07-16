@@ -4,44 +4,55 @@
 
 {% block main %}
 
-<div class="card mx-auto" style="max-width: 30rem;">
-    <form class="" action="{{ url_for('users.new_user') }}" method="POST">
+<form method="POST">
+    {{ form.csrf_token }}
+
+    <div class="card mx-auto" style="max-width: 30rem;">
+        
         <div class="card-header h5 py-2">
             Create new user
         </div>
 
         <div class="card-body">
-            {{ form.csrf_token }}
             
-            <div class="input-group mb-3">
-                <label class="input-group-text" style="width: 6rem;">{{ form.name.label.text }}</label>
-                {{ form.name(class="form-control", placeholder="Required", autocomplete="off") }}
-            </div>
-            
-            <div class="input-group mb-3">
-                <label class="input-group-text" style="width: 6rem;">{{ form.password.label.text }}</label>
-                {{ form.password(class="form-control", placeholder="Required") }}
+            <div class="form-floating mb-3">
+                {{ form.name }}
+                {{ form.name.label(class="text-decoration-underline") }}
             </div>
 
-            <div class="input-group mb-3">
-                <label class="input-group-text" style="width: 6rem;">{{ form.details.label.text }}</label>
-                {{ form.details(class="form-control", placeholder="Optional") }}
+            <div class="form-floating mb-3">
+                {{ form.password }}
+                {{ form.password.label(class="text-decoration-underline") }}
             </div>
 
-            <div class="input-group">
-                <div class="input-group-text mx-auto">
-                    <label class="px-2">{{ form.admin.label.text }}</label>
-                    <div class="form-switch">
-                        {{ form.admin(class="form-check-input", role="switch") }}
+            <div class="form-floating mb-3">
+                {{ form.details }}
+                {{ form.details.label }}
+            </div>
+
+            <div class="row row-cols-3 row-cols-md-3 g-1 g-md-3 mb-3">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body p-1">
+                            {{ form.admin.label }}
+                        </div>
+                        <div class="card-footer">
+                            <div class="form-switch">
+                                {{ form.admin }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <span class="text-body-tertiary">Underlined fields are required</span>
         </div>
 
         <div class="card-footer">
-            {{ form.submit(class="btn btn-primary my-1") }}
+            {{ form.submit }}
         </div>
-    </form>
-</div>
+    </div>
+</form>
 
 {% endblock %}
