@@ -1,7 +1,6 @@
 """Users blueprint."""
 
-from flask import (Blueprint, flash, redirect, render_template, request,
-                   session, url_for)
+from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
@@ -27,35 +26,8 @@ def admin_logged_in():
     pass
 
 
-# TODO: refactor with render_kw and other details
 class CreateUserForm(FlaskForm):
     """Create user form."""
-    name = StringField(
-        label="Username",
-        validators=[
-            InputRequired("Username is required!"),
-            Length(
-                min=3,
-                max=15,
-                message="Username must be between 3 and 15 characters!")])
-    password = PasswordField(
-        label="Password",
-        validators=[
-            InputRequired("Password is required!"),
-            Length(
-                min=8,
-                message="Password should have at least 8 characters!"),
-            Regexp(
-                r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}",
-                message=("Password must have 1 big letter, " +
-                         "1 number, 1 special char (!@#$%^&*_=+)!"))])
-    admin = BooleanField(label="Admin")
-    details = TextAreaField(label="Details")
-    submit = SubmitField(label="Create user")
-
-
-class EditUserForm(FlaskForm):
-    """Edit user form."""
     name = StringField(
         label="Username",
         validators=[
@@ -72,6 +44,39 @@ class EditUserForm(FlaskForm):
     password = PasswordField(
         label="Password",
         validators=[
+            InputRequired(msg["psw_req"]),
+            Length(
+                min=PASSW_MIN_LENGTH,
+                message=msg["psw_len"]),
+            Regexp(PASSW_REGEX, message=("Password must have 1 big letter, " +
+                         f"1 number, 1 special char ({PASSW_SYMB})!"))],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Password",
+            })
+    details = TextAreaField(
+        label="Details",
+        render_kw={
+                "class": "form-control",
+                "placeholder": "Details",
+                "style": "height: 5rem",
+                })
+    admin = BooleanField(
+        label="Admin",
+        render_kw={
+                "class": "form-check-input",
+                "role": "switch",
+                })
+    submit = SubmitField(
+        label="Create user",
+        render_kw={"class": "btn btn-primary px-4"})
+
+
+class EditUserForm(CreateUserForm):
+    """Edit user form."""
+    password = PasswordField(
+        label="Password",
+        validators=[
             Optional(),
             Length(
                 min=PASSW_MIN_LENGTH,
@@ -84,12 +89,6 @@ class EditUserForm(FlaskForm):
             })
     all_products = IntegerField()
     in_use_products = IntegerField()
-    admin = BooleanField(
-        label="Admin",
-        render_kw={
-                "class": "form-check-input",
-                "role": "switch",
-                })
     in_use = BooleanField(
         label="In use",
         render_kw={
@@ -104,13 +103,6 @@ class EditUserForm(FlaskForm):
                 })
     reg_req = BooleanField(validators=[Optional()])
     req_inv = BooleanField(validators=[Optional()])
-    details = TextAreaField(
-        label="Details",
-        render_kw={
-                "class": "form-control",
-                "placeholder": "Details",
-                "style": "height: 5rem",
-                })
     submit = SubmitField(
         label="Update",
         render_kw={"class": "btn btn-primary px-4"})
@@ -157,36 +149,41 @@ def approve_check_inv(username):
 
     return redirect(url_for("main.index"))
 
-# TODO redesign
+@users_bp.route("/approve-all-inventory-check")
+def approve_check_inv_all():
+    """Approve inventory check for all eligible users."""
+    with dbSession() as db_session:
+        users = db_session.scalars(select(User).filter_by(in_use=True, reg_req=False)).all()
+        for user in users:
+            if user.in_use_products:
+                user.done_inv = False
+        db_session.commit()
+
+    return redirect(url_for("main.index"))
+
 @users_bp.route("/user/new", methods=["GET", "POST"])
 def new_user():
     """Create a new user."""
     new_user_form: CreateUserForm = CreateUserForm()
     if new_user_form.validate_on_submit():
         with dbSession() as db_session:
-            # check if user exists
-            user = db_session.scalar(
-                select(User).filter_by(name=new_user_form.name.data))
-            if not user:
+            try:
                 user = User(
-                    name=new_user_form.name.data,
-                    password=new_user_form.password.data,
-                    admin=new_user_form.admin.data,
-                    reg_req=False,
-                    details=new_user_form.details.data
-                )
+                    new_user_form.name.data,
+                    new_user_form.password.data,
+                    reg_req=False)
+                new_user_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
-                flash(f"User {user.name} created")
+                flash(f"User '{user.name}' created")
                 return redirect(url_for("main.index"))
-            else:
-                flash("Username allready exists...", "warning")
+            except ValueError as error:
+                flash(str(error), "error")
     elif new_user_form.errors:
         flash_errors(new_user_form.errors)
 
     return render_template("users/new_user.html", form=new_user_form)
 
-# TODO
 @users_bp.route("/<username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
@@ -248,15 +245,8 @@ def edit_user(username):
             filter_by(name=escape(username)))
     if user:
         edit_user_form = EditUserForm(obj=user)
-        # on 'POST' WTForms defaults to blank input if values were not posted
-        # edit_user_form.reg_req.data = user.reg_req
-        # edit_user_form.req_inv.data = user.req_inv
-        # edit_user_form.check_inv.data = user.check_inv
-        # edit_user_form.admin.data = user.admin
-        # edit_user_form.in_use.data = user.in_use
     else:
         flash(f"User '{username}' does not exist!", "error")
         return redirect(url_for("main.index"))
 
     return render_template("users/edit_user.html", form=edit_user_form)
-
