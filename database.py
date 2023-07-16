@@ -5,12 +5,10 @@ from __future__ import annotations
 from typing import List, Optional
 
 from sqlalchemy import ForeignKey, create_engine, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
-                            Session, declared_attr, mapped_column,
-                            relationship, sessionmaker, validates, synonym)
+                            declared_attr, mapped_column, relationship,
+                            sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
-
 
 # factory for creating new database connections objects
 engine = create_engine("sqlite:///inventory.db", echo=True)

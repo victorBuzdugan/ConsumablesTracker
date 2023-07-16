@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 from wtforms import PasswordField, StringField, SubmitField
-from wtforms.validators import EqualTo, InputRequired, Length, NoneOf, Regexp
+from wtforms.validators import EqualTo, InputRequired, Length, Regexp
 
 from database import User, dbSession
 from helpers import flash_errors, login_required
@@ -19,7 +19,6 @@ msg = {
     "usr_req": "Username is required!",
     "usr_len": (f"Username must be between {USER_MIN_LENGTH} and " +
                     f"{USER_MAX_LENGTH} characters!"),
-    "usr_res": "Username is reserved!",
     "psw_req": "Password is required!",
     "psw_len": ("Password should have at least "
                             f"{PASSW_MIN_LENGTH} characters!"),
@@ -67,8 +66,7 @@ class RegisterForm(FlaskForm):
             Length(
                 min=USER_MIN_LENGTH,
                 max=USER_MAX_LENGTH,
-                message=msg["usr_len"]),
-            NoneOf(("new_user", ), msg["usr_res"])],
+                message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
             "placeholder": "Username",
@@ -206,8 +204,8 @@ def register():
 
     if reg_form.validate_on_submit():
         with dbSession() as db_session:
-            user = User("new_user", "password")
             try:
+                user = User(reg_form.name.data, reg_form.password.data)
                 reg_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
