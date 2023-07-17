@@ -11,7 +11,11 @@ from database import dbSession, Base, User, Category, Supplier, Product
 @pytest.fixture(scope="session")
 def create_test_db():
     """Configure session to a test database. """
-    testEngine = create_engine("sqlite:///.inventory.db", echo=True)
+    testEngine = create_engine(
+        "sqlite:///.inventory.db",
+        echo=True,
+        pool_size=10,
+        max_overflow=20)
     dbSession.configure(bind=testEngine)
     Base.metadata.drop_all(bind=testEngine)
     Base.metadata.create_all(bind=testEngine)
@@ -62,6 +66,10 @@ def create_test_users(create_test_db):
         "Q!666666",
         reg_req=False,
         in_use=False))
+    users.append(User(
+        "user7",
+        "Q!777777",
+        reg_req=False))
     with dbSession() as db_session:
         db_session.add_all(users)
         db_session.commit()
