@@ -115,11 +115,14 @@ class EditUserForm(CreateUserForm):
 def approve_reg(username):
     """Approve registration of user `username`."""
     with dbSession() as db_session:
-        user = db_session.scalar(select(User).filter_by(name=escape(username)))
-        if user:
-            user.reg_req = False
-            db_session.commit()
-            flash(f"{username} has been approved")
+        if (user:= db_session.scalar(
+                        select(User).filter_by(name=escape(username)))):
+            try:
+                user.reg_req = False
+                db_session.commit()
+                flash(f"{username} has been approved")
+            except ValueError as error:
+                flash(str(error))
         else:
             flash(f"{username} does not exist!", "error")
 
@@ -129,23 +132,15 @@ def approve_reg(username):
 def approve_check_inv(username):
     """Approve inventory check for user `username`."""
     with dbSession() as db_session:
-        user = db_session.scalar(select(User).filter_by(name=escape(username)))
-        if (user and
-                user.in_use and
-                not user.reg_req
-                and len(user.products) > 0):
-            user.done_inv = False
-            # TESTME db rules auto-sets req_inv = False
-            db_session.commit()
-            flash(f"{username} inventory check has been approved")
-        elif not user:
-            flash(f"{username} does not exist!", "error")
-        elif not user.in_use:
-            flash(f"{username} is 'retired'", "warning")
-        elif user.reg_req:
-            flash(f"{username} is awaiting registration approval", "warning")
+        if (user:= db_session.scalar(
+                        select(User).filter_by(name=escape(username)))):
+            try:
+                user.done_inv = False
+                db_session.commit()
+            except ValueError as error:
+                flash(str(error))
         else:
-            flash(f"{username} has no products attached", "warning")
+            flash(f"{username} does not exist!", "error")
 
     return redirect(url_for("main.index"))
 
@@ -153,7 +148,8 @@ def approve_check_inv(username):
 def approve_check_inv_all():
     """Approve inventory check for all eligible users."""
     with dbSession() as db_session:
-        users = db_session.scalars(select(User).filter_by(in_use=True, reg_req=False)).all()
+        users = db_session.scalars(
+            select(User).filter_by(in_use=True, reg_req=False)).all()
         for user in users:
             if user.in_use_products:
                 user.done_inv = False
@@ -183,7 +179,7 @@ def new_user():
         flash_errors(new_user_form.errors)
 
     return render_template("users/new_user.html", form=new_user_form)
-
+# TESTME
 @users_bp.route("/<username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
