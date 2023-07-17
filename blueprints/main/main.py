@@ -1,7 +1,7 @@
 """Main blueprint."""
 
 from flask import Blueprint, render_template, session
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, raiseload
 
 from database import dbSession, User, Category, Supplier, Product
@@ -32,18 +32,25 @@ def index():
                     ).unique().all()
 
             stats = {
-                "products_to_order": db_session.query(Product).
-                        filter_by(in_use=True, to_order=True).count(),
-                "users_in_use": db_session.query(User).
-                        filter_by(in_use=True).count(),
-                "categories_in_use": db_session.query(Category).
-                        filter_by(in_use=True).count(),
-                "suppliers_in_use": db_session.query(Supplier).
-                        filter_by(in_use=True).count(),
-                "products_in_use": db_session.query(Product).
-                        filter_by(in_use=True).count(),
-                "critical_products": db_session.query(Product).
-                        filter_by(in_use=True, critical=True).count()
+                "products_to_order": db_session.\
+                        scalar(select(func.count(Product.id)).\
+                        filter_by(in_use=True, to_order=True)),
+                "products_in_use": db_session.\
+                        scalar(select(func.count(Product.id)).\
+                        filter_by(in_use=True)),
+                "critical_products": db_session.\
+                        scalar(select(func.count(Product.id)).\
+                        filter_by(in_use=True, critical=True)),
+                "users_in_use": db_session.\
+                        scalar(select(func.count(User.id)).\
+                        filter_by(in_use=True)),
+                "categories_in_use": db_session.\
+                        scalar(select(func.count(Category.id)).\
+                        filter_by(in_use=True)),
+                "suppliers_in_use": db_session.\
+                        scalar(select(func.count(Supplier.id)).\
+                        filter_by(in_use=True)),
+
             }
 
             return render_template("main/index.html", user=user, users=users, stats=stats)

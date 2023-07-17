@@ -1,7 +1,7 @@
 """Test SQLAlchemy tables mapping."""
 
 import pytest
-from sqlalchemy import insert, select
+from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -104,14 +104,16 @@ def test_username_duplicate(client):
 
 
 def test_bulk_user_insertion(client):
-    values = [{"name": f"user__{no}",
-               "password": generate_password_hash(f"P@ssw0rd{no}")}
-              for no in range(7,10)]
     with dbSession() as db_session:
+        last_id = db_session.scalar(
+            select(User).order_by(User.id.desc())).id
+        values = [{"name": f"user__{no}",
+                "password": generate_password_hash(f"P@ssw0rd{no}")}
+                for no in range(last_id + 1, last_id + 4)]
         db_session.execute(insert(User), values)
         db_session.commit()
         users = db_session.scalars(
-            select(User).where(User.name.like("user__%"))).all()
+            select(User).where(User.name.like("user__%%"))).all()
         assert len(users) == 3
         for user in users:
             assert check_password_hash(user.password, f"P@ssw0rd{user.id}")
@@ -207,7 +209,7 @@ def test_validate_last_admin(client):
     with dbSession() as db_session:
         db_session.get(User, 1).admin = False
         db_session.commit()
-        assert db_session.query(User).filter_by(admin=True).count() == 1
+        assert db_session.scalar(select(func.count(User.id)).filter_by(admin=True)) == 1
         user = db_session.get(User, 2)
         assert user.admin
         try:

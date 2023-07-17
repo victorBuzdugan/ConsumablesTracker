@@ -13,7 +13,7 @@
         </div>
         <ul class="list-group list-group-flush">
             <li class="list-group-item">Logged in as <span class="text-secondary">{{ user.name }}</span></li>
-            <li class="list-group-item">You have <span class="text-secondary">{{ user.products|length }} products</span> assigned</li>
+            <li class="list-group-item">You have <span class="text-secondary">{{ user.in_use_products }} products</span> assigned</li>
             <li class="list-group-item">
                 {% if user.req_inv %}
                     <span class="text-warning">You requested a inventory check</span>

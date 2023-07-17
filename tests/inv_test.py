@@ -3,7 +3,7 @@
 import pytest
 from flask import session, url_for, g
 from flask.testing import FlaskClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from database import User, dbSession, Category, Supplier, Product
 from tests import (admin_logged_in, client, create_test_categories,
@@ -100,16 +100,14 @@ def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logge
             product.to_order = False
             db_session.commit()
 
-            products_len = db_session.query(Product)\
-                .filter_by(responsable_id=session.get("user_id"), in_use=True)\
-                .count()
+            products_len = db_session.scalar(select(func.count(Product.id)).
+                filter_by(responsable_id=session.get("user_id"), in_use=True))
             product.in_use = False
             db_session.commit()
             response = client.get(url_for("inv.inventory"))
             assert (f'id="{product.id}" name="{product.id}" disabled checked') not in response.text
-            assert db_session.query(Product)\
-                .filter_by(responsable_id=session.get("user_id"), in_use=True)\
-                .count() == products_len - 1
+            assert db_session.scalar(select(func.count(Product.id)).
+                filter_by(responsable_id=session.get("user_id"), in_use=True)) == products_len - 1
             product.in_use = True
             db_session.commit()
 

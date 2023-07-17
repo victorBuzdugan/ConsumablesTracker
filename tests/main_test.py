@@ -3,7 +3,7 @@
 import pytest
 from flask import session, url_for
 from flask.testing import FlaskClient
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
 from database import User, dbSession, Category, Supplier, Product
@@ -86,7 +86,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
             assert ('Logged in as <span class="text-secondary">' +
                     f'{session["user_name"]}') in response.text
             assert ('You have <span class="text-secondary">' +
-                    f'{len(user.products)} products') in response.text
+                    f'{user.in_use_products} products') in response.text
             assert "Inventory check not required" in response.text
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
             user.done_inv = False
@@ -184,16 +184,16 @@ def test_index_admin_logged_in_statistics(client: FlaskClient, admin_logged_in):
         response = client.get("/")
         with dbSession() as db_session:
             assert "Statistics" in response.text
-            in_use_users = db_session.query(
-                User).filter_by(in_use=True).count()
-            in_use_categories = db_session.query(
-                Category).filter_by(in_use=True).count()
-            in_use_suppliers = db_session.query(
-                Supplier).filter_by(in_use=True).count()
-            in_use_products = db_session.query(
-                Product).filter_by(in_use=True).count()
-            critical_products = db_session.query(
-                Product).filter_by(in_use=True, critical=True).count()
+            in_use_users = db_session.scalar(select(func.count(User.id)).
+                filter_by(in_use=True))
+            in_use_categories = db_session.scalar(select(func.count(Category.id)).
+                filter_by(in_use=True))
+            in_use_suppliers = db_session.scalar(select(func.count(Supplier.id)).
+                filter_by(in_use=True))
+            in_use_products = db_session.scalar(select(func.count(Product.id)).
+                filter_by(in_use=True))
+            critical_products = db_session.scalar(select(func.count(Product.id)).
+                filter_by(in_use=True, critical=True))
             assert ('There are <span class="text-secondary">' +
                     f"{in_use_users}" +
                     " users</span> in use") in response.text

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from sqlalchemy import ForeignKey, create_engine, select
+from sqlalchemy import ForeignKey, create_engine, func, select
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
@@ -217,15 +217,15 @@ class User(Base):
     def in_use_products(self) -> int:
         """Number of `in_use` products for user."""
         with dbSession() as db_session:
-            return db_session.query(Product).\
-                filter_by(in_use=True, responsable_id=self.id).count()
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(responsable_id=self.id, in_use=True))
 
     @property
     def all_products(self) -> int:
         """Number of total products for user, including not `in_use`."""
         with dbSession() as db_session:
-            return db_session.query(Product).\
-                filter_by(responsable_id=self.id).count()
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(responsable_id=self.id))
 
     @property
     def check_inv(self) -> bool:
