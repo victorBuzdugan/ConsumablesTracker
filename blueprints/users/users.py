@@ -13,7 +13,6 @@ from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
 from database import User, dbSession
 from helpers import admin_required, flash_errors
 
-# TESTME
 users_bp = Blueprint(
     "users",
     __name__,
@@ -187,8 +186,7 @@ def edit_user(username):
     
     if edit_user_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
-            user = db_session.scalar(
-                select(User).
+            user = db_session.scalar(select(User).
                 filter_by(name=escape(username)))
             if edit_user_form.delete.data:
                 if user.all_products:
@@ -203,15 +201,8 @@ def edit_user(username):
                         return redirect(url_for("auth.logout"))
                     return redirect(url_for("main.index"))
             else:
-                # parse first in_use
-                try:
-                    user.in_use = edit_user_form.in_use.data
-                except ValueError as error:
-                    flash(str(error), "warning")
                 try:
                     user.name = edit_user_form.name.data
-                    if session.get("user_id") == user.id:
-                        session["user_name"] = edit_user_form.name.data
                 except ValueError as error:
                     flash(str(error), "error")
                 if edit_user_form.password.data:
@@ -225,24 +216,28 @@ def edit_user(username):
                     user.done_inv = not edit_user_form.check_inv.data
                 except ValueError as error:
                     flash(str(error), "warning")
-                if db_session.is_modified(user):
+                try:
+                    user.in_use = edit_user_form.in_use.data
+                except ValueError as error:
+                    flash(str(error), "warning")
+                if db_session.is_modified(user, include_collections=False):
                     flash("User updated")
                     db_session.commit()
-                    if (session.get("user_id") == user.id and 
-                        not user.admin):
-                        return redirect(url_for("auth.logout"))
+                    if user.id == session.get("user_id"):
+                        session["user_name"] = user.name
+                        if not user.admin:
+                            session["admin"] = False
+                            return redirect(url_for("main.index"))
                 return redirect(url_for("users.edit_user", username=user.name))
     elif edit_user_form.errors:
         flash_errors(edit_user_form.errors)
 
     with dbSession() as db_session:
-        user = db_session.scalar(
-            select(User).
-            filter_by(name=escape(username)))
-    if user:
-        edit_user_form = EditUserForm(obj=user)
-    else:
-        flash(f"User '{username}' does not exist!", "error")
-        return redirect(url_for("main.index"))
+        if (user:= db_session.scalar(select(User).
+                filter_by(name=escape(username)))):
+            edit_user_form = EditUserForm(obj=user)
+        else:
+            flash(f"{username} does not exist!", "error")
+            return redirect(url_for("main.index"))
 
     return render_template("users/edit_user.html", form=edit_user_form)

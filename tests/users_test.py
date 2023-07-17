@@ -231,4 +231,230 @@ def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, f
             assert not db_session.scalar(select(User).filter_by(name=name))
 
 
+@pytest.mark.parametrize(("id", "new_name", "orig_password", "new_password", "new_details", "new_check_inv", "new_admin", "new_in_use"), (
+    # 1 element
+    ("4", "test_user", "Q!444444", "", "", "", "", "on"),
+    ("4", "user4", "Q!444444", "Q!111111", "", "", "", "on"),
+    ("4", "user4", "Q!444444", "", "Some detail", "", "", "on"),
+    ("4", "user4", "Q!444444", "", "", "on", "", "on"),
+    ("4", "user4", "Q!444444", "", "", "", "on", "on"),
+    ("5", "user5", "Q!555555", "", "", "", "", ""),
+    # 2 elements
+    ("3", "test_user", "Q!333333", "Q!111111", "", "", "", "on"),
+    ("3", "test_user", "Q!333333", "", "Some detail", "", "", "on"),
+    ("3", "test_user", "Q!333333", "", "", "on", "", "on"),
+    ("3", "test_user", "Q!333333", "", "", "", "on", "on"),
+    ("6", "test_user", "Q!666666", "", "", "", "", "on"),
+    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "", "on", "on"),
+    ("2", "user2", "Q!222222", "Q!111111", "", "on", "on", "on"),
+    ("2", "user2", "Q!222222", "Q!111111", "", "", "", "on"),
+    ("7", "user7", "Q!777777", "Q!111111", "", "", "", ""),
+    ("1", "user1", "Q!111111", "", "Some detail", "on", "on", "on"),
+    ("2", "user2", "Q!222222", "", "Some detail", "", "", "on"),
+    ("5", "user5", "Q!555555", "", "Some detail", "", "", ""),
+    ("2", "user2", "Q!222222", "", "", "on", "", "on"),
+    ("6", "user6", "Q!666666", "", "", "", "on", "on"),
+    # 3 elements
+    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "", "on", "on"),
+    ("1", "test_user", "Q!111111", "Q!222222", "", "on", "on", "on"),
+    ("2", "test_user", "Q!222222", "Q!111111", "", "", "", "on"),
+    ("7", "test_user", "Q!777777", "Q!111111", "", "", "", ""),
+    ("3", "test_user", "Q!333333", "", "Some detail", "on", "", "on"),
+    ("3", "test_user", "Q!333333", "", "Some detail", "", "on", "on"),
+    ("5", "test_user", "Q!555555", "", "Some detail", "", "", ""),
+    ("3", "test_user", "Q!333333", "", "", "on", "on", "on"),
+    ("6", "test_user", "Q!666666", "", "", "", "on", "on"),
+    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "on", "", "on"),
+    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "", "on", "on"),
+    ("5", "user5", "Q!555555", "Q!111111", "Some detail", "", "", ""),
+    ("4", "user4", "Q!444444", "", "Some detail", "on", "on", "on"),
+    ("7", "user7", "Q!777777", "", "Some detail", "", "on", ""),
+    # 4 elements
+    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "on", "on", "on"),
+    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "", "", "on"),
+    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "", "on"),
+    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "on", "", "on"),
+    ("7", "user7", "Q!777777", "Q!111111", "Some detail", "", "on", ""),
+    # 5 elements
+    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "on", "", "on"),
+    ("4", "test_user", "Q!444444", "Q!111111", "Some detail", "on", "on", "on"),
+    ("7", "test_user", "Q!777777", "Q!111111", "Some detail", "", "on", ""),
+    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "on", "on"),
+))
+def test_edit_user(client: FlaskClient, admin_logged_in,
+        id, new_name, orig_password, new_password, new_details, new_check_inv, new_admin, new_in_use):
+    with dbSession() as db_session:
+        user = db_session.get(User, id)
+        orig_in_use = user.in_use
+        orig_name = user.name
+        orig_details = user.details
+        orig_done_inv = user.done_inv
+        orig_admin = user.admin
+        orig_reg_req = user.reg_req
+        with client:
+            client.get("/")
+            response = client.get(url_for("users.edit_user", username=user.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert orig_name in response.text
+            data = {
+                "csrf_token": g.csrf_token,
+                "name": new_name,
+                "password": new_password,
+                "details": new_details,
+                "check_inv": new_check_inv,
+                "admin": new_admin,
+                "in_use": new_in_use,
+                "submit": True,
+            }
+            response = client.post(url_for("users.edit_user", username=orig_name),
+                                   data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert response.request.path == url_for("users.edit_user", username=new_name)
+            assert b"User updated" in response.data
+            assert f"{new_name}" in response.text
+            assert f"{new_details}" in response.text
+        
+        db_session.refresh(user)
+        assert user.name == new_name
+        if new_password:
+            assert check_password_hash(user.password, new_password)
+        assert user.details == new_details
+        assert user.done_inv != bool(new_check_inv)
+        assert user.admin == bool(new_admin)
+        assert user.in_use == bool(new_in_use)
+        # teardown
+        user.in_use = orig_in_use
+        db_session.commit()
+        db_session.refresh(user)
+        user.name = orig_name
+        user.password = orig_password
+        user.details = orig_details
+        user.done_inv = orig_done_inv
+        user.admin = orig_admin
+        db_session.commit()
+        db_session.refresh(user)
+        user.reg_req = orig_reg_req
+        db_session.commit()
 
+
+
+
+# def test_failed_edit_user(client: FlaskClient, admin_logged_in,
+#         id, new_name, orig_password, new_password, new_check_inv, new_admin, new_in_use, flash_message):
+#     pass
+
+
+def test_failed_edit_user_bad_username(client: FlaskClient, admin_logged_in):
+    with client:
+        client.get("/")
+        response = client.get(url_for("users.edit_user", username="not_existing_user"), follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert b"not_existing_user does not exist!" in response.data
+
+
+def test_edit_user_last_admin(client: FlaskClient, admin_logged_in):
+    with dbSession() as db_session:
+        db_session.get(User, 2).admin = False
+        db_session.commit()
+    with client:
+        client.get("/")
+        username = session.get("user_name")
+        response = client.get(url_for("users.edit_user", username=username))
+        data = {
+                "csrf_token": g.csrf_token,
+                "name": username,
+                "details": "",
+                "admin": "",
+                "in_use": "on",
+                "submit": True,
+            }
+        response = client.post(url_for("users.edit_user", username=username),
+                               data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("users.edit_user", username=username)
+        assert b"User updated" not in response.data
+        assert bytes(username, "UTF-8") in response.data
+        assert b"You are the last admin!" in response.data
+    with dbSession() as db_session:
+        assert db_session.get(User, 1).admin
+        db_session.get(User, 2).admin = True
+        db_session.commit()
+
+
+def test_edit_user_change_admin_name(client: FlaskClient, admin_logged_in):
+    with client:
+        client.get("/")
+        old_name = session.get("user_name")
+        new_name = "new_name"
+        client.get(url_for("users.edit_user", username=old_name))
+        data = {
+                "csrf_token": g.csrf_token,
+                "name": new_name,
+                "details": "",
+                "admin": "on",
+                "in_use": "on",
+                "submit": True,
+            }
+        response = client.post(url_for("users.edit_user", username=old_name),
+                               data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("users.edit_user", username=new_name)
+        assert b"User updated" in response.data
+        assert bytes(new_name, "UTF-8") in response.data
+        assert session.get("user_name") == new_name
+        data = {
+                "csrf_token": g.csrf_token,
+                "name": old_name,
+                "details": "",
+                "admin": "on",
+                "in_use": "on",
+                "submit": True,
+            }
+        response = client.post(url_for("users.edit_user", username=new_name),
+                               data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("users.edit_user", username=old_name)
+        assert b"User updated" in response.data
+        assert bytes(old_name, "UTF-8") in response.data
+        assert session.get("user_name") == old_name
+
+
+def test_edit_user_change_admin_logged_in_admin_status(client: FlaskClient, admin_logged_in):
+    with client:
+        client.get("/")
+        username = session.get("user_name")
+        client.get(url_for("users.edit_user", username=username))
+        data = {
+                "csrf_token": g.csrf_token,
+                "name": username,
+                "details": "",
+                "admin": "",
+                "in_use": "on",
+                "submit": True,
+            }
+        response = client.post(url_for("users.edit_user", username=username),
+                               data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert b"User updated" in response.data
+        assert bytes(username, "UTF-8") in response.data
+        assert b"Admin dashboard" not in response.data
+        assert not session.get("admin")
+    with dbSession() as db_session:
+        assert not db_session.get(User, 1).admin
+        db_session.get(User, 1).admin = True
+        db_session.commit()
