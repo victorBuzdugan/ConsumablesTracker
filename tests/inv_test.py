@@ -36,8 +36,8 @@ def test_inv_user_logged_in_no_check_inventory(client: FlaskClient, user_logged_
         assert b"Inventory check not required" in response.data
         assert b'Inventory check' in response.data
         assert f'<span class="text-secondary">{session.get("user_name")}</span>' in response.text
-        assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
+        assert b'value="Inventory check not required" disabled' in response.data
+        assert b'value="Submit inventory"' not in response.data
         assert b"Critical products are highlighted in red" not in response.data
         with dbSession() as db_session:
             product =  db_session.scalar(
@@ -74,8 +74,8 @@ def test_inv_admin_logged_in_no_check_inventory(client: FlaskClient, admin_logge
         assert b"Inventory check not required" in response.data
         assert b'Inventory check' in response.data
         assert f'<span class="text-secondary">{session.get("user_name")}</span>' in response.text
-        assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
+        assert b'value="Inventory check not required" disabled' in response.data
+        assert b'value="Submit inventory"' not in response.data
         assert b"Critical products are highlighted in red" not in response.data
         with dbSession() as db_session:
             product =  db_session.scalar(
@@ -122,8 +122,8 @@ def test_inv_user_logged_in_yes_check_inventory(client: FlaskClient, user_logged
         response = client.get(url_for("inv.inventory"))
         assert b"checked" not in response.data
         assert b"Inventory check not required" not in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' not in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+        assert b'value="Inventory check not required" disabled' not in response.data
+        assert b'value="Submit inventory"' in response.data
         assert b"Critical products are highlighted in red" in response.data
         with dbSession() as db_session:
             product =  db_session.scalar(
@@ -163,7 +163,7 @@ def test_send_inventory_yes_check_inventory(client: FlaskClient, user_logged_in)
         
         response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" not in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+        assert b'value="Submit inventory"' in response.data
 
         # 22 is not assigned to this user
         data = {
@@ -203,7 +203,7 @@ def test_send_inventory_yes_check_inventory_no_csrf(client: FlaskClient, user_lo
         
         response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" not in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+        assert b'value="Submit inventory"' in response.data
 
         data = {
             "20": "on",
@@ -229,7 +229,7 @@ def test_send_inventory_no_check_inventory(client: FlaskClient, user_logged_in):
         client.get("/")
         response = client.get(url_for("inv.inventory"))
         assert b"Inventory check not required" in response.data
-        assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
+        assert b'value="Submit inventory"' not in response.data
         
         data = {
             "csrf_token": g.csrf_token,
@@ -374,8 +374,8 @@ def test_oth_user_admin_logged_in_yes_check_inventory(client: FlaskClient, admin
     assert b"checked" not in response.data
     assert b"disabled" in response.data
     assert b"Inventory check not required" in response.data
-    assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' in response.data
-    assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' not in response.data
+    assert b'value="Inventory check not required" disabled' in response.data
+    assert b'value="Submit inventory"' not in response.data
     assert b"Critical products are highlighted in red" not in response.data
     
     # trigger inventory check
@@ -394,8 +394,8 @@ def test_oth_user_admin_logged_in_yes_check_inventory(client: FlaskClient, admin
     assert b"checked" not in response.data
     assert b"disabled" not in response.data
     assert b"Inventory check not required" not in response.data
-    assert b'input class="btn btn-primary" type="submit" value="Inventory check not required" disabled' not in response.data
-    assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+    assert b'value="Inventory check not required" disabled' not in response.data
+    assert b'value="Submit inventory"' in response.data
     assert b"Critical products are highlighted in red" in response.data
     assert f"{product.name}" in response.text
     assert f"{product.description}" in response.text
@@ -421,7 +421,7 @@ def test_oth_user_send_inventory_yes_check_inventory(client: FlaskClient, admin_
     assert b"Inventory check not required" not in response.data
     assert b'Inventory check' in response.data
     assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
-    assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+    assert b'value="Submit inventory"' in response.data
 
     # 22 is not assigned to this user
     with client:
@@ -466,7 +466,7 @@ def test_oth_user_send_inventory_yes_check_inventory_no_csrf(client: FlaskClient
     assert b"Inventory check not required" not in response.data
     assert b'Inventory check' in response.data
     assert f'<span class="text-secondary">{oth_user.name}</span>' in response.text
-    assert b'input class="btn btn-primary" type="submit" value="Submit inventory"' in response.data
+    assert b'value="Submit inventory"' in response.data
 
     with client:
         client.get("/")

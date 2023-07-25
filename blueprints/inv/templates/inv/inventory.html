@@ -2,45 +2,54 @@
 
 {% block title %}Inventory{% endblock %}
 
-{% block page_title %}
-Inventory check
-<h5><span class="text-secondary">{{ user.name }}</span></h5>
-{% endblock %}
-
 {% block main %}
 
 <form method="POST">
     {{ form.csrf_token }}
-    <div class="table-responsive mx-auto" style="max-width: 70rem;">
-        <table class="table align-middle table-sm table-hover table-bordered border-light-subtle">
-            {% if not user.done_inv %}
-            <caption class="text-center">*Select to order a product if current stock is less then minimum stock.</caption>
-            <caption class="text-center">*Critical products are highlighted in red.</caption>
-            {% endif %}
-            <thead>
-                <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Min. Stock</th>
-                    <th>Order</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                <tr>
-                    <td>{{ product.name }}</td>
-                    <td>{{ product.description }}</td>
-                    <td {% if product.critical %}class="text-danger"{% endif %}>{{ product.min_stock }} {{ product.meas_unit }}</td>
-                    <td>
-                        <div class="form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="{{ product.id }}" name="{{ product.id }}" {% if user.done_inv %}disabled{% endif %} {% if product.to_order %}checked{% endif %}>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+    <div class="card mx-auto" style="max-width: 70rem;">
+
+        <div class="card-header h5 py-2">
+            Inventory check
+            <br>
+            <span class="text-secondary">{{ user.name }}</span>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive mx-auto">
+                <table class="table align-middle table-sm table-hover table-bordered border-light-subtle m-0">
+                    {% if not user.done_inv %}
+                    <caption class="text-center">*Select to order a product if current stock is less then minimum stock.</caption>
+                    <caption class="text-center">*Critical products are highlighted in red.</caption>
+                    {% endif %}
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Description</th>
+                            <th>Min. Stock</th>
+                            <th>Order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.description }}</td>
+                            <td {% if product.critical %}class="text-danger"{% endif %}>{{ product.min_stock }} {{ product.meas_unit }}</td>
+                            <td>
+                                <div class="form-switch">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="{{ product.id }}" name="{{ product.id }}" {% if user.done_inv %}disabled{% endif %} {% if product.to_order %}checked{% endif %}>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer py-3">
+            <input class="btn btn-primary px-4" type="submit" {% if user.done_inv %}value="Inventory check not required" disabled{% else %}value="Submit inventory"{% endif %} >
+        </div>
     </div>
-    <input class="btn btn-primary" type="submit" {% if user.done_inv %}value="Inventory check not required" disabled{% else %}value="Submit inventory"{% endif %} >
 </form>
 {% endblock %}
