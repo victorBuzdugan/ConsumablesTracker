@@ -16,6 +16,8 @@ from tests import (admin_logged_in, client, create_test_categories,
 
 pytestmark = pytest.mark.users
 
+
+# region: approve registration
 def test_approve_registration(client: FlaskClient, admin_logged_in):
     with client:
         response = client.get("/")
@@ -60,8 +62,10 @@ def test_failed_approve_registration_user_logged_in(client: FlaskClient, user_lo
         assert session.get("user_id")
         with dbSession() as db_session:
             assert db_session.get(User, 5).reg_req
+# endregion
 
 
+# region: approve check inventory
 def test_approve_check_inventory(client: FlaskClient, admin_logged_in):
     with dbSession() as db_session:
         user = db_session.get(User, 4)
@@ -154,8 +158,10 @@ def test_approve_all_check_inventory(client: FlaskClient, admin_logged_in):
         db_session.get(User, 3).done_inv = True
         user.done_inv = True
         db_session.commit()
+# endregion
 
 
+# region: new user
 @pytest.mark.parametrize(("details", "admin"), (
     ("", ""),
     ("some details", ""),
@@ -229,8 +235,10 @@ def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, f
     with dbSession() as db_session:
         if name != "user1":
             assert not db_session.scalar(select(User).filter_by(name=name))
+# endregion
 
 
+# region: edit user
 @pytest.mark.parametrize(("id", "new_name", "orig_password", "new_password", "new_details", "new_check_inv", "new_admin", "new_in_use"), (
     # 1 element
     ("4", "test_user", "Q!444444", "", "", "", "", "on"),
@@ -314,8 +322,8 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
             assert response.status_code == 200
             assert response.request.path == url_for("users.edit_user", username=new_name)
             assert b"User updated" in response.data
-            assert f"{new_name}" in response.text
-            assert f"{new_details}" in response.text
+            assert bytes(new_name, "UTF-8") in response.data
+            assert bytes(new_details, "UTF-8") in response.data
         
         db_session.refresh(user)
         assert user.name == new_name
@@ -340,11 +348,125 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
         db_session.commit()
 
 
+@pytest.mark.parametrize(("id", "new_name", "new_password", "new_check_inv", "new_admin", "flash_message"), (
+    ("4", "", "", "", "", msg["usr_req"]),
+    ("3", "us", "", "", "", msg["usr_len"]),
+    ("2", "useruseruseruser", "", "", "on", msg["usr_len"]),
+    ("2", "us", "Q!1", "", "on", msg["psw_len"]),
+    ("3", "us", "aaaaaaaa", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("4", "us", "#1aaaaaa", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("3", "us", "#Aaaaaaa", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("1", "us", "1Aaaaaaa", "", "on", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+))
+def test_failed_edit_user_form_validators(client: FlaskClient, admin_logged_in,
+        id, new_name, new_password, new_check_inv, new_admin, flash_message):
+    with dbSession() as db_session:
+        user = db_session.get(User, id)
+        orig_name = user.name
+        orig_done_inv = user.done_inv
+        orig_admin = user.admin
+        orig_in_use = user.in_use
+        with client:
+            client.get("/")
+            response = client.get(url_for("users.edit_user", username=orig_name))
+            assert bytes(user.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "name": new_name,
+                "password": new_password,
+                "details": "",
+                "check_inv": new_check_inv,
+                "admin": new_admin,
+                "in_use": "on",
+                "submit": True,
+            }
+            response = client.post(url_for("users.edit_user", username=orig_name),
+                                   data=data, follow_redirects=True)
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert b"User updated" not in response.data
+            assert bytes(orig_name, "UTF-8") in response.data
+            assert flash_message in unescape(response.text)
+        db_session.refresh(user)
+        assert user.name != new_name
+        assert not check_password_hash(user.password, new_password)
+        assert user.done_inv == orig_done_inv
+        assert user.admin == orig_admin
+        assert user.in_use == orig_in_use
 
 
-# def test_failed_edit_user(client: FlaskClient, admin_logged_in,
-#         id, new_name, orig_password, new_password, new_check_inv, new_admin, new_in_use, flash_message):
-#     pass
+def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
+    with dbSession() as db_session:
+        user = db_session.get(User, 2)
+        orig_name = user.name
+        new_name = db_session.get(User, 1).name
+        with client:
+            client.get("/")
+            response = client.get(url_for("users.edit_user", username=orig_name))
+            assert bytes(user.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "name": new_name,
+                "password": "",
+                "details": "",
+                "admin": "on",
+                "in_use": "on",
+                "submit": True,
+            }
+            response = client.post(url_for("users.edit_user", username=orig_name),
+                                   data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert response.request.path == url_for("users.edit_user", username=orig_name)
+            assert b"User updated" not in response.data
+            assert bytes(orig_name, "UTF-8") in response.data
+            assert f"User {new_name} allready exists" in response.text
+        db_session.refresh(user)
+        assert user.name != new_name
+
+
+@pytest.mark.parametrize(("id", "new_check_inv", "new_admin", "new_in_use", "flash_message"), (
+    ("7", "on", "", "on", "User without products attached can't check inventory"),
+    ("6", "on", "", "", "'Retired' user can't check inventory"),
+    ("5", "on", "", "on", "User with pending registration can't check inventory"),
+    ("5", "", "on", "on", "User with pending registration can't be admin"),
+    ("3", "", "", "", "Can't 'retire' a user if he is still responsible for products"),
+))
+def test_failed_edit_user_db_validators(client: FlaskClient, admin_logged_in,
+        id, new_check_inv, new_admin, new_in_use, flash_message):
+    with dbSession() as db_session:
+        user = db_session.get(User, id)
+        orig_done_inv = user.done_inv
+        orig_admin = user.admin
+        orig_in_use = user.in_use
+        with client:
+            client.get("/")
+            response = client.get(url_for("users.edit_user", username=user.name))
+            assert bytes(user.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "name": user.name,
+                "password": "",
+                "details": "",
+                "check_inv": new_check_inv,
+                "admin": new_admin,
+                "in_use": new_in_use,
+                "submit": True,
+            }
+            response = client.post(url_for("users.edit_user", username=user.name),
+                                   data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert response.request.path == url_for("users.edit_user", username=user.name)
+            assert b"User updated" not in response.data
+            assert bytes(user.name, "UTF-8") in response.data
+            assert flash_message in unescape(response.text)
+        db_session.refresh(user)
+        assert user.done_inv == orig_done_inv
+        assert user.admin == orig_admin
+        assert user.in_use == orig_in_use
 
 
 def test_failed_edit_user_bad_username(client: FlaskClient, admin_logged_in):
@@ -458,3 +580,88 @@ def test_edit_user_change_admin_logged_in_admin_status(client: FlaskClient, admi
         assert not db_session.get(User, 1).admin
         db_session.get(User, 1).admin = True
         db_session.commit()
+# endregion
+
+
+# region: delete user
+def test_delete_user(client: FlaskClient, admin_logged_in):
+    with dbSession() as db_session:
+        user = User("new_user", "Q!111111")
+        db_session.add(user)
+        db_session.commit()
+        assert user.id
+    with client:
+        client.get("/")
+        response = client.get(url_for("users.edit_user", username=user.name))
+        assert bytes(user.name, "UTF-8") in response.data
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "delete": True,
+        }
+        response = client.post(url_for("users.edit_user", username=user.name),
+                            data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert f"User '{user.name}' has been deleted" in unescape(response.text)
+    with dbSession() as db_session:
+        assert not db_session.get(User, user.id)
+
+
+def test_delete_user_admin_log_out(client: FlaskClient):
+    with dbSession() as db_session:
+        user = User("new_user", "Q!111111", admin=True, reg_req=False)
+        db_session.add(user)
+        db_session.commit()
+        assert user.id
+    with client.session_transaction() as session:
+        session["user_id"] = user.id
+        session["admin"] = user.admin
+        session["user_name"] = user.name
+    with client:
+        client.get("/")
+        response = client.get(url_for("users.edit_user", username=user.name))
+        assert bytes(user.name, "UTF-8") in response.data
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "delete": True,
+        }
+        response = client.post(url_for("users.edit_user", username=user.name),
+                            data=data, follow_redirects=True)
+        assert len(response.history) == 2
+        assert response.history[0].status_code == 302
+        assert response.history[1].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert b"Succesfully logged out..." in response.data
+
+
+@pytest.mark.parametrize(("user_id", ), (
+    ("1",),
+    ("2",),
+    ("3",),
+    ("4",),
+))
+def test_failed_delete_user(client: FlaskClient, admin_logged_in, user_id):
+    with dbSession() as db_session:
+        user = db_session.get(User, user_id)
+    with client:
+        client.get("/")
+        response = client.get(url_for("users.edit_user", username=user.name))
+        assert bytes(user.name, "UTF-8") in response.data
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "delete": True,
+        }
+        response = client.post(url_for("users.edit_user", username=user.name),
+                            data=data, follow_redirects=True)
+        assert len(response.history) == 0
+        assert response.status_code == 200
+        assert f"Can't delete user! He is still responsible for some products!" in unescape(response.text)
+    with dbSession() as db_session:
+        assert db_session.get(User, user.id)
+# endregion

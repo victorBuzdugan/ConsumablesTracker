@@ -909,7 +909,7 @@ def test_product_change_supplier(client):
     ("user_id", "err_message"), (
     (5, "User with pending registration can't have products attached"),
     (6, "'Retired' users can't have products attached"),
-    (7, "User does not exist")
+    (8, "User does not exist")
     ))
 def test_validate_product_responsable_id(client, user_id, err_message):
     with dbSession() as db_session:

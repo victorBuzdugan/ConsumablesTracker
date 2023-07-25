@@ -116,12 +116,9 @@ def approve_reg(username):
     with dbSession() as db_session:
         if (user:= db_session.scalar(
                         select(User).filter_by(name=escape(username)))):
-            try:
-                user.reg_req = False
-                db_session.commit()
-                flash(f"{username} has been approved")
-            except ValueError as error:
-                flash(str(error))
+            user.reg_req = False
+            db_session.commit()
+            flash(f"{username} has been approved")
         else:
             flash(f"{username} does not exist!", "error")
 
