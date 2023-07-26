@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Suppliers{% endblock %}
+
+{% block main %}
+<div class="card mx-auto mb-3" style="max-width: 40rem;">
+    <div class="card-header h5 py-2">
+        Suppliers
+    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item p-0">
+            <div class="table-responsive mx-auto" style="width: auto;">
+                <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
+                    <caption class="text-center pb-0">*Strikethrough categories are no longer in use.</caption>
+                    <thead>
+                        <tr>
+                            <th class="px-3">Name</th>
+                            <th class="px-3">In use Products</th>
+                            <th class="px-3">All Products</th>
+                            <th class="px-3">Details</th>
+                        </tr>
+                    <tbody>
+                        {% for supplier in suppliers %}
+                        <tr>
+                            <td><span class="{% if not supplier.in_use %}text-decoration-line-through{% endif %}"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('sup.edit_supplier', supplier=supplier.name) }}">{{ supplier.name }}</a></span></td>
+                            <td>{{ supplier.in_use_products }}</td>
+                            <td class="text-secondary">{{ supplier.all_products }}</td>
+                            <td class="text-secondary">{{ supplier.details }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </thead>
+                </table>
+            </div>
+        </li>
+        <li class="list-group-item">
+            There are <span class="text-secondary">{{ stats.all_suppliers }} suppliers</span>, of which <span class="text-secondary">{{ stats.in_use_suppliers }} are in use</span>
+        </li>
+    </ul>
+</div>
+
+{% endblock %}

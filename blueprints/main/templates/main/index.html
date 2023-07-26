@@ -99,12 +99,10 @@
                     There are <span class="text-secondary">{{ stats.users_in_use }} users</span> in use
                 </li>
                 <li class="list-group-item">
-                    {# TODO link to categories #}
-                    There are <span class="text-secondary">{{ stats.categories_in_use }} categories</span> in use
+                    There are <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('cat.categories') }}">{{ stats.categories_in_use }} categories</a> in use
                 </li>
                 <li class="list-group-item">
-                    {# TODO link to suppliers #}
-                    There are <span class="text-secondary">{{ stats.suppliers_in_use }} suppliers</span> in use
+                    There are <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('sup.suppliers') }}">{{ stats.suppliers_in_use }} suppliers</a> in use
                 </li>
                 <li class="list-group-item">
                     {# TODO link to products #}

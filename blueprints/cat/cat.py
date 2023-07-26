@@ -52,7 +52,7 @@ class CreateCatForm(FlaskForm):
     
 
 class EditCatForm(CreateCatForm):
-    """Edit user form."""
+    """Edit category form."""
     all_products = IntegerField()
     in_use_products = IntegerField()
     in_use = BooleanField(

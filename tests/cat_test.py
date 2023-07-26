@@ -4,10 +4,9 @@ from html import unescape
 from urllib.parse import quote
 
 import pytest
-from flask import g, session, url_for
+from flask import g, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
-from werkzeug.security import check_password_hash
 
 from database import Category, dbSession
 from tests import (admin_logged_in, client, create_test_categories,

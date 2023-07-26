@@ -72,6 +72,10 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
         assert f'href={url_for("users.new_user")}>User' not in response.text
+        assert f'href={url_for("cat.new_category")}>Category' not in response.text
+        assert f'href={url_for("sup.new_supplier")}>Supplier' not in response.text
+        assert f'href={url_for("cat.categories")}>Categories' not in response.text
+        assert f'href={url_for("sup.suppliers")}>Suppliers' not in response.text
 
 
 def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_in):
@@ -107,6 +111,10 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
         assert f'href={url_for("users.new_user")}>User' in response.text
+        assert f'href={url_for("cat.new_category")}>Category' in response.text
+        assert f'href={url_for("sup.new_supplier")}>Supplier' in response.text
+        assert f'href={url_for("cat.categories")}>Categories' in response.text
+        assert f'href={url_for("sup.suppliers")}>Suppliers' in response.text
 
 
 def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_logged_in):
@@ -197,12 +205,12 @@ def test_index_admin_logged_in_statistics(client: FlaskClient, admin_logged_in):
             assert ('There are <span class="text-secondary">' +
                     f"{in_use_users}" +
                     " users</span> in use") in response.text
-            assert ('There are <span class="text-secondary">' +
+            assert ('href="/category/categories">' +
                     f"{in_use_categories}" +
-                    " categories</span> in use") in response.text
-            assert ('There are <span class="text-secondary">' +
+                    " categories</a> in use") in response.text
+            assert ('href="/supplier/suppliers">' +
                     f"{in_use_suppliers}" +
-                    " suppliers</span> in use") in response.text
+                    " suppliers</a> in use") in response.text
             assert ('There are <span class="text-secondary">' +
                     f"{in_use_products}" +
                     " products</span> in use of which " +
