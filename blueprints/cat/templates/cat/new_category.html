@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block title %}New category{% endblock %}
+
+{% block main %}
+
+<form method="POST">
+    {{ form.csrf_token }}
+
+    <div class="card mx-auto" style="max-width: 30rem;">
+        
+        <div class="card-header h5 py-2">
+            Create new category
+        </div>
+
+        <div class="card-body">
+            
+            <div class="form-floating mb-3">
+                {{ form.name }}
+                {{ form.name.label(class="text-decoration-underline") }}
+            </div>
+
+            <div class="form-floating mb-3">
+                {{ form.description }}
+                {{ form.description.label }}
+            </div>
+
+            <span class="text-body-tertiary">Underlined fields are required</span>
+        </div>
+
+        <div class="card-footer">
+            {{ form.submit }}
+        </div>
+    </div>
+</form>
+
+{% endblock %}

@@ -145,7 +145,7 @@ def test_admin_creation(client):
         db_session.commit()
 
 
-def test_in_use_products_property(client):
+def test_user_in_use_products_property(client):
     with dbSession() as db_session:
         user = db_session.get(User, 2)
         assert user.all_products == len(user.products)
@@ -157,6 +157,22 @@ def test_in_use_products_property(client):
         assert db_session.get(User, user.id).in_use_products == user.all_products - 1
         db_session.get(Product, product.id).in_use = True
         db_session.commit()
+
+
+def test_user_all_products_property(client):
+    with dbSession() as db_session:
+        user = db_session.get(User, 3)
+        assert user.all_products == len(user.products)
+        all_products = user.all_products
+        product = db_session.scalar(
+            select(Product).
+            filter_by(responsable_id = user.id))
+        product.responsable_id = 2
+        db_session.commit()
+        assert db_session.get(User, user.id).all_products == all_products - 1
+        db_session.get(Product, product.id).responsable_id = user.id
+        db_session.commit()
+        assert user.all_products == all_products
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -494,6 +510,36 @@ def test_delete_category_with_products_attached(client):
             assert db_session.get(Category, category.id)
 
 
+def test_category_in_use_products_property(client):
+    with dbSession() as db_session:
+        category = db_session.get(Category, 2)
+        assert category.all_products == len(category.products)
+        product = db_session.scalar(
+            select(Product).
+            filter_by(in_use=True, category_id = category.id))
+        product.in_use = False
+        db_session.commit()
+        assert db_session.get(Category, category.id).in_use_products == category.all_products - 1
+        db_session.get(Product, product.id).in_use = True
+        db_session.commit()
+
+
+def test_category_all_products_property(client):
+    with dbSession() as db_session:
+        category = db_session.get(Category, 3)
+        assert category.all_products == len(category.products)
+        all_products = category.all_products
+        product = db_session.scalar(
+            select(Product).
+            filter_by(category_id = category.id))
+        product.category_id = 2
+        db_session.commit()
+        assert db_session.get(Category, category.id).all_products == all_products - 1
+        db_session.get(Product, product.id).category_id = category.id
+        db_session.commit()
+        assert category.all_products == all_products
+
+
 @pytest.mark.xfail(raises=ValueError)
 def test_validate_category_products(client):
     with dbSession() as db_session:
@@ -604,6 +650,36 @@ def test_delete_supplier_with_products_attached(client):
             db_session.rollback()
             assert "Supplier can't be deleted or does not exist" in str(err)
             assert db_session.get(Supplier, supplier.id)
+
+
+def test_supplier_in_use_products_property(client):
+    with dbSession() as db_session:
+        supplier = db_session.get(Supplier, 1)
+        assert supplier.all_products == len(supplier.products)
+        product = db_session.scalar(
+            select(Product).
+            filter_by(in_use=True, supplier_id = supplier.id))
+        product.in_use = False
+        db_session.commit()
+        assert db_session.get(Supplier, supplier.id).in_use_products == supplier.all_products - 1
+        db_session.get(Product, product.id).in_use = True
+        db_session.commit()
+
+
+def test_supplier_all_products_property(client):
+    with dbSession() as db_session:
+        supplier = db_session.get(Supplier, 3)
+        assert supplier.all_products == len(supplier.products)
+        all_products = supplier.all_products
+        product = db_session.scalar(
+            select(Product).
+            filter_by(supplier_id = supplier.id))
+        product.supplier_id = 2
+        db_session.commit()
+        assert db_session.get(Supplier, supplier.id).all_products == all_products - 1
+        db_session.get(Product, product.id).supplier_id = supplier.id
+        db_session.commit()
+        assert supplier.all_products == all_products
 
 
 @pytest.mark.xfail(raises=ValueError)

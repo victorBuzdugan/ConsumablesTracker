@@ -16,6 +16,7 @@ from helpers import admin_required, flash_errors
 users_bp = Blueprint(
     "users",
     __name__,
+    url_prefix="/user",
     template_folder="templates")
 
 # require admin logged in for all routes
@@ -153,7 +154,7 @@ def approve_check_inv_all():
 
     return redirect(url_for("main.index"))
 
-@users_bp.route("/user/new", methods=["GET", "POST"])
+@users_bp.route("/new", methods=["GET", "POST"])
 def new_user():
     """Create a new user."""
     new_user_form: CreateUserForm = CreateUserForm()
@@ -175,7 +176,7 @@ def new_user():
         flash_errors(new_user_form.errors)
 
     return render_template("users/new_user.html", form=new_user_form)
-# TESTME
+
 @users_bp.route("/<username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""

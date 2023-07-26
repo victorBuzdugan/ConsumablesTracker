@@ -1,0 +1,84 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Category{% endblock %}
+
+{% block main %}
+
+<form method="POST">
+    {{ form.csrf_token }}
+
+    <div class="card mx-auto" style="max-width: 30rem;">
+    
+        <div class="card-header h5 py-2">
+            Edit category
+            <br>
+            <span class="text-secondary">{{ request.view_args.category }}</span>
+        </div>
+
+        <div class="card-body">
+
+            <div class="form-floating mb-3">
+                {{ form.name }}
+                {{ form.name.label(class="text-decoration-underline") }}
+            </div>
+            
+            <div class="form-floating mb-3">
+                {{ form.description }}
+                {{ form.description.label }}
+            </div>
+
+            <div class="row row-cols-3 row-cols-md-3 g-1 g-md-3 mb-3">
+                <div class="col">
+                </div>
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body p-1">
+                            {{ form.in_use.label }}
+                        </div>
+                        <div class="card-footer">
+                            <div class="form-switch">
+                                {{ form.in_use }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <span class="text-body-tertiary">Underlined fields are required</span>
+        </div>
+
+        <ul class="list-group list-group-flush m-0">
+            <li class="list-group-item">Category has {{ form.all_products.data }} products, of which {{ form.in_use_products.data }} are in use</li>
+        </ul>
+
+        <div class="card-footer py-3">
+            <div class="row row-cols-2 g-4">
+                <div class="col">
+                    {{ form.submit }}
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5">Delete <span class="text-secondary">{{ form.name.data }}</span>?</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                This will delete this category! You can't undo this action.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                {{ form.delete }}
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

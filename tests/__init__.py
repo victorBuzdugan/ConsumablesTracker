@@ -119,7 +119,7 @@ def create_test_categories():
                                description="Household consumables"))
     categories.append(Category("Personal",
                                description="Personal consumables"))
-    categories.append(Category("Electonics"))
+    categories.append(Category("Electronics"))
     categories.append(Category("Kids"))
     categories.append(Category("Health"))
     categories.append(Category("Groceries"))

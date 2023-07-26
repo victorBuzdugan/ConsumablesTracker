@@ -27,7 +27,7 @@ def index():
             with dbSession() as db_session:
                 users = db_session.scalars(
                     select(User).
-                    order_by(User.reg_req.desc(), User.in_use.desc(), User.admin.desc(), User.name).
+                    order_by(User.reg_req.desc(), User.in_use.desc(), User.admin.desc(), func.lower(User.name)).
                     options(joinedload(User.products), raiseload("*"))
                     ).unique().all()
 

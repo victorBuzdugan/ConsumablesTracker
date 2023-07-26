@@ -383,6 +383,20 @@ class Category(Base):
     description: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
 
+    @property
+    def in_use_products(self) -> int:
+        """Number of `in_use` products for category."""
+        with dbSession() as db_session:
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(category_id=self.id, in_use=True))
+
+    @property
+    def all_products(self) -> int:
+        """Number of total products for category, including not `in_use`."""
+        with dbSession() as db_session:
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(category_id=self.id))
+
 
     @validates("products")
     def validate_products(self,
@@ -421,6 +435,20 @@ class Supplier(Base):
     details: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
 
+
+    @property
+    def in_use_products(self) -> int:
+        """Number of `in_use` products for supplier."""
+        with dbSession() as db_session:
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(supplier_id=self.id, in_use=True))
+
+    @property
+    def all_products(self) -> int:
+        """Number of total products for supplier, including not `in_use`."""
+        with dbSession() as db_session:
+            return db_session.scalar(select(func.count(Product.id)).\
+                filter_by(supplier_id=self.id))
 
     @validates("products")
     def validate_products(self,

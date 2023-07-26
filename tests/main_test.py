@@ -116,17 +116,17 @@ def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_
             assert b"Bolded users have administrative privileges" in response.data
             assert b"Strikethrough users are no longer in use" in response.data
             # name
-            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user1/edit">user1</a>' in response.data
-            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user2/edit">user2</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user3/edit">user3</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user4/edit">user4</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user5/edit">user5</a>' in response.data
-            assert b'<span class="text-decoration-line-through"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user6/edit">user6</a>' in response.data
+            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user1/edit">user1</a>' in response.data
+            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user2/edit">user2</a>' in response.data
+            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user3/edit">user3</a>' in response.data
+            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user4/edit">user4</a>' in response.data
+            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user5/edit">user5</a>' in response.data
+            assert b'<span class="text-decoration-line-through"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
             with dbSession() as db_session:
                 db_session.get(User, 6).admin = True
                 db_session.commit()
                 response = client.get("/")
-                assert b'<span class="text-decoration-line-through fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user6/edit">user6</a>' in response.data
+                assert b'<span class="text-decoration-line-through fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
                 db_session.get(User, 6).admin = False
                 db_session.commit()
             # assigned products
