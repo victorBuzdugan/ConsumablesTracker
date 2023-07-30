@@ -1,66 +1,95 @@
 {% extends "layout.html" %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}Edit product{% endblock %}
 
 {% block main %}
 
 <form method="POST">
     {{ form.csrf_token }}
 
-    <div class="card mx-auto" style="max-width: 30rem;">
-    
+    <div class="card mx-auto" style="max-width: 35rem;">
+        
         <div class="card-header h5 py-2">
-            Edit user
+            Edit product
             <br>
-            <span class="text-secondary">{{ request.view_args.username }}</span>
+            <span class="text-secondary">{{ request.view_args.product }}</span>
         </div>
 
         <div class="card-body">
-
+            
             <div class="form-floating mb-3">
                 {{ form.name }}
                 {{ form.name.label(class="text-decoration-underline") }}
             </div>
-                
+
             <div class="form-floating mb-3">
-                {{ form.password }}
-                {{ form.password.label }}
-            </div>
-            
-            <div class="form-floating mb-3">
-                {{ form.details }}
-                {{ form.details.label }}
+                {{ form.description }}
+                {{ form.description.label(class="text-decoration-underline") }}
             </div>
 
-            <div class="row row-cols-3 row-cols-md-3 g-1 g-md-3 mb-3">
+            <div class="row g-2">
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.responsable_id }}
+                        {{ form.responsable_id.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.category_id }}
+                        {{ form.category_id.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.supplier_id }}
+                        {{ form.supplier_id.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.min_stock }}
+                        {{ form.min_stock.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.ord_qty }}
+                        {{ form.ord_qty.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <div class="form-floating mb-3">
+                        {{ form.meas_unit }}
+                        {{ form.meas_unit.label(class="text-decoration-underline") }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
                 <div class="col">
                     <div class="card h-100">
                         <div class="card-body p-1">
-                            {% if form.all_products.data %}
-                                {{ form.check_inv.label }}
-                            {% else %}
-                                {{ form.check_inv.label(class="text-body-tertiary") }}
-                            {% endif %}
+                            {{ form.to_order.label }}
                         </div>
                         <div class="card-footer">
                             <div class="form-switch">
-                            {% if form.all_products.data %}
-                                {{ form.check_inv }}
-                            {% else %}
-                                {{ form.check_inv(disabled="") }}
-                            {% endif %}
+                                {{ form.to_order }}
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col">
+                <div class="col-sm">
                     <div class="card h-100">
                         <div class="card-body p-1">
-                            {{ form.admin.label }}
+                            {{ form.critical.label }}
                         </div>
                         <div class="card-footer">
                             <div class="form-switch">
-                                {{ form.admin }}
+                                {{ form.critical }}
                             </div>
                         </div>
                     </div>
@@ -77,22 +106,9 @@
                         </div>
                     </div>
                 </div>
-                
             </div>
             <span class="text-body-tertiary">Underlined fields are required</span>
         </div>
-
-        <ul class="list-group list-group-flush m-0">
-            {% if form.reg_req.data %}
-                <li class="list-group-item">User awaits <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_reg', username=form.name.data) }}">registration approval</a></li>
-            {% endif %}
-            {% if form.req_inv.data %}
-                <li class="list-group-item">User requested <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_check_inv', username=form.name.data) }}">inventory check</a></li>
-            {% endif %}
-            <li class="list-group-item">
-                User is responsible for <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='responsable') }}">{{ form.all_products.data }} products</a>, of which {{ form.in_use_products.data }} are in use
-            </li>
-        </ul>
 
         <div class="card-footer py-3">
             <div class="row row-cols-2 g-4">
@@ -110,7 +126,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                This will delete this user! You can't undo this action.
+                                This will delete this product! You can't undo this action.
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>

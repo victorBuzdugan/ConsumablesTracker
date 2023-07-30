@@ -1,0 +1,94 @@
+{% extends "layout.html" %}
+
+{% block title %}Order{% endblock %}
+
+{% block main %}
+<form method="POST">
+    {{ form.csrf_token }}
+
+    <div class="card mx-auto mb-3" style="max-width: 70rem;">
+        <div class="card-header h5 py-2">
+            Products to order
+        </div>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item p-0">
+                <div class="table-responsive mx-auto" style="width: auto;">
+                    <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
+                        <caption class="text-center pb-0">*Critical products are highlighted in red.</caption>
+                        <thead>
+                            <tr>
+                                <th class="px-1">Code</th>
+                                <th class="px-1">Description</th>
+                                <th class="px-1">Responsable</th>
+                                <th class="px-1">Category</th>
+                                <th class="px-1">Supplier</th>
+                                <th class="px-1">Quantity</th>
+                                <th class="px-1">Ordered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr>
+                                <td>
+                                    <span><a class="
+                                    {% if product.critical %}
+                                        link-danger
+                                    {% else %}
+                                        link-dark
+                                    {% endif %}
+                                    link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('prod.edit_product', product=product.name) }}">{{ product.name }}</a>
+                                    </span>
+                                </td>
+                                <td>{{ product.description }}</td>
+                                <td>{{ product.responsable.name }}</td>
+                                <td>{{ product.category.name }}</td>
+                                <td>{{ product.supplier.name }}</td>
+                                <td>{{ product.ord_qty }} {{ product.meas_unit }}</td>
+                                <td>
+                                    <div class="form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="{{ product.id }}" name="{{ product.id }}">
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </li>
+            <li class="list-group-item">
+                There are <span class="text-secondary">{{ products|length }} products</span> that need to be orderer
+            </li>
+        </ul>
+
+        <div class="card-footer py-3">
+            <div class="row row-cols-2 g-4">
+                <div class="col">
+                    <input class="btn btn-primary px-4" type="submit" value="Update">
+                </div>
+                <div class="col">
+                    <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">All ordered</button>
+
+                    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h1 class="modal-title fs-5">Confirm all products ordered?</h1>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                Confirm that all products were ordered.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <a class="btn btn-warning px-4" href="{{ url_for('prod.all_products_ordered') }}">All products ordered</a>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}

@@ -510,6 +510,8 @@ class Product(Base):
     to_order: Mapped[bool] = mapped_column(default=False)
     critical: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
+
+    code = synonym("name")
     
     @validates("description")
     def validate_description(self, key: str, value: str) -> Optional[str]:
@@ -626,7 +628,14 @@ class Product(Base):
             raise ValueError(
                 "Not in use supplier can't have products attached")
         return supplier
-    
+
+    @validates("meas_unit")
+    def validate_meas_unit(self, key: str, value: str) -> Optional[str]:
+        """Check for empty measuring unit."""
+        if not value:
+            raise ValueError("Product must have a measuring unit")
+        return value
+
     @validates("min_stock")
     def validate_min_stock(self, key: str, value: int) -> Optional[int]:
         try:

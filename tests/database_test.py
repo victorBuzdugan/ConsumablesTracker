@@ -876,24 +876,23 @@ def test_product_no_supplier(client):
             assert "Supplier does not exist" in str(err)
 
 
-@pytest.mark.xfail(raises=IntegrityError)
+@pytest.mark.xfail(raises=ValueError)
 def test_product_no_meas_unit(client):
     with dbSession() as db_session:
-        product = Product(
-            name="__test__producttt__",
-            description="Some description",
-            responsable=db_session.get(User, 1),
-            category=db_session.get(Category, 1),
-            supplier=db_session.get(Supplier, 1),
-            meas_unit=None,
-            min_stock=7,
-            ord_qty=7
-        )
         try:
-            db_session.add(product)
-            db_session.commit()
-        except IntegrityError:
+            product = Product(
+                name="__test__producttt__",
+                description="Some description",
+                responsable=db_session.get(User, 1),
+                category=db_session.get(Category, 1),
+                supplier=db_session.get(Supplier, 1),
+                meas_unit=None,
+                min_stock=7,
+                ord_qty=7
+            )
+        except ValueError as err:
             db_session.rollback()
+            assert "Product must have a measuring unit" in str(err)
 
 
 def test_bulk_product_insertion(client):

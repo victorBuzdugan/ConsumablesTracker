@@ -32,6 +32,13 @@ def test_index_user_not_logged_in(client: FlaskClient):
         assert f'href={url_for("auth.logout")}>Log Out' not in response.text
 
         assert f'href={url_for("users.new_user")}>User' not in response.text
+        assert f'href={url_for("cat.new_category")}>Category' not in response.text
+        assert f'href={url_for("sup.new_supplier")}>Supplier' not in response.text
+        assert f'href={url_for("prod.new_product")}>Product' not in response.text
+        assert f'href={url_for("cat.categories")}>Categories' not in response.text
+        assert f'href={url_for("sup.suppliers")}>Suppliers' not in response.text
+        assert f'href={url_for("prod.products", ordered_by="code")}>Products' not in response.text
+        assert f'href={url_for("prod.products_to_order")}>Order' not in response.text
 
 
 def test_index_user_logged_in(client: FlaskClient, user_logged_in):
@@ -74,8 +81,11 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
         assert f'href={url_for("users.new_user")}>User' not in response.text
         assert f'href={url_for("cat.new_category")}>Category' not in response.text
         assert f'href={url_for("sup.new_supplier")}>Supplier' not in response.text
+        assert f'href={url_for("prod.new_product")}>Product' not in response.text
         assert f'href={url_for("cat.categories")}>Categories' not in response.text
         assert f'href={url_for("sup.suppliers")}>Suppliers' not in response.text
+        assert f'href={url_for("prod.products", ordered_by="code")}>Products' not in response.text
+        assert f'href={url_for("prod.products_to_order")}>Order' not in response.text
 
 
 def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_in):
@@ -113,8 +123,11 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert f'href={url_for("users.new_user")}>User' in response.text
         assert f'href={url_for("cat.new_category")}>Category' in response.text
         assert f'href={url_for("sup.new_supplier")}>Supplier' in response.text
+        assert f'href={url_for("prod.new_product")}>Product' in response.text
         assert f'href={url_for("cat.categories")}>Categories' in response.text
         assert f'href={url_for("sup.suppliers")}>Suppliers' in response.text
+        assert f'href={url_for("prod.products", ordered_by="code")}>Products' in response.text
+        assert f'href={url_for("prod.products_to_order")}>Order' in response.text
 
 
 def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_logged_in):
@@ -173,12 +186,12 @@ def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(client
             db_session.get(Product, 3).to_order = True
             db_session.commit()
             response = client.get("/")
-            assert b'text-danger">There are 3 products that need to be ordered' in response.data
+            assert f'<span class="text-danger">There are <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{url_for("prod.products_to_order")}">3 products</a> that need to be ordered' in response.text
 
             db_session.get(Product, 2).to_order = False
             db_session.commit()
             response = client.get("/")
-            assert b'text-danger">There are 2 products that need to be ordered' in response.data
+            assert f'<span class="text-danger">There are <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{url_for("prod.products_to_order")}">2 products</a> that need to be ordered' in response.text
 
             db_session.get(Product, 1).to_order = False
             db_session.get(Product, 3).to_order = False
@@ -211,9 +224,9 @@ def test_index_admin_logged_in_statistics(client: FlaskClient, admin_logged_in):
             assert ('href="/supplier/suppliers">' +
                     f"{in_use_suppliers}" +
                     " suppliers</a> in use") in response.text
-            assert ('There are <span class="text-secondary">' +
+            assert ('href="/product/products-sorted-by-code">' +
                     f"{in_use_products}" +
-                    " products</span> in use of which " +
+                    " products</a> in use of which " +
                     '<span class="text-secondary">' +
                     f"{critical_products}" +
                     "</span> are critical.") in response.text

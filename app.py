@@ -6,6 +6,7 @@ from blueprints.auth.auth import auth_bp
 from blueprints.cat.cat import cat_bp
 from blueprints.inv.inv import inv_bp
 from blueprints.main.main import main_bp
+from blueprints.prod.prod import prod_bp
 from blueprints.sup.sup import sup_bp
 from blueprints.users.users import users_bp
 
@@ -25,3 +26,4 @@ app.register_blueprint(inv_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(cat_bp)
 app.register_blueprint(sup_bp)
+app.register_blueprint(prod_bp)

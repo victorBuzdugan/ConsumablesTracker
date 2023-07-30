@@ -47,7 +47,9 @@
         </div>
 
         <ul class="list-group list-group-flush m-0">
-            <li class="list-group-item">Supplier has {{ form.all_products.data }} products, of which {{ form.in_use_products.data }} are in use</li>
+            <li class="list-group-item">
+                Supplier has <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='supplier') }}">{{ form.all_products.data }} products</a>, of which {{ form.in_use_products.data }} are in use
+            </li>
         </ul>
 
         <div class="card-footer py-3">
