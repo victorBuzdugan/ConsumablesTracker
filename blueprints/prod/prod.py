@@ -306,37 +306,16 @@ def edit_product(product):
                     prod.name = edit_prod_form.name.data
                 except ValueError as error:
                     flash(str(error), "error")
-                try:
-                    prod.description = edit_prod_form.description.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                try:
-                    prod.responsable = db_session.get(
-                        User, edit_prod_form.responsable_id.data)
-                except ValueError as error:
-                    flash(str(error), "error")
-                try:
-                    prod.category = db_session.get(
-                        Category, edit_prod_form.category_id.data)
-                except ValueError as error:
-                    flash(str(error), "error")
-                try:
-                    prod.supplier = db_session.get(
-                        Supplier, edit_prod_form.supplier_id.data)
-                except ValueError as error:
-                    flash(str(error), "error")
-                try:
-                    prod.meas_unit = edit_prod_form.meas_unit.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                try:
-                    prod.min_stock = edit_prod_form.min_stock.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                try:
-                    prod.ord_qty = edit_prod_form.ord_qty.data
-                except ValueError as error:
-                    flash(str(error), "warning")
+                prod.description = edit_prod_form.description.data
+                prod.responsable = db_session.get(
+                    User, edit_prod_form.responsable_id.data)
+                prod.category = db_session.get(
+                    Category, edit_prod_form.category_id.data)
+                prod.supplier = db_session.get(
+                    Supplier, edit_prod_form.supplier_id.data)
+                prod.meas_unit = edit_prod_form.meas_unit.data
+                prod.min_stock = edit_prod_form.min_stock.data
+                prod.ord_qty = edit_prod_form.ord_qty.data
                 try:
                     prod.to_order = edit_prod_form.to_order.data
                 except ValueError as error:
