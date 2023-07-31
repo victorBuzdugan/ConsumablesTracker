@@ -111,7 +111,7 @@ class EditUserForm(CreateUserForm):
         render_kw={"class": "btn btn-danger"})
 
 
-@users_bp.route("/<username>/approve-registration")
+@users_bp.route("/<path:username>/approve-registration")
 def approve_reg(username):
     """Approve registration of user `username`."""
     with dbSession() as db_session:
@@ -125,7 +125,7 @@ def approve_reg(username):
 
     return redirect(url_for("main.index"))
 
-@users_bp.route("/<username>/approve-inventory-check")
+@users_bp.route("/<path:username>/approve-inventory-check")
 def approve_check_inv(username):
     """Approve inventory check for user `username`."""
     with dbSession() as db_session:
@@ -177,7 +177,7 @@ def new_user():
 
     return render_template("users/new_user.html", form=new_user_form)
 
-@users_bp.route("/<username>/edit", methods=["GET", "POST"])
+@users_bp.route("/<path:username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
     edit_user_form: EditUserForm = EditUserForm()

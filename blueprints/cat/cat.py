@@ -109,7 +109,7 @@ def new_category():
 
     return render_template("cat/new_category.html", form=new_cat_form)
 
-@cat_bp.route("/<category>/edit", methods=["GET", "POST"])
+@cat_bp.route("/<path:category>/edit", methods=["GET", "POST"])
 def edit_category(category):
     """Edit category."""
     edit_cat_form: EditCatForm = EditCatForm()

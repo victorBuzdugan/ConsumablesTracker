@@ -109,7 +109,7 @@ def new_supplier():
 
     return render_template("sup/new_supplier.html", form=new_sup_form)
 
-@sup_bp.route("/<supplier>/edit", methods=["GET", "POST"])
+@sup_bp.route("/<path:supplier>/edit", methods=["GET", "POST"])
 def edit_supplier(supplier):
     """Edit supplier."""
     edit_sup_form: EditSupForm = EditSupForm()
