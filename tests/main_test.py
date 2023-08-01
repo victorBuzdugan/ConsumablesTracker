@@ -23,7 +23,7 @@ def test_index_user_not_logged_in(client: FlaskClient):
         assert response.request.path == url_for("auth.login")
         assert b'type="submit" value="Log In"' in response.data
         assert b"You have to be logged in..." in response.data
-        # TODO menu items not logged in
+
         assert f'href={url_for("auth.register")}>Register' in response.text
         assert f'href={url_for("auth.login")}>Log In' in response.text
 
@@ -70,7 +70,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
             db_session.commit()
         assert "Admin dashboard" not in response.text
         assert "Statistics" not in response.text
-        # TODO menu items user logged in
+
         assert f'href={url_for("auth.register")}>Register' not in response.text
         assert f'href={url_for("auth.login")}>Log In' not in response.text
 
@@ -112,7 +112,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
             db_session.commit()
         assert b"Admin dashboard" in response.data
         assert b"Statistics" in response.data
-        # TODO menu items admin logged in
+
         assert f'href={url_for("auth.register")}>Register' not in response.text
         assert f'href={url_for("auth.login")}>Log In' not in response.text
         
