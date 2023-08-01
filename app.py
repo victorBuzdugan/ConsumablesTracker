@@ -1,3 +1,5 @@
+"""Main app."""
+
 from datetime import datetime
 
 from flask import Flask
@@ -14,9 +16,10 @@ app = Flask(__name__)
 
 app.config.from_prefixed_env()
 
-# jinja date time
+
 @app.context_processor
 def inject_now():
+    """Function for jinja date time"""
     return {'now': datetime.utcnow()}
 
 

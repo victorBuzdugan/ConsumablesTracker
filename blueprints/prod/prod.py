@@ -1,17 +1,20 @@
 """Products blueprint."""
 
+from typing import Callable
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_wtf import FlaskForm
 from markupsafe import escape
-from sqlalchemy import func, select, text
-from sqlalchemy.orm import (defaultload, defer, joinedload, lazyload,
-                            load_only, raiseload, selectinload)
+from sqlalchemy import func, select
+from sqlalchemy.orm import defer, joinedload, raiseload
 from wtforms import (BooleanField, IntegerField, SelectField, StringField,
-                     SubmitField, TextAreaField)
+                     SubmitField)
 from wtforms.validators import InputRequired, Length, NumberRange
 
 from database import Category, Product, Supplier, User, dbSession
 from helpers import admin_required, flash_errors
+
+func: Callable
 
 prod_bp = Blueprint(
     "prod",
@@ -19,11 +22,11 @@ prod_bp = Blueprint(
     url_prefix="/product",
     template_folder="templates")
 
-# require admin logged in for all routes
+
 @prod_bp.before_request
 @admin_required
 def admin_logged_in():
-    pass
+    """Require admin logged in for all routes."""
 
 
 class CreateProdForm(FlaskForm):
@@ -49,7 +52,7 @@ class CreateProdForm(FlaskForm):
                 min=3,
                 max=50,
                 message="Product description must be " +
-                    "between 3 and 50 characters")],
+                        "between 3 and 50 characters")],
         render_kw={
                 "class": "form-control",
                 "placeholder": "Description",
@@ -145,7 +148,7 @@ def products(ordered_by):
     """All products page."""
     with dbSession() as db_session:
         if ordered_by == "code":
-            products = db_session.scalars(
+            prods = db_session.scalars(
                 select(Product)
                 .options(
                     defer(Product.to_order, raiseload=True),
@@ -156,7 +159,7 @@ def products(ordered_by):
                 .order_by(func.lower(Product.name))
             ).unique().all()
         elif ordered_by == "responsable":
-            products = db_session.scalars(
+            prods = db_session.scalars(
                 select(Product)
                 .join(Product.responsable)
                 .options(
@@ -168,7 +171,7 @@ def products(ordered_by):
                 .order_by(func.lower(User.name), func.lower(Product.name))
             ).unique().all()
         elif ordered_by == "category":
-            products = db_session.scalars(
+            prods = db_session.scalars(
                 select(Product)
                 .join(Product.category)
                 .options(
@@ -180,7 +183,7 @@ def products(ordered_by):
                 .order_by(func.lower(Category.name), func.lower(Product.name))
             ).unique().all()
         elif ordered_by == "supplier":
-            products = db_session.scalars(
+            prods = db_session.scalars(
                 select(Product)
                 .join(Product.supplier)
                 .options(
@@ -195,28 +198,29 @@ def products(ordered_by):
             flash(f"Cannot sort products by {ordered_by}", "warning")
             return redirect(url_for("prod.products", ordered_by="code"))
         stats = {
-                "all_products": db_session.\
-                        scalar(select(func.count(Product.id))),
-                "in_use_products": db_session.\
-                        scalar(select(func.count(Product.id)).\
-                        filter_by(in_use=True)),
-                "critical_products": db_session.\
-                        scalar(select(func.count(Product.id)).\
-                        filter_by(critical=True)),
-                "in_use_critical_products": db_session.\
-                        scalar(select(func.count(Product.id)).\
-                        filter_by(in_use=True, critical=True)),
+                "all_products": db_session.scalar(
+                    select(func.count(Product.id))),
+                "in_use_products": db_session.scalar(
+                    select(func.count(Product.id))
+                    .filter_by(in_use=True)),
+                "critical_products": db_session.scalar(
+                    select(func.count(Product.id))
+                    .filter_by(critical=True)),
+                "in_use_critical_products": db_session.scalar(
+                    select(func.count(Product.id))
+                    .filter_by(in_use=True, critical=True)),
         }
     return render_template(
         "prod/products.html",
-        products=products,
+        products=prods,
         stats=stats)
+
 
 @prod_bp.route("/new", methods=["GET", "POST"])
 def new_product():
     """Create a new product."""
     new_prod_form: CreateProdForm = CreateProdForm()
-    
+
     with dbSession() as db_session:
         users = db_session.execute(
             select(User.id, User.name)
@@ -239,7 +243,7 @@ def new_product():
         (category.id, category.name) for category in categories]
     new_prod_form.supplier_id.choices = [
         (supplier.id, supplier.name) for supplier in suppliers]
-    
+
     if new_prod_form.validate_on_submit():
         with dbSession() as db_session:
             try:
@@ -263,6 +267,7 @@ def new_product():
         flash_errors(new_prod_form.errors)
 
     return render_template("prod/new_product.html", form=new_prod_form)
+
 
 @prod_bp.route("/<path:product>/edit", methods=["GET", "POST"])
 def edit_product(product):
@@ -294,8 +299,9 @@ def edit_product(product):
 
     if edit_prod_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
-            prod = db_session.scalar(select(Product).
-                filter_by(name=escape(product)))
+            prod = db_session.scalar(
+                select(Product)
+                .filter_by(name=escape(product)))
             if edit_prod_form.delete.data:
                 db_session.delete(prod)
                 db_session.commit()
@@ -330,13 +336,14 @@ def edit_product(product):
                     db_session.commit()
                 return redirect(
                     url_for("prod.edit_product", product=prod.name))
-                
+
     elif edit_prod_form.errors:
         flash_errors(edit_prod_form.errors)
 
     with dbSession() as db_session:
-        if (prod:= db_session.scalar(select(Product).
-                filter_by(name=escape(product)))):
+        if (prod := db_session.scalar(
+                select(Product)
+                .filter_by(name=escape(product)))):
             edit_prod_form = EditProdForm(obj=prod)
             edit_prod_form.responsable_id.choices = [
                 (user.id, user.name) for user in users]
@@ -350,6 +357,7 @@ def edit_product(product):
 
     return render_template("prod/edit_product.html", form=edit_prod_form)
 
+
 @prod_bp.route("/products-to-order", methods=["GET", "POST"])
 def products_to_order():
     """Products to order page."""
@@ -357,7 +365,7 @@ def products_to_order():
 
     if prod_to_order_form.validate_on_submit():
         with dbSession() as db_session:
-            products = db_session.scalars(
+            prods = db_session.scalars(
                 select(Product)
                 .join(Product.supplier)
                 .options(
@@ -366,10 +374,10 @@ def products_to_order():
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
-                .filter(Product.to_order == True)
+                .filter(Product.to_order)
                 .order_by(func.lower(Supplier.name))
             ).unique().all()
-            for product in products:
+            for product in prods:
                 if str(product.id) in request.form:
                     product.to_order = False
                 else:
@@ -380,7 +388,7 @@ def products_to_order():
         flash_errors(prod_to_order_form.errors)
 
     with dbSession() as db_session:
-        products = db_session.scalars(
+        prods = db_session.scalars(
             select(Product)
             .join(Product.supplier)
             .options(
@@ -389,26 +397,27 @@ def products_to_order():
                 joinedload(Product.category).load_only(Category.name),
                 joinedload(Product.supplier).load_only(Supplier.name),
                 raiseload("*"))
-            .filter(Product.to_order == True)
+            .filter(Product.to_order)
             .order_by(func.lower(Supplier.name))
         ).unique().all()
-    if products:
+    if prods:
         return render_template(
             "prod/products_to_oder.html",
-            products=products,
+            products=prods,
             form=prod_to_order_form)
     else:
         flash("There are no products that need to be ordered", "warning")
         return redirect(url_for("main.index"))
 
+
 @prod_bp.route("/products-ordered")
 def all_products_ordered():
     """All products ordered flag."""
     with dbSession() as db_session:
-        products = db_session.scalars(
+        prods = db_session.scalars(
             select(Product).filter_by(to_order=True)
             ).all()
-        for product in products:
+        for product in prods:
             product.to_order = False
         db_session.commit()
     flash("All products ordered")

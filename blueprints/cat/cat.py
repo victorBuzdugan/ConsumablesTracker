@@ -1,5 +1,7 @@
 """Categories blueprint."""
 
+from typing import Callable
+
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_wtf import FlaskForm
 from markupsafe import escape
@@ -12,17 +14,19 @@ from wtforms.validators import InputRequired, Length
 from database import Category, dbSession
 from helpers import admin_required, flash_errors
 
+func: Callable
+
 cat_bp = Blueprint(
     "cat",
     __name__,
     url_prefix="/category",
     template_folder="templates")
 
-# require admin logged in for all routes
+
 @cat_bp.before_request
 @admin_required
 def admin_logged_in():
-    pass
+    """Require admin logged in for all routes."""
 
 
 class CreateCatForm(FlaskForm):
@@ -49,7 +53,7 @@ class CreateCatForm(FlaskForm):
     submit = SubmitField(
         label="Create category",
         render_kw={"class": "btn btn-primary px-4"})
-    
+
 
 class EditCatForm(CreateCatForm):
     """Edit category form."""
@@ -68,26 +72,28 @@ class EditCatForm(CreateCatForm):
         label="Delete",
         render_kw={"class": "btn btn-danger"})
 
+
 @cat_bp.route("/categories")
 def categories():
     """All categories page."""
     with dbSession() as db_session:
-        categories = db_session.scalars(
+        cats = db_session.scalars(
                 select(Category).
                 order_by(Category.in_use.desc(), func.lower(Category.name)).
                 options(joinedload(Category.products), raiseload("*"))
                 ).unique().all()
         stats = {
-                "all_categories": db_session.\
-                        scalar(select(func.count(Category.id))),
-                "in_use_categories": db_session.\
-                        scalar(select(func.count(Category.id)).\
-                        filter_by(in_use=True)),
+                "all_categories": db_session.scalar(
+                        select(func.count(Category.id))),
+                "in_use_categories": db_session.scalar(
+                        select(func.count(Category.id))
+                        .filter_by(in_use=True)),
         }
     return render_template(
         "cat/categories.html",
-        categories=categories,
+        categories=cats,
         stats=stats)
+
 
 @cat_bp.route("/new", methods=["GET", "POST"])
 def new_category():
@@ -109,6 +115,7 @@ def new_category():
 
     return render_template("cat/new_category.html", form=new_cat_form)
 
+
 @cat_bp.route("/<path:category>/edit", methods=["GET", "POST"])
 def edit_category(category):
     """Edit category."""
@@ -116,13 +123,14 @@ def edit_category(category):
 
     if edit_cat_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
-            cat = db_session.scalar(select(Category).
-                filter_by(name=escape(category)))
+            cat = db_session.scalar(
+                select(Category)
+                .filter_by(name=escape(category)))
             if edit_cat_form.delete.data:
                 if cat.all_products:
                     flash("Can't delete category! " +
-                        "There are still products attached!",
-                        "error")
+                          "There are still products attached!",
+                          "error")
                 else:
                     db_session.delete(cat)
                     db_session.commit()
@@ -145,10 +153,11 @@ def edit_category(category):
                     url_for("cat.edit_category", category=cat.name))
     elif edit_cat_form.errors:
         flash_errors(edit_cat_form.errors)
-    
+
     with dbSession() as db_session:
-        if (cat:= db_session.scalar(select(Category).
-                filter_by(name=escape(category)))):
+        if (cat := db_session.scalar(
+                select(Category)
+                .filter_by(name=escape(category)))):
             edit_cat_form = EditCatForm(obj=cat)
         else:
             flash(f"{category} does not exist!", "error")

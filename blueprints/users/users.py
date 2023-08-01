@@ -19,11 +19,11 @@ users_bp = Blueprint(
     url_prefix="/user",
     template_folder="templates")
 
-# require admin logged in for all routes
+
 @users_bp.before_request
 @admin_required
 def admin_logged_in():
-    pass
+    """Require admin logged in for all routes."""
 
 
 class CreateUserForm(FlaskForm):
@@ -48,8 +48,9 @@ class CreateUserForm(FlaskForm):
             Length(
                 min=PASSW_MIN_LENGTH,
                 message=msg["psw_len"]),
-            Regexp(PASSW_REGEX, message=("Password must have 1 big letter, " +
-                         f"1 number, 1 special char ({PASSW_SYMB})!"))],
+            Regexp(PASSW_REGEX, message=(
+                "Password must have 1 big letter, " +
+                f"1 number, 1 special char ({PASSW_SYMB})!"))],
         render_kw={
             "class": "form-control",
             "placeholder": "Password",
@@ -81,8 +82,9 @@ class EditUserForm(CreateUserForm):
             Length(
                 min=PASSW_MIN_LENGTH,
                 message=msg["psw_len"]),
-            Regexp(PASSW_REGEX, message=("Password must have 1 big letter, " +
-                         f"1 number, 1 special char ({PASSW_SYMB})!"))],
+            Regexp(PASSW_REGEX, message=(
+                "Password must have 1 big letter, " +
+                f"1 number, 1 special char ({PASSW_SYMB})!"))],
         render_kw={
             "class": "form-control",
             "placeholder": "Password",
@@ -115,7 +117,7 @@ class EditUserForm(CreateUserForm):
 def approve_reg(username):
     """Approve registration of user `username`."""
     with dbSession() as db_session:
-        if (user:= db_session.scalar(
+        if (user := db_session.scalar(
                         select(User).filter_by(name=escape(username)))):
             user.reg_req = False
             db_session.commit()
@@ -125,11 +127,12 @@ def approve_reg(username):
 
     return redirect(url_for("main.index"))
 
+
 @users_bp.route("/<path:username>/approve-inventory-check")
 def approve_check_inv(username):
     """Approve inventory check for user `username`."""
     with dbSession() as db_session:
-        if (user:= db_session.scalar(
+        if (user := db_session.scalar(
                         select(User).filter_by(name=escape(username)))):
             try:
                 user.done_inv = False
@@ -140,6 +143,7 @@ def approve_check_inv(username):
             flash(f"{username} does not exist!", "error")
 
     return redirect(url_for("main.index"))
+
 
 @users_bp.route("/approve-all-inventory-check")
 def approve_check_inv_all():
@@ -153,6 +157,7 @@ def approve_check_inv_all():
         db_session.commit()
 
     return redirect(url_for("main.index"))
+
 
 @users_bp.route("/new", methods=["GET", "POST"])
 def new_user():
@@ -177,20 +182,22 @@ def new_user():
 
     return render_template("users/new_user.html", form=new_user_form)
 
+
 @users_bp.route("/<path:username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
     edit_user_form: EditUserForm = EditUserForm()
-    
+
     if edit_user_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
-            user = db_session.scalar(select(User).
-                filter_by(name=escape(username)))
+            user = db_session.scalar(
+                select(User)
+                .filter_by(name=escape(username)))
             if edit_user_form.delete.data:
                 if user.all_products:
                     flash("Can't delete user! " +
-                        "He is still responsible for some products!",
-                        "error")
+                          "He is still responsible for some products!",
+                          "error")
                 else:
                     db_session.delete(user)
                     db_session.commit()
@@ -231,8 +238,9 @@ def edit_user(username):
         flash_errors(edit_user_form.errors)
 
     with dbSession() as db_session:
-        if (user:= db_session.scalar(select(User).
-                filter_by(name=escape(username)))):
+        if (user := db_session.scalar(
+                select(User)
+                .filter_by(name=escape(username)))):
             edit_user_form = EditUserForm(obj=user)
         else:
             flash(f"{username} does not exist!", "error")

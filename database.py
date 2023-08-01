@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from sqlalchemy import ForeignKey, create_engine, func, select
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
+
+func: Callable
 
 # factory for creating new database connections objects
 engine = create_engine("sqlite:///inventory.db", echo=True)
@@ -19,14 +21,15 @@ dbSession = sessionmaker(bind=engine)
 
 class Base(MappedAsDataclass, DeclarativeBase):
     """Base class for SQLAlchemy Declarative Mapping"""
-    
+
     # set table name
     @declared_attr.directive
     def __tablename__(cls):
+        # pylint: disable=no-self-argument
         if cls.__name__ == "Category":
             return "categories"
-        return (cls.__name__.lower() + "s")
-    
+        return cls.__name__.lower() + "s"
+
     # id and name for all tables
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
@@ -34,6 +37,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
     @validates("name")
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
+        # pylint: disable=unused-argument
         element = type(self)
         if not value:
             raise ValueError(f"{element.__name__} must have a name")
@@ -75,10 +79,10 @@ class User(Base):
     | done_inv |     x    |       |    x   |          |    x    |    x    |
     |  reg_req |     x    |   x   |    x   |     x    |         |    x    |
     |  req_inv |     x    |   x   |    x   |     x    |    x    |         |
-    
+
     Truth tables
     ------------
-    
+
     1. in_use || !products
     - A user cannot be retired if still has products assigned
     - A product cannot be assigned to a retired user
@@ -88,18 +92,18 @@ class User(Base):
     |     0    |  True  |     |
     |    > 0   |  False | NOK |
     |    > 0   |  True  |     |
-    
+
     2. products || done_inv
     - A user without products cannot check inventory;
         if a user doesn't have anymore products assigned set done_inv to True
-    - Check inventory cannot be triggered for a user without products 
+    - Check inventory cannot be triggered for a user without products
     | products | done_inv |     |
     |:--------:|:--------:|:---:|
     |     0    |   False  | NOK |
     |     0    |   True   |     |
     |    > 0   |   False  |     |
     |    > 0   |   True   |     |
-    
+
     3. !reg_req || !products
     - A product cannot be assigned to a user that requested registration
     - Request registration cannot be triggered for a user with products
@@ -217,23 +221,28 @@ class User(Base):
     def in_use_products(self) -> int:
         """Number of `in_use` products for user."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(responsable_id=self.id, in_use=True))
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(responsable_id=self.id, in_use=True))
 
     @property
     def all_products(self) -> int:
         """Number of total products for user, including not `in_use`."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(responsable_id=self.id))
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(responsable_id=self.id))
 
     @property
     def check_inv(self) -> bool:
         """Check inventory flag. Reverese of `done_inv`"""
         return not self.done_inv
-    
+
     @validates("password")
     def validate_password(self, key: str, value: str) -> Optional[str]:
+        """Check for missing value.
+        Returns hashed `value`"""
+        # pylint: disable=unused-argument
         if not value:
             raise ValueError("User must have a password")
         return generate_password_hash(value)
@@ -247,13 +256,14 @@ class User(Base):
         - A product cannot be assigned to a retired user
         - A product cannot be assigned to a user that requested registration
         """
+        # pylint: disable=unused-argument
         if value:
             if not self.in_use:
                 raise ValueError(
                     "'Retired' users can't have products attached")
             if self.reg_req:
-                raise ValueError(
-                "User with pending registration can't have products attached")
+                raise ValueError("User with pending registration " +
+                                 "can't have products attached")
         return value
 
     @validates("admin")
@@ -263,6 +273,7 @@ class User(Base):
         - A user who requested registration cannot be admin
         - Check inventory cannot be triggered for an admin
         """
+        # pylint: disable=unused-argument
         if value:
             if self.reg_req:
                 raise ValueError("User with pending registration " +
@@ -275,7 +286,7 @@ class User(Base):
                 if len(admins) == 1 and admins[0].id == self.id:
                     raise ValueError("You are the last admin!")
         return value
-    
+
     @validates("in_use")
     def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
@@ -285,11 +296,12 @@ class User(Base):
         - Request registration cannot be triggered for a retired user
         - Check inventory cannot be triggered for a retired user
         """
+        # pylint: disable=unused-argument
         if not value:
             if self.products:
                 raise ValueError(
                     "Can't 'retire' a user if he is still responsible " +
-                        "for products")
+                    "for products")
             self.done_inv = True
             self.reg_req = False
             self.req_inv = False
@@ -303,6 +315,7 @@ class User(Base):
         - A user that requested registration cannot check inventory
         - If check inventory triggered cancel request check
         """
+        # pylint: disable=unused-argument
         if not value:
             if not self.in_use:
                 raise ValueError("'Retired' user can't check inventory")
@@ -314,7 +327,7 @@ class User(Base):
                     "User without products attached can't check inventory")
             self.req_inv = False
         return value
-    
+
     @validates("reg_req")
     def validate_reg_req(self, key: str, value: bool
                          ) -> Optional[bool]:
@@ -325,6 +338,7 @@ class User(Base):
         - A user that checks inventory cannot request registration
         - A user that requested inventory cannot request registration
         """
+        # pylint: disable=unused-argument
         if value:
             if self.admin:
                 raise ValueError("Admin users can't request registration")
@@ -340,7 +354,7 @@ class User(Base):
                 raise ValueError(
                     "Users with products attached can't request registration")
         return value
-    
+
     @validates("req_inv")
     def validate_req_inv(self, key: str, value: bool
                          ) -> Optional[bool]:
@@ -351,6 +365,7 @@ class User(Base):
         - A user that checks inventory cannot request check inventory
         - A user that requested registration cannot request inventory check
         """
+        # pylint: disable=unused-argument
         if value:
             if self.admin:
                 raise ValueError("Admins don't need to request inventorying")
@@ -359,7 +374,7 @@ class User(Base):
             if self.reg_req:
                 raise ValueError(
                     "User with pending registration can't request " +
-                        "inventorying")
+                    "inventorying")
             if not self.done_inv:
                 raise ValueError("User can allready check inventory")
             if not self.in_use_products:
@@ -370,7 +385,7 @@ class User(Base):
 
 class Category(Base):
     """Categories database table mapping.
-    
+
     :param id: category id
     :param name: category name
     :param products: list of products belonging to this category
@@ -387,16 +402,17 @@ class Category(Base):
     def in_use_products(self) -> int:
         """Number of `in_use` products for category."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(category_id=self.id, in_use=True))
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(category_id=self.id, in_use=True))
 
     @property
     def all_products(self) -> int:
         """Number of total products for category, including not `in_use`."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(category_id=self.id))
-
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(category_id=self.id))
 
     @validates("products")
     def validate_products(self,
@@ -404,25 +420,26 @@ class Category(Base):
                           value: Product
                           ) -> Optional[Product]:
         """A category that's not in use can't have products assigned."""
+        # pylint: disable=unused-argument
         if value and not self.in_use:
             raise ValueError(
                 "Not in use category can't have products attached")
         return value
-    
+
     @validates("in_use")
     def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
         """A category that has products can't 'retire'."""
+        # pylint: disable=unused-argument
         if not value and self.products:
             raise ValueError(
                 "Not in use category can't have products attached")
         return value
 
 
-
 class Supplier(Base):
     """Suppliers database table mapping.
-    
+
     :param id: supplier id
     :param name: supplier name
     :param products: list of products belonging to this supplier
@@ -435,20 +452,21 @@ class Supplier(Base):
     details: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
 
-
     @property
     def in_use_products(self) -> int:
         """Number of `in_use` products for supplier."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(supplier_id=self.id, in_use=True))
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(supplier_id=self.id, in_use=True))
 
     @property
     def all_products(self) -> int:
         """Number of total products for supplier, including not `in_use`."""
         with dbSession() as db_session:
-            return db_session.scalar(select(func.count(Product.id)).\
-                filter_by(supplier_id=self.id))
+            return db_session.scalar(
+                select(func.count(Product.id))
+                .filter_by(supplier_id=self.id))
 
     @validates("products")
     def validate_products(self,
@@ -456,20 +474,21 @@ class Supplier(Base):
                           value: Product
                           ) -> Optional[Product]:
         """A supplier that's not in use can't have products assigned."""
+        # pylint: disable=unused-argument
         if value and not self.in_use:
             raise ValueError(
                 "Not in use supplier can't have products attached")
         return value
-    
+
     @validates("in_use")
     def validate_in_use(self, key: str, value: bool
                         ) -> Optional[bool]:
         """A supplier that has products can't 'retire'."""
+        # pylint: disable=unused-argument
         if not value and self.products:
             raise ValueError(
                 "Not in use supplier can't have products attached")
         return value
-
 
 
 class Product(Base):
@@ -512,16 +531,19 @@ class Product(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
 
     code = synonym("name")
-    
+
     @validates("description")
     def validate_description(self, key: str, value: str) -> Optional[str]:
         """Check for empty description."""
+        # pylint: disable=unused-argument
         if not value:
             raise ValueError("Product must have a description")
         return value
 
     @validates("responsable_id")
     def validate_responsable_id(self, key: str, user_id: int) -> Optional[int]:
+        """Check for empty, not existing, not in use and last product."""
+        # pylint: disable=unused-argument
         if not user_id:
             raise ValueError(
                 "User can't be deleted or does not exist")
@@ -544,12 +566,14 @@ class Product(Base):
                     prev_user.req_inv = False
                     db_session.commit()
         return user_id
-    
+
     @validates("responsable")
     def validate_responsable(self,
                              key: User,
                              user: Optional[User]
                              ) -> Optional[User]:
+        """Check for empty, not existing, not in use and last product."""
+        # pylint: disable=unused-argument
         if not user:
             raise ValueError(
                 "User does not exist")
@@ -568,12 +592,14 @@ class Product(Base):
                     prev_user.req_inv = False
                     db_session.commit()
         return user
-    
+
     @validates("category_id")
     def validate_category_id(self,
                              key: str,
                              category_id: int
                              ) -> Optional[int]:
+        """Check for empty, not existing or not in use."""
+        # pylint: disable=unused-argument
         if not category_id:
             raise ValueError(
                 "Category can't be deleted or does not exist")
@@ -585,12 +611,14 @@ class Product(Base):
                 raise ValueError(
                     "Not in use category can't have products attached")
         return category_id
-    
+
     @validates("category")
     def validate_category(self,
-                            key: Category,
-                            category: Optional[Category]
-                            ) -> Optional[Category]:
+                          key: Category,
+                          category: Optional[Category]
+                          ) -> Optional[Category]:
+        """Check for empty or not in use."""
+        # pylint: disable=unused-argument
         if not category:
             raise ValueError(
                 "Category does not exist")
@@ -598,12 +626,14 @@ class Product(Base):
             raise ValueError(
                 "Not in use category can't have products attached")
         return category
-    
+
     @validates("supplier_id")
     def validate_supplier_id(self,
                              key: str,
                              supplier_id: int
                              ) -> Optional[int]:
+        """Check for empty, not existing or not in use."""
+        # pylint: disable=unused-argument
         if not supplier_id:
             raise ValueError(
                 "Supplier can't be deleted or does not exist")
@@ -615,12 +645,14 @@ class Product(Base):
                 raise ValueError(
                     "Not in use supplier can't have products attached")
         return supplier_id
-    
+
     @validates("supplier")
     def validate_supplier(self,
-                            key: Supplier,
-                            supplier: Optional[Supplier]
-                            ) -> Optional[Supplier]:
+                          key: Supplier,
+                          supplier: Optional[Supplier]
+                          ) -> Optional[Supplier]:
+        """Check for empty or not in use."""
+        # pylint: disable=unused-argument
         if not supplier:
             raise ValueError(
                 "Supplier does not exist")
@@ -632,36 +664,45 @@ class Product(Base):
     @validates("meas_unit")
     def validate_meas_unit(self, key: str, value: str) -> Optional[str]:
         """Check for empty measuring unit."""
+        # pylint: disable=unused-argument
         if not value:
             raise ValueError("Product must have a measuring unit")
         return value
 
     @validates("min_stock")
     def validate_min_stock(self, key: str, value: int) -> Optional[int]:
+        """Validate int value and >= 0."""
+        # pylint: disable=unused-argument
         try:
-            if not (value >= 0):
+            if not value >= 0:
                 raise ValueError("Minimum stock must be ≥ 0")
-        except TypeError:
-            raise ValueError("Minimum stock must be ≥ 0")
+        except TypeError as err:
+            raise ValueError("Minimum stock must be ≥ 0") from err
         return value
-    
+
     @validates("ord_qty")
     def validate_ord_qty(self, key: str, value: int) -> Optional[int]:
+        """Validate int value and >= 1."""
+        # pylint: disable=unused-argument
         try:
-            if not (value >= 1):
+            if not value >= 1:
                 raise ValueError("Order quantity must be ≥ 1")
-        except TypeError:
-            raise ValueError("Order quantity must be ≥ 1")
+        except TypeError as err:
+            raise ValueError("Order quantity must be ≥ 1") from err
         return value
-    
+
     @validates("to_order")
     def validate_to_order(self, key: str, value: bool) -> Optional[bool]:
+        """Check if product is in use."""
+        # pylint: disable=unused-argument
         if value and not self.in_use:
             raise ValueError("Can't order not in use products")
         return value
-    
+
     @validates("in_use")
     def validate_in_use(self, key: str, value: bool) -> Optional[bool]:
+        """Check if product needs to be ordered."""
+        # pylint: disable=unused-argument
         if not value and self.to_order:
             raise ValueError(
                 "Can't 'retire' a product that needs to be ordered")

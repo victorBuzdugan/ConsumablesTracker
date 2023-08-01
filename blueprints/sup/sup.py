@@ -1,5 +1,7 @@
 """Suppliers blueprint."""
 
+from typing import Callable
+
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_wtf import FlaskForm
 from markupsafe import escape
@@ -12,17 +14,19 @@ from wtforms.validators import InputRequired, Length
 from database import Supplier, dbSession
 from helpers import admin_required, flash_errors
 
+func: Callable
+
 sup_bp = Blueprint(
     "sup",
     __name__,
     url_prefix="/supplier",
     template_folder="templates")
 
-# require admin logged in for all routes
+
 @sup_bp.before_request
 @admin_required
 def admin_logged_in():
-    pass
+    """Require admin logged in for all routes."""
 
 
 class CreateSupForm(FlaskForm):
@@ -49,7 +53,7 @@ class CreateSupForm(FlaskForm):
     submit = SubmitField(
         label="Create supplier",
         render_kw={"class": "btn btn-primary px-4"})
-    
+
 
 class EditSupForm(CreateSupForm):
     """Edit supplier form."""
@@ -68,26 +72,28 @@ class EditSupForm(CreateSupForm):
         label="Delete",
         render_kw={"class": "btn btn-danger"})
 
+
 @sup_bp.route("/suppliers")
 def suppliers():
     """All suppliers page."""
     with dbSession() as db_session:
-        suppliers = db_session.scalars(
+        supps = db_session.scalars(
                 select(Supplier).
                 order_by(Supplier.in_use.desc(), func.lower(Supplier.name)).
                 options(joinedload(Supplier.products), raiseload("*"))
                 ).unique().all()
         stats = {
-                "all_suppliers": db_session.\
-                        scalar(select(func.count(Supplier.id))),
-                "in_use_suppliers": db_session.\
-                        scalar(select(func.count(Supplier.id)).\
-                        filter_by(in_use=True)),
+            "all_suppliers": db_session.scalar(
+                select(func.count(Supplier.id))),
+            "in_use_suppliers": db_session.scalar(
+                select(func.count(Supplier.id))
+                .filter_by(in_use=True)),
         }
     return render_template(
         "sup/suppliers.html",
-        suppliers=suppliers,
+        suppliers=supps,
         stats=stats)
+
 
 @sup_bp.route("/new", methods=["GET", "POST"])
 def new_supplier():
@@ -109,6 +115,7 @@ def new_supplier():
 
     return render_template("sup/new_supplier.html", form=new_sup_form)
 
+
 @sup_bp.route("/<path:supplier>/edit", methods=["GET", "POST"])
 def edit_supplier(supplier):
     """Edit supplier."""
@@ -116,13 +123,14 @@ def edit_supplier(supplier):
 
     if edit_sup_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
-            sup = db_session.scalar(select(Supplier).
-                filter_by(name=escape(supplier)))
+            sup = db_session.scalar(
+                select(Supplier)
+                .filter_by(name=escape(supplier)))
             if edit_sup_form.delete.data:
                 if sup.all_products:
                     flash("Can't delete supplier! " +
-                        "There are still products attached!",
-                        "error")
+                          "There are still products attached!",
+                          "error")
                 else:
                     db_session.delete(sup)
                     db_session.commit()
@@ -145,10 +153,11 @@ def edit_supplier(supplier):
                     url_for("sup.edit_supplier", supplier=sup.name))
     elif edit_sup_form.errors:
         flash_errors(edit_sup_form.errors)
-    
+
     with dbSession() as db_session:
-        if (sup:= db_session.scalar(select(Supplier).
-                filter_by(name=escape(supplier)))):
+        if (sup := db_session.scalar(
+                select(Supplier)
+                .filter_by(name=escape(supplier)))):
             edit_sup_form = EditSupForm(obj=sup)
         else:
             flash(f"{supplier} does not exist!", "error")

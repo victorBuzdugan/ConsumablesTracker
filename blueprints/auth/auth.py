@@ -18,10 +18,10 @@ PASSW_SYMB = "!@#$%^&*_=+"
 msg = {
     "usr_req": "Username is required!",
     "usr_len": (f"Username must be between {USER_MIN_LENGTH} and " +
-                    f"{USER_MAX_LENGTH} characters!"),
+                f"{USER_MAX_LENGTH} characters!"),
     "psw_req": "Password is required!",
     "psw_len": ("Password should have at least "
-                            f"{PASSW_MIN_LENGTH} characters!"),
+                f"{PASSW_MIN_LENGTH} characters!"),
     "psw_rules": "Check password rules!",
     "psw_eq": "Passwords don't match!",
 }
@@ -223,14 +223,15 @@ def register():
 @login_required
 def change_password():
     """Change current user password."""
-    
+
     chg_pass_form: ChgPasswForm = ChgPasswForm()
 
     if chg_pass_form.validate_on_submit():
         with dbSession() as db_session:
             user = db_session.get(User, session["user_id"])
 
-            if check_password_hash(user.password, chg_pass_form.old_password.data):
+            if check_password_hash(
+                    user.password, chg_pass_form.old_password.data):
                 chg_pass_form.populate_obj(user)
                 db_session.commit()
                 session.clear()
