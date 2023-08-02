@@ -16,13 +16,13 @@ The database resets every day at 05:00 UTC (08:00 EEST Romania time).
 
 ## Login credentials
 Login credentials:
-| username 	| password 	|
-|:--------:	|:--------:	|
-|   user1  	| Q!111111 	|
-|   user2  	| Q!222222 	|
-|   user3  	| Q!333333 	|
-|   user4  	| Q!444444 	|
-|   user5  	| Q!555555 	|
+| username 	| password 	| admin |
+|:--------:	|:--------:	|:-----:|
+|   user1  	| Q!111111 	|   x   |
+|   user2  	| Q!222222 	|   x   |
+|   user3  	| Q!333333 	|       |
+|   user4  	| Q!444444 	|       |
+|   user5  	| Q!555555 	|       |
 
 # Installation
 
