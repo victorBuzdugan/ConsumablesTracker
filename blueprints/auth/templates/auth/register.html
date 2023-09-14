@@ -4,13 +4,13 @@
     <script src="{{ url_for('auth.static', filename='registration_rules.js') }}"></script>
 {% endblock link %}
 
-{% block title %}Register{% endblock %}
+{% block title %}{{ gettext("Register") }}{% endblock %}
 
 {% block main %}
 <div class="card mx-auto" style="max-width: 20rem;">
     <form method="POST">
         <div class="card-header h5 py-2">
-            Register
+            {{ gettext("Register") }}
         </div>
 
         <div class="card-body">
@@ -23,7 +23,7 @@
                     <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
                     <ul class="list-unstyled mb-0">
                         <li class="userrequirements userleng">
-                        Must have at least 3 chars</li>
+                        {{ gettext("Must have at least 3 chars") }}</li>
                     </ul>
                     </div>
                 </div>
@@ -36,13 +36,13 @@
                     <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
                     <ul class="list-unstyled mb-0">
                         <li class="requirements leng">
-                        Must have at least 8 chars</li>
+                        {{ gettext("Must have at least 8 chars") }}</li>
                         <li class="requirements big-letter">
-                        Must have at least 1 big letter</li>
+                        {{ gettext("Must have at least 1 big letter") }}</li>
                         <li class="requirements num">
-                        Must have at least 1 number</li>
+                        {{ gettext("Must have at least 1 number") }}</li>
                         <li class="requirements special-char">
-                        Must have at least 1 special char (!@#$%^&*_=+).</li>
+                        {{ gettext("Must have at least 1 special char") }} (!@#$%^&*_=+)</li>
                     </ul>
                     </div>
                 </div>
@@ -55,12 +55,12 @@
                     <div class="alert d-none p-0" id="confirm-alert" role="alert" data-mdb-color="warning">
                     <ul class="list-unstyled mb-0">
                         <li class="confirmrequirements confirmequal">
-                        Passwords don't match</li>
+                        {{ gettext("Passwords don't match") }}</li>
                     </ul>
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">All fields are required</span>
+            <span class="text-body-tertiary">{{ gettext("All fields are required") }}</span>
         </div>
 
         <div class="card-footer py-3">

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-14 18:33+0300\n"
+"POT-Creation-Date: 2023-09-14 22:08+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -187,8 +187,164 @@ msgstr ""
 msgid "You have to be an admin..."
 msgstr ""
 
-#: blueprints/auth/templates/auth/login.html:44
+#: blueprints/auth/auth.py:20
+msgid "Username is required!"
+msgstr ""
+
+#: blueprints/auth/auth.py:21
+#, python-format
+msgid "Username must be between %(m)i and %(M)i characters!"
+msgstr ""
+
+#: blueprints/auth/auth.py:23
+msgid "Password is required!"
+msgstr ""
+
+#: blueprints/auth/auth.py:24
+#, python-format
+msgid "Password should have at least %(pmin)i characters!"
+msgstr ""
+
+#: blueprints/auth/auth.py:26
+msgid "Check password rules!"
+msgstr ""
+
+#: blueprints/auth/auth.py:27
+msgid "Passwords don't match!"
+msgstr ""
+
+#: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
+#: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
+msgid "Username"
+msgstr ""
+
+#: blueprints/auth/auth.py:48 blueprints/auth/auth.py:52
+#: blueprints/auth/auth.py:77 blueprints/auth/auth.py:88
+msgid "Password"
+msgstr ""
+
+#: blueprints/auth/auth.py:91 blueprints/auth/auth.py:100
+#: blueprints/auth/auth.py:137 blueprints/auth/auth.py:146
+msgid "Retype password"
+msgstr ""
+
+#: blueprints/auth/auth.py:103
+msgid "Request registration"
+msgstr ""
+
+#: blueprints/auth/auth.py:112 blueprints/auth/auth.py:120
+msgid "Old password"
+msgstr ""
+
+#: blueprints/auth/auth.py:123 blueprints/auth/auth.py:134
+msgid "New password"
+msgstr ""
+
+#: blueprints/auth/auth.py:149
+#: blueprints/auth/templates/auth/change_password.html:16
+#: templates/layout.html:43
+msgid "Change password"
+msgstr ""
+
+#: blueprints/auth/auth.py:174
+#, python-format
+msgid "Welcome %(username)s"
+msgstr ""
+
+#: blueprints/auth/auth.py:177
+msgid "Your registration is pending. Contact an admin."
+msgstr ""
+
+#: blueprints/auth/auth.py:180
+msgid "This user is not in use anymore!"
+msgstr ""
+
+#: blueprints/auth/auth.py:182
+msgid "Wrong username or password!"
+msgstr ""
+
+#: blueprints/auth/auth.py:197
+msgid "Succesfully logged out..."
+msgstr ""
+
+#: blueprints/auth/auth.py:208
+msgid "You have been logged out..."
+msgstr ""
+
+#: blueprints/auth/auth.py:219
+msgid "Registration request sent. Please contact an admin."
+msgstr ""
+
+#: blueprints/auth/auth.py:246
+msgid "Password changed."
+msgstr ""
+
+#: blueprints/auth/auth.py:249
+msgid "Wrong old password!"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:7
+msgid "Change Password"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:29
+msgid "Old password (at least 8 chars)"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:42
+#: blueprints/auth/templates/auth/register.html:39
+msgid "Must have at least 8 chars"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:44
+#: blueprints/auth/templates/auth/register.html:41
+msgid "Must have at least 1 big letter"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:46
+#: blueprints/auth/templates/auth/register.html:43
+msgid "Must have at least 1 number"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:48
+#: blueprints/auth/templates/auth/register.html:45
+msgid "Must have at least 1 special char"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:61
+#: blueprints/auth/templates/auth/register.html:58
+msgid "Passwords don't match"
+msgstr ""
+
+#: blueprints/auth/templates/auth/change_password.html:66
+#: blueprints/auth/templates/auth/login.html:45
+#: blueprints/auth/templates/auth/register.html:63
 msgid "All fields are required"
+msgstr ""
+
+#: blueprints/auth/templates/auth/login.html:7
+msgid "Log In"
+msgstr ""
+
+#: blueprints/auth/templates/auth/login.html:13
+msgid "Login"
+msgstr ""
+
+#: blueprints/auth/templates/auth/login.html:27
+msgid "Enter username"
+msgstr ""
+
+#: blueprints/auth/templates/auth/login.html:40
+msgid "Enter password"
+msgstr ""
+
+#: blueprints/auth/templates/auth/register.html:7
+#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:47
+msgid "Register"
+msgstr ""
+
+#: blueprints/auth/templates/auth/register.html:26
+msgid "Must have at least 3 chars"
 msgstr ""
 
 #: templates/layout.html:24
@@ -229,13 +385,5 @@ msgstr ""
 
 #: templates/layout.html:36
 msgid "Product"
-msgstr ""
-
-#: templates/layout.html:43
-msgid "Change password"
-msgstr ""
-
-#: templates/layout.html:47
-msgid "Register"
 msgstr ""
 

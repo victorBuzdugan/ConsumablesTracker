@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v.02\n"
+"Project-Id-Version:  v.03\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-14 18:33+0300\n"
+"POT-Creation-Date: 2023-09-14 22:08+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -195,9 +195,165 @@ msgstr "Trebuie să fii logat..."
 msgid "You have to be an admin..."
 msgstr "Trebuie să fii administrator..."
 
-#: blueprints/auth/templates/auth/login.html:44
+#: blueprints/auth/auth.py:20
+msgid "Username is required!"
+msgstr "Numele utilizatorului e obligatoriu!"
+
+#: blueprints/auth/auth.py:21
+#, python-format
+msgid "Username must be between %(m)i and %(M)i characters!"
+msgstr "Numele utilizatorului trebuie să aibă între %(m)i și %(M)i caractere!"
+
+#: blueprints/auth/auth.py:23
+msgid "Password is required!"
+msgstr "Parola e obligatorie!"
+
+#: blueprints/auth/auth.py:24
+#, python-format
+msgid "Password should have at least %(pmin)i characters!"
+msgstr "Parola trebuie să aibă cel puțin %(pmin)i caractere!"
+
+#: blueprints/auth/auth.py:26
+msgid "Check password rules!"
+msgstr "Verifică regulile pentru parolă!"
+
+#: blueprints/auth/auth.py:27
+msgid "Passwords don't match!"
+msgstr "Parolele nu se potrivesc!"
+
+#: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
+#: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
+msgid "Username"
+msgstr "Nume"
+
+#: blueprints/auth/auth.py:48 blueprints/auth/auth.py:52
+#: blueprints/auth/auth.py:77 blueprints/auth/auth.py:88
+msgid "Password"
+msgstr "Parolă"
+
+#: blueprints/auth/auth.py:91 blueprints/auth/auth.py:100
+#: blueprints/auth/auth.py:137 blueprints/auth/auth.py:146
+msgid "Retype password"
+msgstr "Reintrodu parola"
+
+#: blueprints/auth/auth.py:103
+msgid "Request registration"
+msgstr "Cere înregistrare"
+
+#: blueprints/auth/auth.py:112 blueprints/auth/auth.py:120
+msgid "Old password"
+msgstr "Parola veche"
+
+#: blueprints/auth/auth.py:123 blueprints/auth/auth.py:134
+msgid "New password"
+msgstr "Parola nouă"
+
+#: blueprints/auth/auth.py:149
+#: blueprints/auth/templates/auth/change_password.html:16
+#: templates/layout.html:43
+msgid "Change password"
+msgstr "Schimbă parola"
+
+#: blueprints/auth/auth.py:174
+#, python-format
+msgid "Welcome %(username)s"
+msgstr "Bună %(username)s"
+
+#: blueprints/auth/auth.py:177
+msgid "Your registration is pending. Contact an admin."
+msgstr "Înregistrarea așteaptă aprobare. Contactează un administrator."
+
+#: blueprints/auth/auth.py:180
+msgid "This user is not in use anymore!"
+msgstr "Acest utilizator e scos din uz!"
+
+#: blueprints/auth/auth.py:182
+msgid "Wrong username or password!"
+msgstr "Nume utilizator sau parolă greșite"
+
+#: blueprints/auth/auth.py:197
+msgid "Succesfully logged out..."
+msgstr "Ai fost delogat..."
+
+#: blueprints/auth/auth.py:208
+msgid "You have been logged out..."
+msgstr "Ai fost delogat..."
+
+#: blueprints/auth/auth.py:219
+msgid "Registration request sent. Please contact an admin."
+msgstr "Înregistrarea a fost trimisă. Contactează un administrator."
+
+#: blueprints/auth/auth.py:246
+msgid "Password changed."
+msgstr "Parolă schimbată"
+
+#: blueprints/auth/auth.py:249
+msgid "Wrong old password!"
+msgstr "Parolă veche greșită"
+
+#: blueprints/auth/templates/auth/change_password.html:7
+msgid "Change Password"
+msgstr "Schimbă Parola"
+
+#: blueprints/auth/templates/auth/change_password.html:29
+msgid "Old password (at least 8 chars)"
+msgstr "Parola veche (cel puțin 8 caractere)"
+
+#: blueprints/auth/templates/auth/change_password.html:42
+#: blueprints/auth/templates/auth/register.html:39
+msgid "Must have at least 8 chars"
+msgstr "Trebuie cel puțin 8 caractere"
+
+#: blueprints/auth/templates/auth/change_password.html:44
+#: blueprints/auth/templates/auth/register.html:41
+msgid "Must have at least 1 big letter"
+msgstr "Trebuie cel puțin 1 literă mare"
+
+#: blueprints/auth/templates/auth/change_password.html:46
+#: blueprints/auth/templates/auth/register.html:43
+msgid "Must have at least 1 number"
+msgstr "Trebuie cel puțin 1 număr"
+
+#: blueprints/auth/templates/auth/change_password.html:48
+#: blueprints/auth/templates/auth/register.html:45
+msgid "Must have at least 1 special char"
+msgstr "Trebuie cel puțin 1 caracter special"
+
+#: blueprints/auth/templates/auth/change_password.html:61
+#: blueprints/auth/templates/auth/register.html:58
+msgid "Passwords don't match"
+msgstr "Parolele nu se potrivesc"
+
+#: blueprints/auth/templates/auth/change_password.html:66
+#: blueprints/auth/templates/auth/login.html:45
+#: blueprints/auth/templates/auth/register.html:63
 msgid "All fields are required"
 msgstr "Toate câmpurile sunt obligatorii"
+
+#: blueprints/auth/templates/auth/login.html:7
+msgid "Log In"
+msgstr "Log In"
+
+#: blueprints/auth/templates/auth/login.html:13
+msgid "Login"
+msgstr "Login"
+
+#: blueprints/auth/templates/auth/login.html:27
+msgid "Enter username"
+msgstr "Introdu numele"
+
+#: blueprints/auth/templates/auth/login.html:40
+msgid "Enter password"
+msgstr "Introdu parola"
+
+#: blueprints/auth/templates/auth/register.html:7
+#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:47
+msgid "Register"
+msgstr "Înregistrare"
+
+#: blueprints/auth/templates/auth/register.html:26
+msgid "Must have at least 3 chars"
+msgstr "Trebuie cel puțin 3 caractere "
 
 #: templates/layout.html:24
 msgid "Inventory"
@@ -238,12 +394,4 @@ msgstr "Furnizor"
 #: templates/layout.html:36
 msgid "Product"
 msgstr "Produs"
-
-#: templates/layout.html:43
-msgid "Change password"
-msgstr "Schimbă parola"
-
-#: templates/layout.html:47
-msgid "Register"
-msgstr "Înregistrare"
 

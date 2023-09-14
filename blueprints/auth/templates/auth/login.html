@@ -4,13 +4,13 @@
     <script src="{{ url_for('auth.static', filename='login_rules.js') }}"></script>
 {% endblock link %}
 
-{% block title %}Log In{% endblock %}
+{% block title %}{{ gettext("Log In") }}{% endblock %}
 
 {% block main %}
 <div class="card mx-auto" style="max-width: 20rem;">
     <form method="POST">
         <div class="card-header h5 py-2">
-            Login
+            {{ gettext("Login") }}
         </div>
 
         <div class="card-body">
@@ -23,7 +23,7 @@
                     <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
                             <li class="userrequirements userleng">
-                            Enter username</li>
+                            {{ gettext("Enter username") }}</li>
                         </ul>
                     </div>
                 </div>
@@ -36,12 +36,12 @@
                     <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
                             <li class="requirements leng">
-                            Enter password</li>
+                            {{ gettext("Enter password") }}</li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">All fields are required</span>
+            <span class="text-body-tertiary">{{ _("All fields are required") }}</span>
         </div>
         
         <div class="card-footer py-3">

@@ -1,6 +1,7 @@
 """Authentification blueprint."""
 
 from flask import Blueprint, flash, redirect, render_template, session, url_for
+from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
@@ -16,14 +17,14 @@ PASSW_MIN_LENGTH = 8
 PASSW_REGEX = r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}"
 PASSW_SYMB = "!@#$%^&*_=+"
 msg = {
-    "usr_req": "Username is required!",
-    "usr_len": (f"Username must be between {USER_MIN_LENGTH} and " +
-                f"{USER_MAX_LENGTH} characters!"),
-    "psw_req": "Password is required!",
-    "psw_len": ("Password should have at least "
-                f"{PASSW_MIN_LENGTH} characters!"),
-    "psw_rules": "Check password rules!",
-    "psw_eq": "Passwords don't match!",
+    "usr_req": gettext("Username is required!"),
+    "usr_len": gettext("Username must be between %(m)i and %(M)i characters!",
+                       m=USER_MIN_LENGTH, M=USER_MAX_LENGTH),
+    "psw_req": gettext("Password is required!"),
+    "psw_len": gettext("Password should have at least %(pmin)i characters!",
+                pmin=PASSW_MIN_LENGTH),
+    "psw_rules": gettext("Check password rules!"),
+    "psw_eq": gettext("Passwords don't match!"),
 }
 
 auth_bp = Blueprint("auth",
@@ -36,19 +37,19 @@ auth_bp = Blueprint("auth",
 class LoginForm(FlaskForm):
     """Login form."""
     name = StringField(
-        label="Username",
+        label=lazy_gettext("Username"),
         validators=[InputRequired(msg["usr_req"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Username",
+            "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
     password = PasswordField(
-        label="Password",
+        label=lazy_gettext("Password"),
         validators=[InputRequired(msg["psw_req"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Password",
+            "placeholder": lazy_gettext("Password"),
             })
     submit = SubmitField(
         label="Log In",
@@ -60,7 +61,7 @@ class LoginForm(FlaskForm):
 class RegisterForm(FlaskForm):
     """Registration form."""
     name = StringField(
-        label="Username",
+        label=lazy_gettext("Username"),
         validators=[
             InputRequired(msg["usr_req"]),
             Length(
@@ -69,11 +70,11 @@ class RegisterForm(FlaskForm):
                 message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Username",
+            "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
     password = PasswordField(
-        label="Password",
+        label=lazy_gettext("Password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
@@ -84,10 +85,10 @@ class RegisterForm(FlaskForm):
                 message=msg["psw_rules"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Password",
+            "placeholder": lazy_gettext("Password"),
             })
     confirm = PasswordField(
-        label="Retype password",
+        label=lazy_gettext("Retype password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
@@ -96,10 +97,10 @@ class RegisterForm(FlaskForm):
             EqualTo("password", msg["psw_eq"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Retype password",
+            "placeholder": lazy_gettext("Retype password"),
             })
     submit = SubmitField(
-        label="Request registration",
+        label=lazy_gettext("Request registration"),
         render_kw={
             "class": "btn btn-primary px-4",
             "disabled": ""})
@@ -108,7 +109,7 @@ class RegisterForm(FlaskForm):
 class ChgPasswForm(FlaskForm):
     """Change password form."""
     old_password = PasswordField(
-        label="Old password",
+        label=lazy_gettext("Old password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
@@ -116,10 +117,10 @@ class ChgPasswForm(FlaskForm):
                 message=msg["psw_len"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Old password",
+            "placeholder": lazy_gettext("Old password"),
             })
     password = PasswordField(
-        label="New password",
+        label=lazy_gettext("New password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
@@ -130,10 +131,10 @@ class ChgPasswForm(FlaskForm):
                 message=msg["psw_rules"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "New password",
+            "placeholder": lazy_gettext("New password"),
             })
     confirm = PasswordField(
-        label="Retype password",
+        label=lazy_gettext("Retype password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
@@ -142,10 +143,10 @@ class ChgPasswForm(FlaskForm):
             EqualTo("password", msg["psw_eq"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Retype password",
+            "placeholder": lazy_gettext("Retype password"),
             })
     submit = SubmitField(
-        label="Change password",
+        label=lazy_gettext("Change password"),
         render_kw={
             "class": "btn btn-primary px-4",
             "disabled": ""})
@@ -170,15 +171,15 @@ def login():
                     session["user_name"] = user.name
                     if language:
                         session["language"] = language
-                    flash(f"Welcome {user.name}")
+                    flash(gettext("Welcome %(username)s", username=user.name))
                     return redirect(url_for("main.index"))
                 else:
-                    flash("Your registration is pending. Contact an admin.",
-                          "warning")
+                    flash(gettext("Your registration is pending. " +
+                                  "Contact an admin."), "warning")
             else:
-                flash("This user is not in use anymore!", "warning")
+                flash(gettext("This user is not in use anymore!"), "warning")
         else:
-            flash("Wrong username or password!", "warning")
+            flash(gettext("Wrong username or password!"), "warning")
     elif login_form.errors:
         flash_errors(login_form.errors)
 
@@ -193,7 +194,7 @@ def logout():
     session.clear()
     if language:
         session["language"] = language
-    flash("Succesfully logged out...")
+    flash(gettext("Succesfully logged out..."))
     return redirect(url_for("auth.login"))
 
 
@@ -203,8 +204,8 @@ def register():
     # if user is logged in
     if session.get("user_id"):
         session.clear()
-        print("flash")
-        flash("You have been logged out...", "info")
+        # print("flash")
+        flash(gettext("You have been logged out..."), "info")
 
     reg_form: RegisterForm = RegisterForm()
 
@@ -215,7 +216,8 @@ def register():
                 reg_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
-                flash("Registration request sent. Please contact an admin.")
+                flash(gettext("Registration request sent. " +
+                              "Please contact an admin."))
                 return redirect(url_for("auth.login"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -241,10 +243,10 @@ def change_password():
                 chg_pass_form.populate_obj(user)
                 db_session.commit()
                 session.clear()
-                flash("Password changed.")
+                flash(gettext("Password changed."))
                 return redirect(url_for("auth.login"))
             else:
-                flash("Wrong old password!", "error")
+                flash(gettext("Wrong old password!"), "error")
     elif chg_pass_form.errors:
         flash_errors(chg_pass_form.errors)
 
