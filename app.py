@@ -2,7 +2,8 @@
 
 from datetime import datetime
 
-from flask import Flask
+from flask import Flask, flash, redirect, request, session
+from flask_babel import Babel, gettext
 
 from blueprints.auth.auth import auth_bp
 from blueprints.cat.cat import cat_bp
@@ -12,9 +13,20 @@ from blueprints.prod.prod import prod_bp
 from blueprints.sup.sup import sup_bp
 from blueprints.users.users import users_bp
 
+def get_locale():
+    """Set the language the page will be displayed."""
+    if language := session.get("language"):
+        return language
+    # try to guess the language from the user accept header browser
+    language = request.accept_languages.best_match(["ro", "en"])
+    session["language"] = language
+    return language
+
 app = Flask(__name__)
 
 app.config.from_prefixed_env()
+
+babel = Babel(app, locale_selector=get_locale)
 
 
 @app.context_processor
@@ -30,3 +42,11 @@ app.register_blueprint(users_bp)
 app.register_blueprint(cat_bp)
 app.register_blueprint(sup_bp)
 app.register_blueprint(prod_bp)
+
+
+@app.route("/language/<language>")
+def set_language(language=None):
+    """Change app display language."""
+    session["language"] = language
+    flash(gettext("Language changed"))
+    return redirect(request.referrer)
