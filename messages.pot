@@ -1,0 +1,197 @@
+# Translations template for PROJECT.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2023-09-14 16:47+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: app.py:51
+msgid "Language changed"
+msgstr ""
+
+#: database.py:46
+msgid "User"
+msgstr ""
+
+#: database.py:48
+msgid "Category"
+msgstr ""
+
+#: database.py:50
+msgid "Supplier"
+msgstr ""
+
+#: database.py:52
+msgid "Product"
+msgstr ""
+
+#: database.py:54
+#, python-format
+msgid "%(el_name)s must have a name"
+msgstr ""
+
+#: database.py:60
+#, python-format
+msgid "%(el_name)s %(value)s allready exists"
+msgstr ""
+
+#: database.py:260
+msgid "User must have a password"
+msgstr ""
+
+#: database.py:275 database.py:580 database.py:606
+msgid "'Retired' users can't have products attached"
+msgstr ""
+
+#: database.py:278 database.py:583 database.py:609
+msgid "User with pending registration can't have products attached"
+msgstr ""
+
+#: database.py:292
+msgid "User with pending registration can't be admin"
+msgstr ""
+
+#: database.py:300
+msgid "You are the last admin!"
+msgstr ""
+
+#: database.py:316
+msgid "Can't 'retire' a user if he is still responsible for products"
+msgstr ""
+
+#: database.py:335
+msgid "'Retired' user can't check inventory"
+msgstr ""
+
+#: database.py:338
+msgid "User with pending registration can't check inventory"
+msgstr ""
+
+#: database.py:342
+msgid "User without products attached can't check inventory"
+msgstr ""
+
+#: database.py:361
+msgid "Admin users can't request registration"
+msgstr ""
+
+#: database.py:364
+msgid "'Retired' users can't request registration"
+msgstr ""
+
+#: database.py:367
+msgid "User that checks inventory can't request registration"
+msgstr ""
+
+#: database.py:371
+msgid "User that requested inventory can't request registration"
+msgstr ""
+
+#: database.py:375
+msgid "Users with products attached can't request registration"
+msgstr ""
+
+#: database.py:393
+msgid "Admins don't need to request inventorying"
+msgstr ""
+
+#: database.py:396
+msgid "'Retired' users can't request inventorying"
+msgstr ""
+
+#: database.py:399
+msgid "User with pending registration can't request inventorying"
+msgstr ""
+
+#: database.py:402
+msgid "User can allready check inventory"
+msgstr ""
+
+#: database.py:405
+msgid "Users without products can't request inventorying"
+msgstr ""
+
+#: database.py:450 database.py:460 database.py:637 database.py:653
+msgid "Not in use category can't have products attached"
+msgstr ""
+
+#: database.py:504 database.py:514 database.py:672 database.py:688
+msgid "Not in use supplier can't have products attached"
+msgstr ""
+
+#: database.py:564
+msgid "Product must have a description"
+msgstr ""
+
+#: database.py:573
+msgid "User can't be deleted or does not exist"
+msgstr ""
+
+#: database.py:577 database.py:603
+msgid "User does not exist"
+msgstr ""
+
+#: database.py:630
+msgid "Category can't be deleted or does not exist"
+msgstr ""
+
+#: database.py:634 database.py:650
+msgid "Category does not exist"
+msgstr ""
+
+#: database.py:665
+msgid "Supplier can't be deleted or does not exist"
+msgstr ""
+
+#: database.py:669 database.py:685
+msgid "Supplier does not exist"
+msgstr ""
+
+#: database.py:696
+msgid "Product must have a measuring unit"
+msgstr ""
+
+#: database.py:705 database.py:707
+msgid "Minimum stock must be ≥ 0"
+msgstr ""
+
+#: database.py:716 database.py:718
+msgid "Order quantity must be ≥ 1"
+msgstr ""
+
+#: database.py:726
+msgid "Can't order not in use products"
+msgstr ""
+
+#: database.py:735
+msgid "Can't 'retire' a product that needs to be ordered"
+msgstr ""
+
+#: helpers.py:11
+msgid "You have to be logged in..."
+msgstr ""
+
+#: helpers.py:21
+msgid "You have to be an admin..."
+msgstr ""
+
+#: blueprints/auth/templates/auth/login.html:44
+msgid "All fields are required"
+msgstr ""
+
+#: templates/layout.html:47
+msgid "Register"
+msgstr ""
+

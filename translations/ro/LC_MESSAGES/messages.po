@@ -1,0 +1,199 @@
+# Romanian translations for Consumables Tracker App.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the project.
+# FIRST AUTHOR <buzdugan.victor@icloud.com>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version:  v.02\n"
+"Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
+"POT-Creation-Date: 2023-09-14 16:47+0300\n"
+"PO-Revision-Date: 2023-09-14 10:55+0300\n"
+"Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
+"Language: ro\n"
+"Language-Team: ro <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100"
+" < 20)) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: app.py:51
+msgid "Language changed"
+msgstr "Limba a fost schimbată"
+
+#: database.py:46
+msgid "User"
+msgstr "Utilizatorul"
+
+#: database.py:48
+msgid "Category"
+msgstr "Categoria"
+
+#: database.py:50
+msgid "Supplier"
+msgstr "Furnizorul"
+
+#: database.py:52
+msgid "Product"
+msgstr "Produsul"
+
+#: database.py:54
+#, python-format
+msgid "%(el_name)s must have a name"
+msgstr "%(el_name)s trebuie să aibă un nume"
+
+#: database.py:60
+#, python-format
+msgid "%(el_name)s %(value)s allready exists"
+msgstr "%(el_name)s %(value)s există deja"
+
+#: database.py:260
+msgid "User must have a password"
+msgstr "Utilizatorul trebuie să aibă o parolă"
+
+#: database.py:275 database.py:580 database.py:606
+msgid "'Retired' users can't have products attached"
+msgstr "Utilizatorii scoși din uz nu pot fi responsabili de produse"
+
+#: database.py:278 database.py:583 database.py:609
+msgid "User with pending registration can't have products attached"
+msgstr "Utilizatorii în curs de aprobare nu pot fi responsabili de produse"
+
+#: database.py:292
+msgid "User with pending registration can't be admin"
+msgstr "Utilizatorii în curs de aprobare nu pot fi administratori"
+
+#: database.py:300
+msgid "You are the last admin!"
+msgstr "Ești ultimul administrator!"
+
+#: database.py:316
+msgid "Can't 'retire' a user if he is still responsible for products"
+msgstr "Un utilizator nu poate fi scos din uz dacă încă e responsabil de produse"
+
+#: database.py:335
+msgid "'Retired' user can't check inventory"
+msgstr "Un utilizator scos din uz nu poate inventaria"
+
+#: database.py:338
+msgid "User with pending registration can't check inventory"
+msgstr "Un utilizator în curs de aprobare nu poate inventaria"
+
+#: database.py:342
+msgid "User without products attached can't check inventory"
+msgstr "Un utilizator nu poate inventaria dacă nu răspunde de nici un produs"
+
+#: database.py:361
+msgid "Admin users can't request registration"
+msgstr "Un administrator nu poate cere aprobare pentru înregistrare"
+
+#: database.py:364
+msgid "'Retired' users can't request registration"
+msgstr "Un utilizator scos din uz nu poate cere aprobare pentru înregistrare"
+
+#: database.py:367
+msgid "User that checks inventory can't request registration"
+msgstr "Un utilizator ce inventariază nu poate cere aprobare pentru înregistrare"
+
+#: database.py:371
+msgid "User that requested inventory can't request registration"
+msgstr "Un utilizator care a cerut inventariere nu poate cere aprobare pentru înregistrare"
+
+#: database.py:375
+msgid "Users with products attached can't request registration"
+msgstr "Un utilizator ce răspunde de produse nu poate cere aprobare pentru înregistrare"
+
+#: database.py:393
+msgid "Admins don't need to request inventorying"
+msgstr "Administratorii nu trebuie să ceară inventariere"
+
+#: database.py:396
+msgid "'Retired' users can't request inventorying"
+msgstr "Un utilizator scos din uz nu poate cere inventariere"
+
+#: database.py:399
+msgid "User with pending registration can't request inventorying"
+msgstr "Un utilizator în curs de aprobare nu poate cere inventariere"
+
+#: database.py:402
+msgid "User can allready check inventory"
+msgstr "Utilizatorul poate deja inventaria"
+
+#: database.py:405
+msgid "Users without products can't request inventorying"
+msgstr "Un utilizator nu poate cere inventariere dacă nu răspunde de nici un produs"
+
+#: database.py:450 database.py:460 database.py:637 database.py:653
+msgid "Not in use category can't have products attached"
+msgstr "O categorie scoasă din uz nu poate avea produse atașate"
+
+#: database.py:504 database.py:514 database.py:672 database.py:688
+msgid "Not in use supplier can't have products attached"
+msgstr "Un furnizor scos din uz nu poate avea produse atașate"
+
+#: database.py:564
+msgid "Product must have a description"
+msgstr "Produsul trebuie să aibă o descriere"
+
+#: database.py:573
+msgid "User can't be deleted or does not exist"
+msgstr "Utilizatorul nu poate fi șters sau nu există"
+
+#: database.py:577 database.py:603
+msgid "User does not exist"
+msgstr "Utilizatorul nu există"
+
+#: database.py:630
+msgid "Category can't be deleted or does not exist"
+msgstr "Categoria nu poate fi ștearsă sau nu există"
+
+#: database.py:634 database.py:650
+msgid "Category does not exist"
+msgstr "Categoria nu există"
+
+#: database.py:665
+msgid "Supplier can't be deleted or does not exist"
+msgstr "Furnizorul nu poate fi șters sau nu există"
+
+#: database.py:669 database.py:685
+msgid "Supplier does not exist"
+msgstr "Furnizorul nu există"
+
+#: database.py:696
+msgid "Product must have a measuring unit"
+msgstr "Produsul trebuie să aibă unitate de măsură"
+
+#: database.py:705 database.py:707
+msgid "Minimum stock must be ≥ 0"
+msgstr "Stocul minim trebuie să fie ≥ 0"
+
+#: database.py:716 database.py:718
+msgid "Order quantity must be ≥ 1"
+msgstr "Cantitatea de comandă trebui să fie ≥ 1"
+
+#: database.py:726
+msgid "Can't order not in use products"
+msgstr "Nu se poate comanda un produs scos din uz"
+
+#: database.py:735
+msgid "Can't 'retire' a product that needs to be ordered"
+msgstr "Nu se poate scoate din uz un produs ce trebuie comandat"
+
+#: helpers.py:11
+msgid "You have to be logged in..."
+msgstr "Trebuie să fii logat..."
+
+#: helpers.py:21
+msgid "You have to be an admin..."
+msgstr "Trebuie să fii administrator..."
+
+#: blueprints/auth/templates/auth/login.html:44
+msgid "All fields are required"
+msgstr "Toate câmpurile sunt obligatorii"
+
+#: templates/layout.html:47
+msgid "Register"
+msgstr "Înregistrare"
+
