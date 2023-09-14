@@ -163,10 +163,13 @@ def login():
                 user.password, login_form.password.data):
             if user.in_use:
                 if not user.reg_req:
+                    language = session.get("language")
                     session.clear()
                     session["user_id"] = user.id
                     session["admin"] = user.admin
                     session["user_name"] = user.name
+                    if language:
+                        session["language"] = language
                     flash(f"Welcome {user.name}")
                     return redirect(url_for("main.index"))
                 else:
@@ -186,7 +189,10 @@ def login():
 @login_required
 def logout():
     """Logout and clear session."""
+    language = session.get("language")
     session.clear()
+    if language:
+        session["language"] = language
     flash("Succesfully logged out...")
     return redirect(url_for("auth.login"))
 
