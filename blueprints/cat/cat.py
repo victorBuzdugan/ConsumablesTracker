@@ -3,6 +3,7 @@
 from typing import Callable
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
@@ -32,26 +33,27 @@ def admin_logged_in():
 class CreateCatForm(FlaskForm):
     """Create category form."""
     name = StringField(
-        label="Name",
+        label=lazy_gettext("Name"),
         validators=[
-            InputRequired("Category name is required"),
+            InputRequired(gettext("Category name is required")),
             Length(
                 min=3,
-                message="Category name must have at least 3 characters")],
+                message=gettext("Category name must have at least " +
+                                "3 characters"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Username",
+            "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
     description = TextAreaField(
-        label="Description",
+        label=lazy_gettext("Description"),
         render_kw={
                 "class": "form-control",
-                "placeholder": "Details",
+                "placeholder": lazy_gettext("Details"),
                 "style": "height: 5rem",
                 })
     submit = SubmitField(
-        label="Create category",
+        label=lazy_gettext("Create category"),
         render_kw={"class": "btn btn-primary px-4"})
 
 
@@ -60,16 +62,16 @@ class EditCatForm(CreateCatForm):
     all_products = IntegerField()
     in_use_products = IntegerField()
     in_use = BooleanField(
-        label="In use",
+        label=lazy_gettext("In use"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     submit = SubmitField(
-        label="Update",
+        label=lazy_gettext("Update"),
         render_kw={"class": "btn btn-primary px-4"})
     delete = SubmitField(
-        label="Delete",
+        label=lazy_gettext("Delete"),
         render_kw={"class": "btn btn-danger"})
 
 
@@ -106,7 +108,8 @@ def new_category():
                 new_cat_form.populate_obj(category)
                 db_session.add(category)
                 db_session.commit()
-                flash(f"Category '{category.name}' created")
+                flash(gettext("Category '%(cat_name)s' created",
+                              cat_name=category.name))
                 return redirect(url_for("cat.categories"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -128,13 +131,14 @@ def edit_category(category):
                 .filter_by(name=escape(category)))
             if edit_cat_form.delete.data:
                 if cat.all_products:
-                    flash("Can't delete category! " +
-                          "There are still products attached!",
+                    flash(gettext("Can't delete category! " +
+                          "There are still products attached!"),
                           "error")
                 else:
                     db_session.delete(cat)
                     db_session.commit()
-                    flash(f"Category '{cat.name}' has been deleted")
+                    flash(gettext("Category '%(cat_name)s' has been deleted",
+                                  cat_name=cat.name))
                     return redirect(url_for("cat.categories"))
             else:
                 try:
@@ -147,7 +151,7 @@ def edit_category(category):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(cat, include_collections=False):
-                    flash("Category updated")
+                    flash(gettext("Category updated"))
                     db_session.commit()
                 return redirect(
                     url_for("cat.edit_category", category=cat.name))
@@ -160,7 +164,8 @@ def edit_category(category):
                 .filter_by(name=escape(category)))):
             edit_cat_form = EditCatForm(obj=cat)
         else:
-            flash(f"{category} does not exist!", "error")
+            flash(gettext("%(category)s does not exist!",
+                          category=category), "error")
             return redirect(url_for("cat.categories"))
 
     return render_template("cat/edit_category.html", form=edit_cat_form)

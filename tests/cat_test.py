@@ -85,7 +85,7 @@ def test_new_category(client: FlaskClient, admin_logged_in, name, description):
 @pytest.mark.parametrize(("name", "flash_message"), (
     ("", "Category name is required"),
     ("ca", "Category name must have at least 3 characters"),
-    ("Electronics", "Category Electronics allready exists"),
+    ("Electronics", "The category Electronics allready exists"),
 ))
 def test_failed_new_category(client: FlaskClient, admin_logged_in, name, flash_message):
     with client:
@@ -220,7 +220,7 @@ def test_failed_edit_category_name_duplicate(client: FlaskClient, admin_logged_i
             assert response.request.path == url_for("cat.edit_category", category=orig_name)
             assert b"Category updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
-            assert f"Category {new_name} allready exists" in response.text
+            assert f"The category {new_name} allready exists" in response.text
         db_session.refresh(cat)
         assert cat.name != new_name
 

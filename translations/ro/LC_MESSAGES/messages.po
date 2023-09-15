@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  v.03\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-14 22:08+0300\n"
+"POT-Creation-Date: 2023-09-15 08:42+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -223,6 +223,7 @@ msgstr "Parolele nu se potrivesc!"
 
 #: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
 #: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
+#: blueprints/cat/cat.py:45
 msgid "Username"
 msgstr "Nume"
 
@@ -325,7 +326,7 @@ msgid "Passwords don't match"
 msgstr "Parolele nu se potrivesc"
 
 #: blueprints/auth/templates/auth/change_password.html:66
-#: blueprints/auth/templates/auth/login.html:45
+#: blueprints/auth/templates/auth/login.html:44
 #: blueprints/auth/templates/auth/register.html:63
 msgid "All fields are required"
 msgstr "Toate câmpurile sunt obligatorii"
@@ -338,11 +339,11 @@ msgstr "Log In"
 msgid "Login"
 msgstr "Login"
 
-#: blueprints/auth/templates/auth/login.html:27
+#: blueprints/auth/templates/auth/login.html:26
 msgid "Enter username"
 msgstr "Introdu numele"
 
-#: blueprints/auth/templates/auth/login.html:40
+#: blueprints/auth/templates/auth/login.html:39
 msgid "Enter password"
 msgstr "Introdu parola"
 
@@ -355,13 +356,160 @@ msgstr "Înregistrare"
 msgid "Must have at least 3 chars"
 msgstr "Trebuie cel puțin 3 caractere "
 
+#: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
+msgid "Name"
+msgstr "Nume"
+
+#: blueprints/cat/cat.py:38
+msgid "Category name is required"
+msgstr "Numele categoriei e obligatoriu"
+
+#: blueprints/cat/cat.py:41
+msgid "Category name must have at least 3 characters"
+msgstr "Numele categoriei trebuie să aibă cel puțin 3 caractere "
+
+#: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+msgid "Description"
+msgstr "Descriere"
+
+#: blueprints/cat/cat.py:52
+msgid "Details"
+msgstr "Detalii"
+
+#: blueprints/cat/cat.py:56
+msgid "Create category"
+msgstr "Creează categorie"
+
+#: blueprints/cat/cat.py:65
+msgid "In use"
+msgstr "În uz"
+
+#: blueprints/cat/cat.py:71
+msgid "Update"
+msgstr "Actualizează"
+
+#: blueprints/cat/cat.py:74 blueprints/cat/templates/cat/edit_category.html:61
+msgid "Delete"
+msgstr "Șterge"
+
+#: blueprints/cat/cat.py:111
+#, python-format
+msgid "Category '%(cat_name)s' created"
+msgstr "Categoria '%(cat_name)s' a fost creată"
+
+#: blueprints/cat/cat.py:134
+msgid "Can't delete category! There are still products attached!"
+msgstr "Nu se poate șterge categoria! Încă mai are produse atașate!"
+
+#: blueprints/cat/cat.py:140
+#, python-format
+msgid "Category '%(cat_name)s' has been deleted"
+msgstr "Categoria '%(cat_name)s' a fost ștearsă"
+
+#: blueprints/cat/cat.py:154
+msgid "Category updated"
+msgstr "Categorie actualizată"
+
+#: blueprints/cat/cat.py:167
+#, python-format
+msgid "%(category)s does not exist!"
+msgstr "%(category)s nu există!"
+
+#: blueprints/cat/templates/cat/categories.html:3
+#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:26
+msgid "Categories"
+msgstr "Categorii"
+
+#: blueprints/cat/templates/cat/categories.html:14
+msgid "*Strikethrough categories are no longer in use."
+msgstr "*Categoriile tăiate sunt scoase din uz."
+
+#: blueprints/cat/templates/cat/categories.html:18
+msgid "In use Products"
+msgstr "Produse în uz"
+
+#: blueprints/cat/templates/cat/categories.html:19
+msgid "All Products"
+msgstr "Toate produsele"
+
+#: blueprints/cat/templates/cat/categories.html:37
+msgid "There is"
+msgid_plural "There are"
+msgstr[0] "Este"
+msgstr[1] "Sunt"
+msgstr[2] "Sunt"
+
+#: blueprints/cat/templates/cat/categories.html:37
+msgid "category"
+msgid_plural "categories"
+msgstr[0] "categorie"
+msgstr[1] "categorii"
+msgstr[2] "de categorii"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/cat/templates/cat/edit_category.html:51
+msgid "and"
+msgid_plural "of which"
+msgstr[0] "iar"
+msgstr[1] "dintre care"
+msgstr[2] "dintre care"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/cat/templates/cat/edit_category.html:51
+msgid "is in use"
+msgid_plural "are in use"
+msgstr[0] "este în uz"
+msgstr[1] "sunt în uz"
+msgstr[2] "sunt în uz"
+
+#: blueprints/cat/templates/cat/edit_category.html:3
+msgid "Edit Category"
+msgstr "Editează Categoria"
+
+#: blueprints/cat/templates/cat/edit_category.html:13
+msgid "Edit category"
+msgstr "Editează categoria"
+
+#: blueprints/cat/templates/cat/edit_category.html:46
+#: blueprints/cat/templates/cat/new_category.html:28
+msgid "Underlined fields are required"
+msgstr "Câmpurile subliniate sunt obligatorii"
+
+#: blueprints/cat/templates/cat/edit_category.html:51
+msgid "Category has"
+msgstr "Categoria are"
+
+#: blueprints/cat/templates/cat/edit_category.html:51
+msgid "product"
+msgid_plural "products"
+msgstr[0] "produs"
+msgstr[1] "produse"
+msgstr[2] "de produse"
+
+#: blueprints/cat/templates/cat/edit_category.html:67
+msgctxt "question"
+msgid "Delete"
+msgstr "Ștergi"
+
+#: blueprints/cat/templates/cat/edit_category.html:71
+msgid "This will delete this category! You can't undo this action."
+msgstr "Categoria va fi ștearsă definitiv!"
+
+#: blueprints/cat/templates/cat/edit_category.html:74
+msgid "Close"
+msgstr "Închide"
+
+#: blueprints/cat/templates/cat/new_category.html:3
+msgid "New category"
+msgstr "Categorie nouă"
+
+#: blueprints/cat/templates/cat/new_category.html:13
+msgid "Create new category"
+msgstr "Creează o categorie nouă"
+
 #: templates/layout.html:24
 msgid "Inventory"
 msgstr "Inventar"
-
-#: templates/layout.html:26
-msgid "Categories"
-msgstr "Categorii"
 
 #: templates/layout.html:27
 msgid "Suppliers"
