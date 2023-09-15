@@ -2,6 +2,7 @@
 
 from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
+from flask_babel import gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
@@ -39,12 +40,12 @@ def inventory():
                     product.to_order = False
             db_session.get(User, user.id).done_inv = True
             db_session.commit()
-        flash("Inventory has been submitted")
+        flash(gettext("Inventory has been submitted"))
         return redirect(url_for("main.index"))
     elif inv_form.errors:
         flash_errors(inv_form.errors)
     elif user.done_inv:
-        flash("Inventory check not required", "info")
+        flash(gettext("Inventory check not required"), "info")
 
     with dbSession() as db_session:
         products = db_session.scalars(
@@ -68,11 +69,14 @@ def inventory_user(username):
 
     if not user or not user.in_use or user.reg_req:
         if not user:
-            flash(f"User {username} does not exist!", "error")
+            flash(gettext("User %(username)s does not exist!",
+                          username=username), "error")
         elif not user.in_use:
-            flash(f"User {username} is not in use anymore!", "warning")
+            flash(gettext("User %(username)s is not in use anymore!",
+                          username=username), "warning")
         else:
-            flash(f"User {username} awaits registration aproval!", "warning")
+            flash(gettext("User %(username)s awaits registration aproval!",
+                          username=username), "warning")
         return redirect(url_for("main.index"))
 
     if inv_form.validate_on_submit() and not user.done_inv:
@@ -88,12 +92,12 @@ def inventory_user(username):
                     product.to_order = False
             db_session.get(User, user.id).done_inv = True
             db_session.commit()
-        flash("Inventory has been submitted")
+        flash(gettext("Inventory has been submitted"))
         return redirect(url_for("main.index"))
     elif inv_form.errors:
         flash_errors(inv_form.errors)
     elif user.done_inv:
-        flash("Inventory check not required", "info")
+        flash(gettext("Inventory check not required"), "info")
 
     with dbSession() as db_session:
         products = db_session.scalars(
@@ -112,14 +116,14 @@ def inventory_user(username):
 def inventory_request():
     """Inventory request action."""
     if session.get("admin"):
-        flash("You are an admin! You don't need to request inventory checks",
-              "warning")
+        flash(gettext("You are an admin! You don't need to request " +
+                      "inventory checks"), "warning")
     else:
         with dbSession() as db_session:
             user = db_session.get(User, session.get("user_id"))
             try:
                 user.req_inv = True
-                flash("Inventory check request sent")
+                flash(gettext("Inventory check request sent"))
                 db_session.commit()
             except ValueError as error:
                 flash(str(error), "warning")

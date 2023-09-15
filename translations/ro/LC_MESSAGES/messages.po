@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  v.03\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-15 08:42+0300\n"
+"POT-Creation-Date: 2023-09-15 09:13+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -369,6 +369,7 @@ msgid "Category name must have at least 3 characters"
 msgstr "Numele categoriei trebuie să aibă cel puțin 3 caractere "
 
 #: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+#: blueprints/inv/templates/inv/inventory.html:28
 msgid "Description"
 msgstr "Descriere"
 
@@ -507,9 +508,71 @@ msgstr "Categorie nouă"
 msgid "Create new category"
 msgstr "Creează o categorie nouă"
 
-#: templates/layout.html:24
+#: blueprints/inv/inv.py:43 blueprints/inv/inv.py:95
+msgid "Inventory has been submitted"
+msgstr "Inventarul a fost trimis"
+
+#: blueprints/inv/inv.py:48 blueprints/inv/inv.py:100
+#: blueprints/inv/templates/inv/inventory.html:51
+msgid "Inventory check not required"
+msgstr "Nu este necesară inventarierea"
+
+#: blueprints/inv/inv.py:72
+#, python-format
+msgid "User %(username)s does not exist!"
+msgstr "Utilizatorul %(username)s nu există"
+
+#: blueprints/inv/inv.py:75
+#, python-format
+msgid "User %(username)s is not in use anymore!"
+msgstr "Utilizatorul %(username)s e scos din uz!"
+
+#: blueprints/inv/inv.py:78
+#, python-format
+msgid "User %(username)s awaits registration aproval!"
+msgstr "Utilizatorul %(username)s așteaptă aprobarea înregistrării!"
+
+#: blueprints/inv/inv.py:119
+msgid "You are an admin! You don't need to request inventory checks"
+msgstr "Ești administrator! Nu trebuie să ceri aprobare pentru inventariere"
+
+#: blueprints/inv/inv.py:126
+msgid "Inventory check request sent"
+msgstr "Cererea de inventariere a fost trimisă"
+
+#: blueprints/inv/templates/inv/inventory.html:3 templates/layout.html:24
 msgid "Inventory"
 msgstr "Inventar"
+
+#: blueprints/inv/templates/inv/inventory.html:13
+msgid "Inventory check"
+msgstr "Inventariere"
+
+#: blueprints/inv/templates/inv/inventory.html:22
+msgid "*Select to order a product if current stock is less then minimum stock."
+msgstr ""
+"*Selectează un produs pentru comandă dacă stocul curent este mai mic "
+"decât stocul minim"
+
+#: blueprints/inv/templates/inv/inventory.html:23
+msgid "*Critical products are highlighted in red."
+msgstr "*Produsele roșii sunt critice"
+
+#: blueprints/inv/templates/inv/inventory.html:27
+msgid "Code"
+msgstr "Cod"
+
+#: blueprints/inv/templates/inv/inventory.html:29
+msgid "Min. Stock"
+msgstr "Stoc min."
+
+#: blueprints/inv/templates/inv/inventory.html:30 templates/layout.html:29
+msgid "Order"
+msgstr "Comandă"
+
+#: blueprints/inv/templates/inv/inventory.html:51
+msgid "Submit inventory"
+msgstr "Trimite inventarul"
 
 #: templates/layout.html:27
 msgid "Suppliers"
@@ -518,10 +581,6 @@ msgstr "Furnizori"
 #: templates/layout.html:28
 msgid "Products"
 msgstr "Produse"
-
-#: templates/layout.html:29
-msgid "Order"
-msgstr "Comandă"
 
 #: templates/layout.html:31
 msgid "New"

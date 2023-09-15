@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-15 08:42+0300\n"
+"POT-Creation-Date: 2023-09-15 09:13+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -361,6 +361,7 @@ msgid "Category name must have at least 3 characters"
 msgstr ""
 
 #: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+#: blueprints/inv/templates/inv/inventory.html:28
 msgid "Description"
 msgstr ""
 
@@ -494,8 +495,68 @@ msgstr ""
 msgid "Create new category"
 msgstr ""
 
-#: templates/layout.html:24
+#: blueprints/inv/inv.py:43 blueprints/inv/inv.py:95
+msgid "Inventory has been submitted"
+msgstr ""
+
+#: blueprints/inv/inv.py:48 blueprints/inv/inv.py:100
+#: blueprints/inv/templates/inv/inventory.html:51
+msgid "Inventory check not required"
+msgstr ""
+
+#: blueprints/inv/inv.py:72
+#, python-format
+msgid "User %(username)s does not exist!"
+msgstr ""
+
+#: blueprints/inv/inv.py:75
+#, python-format
+msgid "User %(username)s is not in use anymore!"
+msgstr ""
+
+#: blueprints/inv/inv.py:78
+#, python-format
+msgid "User %(username)s awaits registration aproval!"
+msgstr ""
+
+#: blueprints/inv/inv.py:119
+msgid "You are an admin! You don't need to request inventory checks"
+msgstr ""
+
+#: blueprints/inv/inv.py:126
+msgid "Inventory check request sent"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:3 templates/layout.html:24
 msgid "Inventory"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:13
+msgid "Inventory check"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:22
+msgid "*Select to order a product if current stock is less then minimum stock."
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:23
+msgid "*Critical products are highlighted in red."
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:27
+msgid "Code"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:29
+msgid "Min. Stock"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:30 templates/layout.html:29
+msgid "Order"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:51
+msgid "Submit inventory"
 msgstr ""
 
 #: templates/layout.html:27
@@ -504,10 +565,6 @@ msgstr ""
 
 #: templates/layout.html:28
 msgid "Products"
-msgstr ""
-
-#: templates/layout.html:29
-msgid "Order"
 msgstr ""
 
 #: templates/layout.html:31
