@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v.06\n"
+"Project-Id-Version:  v1.0\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-15 12:24+0300\n"
+"POT-Creation-Date: 2023-09-15 13:02+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -224,11 +224,14 @@ msgstr "Parolele nu se potrivesc!"
 #: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
 #: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
 #: blueprints/cat/cat.py:45 blueprints/sup/sup.py:44
+#: blueprints/users/users.py:33 blueprints/users/users.py:42
 msgid "Username"
 msgstr "Nume"
 
 #: blueprints/auth/auth.py:48 blueprints/auth/auth.py:52
 #: blueprints/auth/auth.py:77 blueprints/auth/auth.py:88
+#: blueprints/users/users.py:46 blueprints/users/users.py:58
+#: blueprints/users/users.py:81 blueprints/users/users.py:93
 msgid "Password"
 msgstr "Parolă"
 
@@ -378,7 +381,8 @@ msgid "Description"
 msgstr "Descriere"
 
 #: blueprints/cat/cat.py:52 blueprints/sup/sup.py:48 blueprints/sup/sup.py:51
-#: blueprints/sup/templates/sup/suppliers.html:20
+#: blueprints/sup/templates/sup/suppliers.html:20 blueprints/users/users.py:61
+#: blueprints/users/users.py:64
 msgid "Details"
 msgstr "Detalii"
 
@@ -387,13 +391,13 @@ msgid "Create category"
 msgstr "Creează categorie"
 
 #: blueprints/cat/cat.py:65 blueprints/prod/prod.py:131
-#: blueprints/sup/sup.py:64
+#: blueprints/sup/sup.py:64 blueprints/users/users.py:98
 msgid "In use"
 msgstr "În uz"
 
 #: blueprints/cat/cat.py:71 blueprints/prod/prod.py:137
 #: blueprints/prod/templates/prod/products_to_oder.html:66
-#: blueprints/sup/sup.py:70
+#: blueprints/sup/sup.py:70 blueprints/users/users.py:112
 msgid "Update"
 msgstr "Actualizează"
 
@@ -401,6 +405,8 @@ msgstr "Actualizează"
 #: blueprints/prod/prod.py:140
 #: blueprints/prod/templates/prod/edit_product.html:119
 #: blueprints/sup/sup.py:73 blueprints/sup/templates/sup/edit_supplier.html:61
+#: blueprints/users/templates/users/edit_user.html:103
+#: blueprints/users/users.py:115
 msgid "Delete"
 msgstr "Șterge"
 
@@ -477,6 +483,7 @@ msgstr[2] "de categorii"
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:93
 msgid "and"
 msgid_plural "of which"
 msgstr[0] "iar"
@@ -489,6 +496,7 @@ msgstr[2] "dintre care"
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:93
 msgid "is in use"
 msgid_plural "are in use"
 msgstr[0] "este în uz"
@@ -509,6 +517,8 @@ msgstr "Editează categoria"
 #: blueprints/prod/templates/prod/new_product.html:92
 #: blueprints/sup/templates/sup/edit_supplier.html:46
 #: blueprints/sup/templates/sup/new_supplier.html:28
+#: blueprints/users/templates/users/edit_user.html:82
+#: blueprints/users/templates/users/new_user.html:49
 msgid "Underlined fields are required"
 msgstr "Câmpurile subliniate sunt obligatorii"
 
@@ -523,6 +533,7 @@ msgstr "Categoria are"
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products_to_oder.html:59
 #: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/users/templates/users/edit_user.html:93
 msgid "product"
 msgid_plural "products"
 msgstr[0] "produs"
@@ -532,6 +543,7 @@ msgstr[2] "de produse"
 #: blueprints/cat/templates/cat/edit_category.html:67
 #: blueprints/prod/templates/prod/edit_product.html:125
 #: blueprints/sup/templates/sup/edit_supplier.html:67
+#: blueprints/users/templates/users/edit_user.html:109
 msgctxt "question"
 msgid "Delete"
 msgstr "Ștergi"
@@ -544,6 +556,7 @@ msgstr "Categoria va fi ștearsă definitiv!"
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:74
+#: blueprints/users/templates/users/edit_user.html:116
 msgid "Close"
 msgstr "Închide"
 
@@ -592,7 +605,7 @@ msgstr "Cererea de inventariere a fost trimisă"
 msgid "Inventory"
 msgstr "Inventar"
 
-#: blueprints/inv/templates/inv/inventory.html:13
+#: blueprints/inv/templates/inv/inventory.html:13 blueprints/users/users.py:104
 msgid "Inventory check"
 msgstr "Inventariere"
 
@@ -991,6 +1004,92 @@ msgstr "Furnizori"
 #: blueprints/sup/templates/sup/suppliers.html:14
 msgid "*Strikethrough suppliers are no longer in use."
 msgstr "*Furnizorii cu text tăiat sunt scoși din uz."
+
+#: blueprints/users/users.py:53 blueprints/users/users.py:88
+#, python-format
+msgid ""
+"Password must have 1 big letter, 1 number, 1 special char "
+"(%(passw_symb)s)!"
+msgstr ""
+"Parola trebuie să conțină 1 literă mare, 1 număr, 1 caracter special "
+"(%(passw_symb)s)!"
+
+#: blueprints/users/users.py:68
+msgid "Admin"
+msgstr "Admin"
+
+#: blueprints/users/users.py:74
+msgid "Create user"
+msgstr "Creează utilizator"
+
+#: blueprints/users/users.py:127
+#, python-format
+msgid "%(username)s has been approved"
+msgstr "%(username)s a fost aprobat"
+
+#: blueprints/users/users.py:130 blueprints/users/users.py:148
+#: blueprints/users/users.py:254
+#, python-format
+msgid "%(username)s does not exist!"
+msgstr "%(username)s nu există!"
+
+#: blueprints/users/users.py:182
+#, python-format
+msgid "User '%(username)s' created"
+msgstr "Utilizatorul '%(username)s' a fost creat"
+
+#: blueprints/users/users.py:205
+msgid "Can't delete user! He is still responsible for some products!"
+msgstr "Un utilizator nu poate fi șters dacă încă e responsabil de produse"
+
+#: blueprints/users/users.py:211
+#, python-format
+msgid "User '%(username)s' has been deleted"
+msgstr "Utilizatorul '%(username)s' a fost șters"
+
+#: blueprints/users/users.py:237
+msgid "User updated"
+msgstr "Utilizatorul a fost actualizat"
+
+#: blueprints/users/templates/users/edit_user.html:3
+msgid "Edit User"
+msgstr "Editare Utilizator"
+
+#: blueprints/users/templates/users/edit_user.html:13
+msgid "Edit user"
+msgstr "Editează utilizatorul"
+
+#: blueprints/users/templates/users/edit_user.html:87
+msgid "User awaits"
+msgstr "Utilizatorul așteaptă"
+
+#: blueprints/users/templates/users/edit_user.html:87
+msgid "registration approval"
+msgstr "aprobarea înregistrării"
+
+#: blueprints/users/templates/users/edit_user.html:90
+msgid "User requested"
+msgstr "Utilizatorul a cerut"
+
+#: blueprints/users/templates/users/edit_user.html:90
+msgid "inventory check"
+msgstr "inventariere"
+
+#: blueprints/users/templates/users/edit_user.html:93
+msgid "User is responsible for"
+msgstr "Utilizatorul răspunde de"
+
+#: blueprints/users/templates/users/edit_user.html:113
+msgid "This will delete this user! You can't undo this action."
+msgstr "Utilizatorul va fi șters definitiv!"
+
+#: blueprints/users/templates/users/new_user.html:3
+msgid "New User"
+msgstr "Utilizator nou"
+
+#: blueprints/users/templates/users/new_user.html:13
+msgid "Create new user"
+msgstr "Creează un utilizator nou"
 
 #: templates/layout.html:31
 msgid "New"

@@ -213,7 +213,7 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin):
     ("new_user", "#1aaaaaa", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
     ("new_user", "#Aaaaaaa", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
     ("new_user", "1Aaaaaaa", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("user1", "Q!111111", "User user1 allready exists"),
+    ("user1", "Q!111111", "The user user1 allready exists"),
 ))
 def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, flash_message):
     with client:
@@ -421,7 +421,7 @@ def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
             assert response.request.path == url_for("users.edit_user", username=orig_name)
             assert b"User updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
-            assert f"User {new_name} allready exists" in response.text
+            assert f"The user {new_name} allready exists" in response.text
         db_session.refresh(user)
         assert user.name != new_name
 
