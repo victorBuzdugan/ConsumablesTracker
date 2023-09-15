@@ -1,7 +1,7 @@
 # Consumables Tracker
 ---
 # Description
-This is an app for checking an inventory of consumables. It can be used at home or at work. Anybody can be assigned a list of consumables to keep track of. The process can be started by one of the admins either after one user requests it or at a time interval. The inventory can be unlocked either for each user or for all users at the same time.
+This is an app for checking an inventory of consumables. It can be used at home or at work. Anybody can be assigned a list of consumables to keep track of. The process can be started by one of the admins either after one user requests it or at a time interval. The inventory can be unlocked either for each user or for all users at the same time. The app is available in english or romanian.
 
 ## Home use case
 There are a lot of consumables that need to be tracked at home and easy to forget about. Starting with house consumables (toilet paper, detergent, batteries, light bulbs), kitchen and food related consumables (flour, sugar), kids related (crayons, paper) and personal consumables (toothpaste, soap). Even kids can be assigned a part of the list.
@@ -210,3 +210,7 @@ You can edit all the fields as described in [create new category or supplier](ht
 
 ### Edit products
 Along with with all the fields presented in [create new product](https://github.com/victorBuzdugan/ConsumablesTracker#new-product) you can manually flip the `to order` switch.
+
+### To do
+- [ ] Test romanian translation
+- [ ] Email alert if action is pending
