@@ -1,23 +1,23 @@
 {% extends "layout.html" %}
 
-{% block title %}Suppliers{% endblock %}
+{% block title %}{{ gettext("Suppliers") }}{% endblock %}
 
 {% block main %}
 <div class="card mx-auto mb-3" style="max-width: 40rem;">
     <div class="card-header h5 py-2">
-        Suppliers
+        {{ gettext("Suppliers") }}
     </div>
     <ul class="list-group list-group-flush">
         <li class="list-group-item p-0">
             <div class="table-responsive mx-auto" style="width: auto;">
                 <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                    <caption class="text-center pb-0">*Strikethrough categories are no longer in use.</caption>
+                    <caption class="text-center pb-0">{{ gettext("*Strikethrough suppliers are no longer in use.") }}</caption>
                     <thead>
                         <tr>
-                            <th class="px-3">Name</th>
-                            <th class="px-3">In use Products</th>
-                            <th class="px-3">All Products</th>
-                            <th class="px-3">Details</th>
+                            <th class="px-3">{{ gettext("Name") }}</th>
+                            <th class="px-3">{{ gettext("In use Products") }}</th>
+                            <th class="px-3">{{ gettext("All Products") }}</th>
+                            <th class="px-3">{{ gettext("Details") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,7 +34,7 @@
             </div>
         </li>
         <li class="list-group-item">
-            There are <span class="text-secondary">{{ stats.all_suppliers }} suppliers</span>, of which <span class="text-secondary">{{ stats.in_use_suppliers }} are in use</span>
+            {{ ngettext("There is", "There are", stats.all_suppliers) }} <span class="text-secondary">{{ stats.all_suppliers }} {{ ngettext("supplier", "suppliers", stats.all_suppliers)}}</span>, {{ ngettext("and", "of which", stats.all_suppliers) }} <span class="text-secondary">{{ stats.in_use_suppliers }} {{ ngettext("is in use", "are in use", stats.in_use_suppliers) }}</span>
         </li>
     </ul>
 </div>

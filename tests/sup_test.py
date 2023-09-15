@@ -36,7 +36,7 @@ def test_suppliers_page_admin_logged_in(client: FlaskClient, admin_logged_in):
         assert response.status_code == 200
         assert b"You have to be an admin..." not in response.data
         assert b"Suppliers" in response.data
-        assert b"Strikethrough categories are no longer in use" in response.data
+        assert b"Strikethrough suppliers are no longer in use" in response.data
         assert b"Amazon" in response.data
         assert b"Carrefour" in response.data
         assert b"link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" in response.data
@@ -86,7 +86,7 @@ def test_new_supplier(client: FlaskClient, admin_logged_in, name, details):
 @pytest.mark.parametrize(("name", "flash_message"), (
     ("", "Supplier name is required"),
     ("su", "Supplier name must have at least 3 characters"),
-    ("Amazon", "Supplier Amazon allready exists"),
+    ("Amazon", "The supplier Amazon allready exists"),
 ))
 def test_failed_new_supplier(client: FlaskClient, admin_logged_in, name, flash_message):
     with client:
@@ -221,7 +221,7 @@ def test_failed_edit_supplier_name_duplicate(client: FlaskClient, admin_logged_i
             assert response.request.path == url_for("sup.edit_supplier", supplier=orig_name)
             assert b"Supplier updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
-            assert f"Supplier {new_name} allready exists" in response.text
+            assert f"The supplier {new_name} allready exists" in response.text
         db_session.refresh(sup)
         assert sup.name != new_name
 

@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v.05\n"
+"Project-Id-Version:  v.06\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-15 11:18+0300\n"
+"POT-Creation-Date: 2023-09-15 12:24+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -223,7 +223,7 @@ msgstr "Parolele nu se potrivesc!"
 
 #: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
 #: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
-#: blueprints/cat/cat.py:45
+#: blueprints/cat/cat.py:45 blueprints/sup/sup.py:44
 msgid "Username"
 msgstr "Nume"
 
@@ -357,7 +357,8 @@ msgid "Must have at least 3 chars"
 msgstr "Trebuie cel puțin 3 caractere "
 
 #: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
-#: blueprints/main/templates/main/index.html:46
+#: blueprints/main/templates/main/index.html:46 blueprints/sup/sup.py:36
+#: blueprints/sup/templates/sup/suppliers.html:17
 msgid "Name"
 msgstr "Nume"
 
@@ -376,7 +377,8 @@ msgstr "Numele categoriei trebuie să aibă cel puțin 3 caractere "
 msgid "Description"
 msgstr "Descriere"
 
-#: blueprints/cat/cat.py:52
+#: blueprints/cat/cat.py:52 blueprints/sup/sup.py:48 blueprints/sup/sup.py:51
+#: blueprints/sup/templates/sup/suppliers.html:20
 msgid "Details"
 msgstr "Detalii"
 
@@ -385,17 +387,20 @@ msgid "Create category"
 msgstr "Creează categorie"
 
 #: blueprints/cat/cat.py:65 blueprints/prod/prod.py:131
+#: blueprints/sup/sup.py:64
 msgid "In use"
 msgstr "În uz"
 
 #: blueprints/cat/cat.py:71 blueprints/prod/prod.py:137
 #: blueprints/prod/templates/prod/products_to_oder.html:66
+#: blueprints/sup/sup.py:70
 msgid "Update"
 msgstr "Actualizează"
 
 #: blueprints/cat/cat.py:74 blueprints/cat/templates/cat/edit_category.html:61
 #: blueprints/prod/prod.py:140
 #: blueprints/prod/templates/prod/edit_product.html:119
+#: blueprints/sup/sup.py:73 blueprints/sup/templates/sup/edit_supplier.html:61
 msgid "Delete"
 msgstr "Șterge"
 
@@ -432,10 +437,12 @@ msgid "*Strikethrough categories are no longer in use."
 msgstr "*Categoriile tăiate sunt scoase din uz."
 
 #: blueprints/cat/templates/cat/categories.html:18
+#: blueprints/sup/templates/sup/suppliers.html:18
 msgid "In use Products"
 msgstr "Produse în uz"
 
 #: blueprints/cat/templates/cat/categories.html:19
+#: blueprints/sup/templates/sup/suppliers.html:19
 msgid "All Products"
 msgstr "Toate produsele"
 
@@ -448,6 +455,7 @@ msgstr "Toate produsele"
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "There is"
 msgid_plural "There are"
 msgstr[0] "Este"
@@ -467,6 +475,8 @@ msgstr[2] "de categorii"
 #: blueprints/main/templates/main/index.html:106
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "and"
 msgid_plural "of which"
 msgstr[0] "iar"
@@ -477,6 +487,8 @@ msgstr[2] "dintre care"
 #: blueprints/cat/templates/cat/edit_category.html:51
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "is in use"
 msgid_plural "are in use"
 msgstr[0] "este în uz"
@@ -495,6 +507,8 @@ msgstr "Editează categoria"
 #: blueprints/cat/templates/cat/new_category.html:28
 #: blueprints/prod/templates/prod/edit_product.html:110
 #: blueprints/prod/templates/prod/new_product.html:92
+#: blueprints/sup/templates/sup/edit_supplier.html:46
+#: blueprints/sup/templates/sup/new_supplier.html:28
 msgid "Underlined fields are required"
 msgstr "Câmpurile subliniate sunt obligatorii"
 
@@ -508,6 +522,7 @@ msgstr "Categoria are"
 #: blueprints/main/templates/main/index.html:106
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/edit_supplier.html:51
 msgid "product"
 msgid_plural "products"
 msgstr[0] "produs"
@@ -516,6 +531,7 @@ msgstr[2] "de produse"
 
 #: blueprints/cat/templates/cat/edit_category.html:67
 #: blueprints/prod/templates/prod/edit_product.html:125
+#: blueprints/sup/templates/sup/edit_supplier.html:67
 msgctxt "question"
 msgid "Delete"
 msgstr "Ștergi"
@@ -527,6 +543,7 @@ msgstr "Categoria va fi ștearsă definitiv!"
 #: blueprints/cat/templates/cat/edit_category.html:74
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:74
 msgid "Close"
 msgstr "Închide"
 
@@ -715,6 +732,7 @@ msgid "in use"
 msgstr "în uz"
 
 #: blueprints/main/templates/main/index.html:103
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "supplier"
 msgid_plural "suppliers"
 msgstr[0] "furnizor"
@@ -906,9 +924,73 @@ msgstr "Confirmă toate produsele comandate"
 msgid "Confirm that all products were ordered"
 msgstr "Confirmă că toate produsele au fost comandate"
 
-#: templates/layout.html:27
+#: blueprints/sup/sup.py:38
+msgid "Supplier name is required"
+msgstr "Numele furnizorului e obligatoriu!"
+
+#: blueprints/sup/sup.py:41
+msgid "Supplier name must have at least 3 characters"
+msgstr "Numele furnizorului trebuie să aibă cel puțin 3 caractere "
+
+#: blueprints/sup/sup.py:55
+msgid "Create supplier"
+msgstr "Creează furnizor"
+
+#: blueprints/sup/sup.py:110
+#, python-format
+msgid "Supplier '%(supplier_name)s' created"
+msgstr "Furnizorul '%(supplier_name)s' a fost creat"
+
+#: blueprints/sup/sup.py:133
+msgid "Can't delete supplier! There are still products attached!"
+msgstr "Nu se poate șterge furnizorul! Încă mai are produse atașate!"
+
+#: blueprints/sup/sup.py:139
+#, python-format
+msgid "Supplier '%(sup_name)s' has been deleted"
+msgstr "Furnizorul '%(sup_name)s' a fost șters"
+
+#: blueprints/sup/sup.py:153
+msgid "Supplier updated"
+msgstr "Furnizorul a fost actualizat"
+
+#: blueprints/sup/sup.py:167
+#, python-format
+msgid "%(supplier)s does not exist!"
+msgstr "%(supplier)s nu există"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:3
+msgid "Edit Supplier"
+msgstr "Editare Furnizor"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:13
+msgid "Edit supplier"
+msgstr "Editează furnizorul"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+msgid "Supplier has"
+msgstr "Furnizorul are"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:71
+msgid "This will delete this supplier! You can't undo this action."
+msgstr "Furnizorul va fi șters definitiv!"
+
+#: blueprints/sup/templates/sup/new_supplier.html:3
+msgid "New supplier"
+msgstr "Creeare furnizor"
+
+#: blueprints/sup/templates/sup/new_supplier.html:13
+msgid "Create new supplier"
+msgstr "Creează un furnizor nou"
+
+#: blueprints/sup/templates/sup/suppliers.html:3
+#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:27
 msgid "Suppliers"
 msgstr "Furnizori"
+
+#: blueprints/sup/templates/sup/suppliers.html:14
+msgid "*Strikethrough suppliers are no longer in use."
+msgstr "*Furnizorii cu text tăiat sunt scoși din uz."
 
 #: templates/layout.html:31
 msgid "New"

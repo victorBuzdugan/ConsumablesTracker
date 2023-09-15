@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-15 11:18+0300\n"
+"POT-Creation-Date: 2023-09-15 12:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -215,7 +215,7 @@ msgstr ""
 
 #: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
 #: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
-#: blueprints/cat/cat.py:45
+#: blueprints/cat/cat.py:45 blueprints/sup/sup.py:44
 msgid "Username"
 msgstr ""
 
@@ -349,7 +349,8 @@ msgid "Must have at least 3 chars"
 msgstr ""
 
 #: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
-#: blueprints/main/templates/main/index.html:46
+#: blueprints/main/templates/main/index.html:46 blueprints/sup/sup.py:36
+#: blueprints/sup/templates/sup/suppliers.html:17
 msgid "Name"
 msgstr ""
 
@@ -368,7 +369,8 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: blueprints/cat/cat.py:52
+#: blueprints/cat/cat.py:52 blueprints/sup/sup.py:48 blueprints/sup/sup.py:51
+#: blueprints/sup/templates/sup/suppliers.html:20
 msgid "Details"
 msgstr ""
 
@@ -377,17 +379,20 @@ msgid "Create category"
 msgstr ""
 
 #: blueprints/cat/cat.py:65 blueprints/prod/prod.py:131
+#: blueprints/sup/sup.py:64
 msgid "In use"
 msgstr ""
 
 #: blueprints/cat/cat.py:71 blueprints/prod/prod.py:137
 #: blueprints/prod/templates/prod/products_to_oder.html:66
+#: blueprints/sup/sup.py:70
 msgid "Update"
 msgstr ""
 
 #: blueprints/cat/cat.py:74 blueprints/cat/templates/cat/edit_category.html:61
 #: blueprints/prod/prod.py:140
 #: blueprints/prod/templates/prod/edit_product.html:119
+#: blueprints/sup/sup.py:73 blueprints/sup/templates/sup/edit_supplier.html:61
 msgid "Delete"
 msgstr ""
 
@@ -424,10 +429,12 @@ msgid "*Strikethrough categories are no longer in use."
 msgstr ""
 
 #: blueprints/cat/templates/cat/categories.html:18
+#: blueprints/sup/templates/sup/suppliers.html:18
 msgid "In use Products"
 msgstr ""
 
 #: blueprints/cat/templates/cat/categories.html:19
+#: blueprints/sup/templates/sup/suppliers.html:19
 msgid "All Products"
 msgstr ""
 
@@ -440,6 +447,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "There is"
 msgid_plural "There are"
 msgstr[0] ""
@@ -457,6 +465,8 @@ msgstr[1] ""
 #: blueprints/main/templates/main/index.html:106
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "and"
 msgid_plural "of which"
 msgstr[0] ""
@@ -466,6 +476,8 @@ msgstr[1] ""
 #: blueprints/cat/templates/cat/edit_category.html:51
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "is in use"
 msgid_plural "are in use"
 msgstr[0] ""
@@ -483,6 +495,8 @@ msgstr ""
 #: blueprints/cat/templates/cat/new_category.html:28
 #: blueprints/prod/templates/prod/edit_product.html:110
 #: blueprints/prod/templates/prod/new_product.html:92
+#: blueprints/sup/templates/sup/edit_supplier.html:46
+#: blueprints/sup/templates/sup/new_supplier.html:28
 msgid "Underlined fields are required"
 msgstr ""
 
@@ -496,6 +510,7 @@ msgstr ""
 #: blueprints/main/templates/main/index.html:106
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/edit_supplier.html:51
 msgid "product"
 msgid_plural "products"
 msgstr[0] ""
@@ -503,6 +518,7 @@ msgstr[1] ""
 
 #: blueprints/cat/templates/cat/edit_category.html:67
 #: blueprints/prod/templates/prod/edit_product.html:125
+#: blueprints/sup/templates/sup/edit_supplier.html:67
 msgctxt "question"
 msgid "Delete"
 msgstr ""
@@ -514,6 +530,7 @@ msgstr ""
 #: blueprints/cat/templates/cat/edit_category.html:74
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:74
 msgid "Close"
 msgstr ""
 
@@ -697,6 +714,7 @@ msgid "in use"
 msgstr ""
 
 #: blueprints/main/templates/main/index.html:103
+#: blueprints/sup/templates/sup/suppliers.html:37
 msgid "supplier"
 msgid_plural "suppliers"
 msgstr[0] ""
@@ -885,8 +903,72 @@ msgstr ""
 msgid "Confirm that all products were ordered"
 msgstr ""
 
-#: templates/layout.html:27
+#: blueprints/sup/sup.py:38
+msgid "Supplier name is required"
+msgstr ""
+
+#: blueprints/sup/sup.py:41
+msgid "Supplier name must have at least 3 characters"
+msgstr ""
+
+#: blueprints/sup/sup.py:55
+msgid "Create supplier"
+msgstr ""
+
+#: blueprints/sup/sup.py:110
+#, python-format
+msgid "Supplier '%(supplier_name)s' created"
+msgstr ""
+
+#: blueprints/sup/sup.py:133
+msgid "Can't delete supplier! There are still products attached!"
+msgstr ""
+
+#: blueprints/sup/sup.py:139
+#, python-format
+msgid "Supplier '%(sup_name)s' has been deleted"
+msgstr ""
+
+#: blueprints/sup/sup.py:153
+msgid "Supplier updated"
+msgstr ""
+
+#: blueprints/sup/sup.py:167
+#, python-format
+msgid "%(supplier)s does not exist!"
+msgstr ""
+
+#: blueprints/sup/templates/sup/edit_supplier.html:3
+msgid "Edit Supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/edit_supplier.html:13
+msgid "Edit supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+msgid "Supplier has"
+msgstr ""
+
+#: blueprints/sup/templates/sup/edit_supplier.html:71
+msgid "This will delete this supplier! You can't undo this action."
+msgstr ""
+
+#: blueprints/sup/templates/sup/new_supplier.html:3
+msgid "New supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/new_supplier.html:13
+msgid "Create new supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/suppliers.html:3
+#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:27
 msgid "Suppliers"
+msgstr ""
+
+#: blueprints/sup/templates/sup/suppliers.html:14
+msgid "*Strikethrough suppliers are no longer in use."
 msgstr ""
 
 #: templates/layout.html:31
