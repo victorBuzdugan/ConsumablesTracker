@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-15 09:13+0300\n"
+"POT-Creation-Date: 2023-09-15 10:20+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -349,6 +349,7 @@ msgid "Must have at least 3 chars"
 msgstr ""
 
 #: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
+#: blueprints/main/templates/main/index.html:46
 msgid "Name"
 msgstr ""
 
@@ -426,12 +427,18 @@ msgid "All Products"
 msgstr ""
 
 #: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/main/templates/main/index.html:80
+#: blueprints/main/templates/main/index.html:97
+#: blueprints/main/templates/main/index.html:100
+#: blueprints/main/templates/main/index.html:103
+#: blueprints/main/templates/main/index.html:106
 msgid "There is"
 msgid_plural "There are"
 msgstr[0] ""
 msgstr[1] ""
 
 #: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/main/templates/main/index.html:100
 msgid "category"
 msgid_plural "categories"
 msgstr[0] ""
@@ -439,6 +446,7 @@ msgstr[1] ""
 
 #: blueprints/cat/templates/cat/categories.html:37
 #: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/main/templates/main/index.html:106
 msgid "and"
 msgid_plural "of which"
 msgstr[0] ""
@@ -469,6 +477,9 @@ msgid "Category has"
 msgstr ""
 
 #: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/main/templates/main/index.html:16
+#: blueprints/main/templates/main/index.html:80
+#: blueprints/main/templates/main/index.html:106
 msgid "product"
 msgid_plural "products"
 msgstr[0] ""
@@ -501,6 +512,7 @@ msgstr ""
 
 #: blueprints/inv/inv.py:48 blueprints/inv/inv.py:100
 #: blueprints/inv/templates/inv/inventory.html:51
+#: blueprints/main/templates/main/index.html:22
 msgid "Inventory check not required"
 msgstr ""
 
@@ -558,6 +570,116 @@ msgstr ""
 #: blueprints/inv/templates/inv/inventory.html:51
 msgid "Submit inventory"
 msgstr ""
+
+#: blueprints/main/templates/main/index.html:3
+#: blueprints/main/templates/main/index.html:5
+msgid "Index"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:12
+msgid "User dashboard"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:15
+msgid "Logged in as"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:16
+msgid "You have"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:16
+msgid "assigned"
+msgid_plural "assigned"
+msgstr[0] ""
+msgstr[1] ""
+
+#: blueprints/main/templates/main/index.html:19
+msgid "You requested a inventory check"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:24
+msgid "Check inventory"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:31
+msgid "Request inventory"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:36
+msgid "Admin dashboard"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:42
+msgid "*Bolded users have administrative privileges."
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:43
+msgid "*Strikethrough users are no longer in use."
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:47
+msgid "Products Assigned"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:48
+msgid "Status"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:61
+msgid "check inventory"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:65
+msgid "requested inventory"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:69
+msgid "requested registration"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:80
+msgid "that needs to be ordered"
+msgid_plural "that need to be ordered"
+msgstr[0] ""
+msgstr[1] ""
+
+#: blueprints/main/templates/main/index.html:82
+msgid "There are no products that need to be ordered"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:87
+msgid "Start Inventorying"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:93
+msgid "Statistics"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:97
+msgid "user"
+msgid_plural "users"
+msgstr[0] ""
+msgstr[1] ""
+
+#: blueprints/main/templates/main/index.html:97
+#: blueprints/main/templates/main/index.html:100
+#: blueprints/main/templates/main/index.html:103
+#: blueprints/main/templates/main/index.html:106
+msgid "in use"
+msgstr ""
+
+#: blueprints/main/templates/main/index.html:103
+msgid "supplier"
+msgid_plural "suppliers"
+msgstr[0] ""
+msgstr[1] ""
+
+#: blueprints/main/templates/main/index.html:106
+msgid "is critical"
+msgid_plural "are critical"
+msgstr[0] ""
+msgstr[1] ""
 
 #: templates/layout.html:27
 msgid "Suppliers"

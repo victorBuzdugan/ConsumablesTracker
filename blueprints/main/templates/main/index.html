@@ -1,51 +1,51 @@
 {% extends "layout.html" %}
 
-{% block title %}Main{% endblock %}
+{% block title %}{{ gettext("Index") }}{% endblock %}
 
-{% block page_title %}Index{% endblock %}
+{% block page_title %}{{ gettext("Index") }}{% endblock %}
 
 {% block main %}
 
 
     <div class="card mx-auto mb-3" style="max-width: 40rem;">
         <div class="card-header">
-            <strong>User dashboard</strong>
+            <strong>{{ gettext("User dashboard") }}</strong>
         </div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">Logged in as <span class="text-secondary">{{ user.name }}</span></li>
-            <li class="list-group-item">You have <span class="text-secondary">{{ user.in_use_products }} products</span> assigned</li>
+            <li class="list-group-item">{{ gettext("Logged in as") }} <span class="text-secondary">{{ user.name }}</span></li>
+            <li class="list-group-item">{{ gettext("You have") }} <span class="text-secondary">{{ user.in_use_products }} {{ ngettext("product", "products", user.in_use_products) }}</span> {{ ngettext("assigned", "assigned", user.in_use_products) }}</li>
             <li class="list-group-item">
                 {% if user.req_inv %}
-                    <span class="text-warning">You requested a inventory check</span>
+                    <span class="text-warning">{{ gettext("You requested a inventory check") }}</span>
                 {% else %}
                     {% if user.done_inv %}
-                        <span class="text-secondary">Inventory check not required</span>
+                        <span class="text-secondary">{{ gettext("Inventory check not required") }}</span>
                     {% else %}
-                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('inv.inventory') }}">Check inventory</a>
+                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('inv.inventory') }}">{{ gettext("Check inventory") }}</a>
                     {% endif %}
                 {% endif %}
             </li>
         </ul>
     </div>
     {% if not session.admin and user.in_use_products and user.done_inv and not user.req_inv %}
-        <a class="btn btn-primary" role="button" href="{{ url_for('inv.inventory_request') }}">Request inventory</a>
+        <a class="btn btn-primary" role="button" href="{{ url_for('inv.inventory_request') }}">{{ gettext("Request inventory") }}</a>
     {% endif %}
     {% if session.admin %}
         <div class="card mx-auto mb-3" style="max-width: 40rem;">
             <div class="card-header">
-                <strong>Admin dashboard</strong>
+                <strong>{{ gettext("Admin dashboard") }}</strong>
             </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item p-2 pb-0">
                     <div class="table-responsive mx-auto" style="width: auto;">
                         <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                            <caption class="text-center pb-0">*Bolded users have administrative privileges.</caption>
-                            <caption class="text-center pb-0">*Strikethrough users are no longer in use.</caption>
+                            <caption class="text-center pb-0">{{ gettext("*Bolded users have administrative privileges.") }}</caption>
+                            <caption class="text-center pb-0">{{ gettext("*Strikethrough users are no longer in use.") }}</caption>
                             <thead>
                                 <tr>
-                                    <th class="px-3">Name</th>
-                                    <th class="px-3">Products Assigned</th>
-                                    <th class="px-3">Status</th>
+                                    <th class="px-3">{{ gettext("Name") }}</th>
+                                    <th class="px-3">{{ gettext("Products Assigned") }}</th>
+                                    <th class="px-3">{{ gettext("Status") }}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -58,15 +58,15 @@
                                     <td>
                                         {% if not user.done_inv %}
                                             <a class="link-info link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
-                                            href="{{ url_for('inv.inventory_user', username=user.name) }}">check inventory</a>
+                                            href="{{ url_for('inv.inventory_user', username=user.name) }}">{{ gettext("check inventory") }}</a>
                                         {% endif %}
                                         {% if user.req_inv %}
                                             <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
-                                            href="{{ url_for('users.approve_check_inv', username=user.name) }}">requested inventory</a>
+                                            href="{{ url_for('users.approve_check_inv', username=user.name) }}">{{ gettext("requested inventory") }}</a>
                                         {% endif %}
                                         {% if user.reg_req %}
                                             <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover"
-                                            href="{{ url_for('users.approve_reg', username=user.name) }}">requested registration</a>
+                                            href="{{ url_for('users.approve_reg', username=user.name) }}">{{ gettext("requested registration") }}</a>
                                         {% endif %}
                                     </td>
                                 </tr>
@@ -77,33 +77,33 @@
                 </li>
                 <li class="list-group-item">
                     {% if stats.products_to_order %}
-                        <span class="text-danger">There are <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products_to_order') }}">{{ stats.products_to_order }} products</a> that need to be ordered
+                        <span class="text-danger">{{ ngettext("There is", "There are", stats.products_to_order) }} <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products_to_order') }}">{{ stats.products_to_order }} {{ ngettext("product", "products", stats.products_to_order) }}</a> {{ ngettext("that needs to be ordered", "that need to be ordered", stats.products_to_order) }}
                     {% else %}
-                        There are no products that need to be ordered
+                        {{ gettext("There are no products that need to be ordered") }}
                     {% endif %}
                 </li>
             </ul>
             <div class="card-footer">
-                <a class="btn btn-primary px-4" href="{{ url_for('users.approve_check_inv_all') }}">Start Inventorying</a>
+                <a class="btn btn-primary px-4" href="{{ url_for('users.approve_check_inv_all') }}">{{ gettext("Start Inventorying") }}</a>
             </div>
         </div>
 
         <div class="card mx-auto mb-3" style="max-width: 40rem;">
             <div class="card-header">
-                <strong>Statistics</strong>
+                <strong>{{ gettext("Statistics") }}</strong>
             </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item">
-                    There are <span class="text-secondary">{{ stats.users_in_use }} users</span> in use
+                    {{ ngettext("There is", "There are", stats.users_in_use) }} <span class="text-secondary">{{ stats.users_in_use }} {{ ngettext("user", "users", stats.users_in_use) }}</span> {{ gettext("in use") }}
                 </li>
                 <li class="list-group-item">
-                    There are <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('cat.categories') }}">{{ stats.categories_in_use }} categories</a> in use
+                    {{ ngettext("There is", "There are", stats.categories_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('cat.categories') }}">{{ stats.categories_in_use }} {{ ngettext("category", "categories", stats.categories_in_use) }}</a> {{ gettext("in use") }}
                 </li>
                 <li class="list-group-item">
-                    There are <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('sup.suppliers') }}">{{ stats.suppliers_in_use }} suppliers</a> in use
+                    {{ ngettext("There is", "There are", stats.suppliers_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('sup.suppliers') }}">{{ stats.suppliers_in_use }} {{ ngettext("supplier", "suppliers", stats.suppliers_in_use) }}</a> {{ gettext("in use") }}
                 </li>
                 <li class="list-group-item">
-                    There are <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='code') }}">{{ stats.products_in_use }} products</a> in use of which <span class="text-secondary">{{ stats.critical_products }}</span> are critical.
+                    {{ ngettext("There is", "There are", stats.products_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='code') }}">{{ stats.products_in_use }} {{ ngettext("product", "products", stats.products_in_use) }}</a> {{ gettext("in use") }}, {{ ngettext("and", "of which", stats.products_in_use) }} <span class="text-secondary">{{ stats.critical_products }}</span> {{ ngettext("is critical", "are critical", stats.critical_products) }}.
                 </li>
             </ul>
         </div>
