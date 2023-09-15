@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Edit product{% endblock %}
+{% block title %}{{ gettext("Edit product") }}{% endblock %}
 
 {% block main %}
 
@@ -10,7 +10,7 @@
     <div class="card mx-auto" style="max-width: 35rem;">
         
         <div class="card-header h5 py-2">
-            Edit product
+            {{ gettext("Edit product") }}
             <br>
             <span class="text-secondary">{{ request.view_args.product }}</span>
         </div>
@@ -107,7 +107,7 @@
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">Underlined fields are required</span>
+            <span class="text-body-tertiary">{{ gettext("Underlined fields are required") }}</span>
         </div>
 
         <div class="card-footer py-3">
@@ -116,20 +116,20 @@
                     {{ form.submit }}
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                    <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">{{ gettext("Delete") }}</button>
 
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5">Delete <span class="text-secondary">{{ form.name.data }}</span>?</h1>
+                                <h1 class="modal-title fs-5">{{ pgettext("question", "Delete") }} <span class="text-secondary">{{ form.name.data }}</span>?</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                This will delete this product! You can't undo this action.
+                                {{ gettext("This will delete this product! You can't undo this action.") }}
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
                                 {{ form.delete }}
                             </div>
                         </div>

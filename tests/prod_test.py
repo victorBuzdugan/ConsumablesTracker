@@ -131,7 +131,7 @@ def test_new_product(client: FlaskClient, admin_logged_in,
     ("", "some description", 1, 1, 1, "pc", 0, 1, "Product name is required"),
     ("pr", "some description", 1, 1, 1, "pc", 0, 1, "Product name must be between 3 and 15 characters"),
     ("prod_prod_prod_p", "some description", 1, 1, 1, "pc", 0, 1, "Product name must be between 3 and 15 characters"),
-    ("AA Batteries", "some description", 1, 1, 1, "pc", 0, 1, "Product AA Batteries allready exists"),
+    ("AA Batteries", "some description", 1, 1, 1, "pc", 0, 1, "The product AA Batteries allready exists"),
     ("new_product", "", 1, 1, 1, "pc", 0, 1, "Product description is required"),
     ("new_product", "de", 1, 1, 1, "pc", 0, 1, "Product description must be between 3 and 50 characters"),
     ("new_product", "desc-desc-desc-desc-desc-desc-desc-desc-desc-desc-desc", 1, 1, 1, "pc", 0, 1, "Product description must be between 3 and 50 characters"),
@@ -365,7 +365,7 @@ def test_failed_edit_product_name_duplicate(client: FlaskClient, admin_logged_in
             assert quote(response.request.path) == url_for("prod.edit_product", product=orig_name)
             assert b"Product updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
-            assert f"Product {new_name} allready exists" in response.text
+            assert f"The product {new_name} allready exists" in response.text
         db_session.refresh(prod)
         assert prod.name != new_name
 

@@ -226,7 +226,7 @@ def test_index_admin_logged_in_statistics(client: FlaskClient, admin_logged_in):
                     " suppliers</a> in use") in response.text
             assert ('href="/product/products-sorted-by-code">' +
                     f"{in_use_products}" +
-                    " products</a> in use of which " +
+                    " products</a> in use, of which " +
                     '<span class="text-secondary">' +
                     f"{critical_products}" +
                     "</span> are critical.") in response.text

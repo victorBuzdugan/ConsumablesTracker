@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Order{% endblock %}
+{% block title %}{{ gettext("Order") }}{% endblock %}
 
 {% block main %}
 <form method="POST">
@@ -8,22 +8,22 @@
 
     <div class="card mx-auto mb-3" style="max-width: 70rem;">
         <div class="card-header h5 py-2">
-            Products to order
+            {{ gettext("Products to order") }}
         </div>
         <ul class="list-group list-group-flush">
             <li class="list-group-item p-0">
                 <div class="table-responsive mx-auto" style="width: auto;">
                     <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                        <caption class="text-center pb-0">*Critical products are highlighted in red.</caption>
+                        <caption class="text-center pb-0">{{ gettext("*Critical products are highlighted in red.") }}</caption>
                         <thead>
                             <tr>
-                                <th class="px-1">Code</th>
-                                <th class="px-1">Description</th>
-                                <th class="px-1">Responsable</th>
-                                <th class="px-1">Category</th>
-                                <th class="px-1">Supplier</th>
-                                <th class="px-1">Quantity</th>
-                                <th class="px-1">Ordered</th>
+                                <th class="px-1">{{ gettext("Code") }}</th>
+                                <th class="px-1">{{ gettext("Description") }}</th>
+                                <th class="px-1">{{ gettext("Responsable") }}</th>
+                                <th class="px-1">{{ gettext("Category") }}</th>
+                                <th class="px-1">{{ gettext("Supplier") }}</th>
+                                <th class="px-1">{{ gettext("Quantity") }}</th>
+                                <th class="px-1">{{ gettext("Ordered") }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -56,31 +56,31 @@
                 </div>
             </li>
             <li class="list-group-item">
-                There are <span class="text-secondary">{{ products|length }} products</span> that need to be orderer
+                {{ ngettext("There is", "There are", products|length) }} <span class="text-secondary">{{ products|length }} {{ ngettext("product", "products", products|length) }}</span> {{ ngettext("that needs to be ordered", "that need to be ordered", products|length) }}
             </li>
         </ul>
 
         <div class="card-footer py-3">
             <div class="row row-cols-2 g-4">
                 <div class="col">
-                    <input class="btn btn-primary px-4" type="submit" value="Update">
+                    <input class="btn btn-primary px-4" type="submit" value="{{ gettext("Update") }}">
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">All ordered</button>
+                    <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">{{ gettext("All ordered") }}</button>
 
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5">Confirm all products ordered?</h1>
+                                <h1 class="modal-title fs-5">{{ gettext("Confirm all products ordered") }}?</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                Confirm that all products were ordered.
+                                {{ gettext("Confirm that all products were ordered") }}.
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <a class="btn btn-warning px-4" href="{{ url_for('prod.all_products_ordered') }}">All products ordered</a>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
+                                <a class="btn btn-warning px-4" href="{{ url_for('prod.all_products_ordered') }}">{{ gettext("All products ordered") }}</a>
                             </div>
                         </div>
                     </div>

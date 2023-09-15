@@ -1,6 +1,7 @@
 """Users blueprint."""
 
 from flask import Blueprint, flash, redirect, render_template, session, url_for
+from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
@@ -29,7 +30,7 @@ def admin_logged_in():
 class CreateUserForm(FlaskForm):
     """Create user form."""
     name = StringField(
-        label="Username",
+        label=lazy_gettext("Username"),
         validators=[
             InputRequired(msg["usr_req"]),
             Length(
@@ -38,67 +39,69 @@ class CreateUserForm(FlaskForm):
                 message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
-            "placeholder": "Username",
+            "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
     password = PasswordField(
-        label="Password",
+        label=lazy_gettext("Password"),
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
                 min=PASSW_MIN_LENGTH,
                 message=msg["psw_len"]),
             Regexp(PASSW_REGEX, message=(
-                "Password must have 1 big letter, " +
-                f"1 number, 1 special char ({PASSW_SYMB})!"))],
+                gettext("Password must have 1 big letter, " +
+                "1 number, 1 special char (%(passw_symb)s)!",
+                passw_symb=PASSW_SYMB)))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Password",
+            "placeholder": lazy_gettext("Password"),
             })
     details = TextAreaField(
-        label="Details",
+        label=lazy_gettext("Details"),
         render_kw={
                 "class": "form-control",
-                "placeholder": "Details",
+                "placeholder": lazy_gettext("Details"),
                 "style": "height: 5rem",
                 })
     admin = BooleanField(
-        label="Admin",
+        label=lazy_gettext("Admin"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     submit = SubmitField(
-        label="Create user",
+        label=lazy_gettext("Create user"),
         render_kw={"class": "btn btn-primary px-4"})
 
 
 class EditUserForm(CreateUserForm):
     """Edit user form."""
     password = PasswordField(
-        label="Password",
+        label=lazy_gettext("Password"),
         validators=[
             Optional(),
             Length(
                 min=PASSW_MIN_LENGTH,
                 message=msg["psw_len"]),
             Regexp(PASSW_REGEX, message=(
-                "Password must have 1 big letter, " +
-                f"1 number, 1 special char ({PASSW_SYMB})!"))],
+                gettext("Password must have 1 big letter, " +
+                "1 number, 1 special char (%(passw_symb)s)!",
+                passw_symb=PASSW_SYMB)))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Password",
+            "placeholder": lazy_gettext("Password"),
             })
     all_products = IntegerField()
     in_use_products = IntegerField()
     in_use = BooleanField(
-        label="In use",
+        label=lazy_gettext("In use"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     check_inv = BooleanField(
-        label="Inventory check",
+        label=lazy_gettext("Inventory check"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
@@ -106,10 +109,10 @@ class EditUserForm(CreateUserForm):
     reg_req = BooleanField(validators=[Optional()])
     req_inv = BooleanField(validators=[Optional()])
     submit = SubmitField(
-        label="Update",
+        label=lazy_gettext("Update"),
         render_kw={"class": "btn btn-primary px-4"})
     delete = SubmitField(
-        label="Delete",
+        label=lazy_gettext("Delete"),
         render_kw={"class": "btn btn-danger"})
 
 
@@ -121,9 +124,11 @@ def approve_reg(username):
                         select(User).filter_by(name=escape(username)))):
             user.reg_req = False
             db_session.commit()
-            flash(f"{username} has been approved")
+            flash(gettext("%(username)s has been approved",
+                          username=username))
         else:
-            flash(f"{username} does not exist!", "error")
+            flash(gettext("%(username)s does not exist!",
+                          username=username), "error")
 
     return redirect(url_for("main.index"))
 
@@ -140,7 +145,8 @@ def approve_check_inv(username):
             except ValueError as error:
                 flash(str(error))
         else:
-            flash(f"{username} does not exist!", "error")
+            flash(gettext("%(username)s does not exist!",
+                          username=username), "error")
 
     return redirect(url_for("main.index"))
 
@@ -173,7 +179,8 @@ def new_user():
                 new_user_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
-                flash(f"User '{user.name}' created")
+                flash(gettext("User '%(username)s' created",
+                              username=user.name))
                 return redirect(url_for("main.index"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -195,13 +202,14 @@ def edit_user(username):
                 .filter_by(name=escape(username)))
             if edit_user_form.delete.data:
                 if user.all_products:
-                    flash("Can't delete user! " +
-                          "He is still responsible for some products!",
+                    flash(gettext("Can't delete user! " +
+                          "He is still responsible for some products!"),
                           "error")
                 else:
                     db_session.delete(user)
                     db_session.commit()
-                    flash(f"User '{user.name}' has been deleted")
+                    flash(gettext("User '%(username)s' has been deleted",
+                                  username=user.name))
                     if user.id == session.get("user_id"):
                         return redirect(url_for("auth.logout"))
                     return redirect(url_for("main.index"))
@@ -226,7 +234,7 @@ def edit_user(username):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(user, include_collections=False):
-                    flash("User updated")
+                    flash(gettext("User updated"))
                     db_session.commit()
                     if user.id == session.get("user_id"):
                         session["user_name"] = user.name
@@ -243,7 +251,8 @@ def edit_user(username):
                 .filter_by(name=escape(username)))):
             edit_user_form = EditUserForm(obj=user)
         else:
-            flash(f"{username} does not exist!", "error")
+            flash(gettext("%(username)s does not exist!",
+                          username=username), "error")
             return redirect(url_for("main.index"))
 
     return render_template("users/edit_user.html", form=edit_user_form)

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Edit User{% endblock %}
+{% block title %}{{ gettext("Edit User") }}{% endblock %}
 
 {% block main %}
 
@@ -10,7 +10,7 @@
     <div class="card mx-auto" style="max-width: 30rem;">
     
         <div class="card-header h5 py-2">
-            Edit user
+            {{ gettext("Edit user") }}
             <br>
             <span class="text-secondary">{{ request.view_args.username }}</span>
         </div>
@@ -79,18 +79,18 @@
                 </div>
                 
             </div>
-            <span class="text-body-tertiary">Underlined fields are required</span>
+            <span class="text-body-tertiary">{{ gettext("Underlined fields are required") }}</span>
         </div>
 
         <ul class="list-group list-group-flush m-0">
             {% if form.reg_req.data %}
-                <li class="list-group-item">User awaits <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_reg', username=form.name.data) }}">registration approval</a></li>
+                <li class="list-group-item">{{ gettext("User awaits") }} <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_reg', username=form.name.data) }}">{{ gettext("registration approval") }}</a></li>
             {% endif %}
             {% if form.req_inv.data %}
-                <li class="list-group-item">User requested <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_check_inv', username=form.name.data) }}">inventory check</a></li>
+                <li class="list-group-item">{{ gettext("User requested") }} <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_check_inv', username=form.name.data) }}">{{ gettext("inventory check") }}</a></li>
             {% endif %}
             <li class="list-group-item">
-                User is responsible for <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='responsable') }}">{{ form.all_products.data }} products</a>, of which {{ form.in_use_products.data }} are in use
+                {{ gettext("User is responsible for") }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='responsable') }}">{{ form.all_products.data }} {{ ngettext("product", "products", form.all_products.data) }}</a>, {{ ngettext("and", "of which", form.all_products.data) }} <span class="text-secondary">{{ form.in_use_products.data }} {{ ngettext("is in use", "are in use", form.in_use_products.data) }}</span>
             </li>
         </ul>
 
@@ -100,20 +100,20 @@
                     {{ form.submit }}
                 </div>
                 <div class="col">
-                    <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">Delete</button>
+                    <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">{{ gettext("Delete") }}</button>
 
                     <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
                     <div class="modal-dialog">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h1 class="modal-title fs-5">Delete <span class="text-secondary">{{ form.name.data }}</span>?</h1>
+                                <h1 class="modal-title fs-5">{{ pgettext("question", "Delete") }} <span class="text-secondary">{{ form.name.data }}</span>?</h1>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                This will delete this user! You can't undo this action.
+                                {{ gettext("This will delete this user! You can't undo this action.") }}
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
                                 {{ form.delete }}
                             </div>
                         </div>

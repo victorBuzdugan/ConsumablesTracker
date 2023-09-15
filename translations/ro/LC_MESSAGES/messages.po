@@ -1,0 +1,1105 @@
+# Romanian translations for Consumables Tracker App.
+# Copyright (C) 2023 ORGANIZATION
+# This file is distributed under the same license as the project.
+# FIRST AUTHOR <buzdugan.victor@icloud.com>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version:  v1.0\n"
+"Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
+"POT-Creation-Date: 2023-09-15 13:02+0300\n"
+"PO-Revision-Date: 2023-09-14 10:55+0300\n"
+"Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
+"Language: ro\n"
+"Language-Team: ro <LL@li.org>\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100 > 0 && n%100"
+" < 20)) ? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.12.1\n"
+
+#: app.py:51
+msgid "Language changed"
+msgstr "Limba a fost schimbată"
+
+#: database.py:46
+msgid "The user"
+msgstr "Utilizatorul"
+
+#: database.py:48
+msgid "The category"
+msgstr "Categoria"
+
+#: database.py:50
+msgid "The supplier"
+msgstr "Furnizorul"
+
+#: database.py:52
+msgid "The product"
+msgstr "Produsul"
+
+#: database.py:54
+#, python-format
+msgid "%(el_name)s must have a name"
+msgstr "%(el_name)s trebuie să aibă un nume"
+
+#: database.py:60
+#, python-format
+msgid "%(el_name)s %(value)s allready exists"
+msgstr "%(el_name)s %(value)s există deja"
+
+#: database.py:260
+msgid "User must have a password"
+msgstr "Utilizatorul trebuie să aibă o parolă"
+
+#: database.py:275 database.py:580 database.py:606
+msgid "'Retired' users can't have products attached"
+msgstr "Utilizatorii scoși din uz nu pot fi responsabili de produse"
+
+#: database.py:278 database.py:583 database.py:609
+msgid "User with pending registration can't have products attached"
+msgstr "Utilizatorii în curs de aprobare nu pot fi responsabili de produse"
+
+#: database.py:292
+msgid "User with pending registration can't be admin"
+msgstr "Utilizatorii în curs de aprobare nu pot fi administratori"
+
+#: database.py:300
+msgid "You are the last admin!"
+msgstr "Ești ultimul administrator!"
+
+#: database.py:316
+msgid "Can't 'retire' a user if he is still responsible for products"
+msgstr "Un utilizator nu poate fi scos din uz dacă încă e responsabil de produse"
+
+#: database.py:335
+msgid "'Retired' user can't check inventory"
+msgstr "Un utilizator scos din uz nu poate inventaria"
+
+#: database.py:338
+msgid "User with pending registration can't check inventory"
+msgstr "Un utilizator în curs de aprobare nu poate inventaria"
+
+#: database.py:342
+msgid "User without products attached can't check inventory"
+msgstr "Un utilizator nu poate inventaria dacă nu răspunde de nici un produs"
+
+#: database.py:361
+msgid "Admin users can't request registration"
+msgstr "Un administrator nu poate cere aprobare pentru înregistrare"
+
+#: database.py:364
+msgid "'Retired' users can't request registration"
+msgstr "Un utilizator scos din uz nu poate cere aprobare pentru înregistrare"
+
+#: database.py:367
+msgid "User that checks inventory can't request registration"
+msgstr "Un utilizator ce inventariază nu poate cere aprobare pentru înregistrare"
+
+#: database.py:371
+msgid "User that requested inventory can't request registration"
+msgstr ""
+"Un utilizator care a cerut inventariere nu poate cere aprobare pentru "
+"înregistrare"
+
+#: database.py:375
+msgid "Users with products attached can't request registration"
+msgstr ""
+"Un utilizator ce răspunde de produse nu poate cere aprobare pentru "
+"înregistrare"
+
+#: database.py:393
+msgid "Admins don't need to request inventorying"
+msgstr "Administratorii nu trebuie să ceară inventariere"
+
+#: database.py:396
+msgid "'Retired' users can't request inventorying"
+msgstr "Un utilizator scos din uz nu poate cere inventariere"
+
+#: database.py:399
+msgid "User with pending registration can't request inventorying"
+msgstr "Un utilizator în curs de aprobare nu poate cere inventariere"
+
+#: database.py:402
+msgid "User can allready check inventory"
+msgstr "Utilizatorul poate deja inventaria"
+
+#: database.py:405
+msgid "Users without products can't request inventorying"
+msgstr ""
+"Un utilizator nu poate cere inventariere dacă nu răspunde de nici un "
+"produs"
+
+#: database.py:450 database.py:460 database.py:637 database.py:653
+msgid "Not in use category can't have products attached"
+msgstr "O categorie scoasă din uz nu poate avea produse atașate"
+
+#: database.py:504 database.py:514 database.py:672 database.py:688
+msgid "Not in use supplier can't have products attached"
+msgstr "Un furnizor scos din uz nu poate avea produse atașate"
+
+#: database.py:564
+msgid "Product must have a description"
+msgstr "Produsul trebuie să aibă o descriere"
+
+#: database.py:573
+msgid "User can't be deleted or does not exist"
+msgstr "Utilizatorul nu poate fi șters sau nu există"
+
+#: database.py:577 database.py:603
+msgid "User does not exist"
+msgstr "Utilizatorul nu există"
+
+#: database.py:630
+msgid "Category can't be deleted or does not exist"
+msgstr "Categoria nu poate fi ștearsă sau nu există"
+
+#: database.py:634 database.py:650
+msgid "Category does not exist"
+msgstr "Categoria nu există"
+
+#: database.py:665
+msgid "Supplier can't be deleted or does not exist"
+msgstr "Furnizorul nu poate fi șters sau nu există"
+
+#: database.py:669 database.py:685
+msgid "Supplier does not exist"
+msgstr "Furnizorul nu există"
+
+#: database.py:696
+msgid "Product must have a measuring unit"
+msgstr "Produsul trebuie să aibă unitate de măsură"
+
+#: database.py:705 database.py:707
+msgid "Minimum stock must be ≥ 0"
+msgstr "Stocul minim trebuie să fie ≥ 0"
+
+#: database.py:716 database.py:718
+msgid "Order quantity must be ≥ 1"
+msgstr "Cantitatea de comandă trebui să fie ≥ 1"
+
+#: database.py:726
+msgid "Can't order not in use products"
+msgstr "Nu se poate comanda un produs scos din uz"
+
+#: database.py:735
+msgid "Can't 'retire' a product that needs to be ordered"
+msgstr "Nu se poate scoate din uz un produs ce trebuie comandat"
+
+#: helpers.py:11
+msgid "You have to be logged in..."
+msgstr "Trebuie să fii logat..."
+
+#: helpers.py:21
+msgid "You have to be an admin..."
+msgstr "Trebuie să fii administrator..."
+
+#: blueprints/auth/auth.py:20
+msgid "Username is required!"
+msgstr "Numele utilizatorului e obligatoriu!"
+
+#: blueprints/auth/auth.py:21
+#, python-format
+msgid "Username must be between %(m)i and %(M)i characters!"
+msgstr "Numele utilizatorului trebuie să aibă între %(m)i și %(M)i caractere!"
+
+#: blueprints/auth/auth.py:23
+msgid "Password is required!"
+msgstr "Parola e obligatorie!"
+
+#: blueprints/auth/auth.py:24
+#, python-format
+msgid "Password should have at least %(pmin)i characters!"
+msgstr "Parola trebuie să aibă cel puțin %(pmin)i caractere!"
+
+#: blueprints/auth/auth.py:26
+msgid "Check password rules!"
+msgstr "Verifică regulile pentru parolă!"
+
+#: blueprints/auth/auth.py:27
+msgid "Passwords don't match!"
+msgstr "Parolele nu se potrivesc!"
+
+#: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
+#: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
+#: blueprints/cat/cat.py:45 blueprints/sup/sup.py:44
+#: blueprints/users/users.py:33 blueprints/users/users.py:42
+msgid "Username"
+msgstr "Nume"
+
+#: blueprints/auth/auth.py:48 blueprints/auth/auth.py:52
+#: blueprints/auth/auth.py:77 blueprints/auth/auth.py:88
+#: blueprints/users/users.py:46 blueprints/users/users.py:58
+#: blueprints/users/users.py:81 blueprints/users/users.py:93
+msgid "Password"
+msgstr "Parolă"
+
+#: blueprints/auth/auth.py:91 blueprints/auth/auth.py:100
+#: blueprints/auth/auth.py:137 blueprints/auth/auth.py:146
+msgid "Retype password"
+msgstr "Reintrodu parola"
+
+#: blueprints/auth/auth.py:103
+msgid "Request registration"
+msgstr "Cere înregistrare"
+
+#: blueprints/auth/auth.py:112 blueprints/auth/auth.py:120
+msgid "Old password"
+msgstr "Parola veche"
+
+#: blueprints/auth/auth.py:123 blueprints/auth/auth.py:134
+msgid "New password"
+msgstr "Parola nouă"
+
+#: blueprints/auth/auth.py:149
+#: blueprints/auth/templates/auth/change_password.html:16
+#: templates/layout.html:43
+msgid "Change password"
+msgstr "Schimbă parola"
+
+#: blueprints/auth/auth.py:174
+#, python-format
+msgid "Welcome %(username)s"
+msgstr "Bună %(username)s"
+
+#: blueprints/auth/auth.py:177
+msgid "Your registration is pending. Contact an admin."
+msgstr "Înregistrarea așteaptă aprobare. Contactează un administrator."
+
+#: blueprints/auth/auth.py:180
+msgid "This user is not in use anymore!"
+msgstr "Acest utilizator e scos din uz!"
+
+#: blueprints/auth/auth.py:182
+msgid "Wrong username or password!"
+msgstr "Nume utilizator sau parolă greșite"
+
+#: blueprints/auth/auth.py:197
+msgid "Succesfully logged out..."
+msgstr "Ai fost delogat..."
+
+#: blueprints/auth/auth.py:208
+msgid "You have been logged out..."
+msgstr "Ai fost delogat..."
+
+#: blueprints/auth/auth.py:219
+msgid "Registration request sent. Please contact an admin."
+msgstr "Înregistrarea a fost trimisă. Contactează un administrator."
+
+#: blueprints/auth/auth.py:246
+msgid "Password changed."
+msgstr "Parolă schimbată"
+
+#: blueprints/auth/auth.py:249
+msgid "Wrong old password!"
+msgstr "Parolă veche greșită"
+
+#: blueprints/auth/templates/auth/change_password.html:7
+msgid "Change Password"
+msgstr "Schimbă Parola"
+
+#: blueprints/auth/templates/auth/change_password.html:29
+msgid "Old password (at least 8 chars)"
+msgstr "Parola veche (cel puțin 8 caractere)"
+
+#: blueprints/auth/templates/auth/change_password.html:42
+#: blueprints/auth/templates/auth/register.html:39
+msgid "Must have at least 8 chars"
+msgstr "Trebuie cel puțin 8 caractere"
+
+#: blueprints/auth/templates/auth/change_password.html:44
+#: blueprints/auth/templates/auth/register.html:41
+msgid "Must have at least 1 big letter"
+msgstr "Trebuie cel puțin 1 literă mare"
+
+#: blueprints/auth/templates/auth/change_password.html:46
+#: blueprints/auth/templates/auth/register.html:43
+msgid "Must have at least 1 number"
+msgstr "Trebuie cel puțin 1 număr"
+
+#: blueprints/auth/templates/auth/change_password.html:48
+#: blueprints/auth/templates/auth/register.html:45
+msgid "Must have at least 1 special char"
+msgstr "Trebuie cel puțin 1 caracter special"
+
+#: blueprints/auth/templates/auth/change_password.html:61
+#: blueprints/auth/templates/auth/register.html:58
+msgid "Passwords don't match"
+msgstr "Parolele nu se potrivesc"
+
+#: blueprints/auth/templates/auth/change_password.html:66
+#: blueprints/auth/templates/auth/login.html:44
+#: blueprints/auth/templates/auth/register.html:63
+msgid "All fields are required"
+msgstr "Toate câmpurile sunt obligatorii"
+
+#: blueprints/auth/templates/auth/login.html:7
+msgid "Log In"
+msgstr "Log In"
+
+#: blueprints/auth/templates/auth/login.html:13
+msgid "Login"
+msgstr "Login"
+
+#: blueprints/auth/templates/auth/login.html:26
+msgid "Enter username"
+msgstr "Introdu numele"
+
+#: blueprints/auth/templates/auth/login.html:39
+msgid "Enter password"
+msgstr "Introdu parola"
+
+#: blueprints/auth/templates/auth/register.html:7
+#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:47
+msgid "Register"
+msgstr "Înregistrare"
+
+#: blueprints/auth/templates/auth/register.html:26
+msgid "Must have at least 3 chars"
+msgstr "Trebuie cel puțin 3 caractere "
+
+#: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
+#: blueprints/main/templates/main/index.html:46 blueprints/sup/sup.py:36
+#: blueprints/sup/templates/sup/suppliers.html:17
+msgid "Name"
+msgstr "Nume"
+
+#: blueprints/cat/cat.py:38
+msgid "Category name is required"
+msgstr "Numele categoriei e obligatoriu"
+
+#: blueprints/cat/cat.py:41
+msgid "Category name must have at least 3 characters"
+msgstr "Numele categoriei trebuie să aibă cel puțin 3 caractere "
+
+#: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+#: blueprints/inv/templates/inv/inventory.html:28 blueprints/prod/prod.py:50
+#: blueprints/prod/prod.py:60 blueprints/prod/templates/prod/products.html:25
+#: blueprints/prod/templates/prod/products_to_oder.html:21
+msgid "Description"
+msgstr "Descriere"
+
+#: blueprints/cat/cat.py:52 blueprints/sup/sup.py:48 blueprints/sup/sup.py:51
+#: blueprints/sup/templates/sup/suppliers.html:20 blueprints/users/users.py:61
+#: blueprints/users/users.py:64
+msgid "Details"
+msgstr "Detalii"
+
+#: blueprints/cat/cat.py:56
+msgid "Create category"
+msgstr "Creează categorie"
+
+#: blueprints/cat/cat.py:65 blueprints/prod/prod.py:131
+#: blueprints/sup/sup.py:64 blueprints/users/users.py:98
+msgid "In use"
+msgstr "În uz"
+
+#: blueprints/cat/cat.py:71 blueprints/prod/prod.py:137
+#: blueprints/prod/templates/prod/products_to_oder.html:66
+#: blueprints/sup/sup.py:70 blueprints/users/users.py:112
+msgid "Update"
+msgstr "Actualizează"
+
+#: blueprints/cat/cat.py:74 blueprints/cat/templates/cat/edit_category.html:61
+#: blueprints/prod/prod.py:140
+#: blueprints/prod/templates/prod/edit_product.html:119
+#: blueprints/sup/sup.py:73 blueprints/sup/templates/sup/edit_supplier.html:61
+#: blueprints/users/templates/users/edit_user.html:103
+#: blueprints/users/users.py:115
+msgid "Delete"
+msgstr "Șterge"
+
+#: blueprints/cat/cat.py:111
+#, python-format
+msgid "Category '%(cat_name)s' created"
+msgstr "Categoria '%(cat_name)s' a fost creată"
+
+#: blueprints/cat/cat.py:134
+msgid "Can't delete category! There are still products attached!"
+msgstr "Nu se poate șterge categoria! Încă mai are produse atașate!"
+
+#: blueprints/cat/cat.py:140
+#, python-format
+msgid "Category '%(cat_name)s' has been deleted"
+msgstr "Categoria '%(cat_name)s' a fost ștearsă"
+
+#: blueprints/cat/cat.py:154
+msgid "Category updated"
+msgstr "Categorie actualizată"
+
+#: blueprints/cat/cat.py:167
+#, python-format
+msgid "%(category)s does not exist!"
+msgstr "%(category)s nu există!"
+
+#: blueprints/cat/templates/cat/categories.html:3
+#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:26
+msgid "Categories"
+msgstr "Categorii"
+
+#: blueprints/cat/templates/cat/categories.html:14
+msgid "*Strikethrough categories are no longer in use."
+msgstr "*Categoriile tăiate sunt scoase din uz."
+
+#: blueprints/cat/templates/cat/categories.html:18
+#: blueprints/sup/templates/sup/suppliers.html:18
+msgid "In use Products"
+msgstr "Produse în uz"
+
+#: blueprints/cat/templates/cat/categories.html:19
+#: blueprints/sup/templates/sup/suppliers.html:19
+msgid "All Products"
+msgstr "Toate produsele"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/main/templates/main/index.html:80
+#: blueprints/main/templates/main/index.html:97
+#: blueprints/main/templates/main/index.html:100
+#: blueprints/main/templates/main/index.html:103
+#: blueprints/main/templates/main/index.html:106
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products.html:82
+#: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/suppliers.html:37
+msgid "There is"
+msgid_plural "There are"
+msgstr[0] "Este"
+msgstr[1] "Sunt"
+msgstr[2] "Sunt"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/main/templates/main/index.html:100
+msgid "category"
+msgid_plural "categories"
+msgstr[0] "categorie"
+msgstr[1] "categorii"
+msgstr[2] "de categorii"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/main/templates/main/index.html:106
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:93
+msgid "and"
+msgid_plural "of which"
+msgstr[0] "iar"
+msgstr[1] "dintre care"
+msgstr[2] "dintre care"
+
+#: blueprints/cat/templates/cat/categories.html:37
+#: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:93
+msgid "is in use"
+msgid_plural "are in use"
+msgstr[0] "este în uz"
+msgstr[1] "sunt în uz"
+msgstr[2] "sunt în uz"
+
+#: blueprints/cat/templates/cat/edit_category.html:3
+msgid "Edit Category"
+msgstr "Editează Categoria"
+
+#: blueprints/cat/templates/cat/edit_category.html:13
+msgid "Edit category"
+msgstr "Editează categoria"
+
+#: blueprints/cat/templates/cat/edit_category.html:46
+#: blueprints/cat/templates/cat/new_category.html:28
+#: blueprints/prod/templates/prod/edit_product.html:110
+#: blueprints/prod/templates/prod/new_product.html:92
+#: blueprints/sup/templates/sup/edit_supplier.html:46
+#: blueprints/sup/templates/sup/new_supplier.html:28
+#: blueprints/users/templates/users/edit_user.html:82
+#: blueprints/users/templates/users/new_user.html:49
+msgid "Underlined fields are required"
+msgstr "Câmpurile subliniate sunt obligatorii"
+
+#: blueprints/cat/templates/cat/edit_category.html:51
+msgid "Category has"
+msgstr "Categoria are"
+
+#: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/main/templates/main/index.html:16
+#: blueprints/main/templates/main/index.html:80
+#: blueprints/main/templates/main/index.html:106
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/users/templates/users/edit_user.html:93
+msgid "product"
+msgid_plural "products"
+msgstr[0] "produs"
+msgstr[1] "produse"
+msgstr[2] "de produse"
+
+#: blueprints/cat/templates/cat/edit_category.html:67
+#: blueprints/prod/templates/prod/edit_product.html:125
+#: blueprints/sup/templates/sup/edit_supplier.html:67
+#: blueprints/users/templates/users/edit_user.html:109
+msgctxt "question"
+msgid "Delete"
+msgstr "Ștergi"
+
+#: blueprints/cat/templates/cat/edit_category.html:71
+msgid "This will delete this category! You can't undo this action."
+msgstr "Categoria va fi ștearsă definitiv!"
+
+#: blueprints/cat/templates/cat/edit_category.html:74
+#: blueprints/prod/templates/prod/edit_product.html:132
+#: blueprints/prod/templates/prod/products_to_oder.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:74
+#: blueprints/users/templates/users/edit_user.html:116
+msgid "Close"
+msgstr "Închide"
+
+#: blueprints/cat/templates/cat/new_category.html:3
+msgid "New category"
+msgstr "Categorie nouă"
+
+#: blueprints/cat/templates/cat/new_category.html:13
+msgid "Create new category"
+msgstr "Creează o categorie nouă"
+
+#: blueprints/inv/inv.py:43 blueprints/inv/inv.py:95
+msgid "Inventory has been submitted"
+msgstr "Inventarul a fost trimis"
+
+#: blueprints/inv/inv.py:48 blueprints/inv/inv.py:100
+#: blueprints/inv/templates/inv/inventory.html:51
+#: blueprints/main/templates/main/index.html:22
+msgid "Inventory check not required"
+msgstr "Nu este necesară inventarierea"
+
+#: blueprints/inv/inv.py:72
+#, python-format
+msgid "User %(username)s does not exist!"
+msgstr "Utilizatorul %(username)s nu există"
+
+#: blueprints/inv/inv.py:75
+#, python-format
+msgid "User %(username)s is not in use anymore!"
+msgstr "Utilizatorul %(username)s e scos din uz!"
+
+#: blueprints/inv/inv.py:78
+#, python-format
+msgid "User %(username)s awaits registration aproval!"
+msgstr "Utilizatorul %(username)s așteaptă aprobarea înregistrării!"
+
+#: blueprints/inv/inv.py:119
+msgid "You are an admin! You don't need to request inventory checks"
+msgstr "Ești administrator! Nu trebuie să ceri aprobare pentru inventariere"
+
+#: blueprints/inv/inv.py:126
+msgid "Inventory check request sent"
+msgstr "Cererea de inventariere a fost trimisă"
+
+#: blueprints/inv/templates/inv/inventory.html:3 templates/layout.html:24
+msgid "Inventory"
+msgstr "Inventar"
+
+#: blueprints/inv/templates/inv/inventory.html:13 blueprints/users/users.py:104
+msgid "Inventory check"
+msgstr "Inventariere"
+
+#: blueprints/inv/templates/inv/inventory.html:22
+msgid "*Select to order a product if current stock is less then minimum stock."
+msgstr ""
+"*Selectează un produs pentru comandă dacă stocul curent este mai mic "
+"decât stocul minim"
+
+#: blueprints/inv/templates/inv/inventory.html:23
+#: blueprints/prod/templates/prod/products.html:15
+#: blueprints/prod/templates/prod/products_to_oder.html:17
+msgid "*Critical products are highlighted in red."
+msgstr "*Produsele roșii sunt critice"
+
+#: blueprints/inv/templates/inv/inventory.html:27 blueprints/prod/prod.py:36
+#: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
+#: blueprints/prod/templates/prod/products.html:22
+#: blueprints/prod/templates/prod/products_to_oder.html:20
+msgid "Code"
+msgstr "Cod"
+
+#: blueprints/inv/templates/inv/inventory.html:29
+msgid "Min. Stock"
+msgstr "Stoc min."
+
+#: blueprints/inv/templates/inv/inventory.html:30
+#: blueprints/prod/templates/prod/products_to_oder.html:3
+#: templates/layout.html:29
+msgid "Order"
+msgstr "Comandă"
+
+#: blueprints/inv/templates/inv/inventory.html:51
+msgid "Submit inventory"
+msgstr "Trimite inventarul"
+
+#: blueprints/main/templates/main/index.html:3
+#: blueprints/main/templates/main/index.html:5
+msgid "Index"
+msgstr "Index"
+
+#: blueprints/main/templates/main/index.html:12
+msgid "User dashboard"
+msgstr "Panou de bord utilizator"
+
+#: blueprints/main/templates/main/index.html:15
+msgid "Logged in as"
+msgstr "Logat ca"
+
+#: blueprints/main/templates/main/index.html:16
+msgid "You have"
+msgstr "Ai"
+
+#: blueprints/main/templates/main/index.html:16
+msgid "assigned"
+msgid_plural "assigned"
+msgstr[0] "atribuit"
+msgstr[1] "atribuite"
+msgstr[2] "atribuite"
+
+#: blueprints/main/templates/main/index.html:19
+msgid "You requested a inventory check"
+msgstr "Ai cerut inventariere"
+
+#: blueprints/main/templates/main/index.html:24
+msgid "Check inventory"
+msgstr "Inventariază"
+
+#: blueprints/main/templates/main/index.html:31
+msgid "Request inventory"
+msgstr "Cere inventariere"
+
+#: blueprints/main/templates/main/index.html:36
+msgid "Admin dashboard"
+msgstr "Panou de bord administrator"
+
+#: blueprints/main/templates/main/index.html:42
+msgid "*Bolded users have administrative privileges."
+msgstr "*Utilizatorii cu text îngroșat sunt administratori"
+
+#: blueprints/main/templates/main/index.html:43
+msgid "*Strikethrough users are no longer in use."
+msgstr "*Utilizatorii cu text tăiat sunt scoși din uz."
+
+#: blueprints/main/templates/main/index.html:47
+msgid "Products Assigned"
+msgstr "Produse atribuite"
+
+#: blueprints/main/templates/main/index.html:48
+msgid "Status"
+msgstr "Status"
+
+#: blueprints/main/templates/main/index.html:61
+msgid "check inventory"
+msgstr "inventariază"
+
+#: blueprints/main/templates/main/index.html:65
+msgid "requested inventory"
+msgstr "inventariere cerută"
+
+#: blueprints/main/templates/main/index.html:69
+msgid "requested registration"
+msgstr "înregistrare cerută"
+
+#: blueprints/main/templates/main/index.html:80
+#: blueprints/prod/templates/prod/products_to_oder.html:59
+msgid "that needs to be ordered"
+msgid_plural "that need to be ordered"
+msgstr[0] "ce trebuie comandat"
+msgstr[1] "ce trebuie comandate"
+msgstr[2] "ce trebuie comandate"
+
+#: blueprints/main/templates/main/index.html:82 blueprints/prod/prod.py:415
+msgid "There are no products that need to be ordered"
+msgstr "Nu este nici un produs de comandat"
+
+#: blueprints/main/templates/main/index.html:87
+msgid "Start Inventorying"
+msgstr "Start inventariere"
+
+#: blueprints/main/templates/main/index.html:93
+msgid "Statistics"
+msgstr "Statistici"
+
+#: blueprints/main/templates/main/index.html:97
+msgid "user"
+msgid_plural "users"
+msgstr[0] "utilizator"
+msgstr[1] "utilizatori"
+msgstr[2] "de utilizatori"
+
+#: blueprints/main/templates/main/index.html:97
+#: blueprints/main/templates/main/index.html:100
+#: blueprints/main/templates/main/index.html:103
+#: blueprints/main/templates/main/index.html:106
+msgid "in use"
+msgstr "în uz"
+
+#: blueprints/main/templates/main/index.html:103
+#: blueprints/sup/templates/sup/suppliers.html:37
+msgid "supplier"
+msgid_plural "suppliers"
+msgstr[0] "furnizor"
+msgstr[1] "furnizori"
+msgstr[2] "de furnizori"
+
+#: blueprints/main/templates/main/index.html:106
+msgid "is critical"
+msgid_plural "are critical"
+msgstr[0] "este critic"
+msgstr[1] "sunt critice"
+msgstr[2] "sunt critice"
+
+#: blueprints/prod/prod.py:38
+msgid "Product name is required"
+msgstr "Numele produsului e obligatoriu"
+
+#: blueprints/prod/prod.py:42
+msgid "Product name must be between 3 and 15 characters"
+msgstr "Numele produsului trebuie să fie între 3 și 15 caractere"
+
+#: blueprints/prod/prod.py:52
+msgid "Product description is required"
+msgstr "Descrierea produsului e obligatorie"
+
+#: blueprints/prod/prod.py:56
+msgid "Product description must be between 3 and 50 characters"
+msgstr "Descrierea produsului trebuie să fie între 3 și 50 caractere"
+
+#: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
+#: blueprints/prod/templates/prod/products.html:30
+#: blueprints/prod/templates/prod/products_to_oder.html:22
+msgid "Responsable"
+msgstr "Responsabil"
+
+#: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
+#: blueprints/prod/templates/prod/products.html:37
+#: blueprints/prod/templates/prod/products_to_oder.html:23
+#: templates/layout.html:34
+msgid "Category"
+msgstr "Categorie"
+
+#: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
+#: blueprints/prod/templates/prod/products.html:44
+#: blueprints/prod/templates/prod/products_to_oder.html:24
+#: templates/layout.html:35
+msgid "Supplier"
+msgstr "Furnizor"
+
+#: blueprints/prod/prod.py:83 blueprints/prod/prod.py:87
+msgid "Measuring unit"
+msgstr "Unitate măsură"
+
+#: blueprints/prod/prod.py:84
+msgid "Measuring unit is required"
+msgstr "Unitatea de măsură e obligatorie"
+
+#: blueprints/prod/prod.py:90 blueprints/prod/prod.py:98
+msgid "Minimum stock"
+msgstr "Stoc minim"
+
+#: blueprints/prod/prod.py:92
+msgid "Minimum stock is required"
+msgstr "Stocul minim e obligatoriu"
+
+#: blueprints/prod/prod.py:95
+msgid "Minimum stock must be at least 0"
+msgstr "Stocul minim trebuie să fie cel puțin 0"
+
+#: blueprints/prod/prod.py:101 blueprints/prod/prod.py:109
+msgid "Order quantity"
+msgstr "Cant comandă"
+
+#: blueprints/prod/prod.py:103
+msgid "Order quantity is required"
+msgstr "Cantitatea de comandă e obligatorie"
+
+#: blueprints/prod/prod.py:106
+msgid "Order quantity must be at least 1"
+msgstr "Cantitatea de comandă trebui să fie cel puțin 1"
+
+#: blueprints/prod/prod.py:112
+msgid "Critical product"
+msgstr "Produs critic"
+
+#: blueprints/prod/prod.py:118
+msgid "Create product"
+msgstr "Creează produs"
+
+#: blueprints/prod/prod.py:125
+msgid "To order"
+msgstr "De comandat"
+
+#: blueprints/prod/prod.py:200
+#, python-format
+msgid "Cannot sort products by %(ordered_by)s"
+msgstr "Nu se pot sorta produsele după %(ordered_by)s"
+
+#: blueprints/prod/prod.py:265
+#, python-format
+msgid "Product '%(new_prod_name)s' created"
+msgstr "Produsul '%(new_prod_name)s' a fost creat"
+
+#: blueprints/prod/prod.py:312
+#, python-format
+msgid "Product '%(prod_name)s' has been deleted"
+msgstr "Produsul '%(prod_name)s' a fost șters"
+
+#: blueprints/prod/prod.py:340
+msgid "Product updated"
+msgstr "Produs actualizat"
+
+#: blueprints/prod/prod.py:360
+#, python-format
+msgid "%(product)s does not exist!"
+msgstr "%(product)s nu există!"
+
+#: blueprints/prod/prod.py:392
+msgid "Products updated"
+msgstr "Produse actualizate"
+
+#: blueprints/prod/prod.py:430
+#: blueprints/prod/templates/prod/products_to_oder.html:83
+msgid "All products ordered"
+msgstr "Toate produsele comandate"
+
+#: blueprints/prod/templates/prod/edit_product.html:3
+#: blueprints/prod/templates/prod/edit_product.html:13
+msgid "Edit product"
+msgstr "Editare produs"
+
+#: blueprints/prod/templates/prod/edit_product.html:129
+msgid "This will delete this product! You can't undo this action."
+msgstr "Produsul va fi șters definitiv!"
+
+#: blueprints/prod/templates/prod/new_product.html:3
+msgid "New product"
+msgstr "Produs nou"
+
+#: blueprints/prod/templates/prod/new_product.html:13
+msgid "Create new product"
+msgstr "Creează un produs nou"
+
+#: blueprints/prod/templates/prod/products.html:3
+#: blueprints/prod/templates/prod/products.html:8 templates/layout.html:28
+msgid "Products"
+msgstr "Produse"
+
+#: blueprints/prod/templates/prod/products.html:14
+msgid "*Strikethrough products are no longer in use."
+msgstr "*Produsele cu text tăiat sunt scoase din uz."
+
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Min stock"
+msgstr "Stoc min"
+
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Order qty"
+msgstr "Cant cdă"
+
+#: blueprints/prod/templates/prod/products.html:82
+msgid "critical product"
+msgid_plural "critical products"
+msgstr[0] "produs critic"
+msgstr[1] "produse critice"
+msgstr[2] "de produse critice"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:11
+msgid "Products to order"
+msgstr "Produse de comandat"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:25
+msgid "Quantity"
+msgstr "Cantitate"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:26
+msgid "Ordered"
+msgstr "Comandat"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:69
+msgid "All ordered"
+msgstr "Toate comandate"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:75
+msgid "Confirm all products ordered"
+msgstr "Confirmă toate produsele comandate"
+
+#: blueprints/prod/templates/prod/products_to_oder.html:79
+msgid "Confirm that all products were ordered"
+msgstr "Confirmă că toate produsele au fost comandate"
+
+#: blueprints/sup/sup.py:38
+msgid "Supplier name is required"
+msgstr "Numele furnizorului e obligatoriu!"
+
+#: blueprints/sup/sup.py:41
+msgid "Supplier name must have at least 3 characters"
+msgstr "Numele furnizorului trebuie să aibă cel puțin 3 caractere "
+
+#: blueprints/sup/sup.py:55
+msgid "Create supplier"
+msgstr "Creează furnizor"
+
+#: blueprints/sup/sup.py:110
+#, python-format
+msgid "Supplier '%(supplier_name)s' created"
+msgstr "Furnizorul '%(supplier_name)s' a fost creat"
+
+#: blueprints/sup/sup.py:133
+msgid "Can't delete supplier! There are still products attached!"
+msgstr "Nu se poate șterge furnizorul! Încă mai are produse atașate!"
+
+#: blueprints/sup/sup.py:139
+#, python-format
+msgid "Supplier '%(sup_name)s' has been deleted"
+msgstr "Furnizorul '%(sup_name)s' a fost șters"
+
+#: blueprints/sup/sup.py:153
+msgid "Supplier updated"
+msgstr "Furnizorul a fost actualizat"
+
+#: blueprints/sup/sup.py:167
+#, python-format
+msgid "%(supplier)s does not exist!"
+msgstr "%(supplier)s nu există"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:3
+msgid "Edit Supplier"
+msgstr "Editare Furnizor"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:13
+msgid "Edit supplier"
+msgstr "Editează furnizorul"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+msgid "Supplier has"
+msgstr "Furnizorul are"
+
+#: blueprints/sup/templates/sup/edit_supplier.html:71
+msgid "This will delete this supplier! You can't undo this action."
+msgstr "Furnizorul va fi șters definitiv!"
+
+#: blueprints/sup/templates/sup/new_supplier.html:3
+msgid "New supplier"
+msgstr "Creeare furnizor"
+
+#: blueprints/sup/templates/sup/new_supplier.html:13
+msgid "Create new supplier"
+msgstr "Creează un furnizor nou"
+
+#: blueprints/sup/templates/sup/suppliers.html:3
+#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:27
+msgid "Suppliers"
+msgstr "Furnizori"
+
+#: blueprints/sup/templates/sup/suppliers.html:14
+msgid "*Strikethrough suppliers are no longer in use."
+msgstr "*Furnizorii cu text tăiat sunt scoși din uz."
+
+#: blueprints/users/users.py:53 blueprints/users/users.py:88
+#, python-format
+msgid ""
+"Password must have 1 big letter, 1 number, 1 special char "
+"(%(passw_symb)s)!"
+msgstr ""
+"Parola trebuie să conțină 1 literă mare, 1 număr, 1 caracter special "
+"(%(passw_symb)s)!"
+
+#: blueprints/users/users.py:68
+msgid "Admin"
+msgstr "Admin"
+
+#: blueprints/users/users.py:74
+msgid "Create user"
+msgstr "Creează utilizator"
+
+#: blueprints/users/users.py:127
+#, python-format
+msgid "%(username)s has been approved"
+msgstr "%(username)s a fost aprobat"
+
+#: blueprints/users/users.py:130 blueprints/users/users.py:148
+#: blueprints/users/users.py:254
+#, python-format
+msgid "%(username)s does not exist!"
+msgstr "%(username)s nu există!"
+
+#: blueprints/users/users.py:182
+#, python-format
+msgid "User '%(username)s' created"
+msgstr "Utilizatorul '%(username)s' a fost creat"
+
+#: blueprints/users/users.py:205
+msgid "Can't delete user! He is still responsible for some products!"
+msgstr "Un utilizator nu poate fi șters dacă încă e responsabil de produse"
+
+#: blueprints/users/users.py:211
+#, python-format
+msgid "User '%(username)s' has been deleted"
+msgstr "Utilizatorul '%(username)s' a fost șters"
+
+#: blueprints/users/users.py:237
+msgid "User updated"
+msgstr "Utilizatorul a fost actualizat"
+
+#: blueprints/users/templates/users/edit_user.html:3
+msgid "Edit User"
+msgstr "Editare Utilizator"
+
+#: blueprints/users/templates/users/edit_user.html:13
+msgid "Edit user"
+msgstr "Editează utilizatorul"
+
+#: blueprints/users/templates/users/edit_user.html:87
+msgid "User awaits"
+msgstr "Utilizatorul așteaptă"
+
+#: blueprints/users/templates/users/edit_user.html:87
+msgid "registration approval"
+msgstr "aprobarea înregistrării"
+
+#: blueprints/users/templates/users/edit_user.html:90
+msgid "User requested"
+msgstr "Utilizatorul a cerut"
+
+#: blueprints/users/templates/users/edit_user.html:90
+msgid "inventory check"
+msgstr "inventariere"
+
+#: blueprints/users/templates/users/edit_user.html:93
+msgid "User is responsible for"
+msgstr "Utilizatorul răspunde de"
+
+#: blueprints/users/templates/users/edit_user.html:113
+msgid "This will delete this user! You can't undo this action."
+msgstr "Utilizatorul va fi șters definitiv!"
+
+#: blueprints/users/templates/users/new_user.html:3
+msgid "New User"
+msgstr "Utilizator nou"
+
+#: blueprints/users/templates/users/new_user.html:13
+msgid "Create new user"
+msgstr "Creează un utilizator nou"
+
+#: templates/layout.html:31
+msgid "New"
+msgstr "Creează"
+
+#: templates/layout.html:33
+msgid "User"
+msgstr "Utilizator"
+
+#: templates/layout.html:36
+msgid "Product"
+msgstr "Produs"
+

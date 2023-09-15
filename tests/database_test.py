@@ -79,7 +79,7 @@ def test_no_name(client):
         try:
             db_session.add(User(None, "password"))
         except ValueError as err:
-            assert "User must have a name" in str(err)
+            assert "The user must have a name" in str(err)
             db_session.rollback()
 
 
@@ -99,7 +99,7 @@ def test_username_duplicate(client):
         try:
             db_session.add(User("user1", "passw"))
         except ValueError as err:
-            assert "User user1 allready exists" in str(err)
+            assert "The user user1 allready exists" in str(err)
             db_session.rollback()
 
 
@@ -467,7 +467,7 @@ def test_category_duplicate(client):
             db_session.add(Category(category.name))
         except ValueError as err:
             db_session.rollback()
-            assert f"Category {category.name} allready exists" in str(err)
+            assert f"The category {category.name} allready exists" in str(err)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -477,7 +477,7 @@ def test_category_no_name(client):
             db_session.add(Category(None))
         except ValueError as err:
             db_session.rollback()
-            assert f"Category must have a name" in str(err)
+            assert f"The category must have a name" in str(err)
 
 
 def test_bulk_category_insertion(client):
@@ -609,7 +609,7 @@ def test_supplier_duplicate(client):
             db_session.add(Supplier(supplier.name))
         except ValueError as err:
             db_session.rollback()
-            assert f"Supplier {supplier.name} allready exists" in str(err)
+            assert f"The supplier {supplier.name} allready exists" in str(err)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -619,7 +619,7 @@ def test_supplier_no_name(client):
             db_session.add(Supplier(None))
         except ValueError as err:
             db_session.rollback()
-            assert "Supplier must have a name" in str(err)
+            assert "The supplier must have a name" in str(err)
 
 
 def test_bulk_supplier_insertion(client):
@@ -778,7 +778,7 @@ def test_product_duplicate_name(client):
             )
         except ValueError as err:
             db_session.rollback()
-            assert f"Product {existing_product.name} allready exists" in str(err)
+            assert f"The product {existing_product.name} allready exists" in str(err)
 
 
 @pytest.mark.xfail(raises=ValueError)
@@ -797,7 +797,7 @@ def test_product_no_name(client):
             )
         except ValueError as err:
             db_session.rollback()
-            assert "Product must have a name" in str(err)
+            assert "The product must have a name" in str(err)
 
 
 @pytest.mark.xfail(raises=ValueError)

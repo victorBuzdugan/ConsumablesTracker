@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}Inventory{% endblock %}
+{% block title %}{{ gettext("Inventory") }}{% endblock %}
 
 {% block main %}
 
@@ -10,7 +10,7 @@
     <div class="card mx-auto" style="max-width: 70rem;">
 
         <div class="card-header h5 py-2">
-            Inventory check
+            {{ gettext("Inventory check") }}
             <br>
             <span class="text-secondary">{{ user.name }}</span>
         </div>
@@ -19,15 +19,15 @@
             <div class="table-responsive mx-auto">
                 <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped m-0">
                     {% if not user.done_inv %}
-                    <caption class="text-center">*Select to order a product if current stock is less then minimum stock.</caption>
-                    <caption class="text-center">*Critical products are highlighted in red.</caption>
+                    <caption class="text-center">{{ gettext("*Select to order a product if current stock is less then minimum stock.") }}</caption>
+                    <caption class="text-center">{{ gettext("*Critical products are highlighted in red.") }}</caption>
                     {% endif %}
                     <thead>
                         <tr>
-                            <th>Code</th>
-                            <th>Description</th>
-                            <th>Min. Stock</th>
-                            <th>Order</th>
+                            <th>{{ gettext("Code") }}</th>
+                            <th>{{ gettext("Description") }}</th>
+                            <th>{{ gettext("Min. Stock") }}</th>
+                            <th>{{ gettext("Order") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -48,7 +48,7 @@
             </div>
         </div>
         <div class="card-footer py-3">
-            <input class="btn btn-primary px-4" type="submit" {% if user.done_inv %}value="Inventory check not required" disabled{% else %}value="Submit inventory"{% endif %} >
+            <input class="btn btn-primary px-4" type="submit" {% if user.done_inv %}value="{{ gettext("Inventory check not required") }}" disabled{% else %}value="{{ gettext("Submit inventory") }}"{% endif %} >
         </div>
     </div>
 </form>

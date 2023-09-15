@@ -3,6 +3,7 @@
 from typing import Callable
 
 from flask import Blueprint, flash, redirect, render_template, url_for
+from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
@@ -32,26 +33,26 @@ def admin_logged_in():
 class CreateSupForm(FlaskForm):
     """Create supplier form."""
     name = StringField(
-        label="Name",
+        label=lazy_gettext("Name"),
         validators=[
-            InputRequired("Supplier name is required"),
+            InputRequired(gettext("Supplier name is required")),
             Length(
                 min=3,
-                message="Supplier name must have at least 3 characters")],
+                message=gettext("Supplier name must have at least 3 characters"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Username",
+            "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
     details = TextAreaField(
-        label="Details",
+        label=lazy_gettext("Details"),
         render_kw={
                 "class": "form-control",
-                "placeholder": "Details",
+                "placeholder": lazy_gettext("Details"),
                 "style": "height: 5rem",
                 })
     submit = SubmitField(
-        label="Create supplier",
+        label=lazy_gettext("Create supplier"),
         render_kw={"class": "btn btn-primary px-4"})
 
 
@@ -60,16 +61,16 @@ class EditSupForm(CreateSupForm):
     all_products = IntegerField()
     in_use_products = IntegerField()
     in_use = BooleanField(
-        label="In use",
+        label=lazy_gettext("In use"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     submit = SubmitField(
-        label="Update",
+        label=lazy_gettext("Update"),
         render_kw={"class": "btn btn-primary px-4"})
     delete = SubmitField(
-        label="Delete",
+        label=lazy_gettext("Delete"),
         render_kw={"class": "btn btn-danger"})
 
 
@@ -106,7 +107,8 @@ def new_supplier():
                 new_sup_form.populate_obj(supplier)
                 db_session.add(supplier)
                 db_session.commit()
-                flash(f"Supplier '{supplier.name}' created")
+                flash(gettext("Supplier '%(supplier_name)s' created",
+                              supplier_name=supplier.name))
                 return redirect(url_for("sup.suppliers"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -128,13 +130,14 @@ def edit_supplier(supplier):
                 .filter_by(name=escape(supplier)))
             if edit_sup_form.delete.data:
                 if sup.all_products:
-                    flash("Can't delete supplier! " +
-                          "There are still products attached!",
+                    flash(gettext("Can't delete supplier! " +
+                          "There are still products attached!"),
                           "error")
                 else:
                     db_session.delete(sup)
                     db_session.commit()
-                    flash(f"Supplier '{sup.name}' has been deleted")
+                    flash(gettext("Supplier '%(sup_name)s' has been deleted",
+                                  sup_name=sup.name))
                     return redirect(url_for("sup.suppliers"))
             else:
                 try:
@@ -147,7 +150,7 @@ def edit_supplier(supplier):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(sup, include_collections=False):
-                    flash("Supplier updated")
+                    flash(gettext("Supplier updated"))
                     db_session.commit()
                 return redirect(
                     url_for("sup.edit_supplier", supplier=sup.name))
@@ -160,7 +163,9 @@ def edit_supplier(supplier):
                 .filter_by(name=escape(supplier)))):
             edit_sup_form = EditSupForm(obj=sup)
         else:
-            flash(f"{supplier} does not exist!", "error")
+            # flash(f"{supplier} does not exist!", "error")
+            flash(gettext("%(supplier)s does not exist!",
+                          supplier=supplier), "error")
             return redirect(url_for("sup.suppliers"))
 
     return render_template("sup/edit_supplier.html", form=edit_sup_form)

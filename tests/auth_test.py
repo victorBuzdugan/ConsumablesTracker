@@ -50,7 +50,7 @@ def test_clear_session_if_user_logged_in(client: FlaskClient, user_logged_in):
     ("aaa", "#1aaaaaa", "#1aaaaaa", msg["psw_rules"]),
     ("aaa", "#Aaaaaaa", "#Aaaaaaa", msg["psw_rules"]),
     ("aaa", "1Aaaaaaa", "1Aaaaaaa", msg["psw_rules"]),
-    ("user5", "P@ssw0rd", "P@ssw0rd", f"User user5 allready exists"),
+    ("user5", "P@ssw0rd", "P@ssw0rd", f"The user user5 allready exists"),
 ))
 def test_failed_registration(
         client: FlaskClient,

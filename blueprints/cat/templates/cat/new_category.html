@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %}New category{% endblock %}
+{% block title %}{{ gettext("New category") }}{% endblock %}
 
 {% block main %}
 
@@ -10,7 +10,7 @@
     <div class="card mx-auto" style="max-width: 30rem;">
         
         <div class="card-header h5 py-2">
-            Create new category
+            {{ gettext("Create new category") }}
         </div>
 
         <div class="card-body">
@@ -25,7 +25,7 @@
                 {{ form.description.label }}
             </div>
 
-            <span class="text-body-tertiary">Underlined fields are required</span>
+            <span class="text-body-tertiary">{{ gettext("Underlined fields are required") }}</span>
         </div>
 
         <div class="card-footer">

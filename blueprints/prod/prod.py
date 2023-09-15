@@ -3,6 +3,7 @@
 from typing import Callable
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
@@ -32,110 +33,111 @@ def admin_logged_in():
 class CreateProdForm(FlaskForm):
     """Create product form."""
     name = StringField(
-        label="Code",
+        label=lazy_gettext("Code"),
         validators=[
-            InputRequired("Product name is required"),
+            InputRequired(gettext("Product name is required")),
             Length(
                 min=3,
                 max=15,
-                message="Product name must be between 3 and 15 characters")],
+                message=gettext("Product name must be between " +
+                                "3 and 15 characters"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Code",
+            "placeholder": lazy_gettext("Code"),
             "autocomplete": "off",
             })
     description = StringField(
-        label="Description",
+        label=lazy_gettext("Description"),
         validators=[
-            InputRequired("Product description is required"),
+            InputRequired(gettext("Product description is required")),
             Length(
                 min=3,
                 max=50,
-                message="Product description must be " +
-                        "between 3 and 50 characters")],
+                message=gettext("Product description must be " +
+                        "between 3 and 50 characters"))],
         render_kw={
                 "class": "form-control",
-                "placeholder": "Description",
+                "placeholder": lazy_gettext("Description"),
                 "style": "height: 5rem",
                 "autocomplete": "off",
                 })
     responsable_id = SelectField(
-        label="Responsable",
+        label=lazy_gettext("Responsable"),
         coerce=int,
         render_kw={
                 "class": "form-select",
                 })
     category_id = SelectField(
-        label="Category",
+        label=lazy_gettext("Category"),
         coerce=int,
         render_kw={
                 "class": "form-select",
                 })
     supplier_id = SelectField(
-        label="Supplier",
+        label=lazy_gettext("Supplier"),
         coerce=int,
         render_kw={
                 "class": "form-select",
                 })
     meas_unit = StringField(
-        label="Measuring unit",
-        validators=[InputRequired("Measuring unit is required")],
+        label=lazy_gettext("Measuring unit"),
+        validators=[InputRequired(gettext("Measuring unit is required"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Measuring unit",
+            "placeholder": lazy_gettext("Measuring unit"),
             })
     min_stock = IntegerField(
-        label="Minimum stock",
+        label=lazy_gettext("Minimum stock"),
         validators=[
-            InputRequired("Minimum stock is required"),
+            InputRequired(gettext("Minimum stock is required")),
             NumberRange(
                 min=0,
-                message="Minimum stock must be at least 0")],
+                message=gettext("Minimum stock must be at least 0"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Minimum stock",
+            "placeholder": lazy_gettext("Minimum stock"),
             })
     ord_qty = IntegerField(
-        label="Order quantity",
+        label=lazy_gettext("Order quantity"),
         validators=[
-            InputRequired("Order quantity is required"),
+            InputRequired(gettext("Order quantity is required")),
             NumberRange(
                 min=1,
-                message="Order quantity must be at least 1")],
+                message=gettext("Order quantity must be at least 1"))],
         render_kw={
             "class": "form-control",
-            "placeholder": "Order quantity",
+            "placeholder": lazy_gettext("Order quantity"),
             })
     critical = BooleanField(
-        label="Critical product",
+        label=lazy_gettext("Critical product"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     submit = SubmitField(
-        label="Create product",
+        label=lazy_gettext("Create product"),
         render_kw={"class": "btn btn-primary px-4"})
 
 
 class EditProdForm(CreateProdForm):
     """Edit product form."""
     to_order = BooleanField(
-        label="To order",
+        label=lazy_gettext("To order"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     in_use = BooleanField(
-        label="In use",
+        label=lazy_gettext("In use"),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     submit = SubmitField(
-        label="Update",
+        label=lazy_gettext("Update"),
         render_kw={"class": "btn btn-primary px-4"})
     delete = SubmitField(
-        label="Delete",
+        label=lazy_gettext("Delete"),
         render_kw={"class": "btn btn-danger"})
 
 
@@ -195,7 +197,8 @@ def products(ordered_by):
                 .order_by(func.lower(Supplier.name), func.lower(Product.name))
             ).unique().all()
         else:
-            flash(f"Cannot sort products by {ordered_by}", "warning")
+            flash(gettext("Cannot sort products by %(ordered_by)s",
+                          ordered_by=ordered_by), "warning")
             return redirect(url_for("prod.products", ordered_by="code"))
         stats = {
                 "all_products": db_session.scalar(
@@ -259,7 +262,8 @@ def new_product():
                 new_prod_form.populate_obj(new_prod)
                 db_session.add(new_prod)
                 db_session.commit()
-                flash(f"Product '{new_prod.name}' created")
+                flash(gettext("Product '%(new_prod_name)s' created",
+                              new_prod_name=new_prod.name))
                 return redirect(url_for("prod.products", ordered_by="code"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -305,7 +309,8 @@ def edit_product(product):
             if edit_prod_form.delete.data:
                 db_session.delete(prod)
                 db_session.commit()
-                flash(f"Product '{prod.name}' has been deleted")
+                flash(gettext("Product '%(prod_name)s' has been deleted",
+                              prod_name=prod.name))
                 return redirect(url_for("prod.products", ordered_by="code"))
             else:
                 try:
@@ -332,7 +337,7 @@ def edit_product(product):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(prod, include_collections=False):
-                    flash("Product updated")
+                    flash(gettext("Product updated"))
                     db_session.commit()
                 return redirect(
                     url_for("prod.edit_product", product=prod.name))
@@ -352,7 +357,8 @@ def edit_product(product):
             edit_prod_form.supplier_id.choices = [
                 (supplier.id, supplier.name) for supplier in suppliers]
         else:
-            flash(f"{product} does not exist!", "error")
+            flash(gettext("%(product)s does not exist!",
+                          product=product), "error")
             return redirect(url_for("prod.products", ordered_by="code"))
 
     return render_template("prod/edit_product.html", form=edit_prod_form)
@@ -383,7 +389,7 @@ def products_to_order():
                 else:
                     product.to_order = True
             db_session.commit()
-        flash("Products updated")
+        flash(gettext("Products updated"))
     elif prod_to_order_form.errors:
         flash_errors(prod_to_order_form.errors)
 
@@ -406,7 +412,8 @@ def products_to_order():
             products=prods,
             form=prod_to_order_form)
     else:
-        flash("There are no products that need to be ordered", "warning")
+        flash(gettext("There are no products that need to be ordered"),
+              "warning")
         return redirect(url_for("main.index"))
 
 
@@ -420,5 +427,5 @@ def all_products_ordered():
         for product in prods:
             product.to_order = False
         db_session.commit()
-    flash("All products ordered")
+    flash(gettext("All products ordered"))
     return redirect(url_for("main.index"))
