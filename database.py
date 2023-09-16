@@ -33,33 +33,6 @@ class Base(MappedAsDataclass, DeclarativeBase):
 
     # id and name for all tables
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
-    name: Mapped[str] = mapped_column(unique=True)
-
-    @validates("name")
-    def validate_name(self, key: str, value: str) -> Optional[str]:
-        """Check for duplicate or empty name."""
-        # pylint: disable=unused-argument
-        element = type(self)
-        el_name = element.__name__
-        match el_name:
-            case "User":
-                el_name = gettext("The user")
-            case "Category":
-                el_name = gettext("The category")
-            case "Supplier":
-                el_name = gettext("The supplier")
-            case "Product":
-                el_name = gettext("The product")
-        if not value:
-            raise ValueError(gettext("%(el_name)s must have a name",
-                                     el_name=el_name))
-        if value != self.name:
-            with dbSession() as db_session:
-                if db_session.scalar(select(element).filter_by(name=value)):
-                    raise ValueError(
-                        gettext("%(el_name)s %(value)s allready exists",
-                                el_name=el_name, value=value))
-        return value
 
 
 class User(Base):
@@ -218,6 +191,7 @@ class User(Base):
     |   True  |  False  |     |
     |   True  |   True  | NOK |
     """
+    name: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(repr=False)
     products: Mapped[List["Product"]] = relationship(
         default_factory=list, back_populates="responsable", repr=False)
@@ -250,6 +224,21 @@ class User(Base):
     def check_inv(self) -> bool:
         """Check inventory flag. Reverese of `done_inv`"""
         return not self.done_inv
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for duplicate or empty name."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError(gettext("%(el_name)s must have a name",
+                                     el_name=gettext("The user")))
+        if value != self.name:
+            with dbSession() as db_session:
+                if db_session.scalar(select(User).filter_by(name=value)):
+                    raise ValueError(
+                        gettext("%(el_name)s %(value)s allready exists",
+                                el_name=gettext("The user"), value=value))
+        return value
 
     @validates("password")
     def validate_password(self, key: str, value: str) -> Optional[str]:
@@ -416,6 +405,7 @@ class Category(Base):
     :param in_use: category can still be used; not obsolete
     :param description: category description, extra info
     """
+    name: Mapped[str] = mapped_column(unique=True)
     products: Mapped[List["Product"]] = relationship(
         default_factory=list, back_populates="category", repr=False)
     in_use: Mapped[bool] = mapped_column(default=True)
@@ -437,6 +427,21 @@ class Category(Base):
             return db_session.scalar(
                 select(func.count(Product.id))
                 .filter_by(category_id=self.id))
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for duplicate or empty name."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError(gettext("%(el_name)s must have a name",
+                                     el_name=gettext("The category")))
+        if value != self.name:
+            with dbSession() as db_session:
+                if db_session.scalar(select(Category).filter_by(name=value)):
+                    raise ValueError(
+                        gettext("%(el_name)s %(value)s allready exists",
+                                el_name=gettext("The category"), value=value))
+        return value
 
     @validates("products")
     def validate_products(self,
@@ -470,6 +475,7 @@ class Supplier(Base):
     :param in_use: supplier can still be used; not obsolete
     :param details: supplier details, extra info
     """
+    name: Mapped[str] = mapped_column(unique=True)
     products: Mapped[List["Product"]] = relationship(
         default_factory=list, back_populates="supplier", repr=False)
     in_use: Mapped[bool] = mapped_column(default=True)
@@ -491,6 +497,21 @@ class Supplier(Base):
             return db_session.scalar(
                 select(func.count(Product.id))
                 .filter_by(supplier_id=self.id))
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for duplicate or empty name."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError(gettext("%(el_name)s must have a name",
+                                     el_name=gettext("The supplier")))
+        if value != self.name:
+            with dbSession() as db_session:
+                if db_session.scalar(select(Supplier).filter_by(name=value)):
+                    raise ValueError(
+                        gettext("%(el_name)s %(value)s allready exists",
+                                el_name=gettext("The supplier"), value=value))
+        return value
 
     @validates("products")
     def validate_products(self,
@@ -537,6 +558,7 @@ class Product(Base):
     :param critical: product is a critical product
     :param in_use: product is not obsolete
     """
+    name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str]
     responsable_id = mapped_column(ForeignKey("users.id"), nullable=False)
     responsable: Mapped[User] = relationship(back_populates="products",
@@ -555,6 +577,21 @@ class Product(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
 
     code = synonym("name")
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for duplicate or empty name."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError(gettext("%(el_name)s must have a name",
+                                     el_name=gettext("The product")))
+        if value != self.name:
+            with dbSession() as db_session:
+                if db_session.scalar(select(Product).filter_by(name=value)):
+                    raise ValueError(
+                        gettext("%(el_name)s %(value)s allready exists",
+                                el_name=gettext("The product"), value=value))
+        return value
 
     @validates("description")
     def validate_description(self, key: str, value: str) -> Optional[str]:
