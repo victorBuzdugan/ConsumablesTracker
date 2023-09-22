@@ -214,6 +214,10 @@ You can edit all the fields as described in [create new category or supplier](ht
 ### Edit products
 Along with with all the fields presented in [create new product](https://github.com/victorBuzdugan/ConsumablesTracker#new-product) you can manually flip the `to order` switch.
 
+# Flowcharts
+### User login/registration
+![User login/registration flowchart](flowcharts/Login_registration.png)
+
 ### To do
 - [ ] Test romanian translation
 - [ ] Email alert if action is pending
