@@ -5,9 +5,9 @@ from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
-from wtforms import (BooleanField, IntegerField, PasswordField, StringField,
-                     SubmitField, TextAreaField)
-from wtforms.validators import InputRequired, Length, Optional, Regexp
+from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
+                     StringField, SubmitField, TextAreaField)
+from wtforms.validators import Email, InputRequired, Length, Optional, Regexp
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
@@ -56,6 +56,17 @@ class CreateUserForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
+            })
+    email = EmailField(
+        label="Email",
+        validators=[
+            Optional(),
+            Email(gettext("Invalid email adress"))],
+        default="",
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Email",
+            "autocomplete": "off",
             })
     details = TextAreaField(
         label=lazy_gettext("Details"),
@@ -232,6 +243,7 @@ def edit_user(username):
                     flash(str(error), "error")
                 if edit_user_form.password.data:
                     user.password = edit_user_form.password.data
+                user.email = edit_user_form.email.data
                 user.details = edit_user_form.details.data
                 try:
                     user.admin = edit_user_form.admin.data

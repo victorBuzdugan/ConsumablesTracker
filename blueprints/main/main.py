@@ -61,6 +61,10 @@ def index():
             }
 
             return render_template(
-                "main/index.html", user=user, users=users, stats=stats)
+                "main/index.html",
+                user=user,
+                users=users,
+                stats=stats)
 
-    return render_template("main/index.html", user=user)
+    return render_template("main/index.html",
+                           user=user)

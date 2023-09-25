@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-15 13:02+0300\n"
+"POT-Creation-Date: 2023-09-25 17:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,273 +17,277 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: app.py:51
+#: app.py:56
 msgid "Language changed"
 msgstr ""
 
-#: database.py:46
-msgid "The user"
-msgstr ""
-
-#: database.py:48
-msgid "The category"
-msgstr ""
-
-#: database.py:50
-msgid "The supplier"
-msgstr ""
-
-#: database.py:52
-msgid "The product"
-msgstr ""
-
-#: database.py:54
+#: database.py:235 database.py:438 database.py:508 database.py:588
 #, python-format
 msgid "%(el_name)s must have a name"
 msgstr ""
 
-#: database.py:60
+#: database.py:236 database.py:242
+msgid "The user"
+msgstr ""
+
+#: database.py:241 database.py:444 database.py:514 database.py:594
 #, python-format
 msgid "%(el_name)s %(value)s allready exists"
 msgstr ""
 
-#: database.py:260
+#: database.py:251
 msgid "User must have a password"
 msgstr ""
 
-#: database.py:275 database.py:580 database.py:606
+#: database.py:266 database.py:619 database.py:645
 msgid "'Retired' users can't have products attached"
 msgstr ""
 
-#: database.py:278 database.py:583 database.py:609
+#: database.py:269 database.py:622 database.py:648
 msgid "User with pending registration can't have products attached"
 msgstr ""
 
-#: database.py:292
+#: database.py:283
 msgid "User with pending registration can't be admin"
 msgstr ""
 
-#: database.py:300
+#: database.py:291
 msgid "You are the last admin!"
 msgstr ""
 
-#: database.py:316
+#: database.py:307
 msgid "Can't 'retire' a user if he is still responsible for products"
 msgstr ""
 
-#: database.py:335
+#: database.py:326
 msgid "'Retired' user can't check inventory"
 msgstr ""
 
-#: database.py:338
+#: database.py:329
 msgid "User with pending registration can't check inventory"
 msgstr ""
 
-#: database.py:342
+#: database.py:333
 msgid "User without products attached can't check inventory"
 msgstr ""
 
-#: database.py:361
+#: database.py:352
 msgid "Admin users can't request registration"
 msgstr ""
 
-#: database.py:364
+#: database.py:355
 msgid "'Retired' users can't request registration"
 msgstr ""
 
-#: database.py:367
+#: database.py:358
 msgid "User that checks inventory can't request registration"
 msgstr ""
 
-#: database.py:371
+#: database.py:362
 msgid "User that requested inventory can't request registration"
 msgstr ""
 
-#: database.py:375
+#: database.py:366
 msgid "Users with products attached can't request registration"
 msgstr ""
 
-#: database.py:393
+#: database.py:384
 msgid "Admins don't need to request inventorying"
 msgstr ""
 
-#: database.py:396
+#: database.py:387
 msgid "'Retired' users can't request inventorying"
 msgstr ""
 
-#: database.py:399
+#: database.py:390
 msgid "User with pending registration can't request inventorying"
 msgstr ""
 
-#: database.py:402
+#: database.py:393
 msgid "User can allready check inventory"
 msgstr ""
 
-#: database.py:405
+#: database.py:396
 msgid "Users without products can't request inventorying"
 msgstr ""
 
-#: database.py:450 database.py:460 database.py:637 database.py:653
+#: database.py:439 database.py:445
+msgid "The category"
+msgstr ""
+
+#: database.py:457 database.py:467 database.py:676 database.py:692
 msgid "Not in use category can't have products attached"
 msgstr ""
 
-#: database.py:504 database.py:514 database.py:672 database.py:688
+#: database.py:509 database.py:515
+msgid "The supplier"
+msgstr ""
+
+#: database.py:527 database.py:537 database.py:711 database.py:727
 msgid "Not in use supplier can't have products attached"
 msgstr ""
 
-#: database.py:564
+#: database.py:589 database.py:595
+msgid "The product"
+msgstr ""
+
+#: database.py:603
 msgid "Product must have a description"
 msgstr ""
 
-#: database.py:573
+#: database.py:612
 msgid "User can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:577 database.py:603
+#: database.py:616 database.py:642
 msgid "User does not exist"
 msgstr ""
 
-#: database.py:630
+#: database.py:669
 msgid "Category can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:634 database.py:650
+#: database.py:673 database.py:689
 msgid "Category does not exist"
 msgstr ""
 
-#: database.py:665
+#: database.py:704
 msgid "Supplier can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:669 database.py:685
+#: database.py:708 database.py:724
 msgid "Supplier does not exist"
 msgstr ""
 
-#: database.py:696
+#: database.py:735
 msgid "Product must have a measuring unit"
 msgstr ""
 
-#: database.py:705 database.py:707
+#: database.py:744 database.py:746
 msgid "Minimum stock must be ≥ 0"
 msgstr ""
 
-#: database.py:716 database.py:718
+#: database.py:755 database.py:757
 msgid "Order quantity must be ≥ 1"
 msgstr ""
 
-#: database.py:726
+#: database.py:765
 msgid "Can't order not in use products"
 msgstr ""
 
-#: database.py:735
+#: database.py:774
 msgid "Can't 'retire' a product that needs to be ordered"
 msgstr ""
 
-#: helpers.py:11
+#: helpers.py:15
 msgid "You have to be logged in..."
 msgstr ""
 
-#: helpers.py:21
+#: helpers.py:25
 msgid "You have to be an admin..."
 msgstr ""
 
-#: blueprints/auth/auth.py:20
+#: blueprints/auth/auth.py:21
 msgid "Username is required!"
 msgstr ""
 
-#: blueprints/auth/auth.py:21
+#: blueprints/auth/auth.py:22
 #, python-format
 msgid "Username must be between %(m)i and %(M)i characters!"
 msgstr ""
 
-#: blueprints/auth/auth.py:23
+#: blueprints/auth/auth.py:24
 msgid "Password is required!"
 msgstr ""
 
-#: blueprints/auth/auth.py:24
+#: blueprints/auth/auth.py:25
 #, python-format
 msgid "Password should have at least %(pmin)i characters!"
 msgstr ""
 
-#: blueprints/auth/auth.py:26
+#: blueprints/auth/auth.py:27
 msgid "Check password rules!"
 msgstr ""
 
-#: blueprints/auth/auth.py:27
+#: blueprints/auth/auth.py:28
 msgid "Passwords don't match!"
 msgstr ""
 
-#: blueprints/auth/auth.py:40 blueprints/auth/auth.py:44
-#: blueprints/auth/auth.py:64 blueprints/auth/auth.py:73
+#: blueprints/auth/auth.py:41 blueprints/auth/auth.py:45
+#: blueprints/auth/auth.py:65 blueprints/auth/auth.py:74
 #: blueprints/cat/cat.py:45 blueprints/sup/sup.py:44
 #: blueprints/users/users.py:33 blueprints/users/users.py:42
 msgid "Username"
 msgstr ""
 
-#: blueprints/auth/auth.py:48 blueprints/auth/auth.py:52
-#: blueprints/auth/auth.py:77 blueprints/auth/auth.py:88
+#: blueprints/auth/auth.py:49 blueprints/auth/auth.py:53
+#: blueprints/auth/auth.py:78 blueprints/auth/auth.py:89
 #: blueprints/users/users.py:46 blueprints/users/users.py:58
-#: blueprints/users/users.py:81 blueprints/users/users.py:93
+#: blueprints/users/users.py:92 blueprints/users/users.py:104
 msgid "Password"
 msgstr ""
 
-#: blueprints/auth/auth.py:91 blueprints/auth/auth.py:100
-#: blueprints/auth/auth.py:137 blueprints/auth/auth.py:146
+#: blueprints/auth/auth.py:92 blueprints/auth/auth.py:101
+#: blueprints/auth/auth.py:149 blueprints/auth/auth.py:158
 msgid "Retype password"
 msgstr ""
 
-#: blueprints/auth/auth.py:103
+#: blueprints/auth/auth.py:108 blueprints/users/users.py:64
+msgid "Invalid email adress"
+msgstr ""
+
+#: blueprints/auth/auth.py:115
 msgid "Request registration"
 msgstr ""
 
-#: blueprints/auth/auth.py:112 blueprints/auth/auth.py:120
+#: blueprints/auth/auth.py:124 blueprints/auth/auth.py:132
 msgid "Old password"
 msgstr ""
 
-#: blueprints/auth/auth.py:123 blueprints/auth/auth.py:134
+#: blueprints/auth/auth.py:135 blueprints/auth/auth.py:146
 msgid "New password"
 msgstr ""
 
-#: blueprints/auth/auth.py:149
+#: blueprints/auth/auth.py:161
 #: blueprints/auth/templates/auth/change_password.html:16
 #: templates/layout.html:43
 msgid "Change password"
 msgstr ""
 
-#: blueprints/auth/auth.py:174
+#: blueprints/auth/auth.py:187
 #, python-format
 msgid "Welcome %(username)s"
 msgstr ""
 
-#: blueprints/auth/auth.py:177
+#: blueprints/auth/auth.py:190
 msgid "Your registration is pending. Contact an admin."
 msgstr ""
 
-#: blueprints/auth/auth.py:180
+#: blueprints/auth/auth.py:193
 msgid "This user is not in use anymore!"
 msgstr ""
 
-#: blueprints/auth/auth.py:182
+#: blueprints/auth/auth.py:197
 msgid "Wrong username or password!"
 msgstr ""
 
-#: blueprints/auth/auth.py:197
+#: blueprints/auth/auth.py:213
 msgid "Succesfully logged out..."
 msgstr ""
 
-#: blueprints/auth/auth.py:208
+#: blueprints/auth/auth.py:224
 msgid "You have been logged out..."
 msgstr ""
 
-#: blueprints/auth/auth.py:219
+#: blueprints/auth/auth.py:236
 msgid "Registration request sent. Please contact an admin."
 msgstr ""
 
-#: blueprints/auth/auth.py:246
+#: blueprints/auth/auth.py:266
 msgid "Password changed."
 msgstr ""
 
-#: blueprints/auth/auth.py:249
+#: blueprints/auth/auth.py:270
 msgid "Wrong old password!"
 msgstr ""
 
@@ -322,7 +326,6 @@ msgstr ""
 
 #: blueprints/auth/templates/auth/change_password.html:66
 #: blueprints/auth/templates/auth/login.html:44
-#: blueprints/auth/templates/auth/register.html:63
 msgid "All fields are required"
 msgstr ""
 
@@ -351,6 +354,10 @@ msgstr ""
 msgid "Must have at least 3 chars"
 msgstr ""
 
+#: blueprints/auth/templates/auth/register.html:67
+msgid "All fields except email are required"
+msgstr ""
+
 #: blueprints/cat/cat.py:36 blueprints/cat/templates/cat/categories.html:17
 #: blueprints/main/templates/main/index.html:46 blueprints/sup/sup.py:36
 #: blueprints/sup/templates/sup/suppliers.html:17
@@ -373,8 +380,8 @@ msgid "Description"
 msgstr ""
 
 #: blueprints/cat/cat.py:52 blueprints/sup/sup.py:48 blueprints/sup/sup.py:51
-#: blueprints/sup/templates/sup/suppliers.html:20 blueprints/users/users.py:61
-#: blueprints/users/users.py:64
+#: blueprints/sup/templates/sup/suppliers.html:20 blueprints/users/users.py:72
+#: blueprints/users/users.py:75
 msgid "Details"
 msgstr ""
 
@@ -383,13 +390,13 @@ msgid "Create category"
 msgstr ""
 
 #: blueprints/cat/cat.py:65 blueprints/prod/prod.py:131
-#: blueprints/sup/sup.py:64 blueprints/users/users.py:98
+#: blueprints/sup/sup.py:64 blueprints/users/users.py:109
 msgid "In use"
 msgstr ""
 
 #: blueprints/cat/cat.py:71 blueprints/prod/prod.py:137
 #: blueprints/prod/templates/prod/products_to_oder.html:66
-#: blueprints/sup/sup.py:70 blueprints/users/users.py:112
+#: blueprints/sup/sup.py:70 blueprints/users/users.py:123
 msgid "Update"
 msgstr ""
 
@@ -397,30 +404,30 @@ msgstr ""
 #: blueprints/prod/prod.py:140
 #: blueprints/prod/templates/prod/edit_product.html:119
 #: blueprints/sup/sup.py:73 blueprints/sup/templates/sup/edit_supplier.html:61
-#: blueprints/users/templates/users/edit_user.html:103
-#: blueprints/users/users.py:115
+#: blueprints/users/templates/users/edit_user.html:108
+#: blueprints/users/users.py:126
 msgid "Delete"
 msgstr ""
 
-#: blueprints/cat/cat.py:111
+#: blueprints/cat/cat.py:114
 #, python-format
 msgid "Category '%(cat_name)s' created"
 msgstr ""
 
-#: blueprints/cat/cat.py:134
+#: blueprints/cat/cat.py:140
 msgid "Can't delete category! There are still products attached!"
 msgstr ""
 
-#: blueprints/cat/cat.py:140
+#: blueprints/cat/cat.py:147
 #, python-format
 msgid "Category '%(cat_name)s' has been deleted"
 msgstr ""
 
-#: blueprints/cat/cat.py:154
+#: blueprints/cat/cat.py:162
 msgid "Category updated"
 msgstr ""
 
-#: blueprints/cat/cat.py:167
+#: blueprints/cat/cat.py:176
 #, python-format
 msgid "%(category)s does not exist!"
 msgstr ""
@@ -473,7 +480,7 @@ msgstr[1] ""
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:93
+#: blueprints/users/templates/users/edit_user.html:98
 msgid "and"
 msgid_plural "of which"
 msgstr[0] ""
@@ -485,7 +492,7 @@ msgstr[1] ""
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:93
+#: blueprints/users/templates/users/edit_user.html:98
 msgid "is in use"
 msgid_plural "are in use"
 msgstr[0] ""
@@ -505,8 +512,8 @@ msgstr ""
 #: blueprints/prod/templates/prod/new_product.html:92
 #: blueprints/sup/templates/sup/edit_supplier.html:46
 #: blueprints/sup/templates/sup/new_supplier.html:28
-#: blueprints/users/templates/users/edit_user.html:82
-#: blueprints/users/templates/users/new_user.html:49
+#: blueprints/users/templates/users/edit_user.html:87
+#: blueprints/users/templates/users/new_user.html:54
 msgid "Underlined fields are required"
 msgstr ""
 
@@ -521,7 +528,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products_to_oder.html:59
 #: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/users/templates/users/edit_user.html:93
+#: blueprints/users/templates/users/edit_user.html:98
 msgid "product"
 msgid_plural "products"
 msgstr[0] ""
@@ -530,7 +537,7 @@ msgstr[1] ""
 #: blueprints/cat/templates/cat/edit_category.html:67
 #: blueprints/prod/templates/prod/edit_product.html:125
 #: blueprints/sup/templates/sup/edit_supplier.html:67
-#: blueprints/users/templates/users/edit_user.html:109
+#: blueprints/users/templates/users/edit_user.html:114
 msgctxt "question"
 msgid "Delete"
 msgstr ""
@@ -543,7 +550,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:74
-#: blueprints/users/templates/users/edit_user.html:116
+#: blueprints/users/templates/users/edit_user.html:121
 msgid "Close"
 msgstr ""
 
@@ -555,36 +562,36 @@ msgstr ""
 msgid "Create new category"
 msgstr ""
 
-#: blueprints/inv/inv.py:43 blueprints/inv/inv.py:95
+#: blueprints/inv/inv.py:45 blueprints/inv/inv.py:102
 msgid "Inventory has been submitted"
 msgstr ""
 
-#: blueprints/inv/inv.py:48 blueprints/inv/inv.py:100
+#: blueprints/inv/inv.py:52 blueprints/inv/inv.py:110
 #: blueprints/inv/templates/inv/inventory.html:51
 #: blueprints/main/templates/main/index.html:22
 msgid "Inventory check not required"
 msgstr ""
 
-#: blueprints/inv/inv.py:72
+#: blueprints/inv/inv.py:77
 #, python-format
 msgid "User %(username)s does not exist!"
 msgstr ""
 
-#: blueprints/inv/inv.py:75
+#: blueprints/inv/inv.py:80
 #, python-format
 msgid "User %(username)s is not in use anymore!"
 msgstr ""
 
-#: blueprints/inv/inv.py:78
+#: blueprints/inv/inv.py:83
 #, python-format
 msgid "User %(username)s awaits registration aproval!"
 msgstr ""
 
-#: blueprints/inv/inv.py:119
+#: blueprints/inv/inv.py:129
 msgid "You are an admin! You don't need to request inventory checks"
 msgstr ""
 
-#: blueprints/inv/inv.py:126
+#: blueprints/inv/inv.py:137
 msgid "Inventory check request sent"
 msgstr ""
 
@@ -592,7 +599,7 @@ msgstr ""
 msgid "Inventory"
 msgstr ""
 
-#: blueprints/inv/templates/inv/inventory.html:13 blueprints/users/users.py:104
+#: blueprints/inv/templates/inv/inventory.html:13 blueprints/users/users.py:115
 msgid "Inventory check"
 msgstr ""
 
@@ -701,7 +708,7 @@ msgid_plural "that need to be ordered"
 msgstr[0] ""
 msgstr[1] ""
 
-#: blueprints/main/templates/main/index.html:82 blueprints/prod/prod.py:415
+#: blueprints/main/templates/main/index.html:82 blueprints/prod/prod.py:429
 msgid "There are no products that need to be ordered"
 msgstr ""
 
@@ -819,35 +826,35 @@ msgstr ""
 msgid "To order"
 msgstr ""
 
-#: blueprints/prod/prod.py:200
+#: blueprints/prod/prod.py:202
 #, python-format
 msgid "Cannot sort products by %(ordered_by)s"
 msgstr ""
 
-#: blueprints/prod/prod.py:265
+#: blueprints/prod/prod.py:269
 #, python-format
 msgid "Product '%(new_prod_name)s' created"
 msgstr ""
 
-#: blueprints/prod/prod.py:312
+#: blueprints/prod/prod.py:320
 #, python-format
 msgid "Product '%(prod_name)s' has been deleted"
 msgstr ""
 
-#: blueprints/prod/prod.py:340
+#: blueprints/prod/prod.py:349
 msgid "Product updated"
 msgstr ""
 
-#: blueprints/prod/prod.py:360
+#: blueprints/prod/prod.py:370
 #, python-format
 msgid "%(product)s does not exist!"
 msgstr ""
 
-#: blueprints/prod/prod.py:392
+#: blueprints/prod/prod.py:404
 msgid "Products updated"
 msgstr ""
 
-#: blueprints/prod/prod.py:430
+#: blueprints/prod/prod.py:445
 #: blueprints/prod/templates/prod/products_to_oder.html:83
 msgid "All products ordered"
 msgstr ""
@@ -928,25 +935,25 @@ msgstr ""
 msgid "Create supplier"
 msgstr ""
 
-#: blueprints/sup/sup.py:110
+#: blueprints/sup/sup.py:113
 #, python-format
 msgid "Supplier '%(supplier_name)s' created"
 msgstr ""
 
-#: blueprints/sup/sup.py:133
+#: blueprints/sup/sup.py:139
 msgid "Can't delete supplier! There are still products attached!"
 msgstr ""
 
-#: blueprints/sup/sup.py:139
+#: blueprints/sup/sup.py:146
 #, python-format
 msgid "Supplier '%(sup_name)s' has been deleted"
 msgstr ""
 
-#: blueprints/sup/sup.py:153
+#: blueprints/sup/sup.py:161
 msgid "Supplier updated"
 msgstr ""
 
-#: blueprints/sup/sup.py:167
+#: blueprints/sup/sup.py:177
 #, python-format
 msgid "%(supplier)s does not exist!"
 msgstr ""
@@ -984,47 +991,47 @@ msgstr ""
 msgid "*Strikethrough suppliers are no longer in use."
 msgstr ""
 
-#: blueprints/users/users.py:53 blueprints/users/users.py:88
+#: blueprints/users/users.py:53 blueprints/users/users.py:99
 #, python-format
 msgid ""
 "Password must have 1 big letter, 1 number, 1 special char "
 "(%(passw_symb)s)!"
 msgstr ""
 
-#: blueprints/users/users.py:68
+#: blueprints/users/users.py:79
 msgid "Admin"
 msgstr ""
 
-#: blueprints/users/users.py:74
+#: blueprints/users/users.py:85
 msgid "Create user"
 msgstr ""
 
-#: blueprints/users/users.py:127
+#: blueprints/users/users.py:139
 #, python-format
 msgid "%(username)s has been approved"
 msgstr ""
 
-#: blueprints/users/users.py:130 blueprints/users/users.py:148
-#: blueprints/users/users.py:254
+#: blueprints/users/users.py:143 blueprints/users/users.py:164
+#: blueprints/users/users.py:280
 #, python-format
 msgid "%(username)s does not exist!"
 msgstr ""
 
-#: blueprints/users/users.py:182
+#: blueprints/users/users.py:201
 #, python-format
 msgid "User '%(username)s' created"
 msgstr ""
 
-#: blueprints/users/users.py:205
+#: blueprints/users/users.py:227
 msgid "Can't delete user! He is still responsible for some products!"
 msgstr ""
 
-#: blueprints/users/users.py:211
+#: blueprints/users/users.py:234
 #, python-format
 msgid "User '%(username)s' has been deleted"
 msgstr ""
 
-#: blueprints/users/users.py:237
+#: blueprints/users/users.py:262
 msgid "User updated"
 msgstr ""
 
@@ -1036,27 +1043,27 @@ msgstr ""
 msgid "Edit user"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:87
+#: blueprints/users/templates/users/edit_user.html:92
 msgid "User awaits"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:87
+#: blueprints/users/templates/users/edit_user.html:92
 msgid "registration approval"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:90
+#: blueprints/users/templates/users/edit_user.html:95
 msgid "User requested"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:90
+#: blueprints/users/templates/users/edit_user.html:95
 msgid "inventory check"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:93
+#: blueprints/users/templates/users/edit_user.html:98
 msgid "User is responsible for"
 msgstr ""
 
-#: blueprints/users/templates/users/edit_user.html:113
+#: blueprints/users/templates/users/edit_user.html:118
 msgid "This will delete this user! You can't undo this action."
 msgstr ""
 

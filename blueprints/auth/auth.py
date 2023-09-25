@@ -5,8 +5,9 @@ from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
-from wtforms import PasswordField, StringField, SubmitField
-from wtforms.validators import EqualTo, InputRequired, Length, Regexp
+from wtforms import EmailField, PasswordField, StringField, SubmitField
+from wtforms.validators import (Email, EqualTo, InputRequired, Length,
+                                Optional, Regexp)
 
 from database import User, dbSession
 from helpers import flash_errors, logger, login_required
@@ -98,6 +99,17 @@ class RegisterForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Retype password"),
+            })
+    email = EmailField(
+        label="Email",
+        default=None,
+        validators=[
+            Optional(),
+            Email(gettext("Invalid email adress"))],
+        render_kw={
+            "class": "form-control",
+            "placeholder": "Email",
+            "autocomplete": "off",
             })
     submit = SubmitField(
         label=lazy_gettext("Request registration"),

@@ -54,6 +54,7 @@ class User(Base):
     :param reg_req: user has requested registration
     :param req_inv: user has requested inventorying
     :param details: user details, extra info
+    :param email: user email adress
 
     Interlocks
     ----------
@@ -201,6 +202,7 @@ class User(Base):
     reg_req: Mapped[bool] = mapped_column(default=True)
     req_inv: Mapped[bool] = mapped_column(default=False)
     details: Mapped[Optional[str]] = mapped_column(default="", repr=False)
+    email: Mapped[Optional[str]] = mapped_column(default="", repr=False)
 
     username = synonym("name")
 

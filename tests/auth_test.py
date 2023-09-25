@@ -37,24 +37,30 @@ def test_clear_session_if_user_logged_in(client: FlaskClient, user_logged_in):
         assert not session.get("user_id")
 
 
-@pytest.mark.parametrize(("name", "password", "confirm", "flash_message"), (
-    ("", "a", "a", msg["usr_req"]),
-    ("aa", "a", "a", msg["usr_len"]),
-    ("aaaaaaaaaaaaaaaa", "a", "a", msg["usr_len"]),
-    ("aaa", "", "a", msg["psw_req"]),
-    ("aaa", "aaaaaaa", "a", msg["psw_len"]),
-    ("aaa", "aaaaaaaa", "", msg["psw_req"]),
-    ("aaa", "aaaaaaaa", "aaaaaaa", msg["psw_len"]),
-    ("aaa", "aaaaaaaa", "aaaaaaab", msg["psw_eq"]),
-    ("aaa", "aaaaaaaa", "aaaaaaaa", msg["psw_rules"]),
-    ("aaa", "#1aaaaaa", "#1aaaaaa", msg["psw_rules"]),
-    ("aaa", "#Aaaaaaa", "#Aaaaaaa", msg["psw_rules"]),
-    ("aaa", "1Aaaaaaa", "1Aaaaaaa", msg["psw_rules"]),
-    ("user5", "P@ssw0rd", "P@ssw0rd", f"The user user5 allready exists"),
+@pytest.mark.parametrize(("name", "password", "confirm", "email", "flash_message"), (
+    ("", "a", "a", "", msg["usr_req"]),
+    ("aa", "a", "a", "", msg["usr_len"]),
+    ("aaaaaaaaaaaaaaaa", "a", "a", "", msg["usr_len"]),
+    ("aaa", "", "a", "", msg["psw_req"]),
+    ("aaa", "aaaaaaa", "a", "", msg["psw_len"]),
+    ("aaa", "aaaaaaaa", "", "", msg["psw_req"]),
+    ("aaa", "aaaaaaaa", "aaaaaaa", "", msg["psw_len"]),
+    ("aaa", "aaaaaaaa", "aaaaaaab", "", msg["psw_eq"]),
+    ("aaa", "aaaaaaaa", "aaaaaaaa", "", msg["psw_rules"]),
+    ("aaa", "#1aaaaaa", "#1aaaaaa", "", msg["psw_rules"]),
+    ("aaa", "#Aaaaaaa", "#Aaaaaaa", "", msg["psw_rules"]),
+    ("aaa", "1Aaaaaaa", "1Aaaaaaa", "", msg["psw_rules"]),
+    ("user5", "P@ssw0rd", "P@ssw0rd", "", f"The user user5 allready exists"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "plainaddress", "Invalid email adress"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "#@%^%#$@#$@#.com", "Invalid email adress"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "@example.com", "Invalid email adress"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "Joe Smith <email@example.com>", "Invalid email adress"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@example@example.com", "Invalid email adress"),
+    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@-example.com", "Invalid email adress"),
 ))
 def test_failed_registration(
         client: FlaskClient,
-        name, password, confirm, flash_message):
+        name, password, confirm, email, flash_message):
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
@@ -62,7 +68,8 @@ def test_failed_registration(
             "csrf_token": g.csrf_token,
             "name": name,
             "password": password,
-            "confirm": confirm}
+            "confirm": confirm,
+            "email": email}
         response = client.post("/auth/register", data=data)
     assert response.status_code == 200
     assert flash_message in unescape(response.text)
