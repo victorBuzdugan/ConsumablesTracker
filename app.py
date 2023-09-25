@@ -20,6 +20,8 @@ def get_locale():
         return language
     # try to guess the language from the user accept header browser
     language = request.accept_languages.best_match(["ro", "en"])
+    if not language:
+        language = "en"
     session["language"] = language
     logger.info("Got locale language '%s'", language)
     return language

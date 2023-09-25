@@ -112,6 +112,22 @@ def test_login_landing_page(client: FlaskClient):
         response = client.get(url_for("auth.login"))
         assert response.status_code == 200
         assert b'type="submit" value="Log In"' in response.data
+        client.get(url_for("set_language", language="ro"))
+        response = client.get(url_for("auth.login"))
+        assert b'Language changed' not in response.data
+        assert b'Username' not in response.data
+        assert b'Password' not in response.data
+        assert u'Limba a fost schimbată' in response.text
+        assert u'Nume' in response.text
+        assert u'Parolă' in response.text
+        client.get(url_for("set_language", language="en"))
+        response = client.get(url_for("auth.login"))
+        assert b'Language changed' in response.data
+        assert b'Username' in response.data
+        assert b'Password' in response.data
+        assert u'Limba a fost schimbată' not in response.text
+        assert u'Nume' not in response.text
+        assert u'Parolă' not in response.text
 
 
 @pytest.mark.parametrize(("name", "password", "flash_message"), (

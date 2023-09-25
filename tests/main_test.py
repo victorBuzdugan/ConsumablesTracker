@@ -111,7 +111,9 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
             user.done_inv = True
             db_session.commit()
         assert b"Admin dashboard" in response.data
+        assert b"Panou de bord utilizator" not in response.data
         assert b"Statistics" in response.data
+        assert b"Statistici" not in response.data
 
         assert f'href={url_for("auth.register")}>Register' not in response.text
         assert f'href={url_for("auth.login")}>Log In' not in response.text
@@ -129,50 +131,88 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert f'href={url_for("prod.products", ordered_by="code")}>Products' in response.text
         assert f'href={url_for("prod.products_to_order")}>Order' in response.text
 
+        client.get(url_for("set_language", language="ro"))
+        response = client.get(url_for("main.index"))
+        assert b'Language changed' not in response.data
+        assert b"Admin dashboard" not in response.data
+        assert b"Statistics" not in response.data
+        assert u'Limba a fost schimbată' in response.text
+        assert b"Panou de bord utilizator" in response.data
+        assert b"Statistici" in response.data
+        client.get(url_for("set_language", language="en"))
+        response = client.get(url_for("main.index"))
+        assert b'Language changed' in response.data
+        assert b"Admin dashboard" in response.data
+        assert b"Statistics" in response.data
+        assert u'Limba a fost schimbată' not in response.text
+        assert b"Panou de bord utilizator" not in response.data
+        assert b"Statistici" not in response.data
+
 
 def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_logged_in):
     with client:
+        response = client.get("/")
+        assert response.status_code == 200
+        assert b"Bolded users have administrative privileges" in response.data
+        assert b"Strikethrough users are no longer in use" in response.data
+        # name
+        assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user1/edit">user1</a>' in response.data
+        assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user2/edit">user2</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user3/edit">user3</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user4/edit">user4</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user5/edit">user5</a>' in response.data
+        assert b'<span class="text-decoration-line-through"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
+        with dbSession() as db_session:
+            db_session.get(User, 6).admin = True
+            db_session.commit()
             response = client.get("/")
-            assert response.status_code == 200
-            assert b"Bolded users have administrative privileges" in response.data
-            assert b"Strikethrough users are no longer in use" in response.data
-            # name
-            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user1/edit">user1</a>' in response.data
-            assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user2/edit">user2</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user3/edit">user3</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user4/edit">user4</a>' in response.data
-            assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user5/edit">user5</a>' in response.data
-            assert b'<span class="text-decoration-line-through"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
-            with dbSession() as db_session:
-                db_session.get(User, 6).admin = True
-                db_session.commit()
-                response = client.get("/")
-                assert b'<span class="text-decoration-line-through fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
-                db_session.get(User, 6).admin = False
-                db_session.commit()
-            # assigned products
-            assert b"<td>13</td>" in response.data
-            assert b"<td>16</td>" in response.data
-            assert b"<td>9</td>" in response.data
-            assert b"<td>4</td>" in response.data
-            assert b"<td>0</td>" in response.data
-            # status
-            assert b"check inventory" not in response.data
-            assert b"requested inventory" not in response.data
-            assert f'href="{url_for("users.approve_reg", username="user5")}">requested registration' in response.text
-            with dbSession() as db_session:
-                db_session.get(User, 3).done_inv = False
-                db_session.get(User, 4).req_inv = True
-                db_session.get(User, 5).reg_req = False
-                db_session.commit()
-                response = client.get("/")
-                assert f'href="{url_for("inv.inventory_user", username="user3")}">check inventory' in response.text
-                assert f'href="{url_for("users.approve_check_inv", username="user4")}">requested inventory' in response.text
-                assert b"requested registration" not in response.data
-                db_session.get(User, 3).done_inv = True
-                db_session.get(User, 4).req_inv = False
-                db_session.get(User, 5).reg_req = True
-                db_session.commit()
+            assert b'<span class="text-decoration-line-through fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
+            db_session.get(User, 6).admin = False
+            db_session.commit()
+        # assigned products
+        assert b"<td>13</td>" in response.data
+        assert b"<td>16</td>" in response.data
+        assert b"<td>9</td>" in response.data
+        assert b"<td>4</td>" in response.data
+        assert b"<td>0</td>" in response.data
+        # status
+        assert b"check inventory" not in response.data
+        assert b"requested inventory" not in response.data
+        assert f'href="{url_for("users.approve_reg", username="user5")}">requested registration' in response.text
+        with dbSession() as db_session:
+            db_session.get(User, 3).done_inv = False
+            db_session.get(User, 4).req_inv = True
+            db_session.get(User, 5).reg_req = False
+            db_session.commit()
+            response = client.get("/")
+            assert f'href="{url_for("inv.inventory_user", username="user3")}">check inventory' in response.text
+            assert f'href="{url_for("users.approve_check_inv", username="user4")}">requested inventory' in response.text
+            assert b"requested registration" not in response.data
+            db_session.get(User, 3).done_inv = True
+            db_session.get(User, 4).req_inv = False
+            db_session.get(User, 5).reg_req = True
+            db_session.commit()
+
+        client.get(url_for("set_language", language="ro"))
+        response = client.get(url_for("main.index"))
+        assert b'Language changed' not in response.data
+        assert b'Admin dashboard' not in response.data
+        assert b"Bolded users have administrative privileges" not in response.data
+        assert b"Strikethrough users are no longer in use" not in response.data
+        assert u'Limba a fost schimbată' in response.text
+        assert b'Panou de bord administrator' in response.data
+        assert u'Utilizatorii cu text îngroșat sunt administratori' in response.text
+        assert u'Utilizatorii cu text tăiat sunt scoși din uz' in response.text
+        client.get(url_for("set_language", language="en"))
+        response = client.get(url_for("main.index"))
+        assert b'Language changed' in response.data
+        assert b'Admin dashboard' in response.data
+        assert b"Bolded users have administrative privileges" in response.data
+        assert b"Strikethrough users are no longer in use" in response.data
+        assert u'Limba a fost schimbată' not in response.text
+        assert b'Panou de bord administrator' not in response.data
+        assert u'Utilizatorii cu text îngroșat sunt administratori' not in response.text
+        assert u'Utilizatorii cu text tăiat sunt scoși din uz' not in response.text
 
 
 def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(client: FlaskClient, admin_logged_in):
