@@ -12,7 +12,7 @@ from wtforms.validators import InputRequired, Length, Optional, Regexp
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
 from database import User, dbSession
-from helpers import admin_required, flash_errors
+from helpers import admin_required, flash_errors, logger
 
 users_bp = Blueprint(
     "users",
@@ -124,9 +124,11 @@ def approve_reg(username):
                         select(User).filter_by(name=escape(username)))):
             user.reg_req = False
             db_session.commit()
+            logger.debug("%s has been approved", username)
             flash(gettext("%(username)s has been approved",
                           username=username))
         else:
+            logger.warning("%s does not exist", username)
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")
 
@@ -142,9 +144,12 @@ def approve_check_inv(username):
             try:
                 user.done_inv = False
                 db_session.commit()
+                logger.debug("Inventory check approved for %s", username)
             except ValueError as error:
+                logger.warning("User inventory check approval error(s)")
                 flash(str(error))
         else:
+            logger.warning("User inventory check approval error(s)")
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")
 
@@ -161,6 +166,7 @@ def approve_check_inv_all():
             if user.in_use_products:
                 user.done_inv = False
         db_session.commit()
+        logger.debug("Approved inventory check for all")
 
     return redirect(url_for("main.index"))
 
@@ -168,6 +174,7 @@ def approve_check_inv_all():
 @users_bp.route("/new", methods=["GET", "POST"])
 def new_user():
     """Create a new user."""
+    logger.info("New user page")
     new_user_form: CreateUserForm = CreateUserForm()
     if new_user_form.validate_on_submit():
         with dbSession() as db_session:
@@ -179,12 +186,15 @@ def new_user():
                 new_user_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
+                logger.debug("User '%s' created", user.name)
                 flash(gettext("User '%(username)s' created",
                               username=user.name))
                 return redirect(url_for("main.index"))
             except ValueError as error:
+                logger.warning("User creation error(s)")
                 flash(str(error), "error")
     elif new_user_form.errors:
+        logger.warning("User creation error(s)")
         flash_errors(new_user_form.errors)
 
     return render_template("users/new_user.html", form=new_user_form)
@@ -193,6 +203,7 @@ def new_user():
 @users_bp.route("/<path:username>/edit", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
+    logger.info("Edit user '%s' page", username)
     edit_user_form: EditUserForm = EditUserForm()
 
     if edit_user_form.validate_on_submit():
@@ -208,6 +219,7 @@ def edit_user(username):
                 else:
                     db_session.delete(user)
                     db_session.commit()
+                    logger.debug("User '%s' has been deleted", username)
                     flash(gettext("User '%(username)s' has been deleted",
                                   username=user.name))
                     if user.id == session.get("user_id"):
@@ -234,6 +246,7 @@ def edit_user(username):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(user, include_collections=False):
+                    logger.debug("User updated")
                     flash(gettext("User updated"))
                     db_session.commit()
                     if user.id == session.get("user_id"):
@@ -243,6 +256,7 @@ def edit_user(username):
                             return redirect(url_for("main.index"))
                 return redirect(url_for("users.edit_user", username=user.name))
     elif edit_user_form.errors:
+        logger.warning("User editing error(s)")
         flash_errors(edit_user_form.errors)
 
     with dbSession() as db_session:

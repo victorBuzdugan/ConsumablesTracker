@@ -9,7 +9,7 @@ from wtforms import PasswordField, StringField, SubmitField
 from wtforms.validators import EqualTo, InputRequired, Length, Regexp
 
 from database import User, dbSession
-from helpers import flash_errors, login_required
+from helpers import flash_errors, logger, login_required
 
 USER_MIN_LENGTH = 3
 USER_MAX_LENGTH = 15
@@ -155,6 +155,7 @@ class ChgPasswForm(FlaskForm):
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     """Login user if conditions are met."""
+    logger.info("Login page")
     login_form: LoginForm = LoginForm()
     if login_form.validate_on_submit():
         with dbSession() as db_session:
@@ -179,6 +180,8 @@ def login():
             else:
                 flash(gettext("This user is not in use anymore!"), "warning")
         else:
+            logger.warning("Bad login credentials for user '%s'",
+                           login_form.name.data)
             flash(gettext("Wrong username or password!"), "warning")
     elif login_form.errors:
         flash_errors(login_form.errors)
@@ -190,6 +193,7 @@ def login():
 @login_required
 def logout():
     """Logout and clear session."""
+    logger.info("Logging out")
     language = session.get("language")
     session.clear()
     if language:
@@ -201,10 +205,10 @@ def logout():
 @auth_bp.route("/register", methods=["GET", "POST"])
 def register():
     """Register user if conditions are met."""
+    logger.info("Register page")
     # if user is logged in
     if session.get("user_id"):
         session.clear()
-        # print("flash")
         flash(gettext("You have been logged out..."), "info")
 
     reg_form: RegisterForm = RegisterForm()
@@ -216,12 +220,14 @@ def register():
                 reg_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()
+                logger.debug("Registration requested")
                 flash(gettext("Registration request sent. " +
                               "Please contact an admin."))
                 return redirect(url_for("auth.login"))
             except ValueError as error:
                 flash(str(error), "error")
     elif reg_form.errors:
+        logger.warning("Bad registration data")
         flash_errors(reg_form.errors)
 
     return render_template("auth/register.html", form=reg_form)
@@ -231,6 +237,7 @@ def register():
 @login_required
 def change_password():
     """Change current user password."""
+    logger.info("Change password page")
 
     chg_pass_form: ChgPasswForm = ChgPasswForm()
 
@@ -243,11 +250,14 @@ def change_password():
                 chg_pass_form.populate_obj(user)
                 db_session.commit()
                 session.clear()
+                logger.debug("Password changed")
                 flash(gettext("Password changed."))
                 return redirect(url_for("auth.login"))
             else:
+                logger.warning("Wrong old password")
                 flash(gettext("Wrong old password!"), "error")
     elif chg_pass_form.errors:
+        logger.warning("Change password error(s)")
         flash_errors(chg_pass_form.errors)
 
     return render_template("auth/change_password.html", form=chg_pass_form)

@@ -13,7 +13,7 @@ from wtforms import (BooleanField, IntegerField, StringField, SubmitField,
 from wtforms.validators import InputRequired, Length
 
 from database import Category, dbSession
-from helpers import admin_required, flash_errors
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -78,6 +78,7 @@ class EditCatForm(CreateCatForm):
 @cat_bp.route("/categories")
 def categories():
     """All categories page."""
+    logger.info("Categories page")
     with dbSession() as db_session:
         cats = db_session.scalars(
                 select(Category).
@@ -100,6 +101,7 @@ def categories():
 @cat_bp.route("/new", methods=["GET", "POST"])
 def new_category():
     """Create a new category."""
+    logger.info("New category page")
     new_cat_form: CreateCatForm = CreateCatForm()
     if new_cat_form.validate_on_submit():
         with dbSession() as db_session:
@@ -108,12 +110,15 @@ def new_category():
                 new_cat_form.populate_obj(category)
                 db_session.add(category)
                 db_session.commit()
+                logger.debug("Category '%s' created", category.name)
                 flash(gettext("Category '%(cat_name)s' created",
                               cat_name=category.name))
                 return redirect(url_for("cat.categories"))
             except ValueError as error:
+                logger.warning("Category creation error")
                 flash(str(error), "error")
     elif new_cat_form.errors:
+        logger.warning("Category creation error")
         flash_errors(new_cat_form.errors)
 
     return render_template("cat/new_category.html", form=new_cat_form)
@@ -122,6 +127,7 @@ def new_category():
 @cat_bp.route("/<path:category>/edit", methods=["GET", "POST"])
 def edit_category(category):
     """Edit category."""
+    logger.info("Edit category '%s' page", category)
     edit_cat_form: EditCatForm = EditCatForm()
 
     if edit_cat_form.validate_on_submit():
@@ -137,6 +143,7 @@ def edit_category(category):
                 else:
                     db_session.delete(cat)
                     db_session.commit()
+                    logger.debug("Category '%s' has been deleted", cat.name)
                     flash(gettext("Category '%(cat_name)s' has been deleted",
                                   cat_name=cat.name))
                     return redirect(url_for("cat.categories"))
@@ -151,11 +158,13 @@ def edit_category(category):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(cat, include_collections=False):
+                    logger.debug("Category updated")
                     flash(gettext("Category updated"))
                     db_session.commit()
                 return redirect(
                     url_for("cat.edit_category", category=cat.name))
     elif edit_cat_form.errors:
+        logger.warning("Category edit error(s)")
         flash_errors(edit_cat_form.errors)
 
     with dbSession() as db_session:

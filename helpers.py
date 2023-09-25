@@ -1,5 +1,9 @@
+import logging
+import os
 from functools import wraps
-from flask import session, redirect, url_for, flash
+from logging.handlers import TimedRotatingFileHandler
+
+from flask import flash, redirect, session, url_for
 from flask_babel import gettext
 
 
@@ -28,3 +32,38 @@ def flash_errors(form_errors: dict) -> None:
                     for error in errors]
     for error in flash_errors:
         flash(error, "error")
+
+# region: logging configuration
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
+
+log_formatter = logging.Formatter(
+    fmt='%(asctime)s %(levelname)-8s %(user)-10s: %(message)s',
+    datefmt='%d.%m %H:%M'
+)
+
+log_handler = TimedRotatingFileHandler(
+    filename=os.path.join(FILE_PATH, 'logger.log'),
+    encoding='UTF-8',
+    when="D",
+    interval=30,
+    backupCount=1
+)
+log_handler.setLevel(logging.DEBUG)
+log_handler.setFormatter(log_formatter)
+
+logger = logging.getLogger("app_logger")
+logger.setLevel(logging.DEBUG)
+logger.addHandler(log_handler)
+
+old_factory = logging.getLogRecordFactory()
+def record_factory(*args, **kwargs):
+    record = old_factory(*args, **kwargs)
+    # bypass flask no request context runtime error
+    try:
+        record.user = session.get("user_name", default="no_user")
+    except RuntimeError:
+        record.user = "no_user"
+    return record
+
+logging.setLogRecordFactory(record_factory)
+# endregion

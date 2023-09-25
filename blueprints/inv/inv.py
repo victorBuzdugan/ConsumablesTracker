@@ -8,7 +8,7 @@ from markupsafe import escape
 from sqlalchemy import select
 
 from database import Product, User, dbSession
-from helpers import admin_required, login_required, flash_errors
+from helpers import admin_required, flash_errors, logger, login_required
 
 inv_bp = Blueprint(
     "inv",
@@ -24,6 +24,7 @@ class InventoryForm(FlaskForm):
 @login_required
 def inventory():
     """Inventory check page."""
+    logger.info("Inventory check page")
     inv_form: InventoryForm = InventoryForm()
     with dbSession() as db_session:
         user = db_session.get(User, session.get("user_id"))
@@ -40,11 +41,14 @@ def inventory():
                     product.to_order = False
             db_session.get(User, user.id).done_inv = True
             db_session.commit()
+        logger.debug("Inventory submitted")
         flash(gettext("Inventory has been submitted"))
         return redirect(url_for("main.index"))
     elif inv_form.errors:
+        logger.warning("Inventory submitting error(s)")
         flash_errors(inv_form.errors)
     elif user.done_inv:
+        logger.warning("Inventory check not required")
         flash(gettext("Inventory check not required"), "info")
 
     with dbSession() as db_session:
@@ -63,6 +67,7 @@ def inventory():
 @admin_required
 def inventory_user(username):
     """Inventory check page for other users."""
+    logger.info("Inventory check page for user '%s'", username)
     inv_form: InventoryForm = InventoryForm()
     with dbSession() as db_session:
         user = db_session.scalar(select(User).filter_by(name=escape(username)))
@@ -77,6 +82,7 @@ def inventory_user(username):
         else:
             flash(gettext("User %(username)s awaits registration aproval!",
                           username=username), "warning")
+        logger.warning("Inventory check page for user '%s' error(s)", username)
         return redirect(url_for("main.index"))
 
     if inv_form.validate_on_submit() and not user.done_inv:
@@ -92,11 +98,15 @@ def inventory_user(username):
                     product.to_order = False
             db_session.get(User, user.id).done_inv = True
             db_session.commit()
+        logger.debug("Inventory has been submitted for user '%s'", username)
         flash(gettext("Inventory has been submitted"))
         return redirect(url_for("main.index"))
     elif inv_form.errors:
+        logger.warning("Inventory check page for user '%s' error(s)", username)
         flash_errors(inv_form.errors)
     elif user.done_inv:
+        logger.debug("Inventory check not required for user '%s' error(s)",
+                     username)
         flash(gettext("Inventory check not required"), "info")
 
     with dbSession() as db_session:
@@ -123,6 +133,7 @@ def inventory_request():
             user = db_session.get(User, session.get("user_id"))
             try:
                 user.req_inv = True
+                logger.info("Inventory check request sent")
                 flash(gettext("Inventory check request sent"))
                 db_session.commit()
             except ValueError as error:

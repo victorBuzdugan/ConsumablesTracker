@@ -6,9 +6,8 @@ from flask import Blueprint, render_template, session
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, raiseload
 
-from database import dbSession, User, Category, Supplier, Product
-from helpers import login_required
-
+from database import Category, Product, Supplier, User, dbSession
+from helpers import logger, login_required
 
 func: Callable
 
@@ -21,6 +20,7 @@ main_bp = Blueprint("main",
 @login_required
 def index():
     """Index page."""
+    logger.info("Index page")
     with dbSession() as db_session:
         user = db_session.scalar(
             select(User).

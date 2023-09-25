@@ -13,7 +13,7 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
 from wtforms.validators import InputRequired, Length, NumberRange
 
 from database import Category, Product, Supplier, User, dbSession
-from helpers import admin_required, flash_errors
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -148,6 +148,7 @@ class ProdToOrderForm(FlaskForm):
 @prod_bp.route("/products-sorted-by-<ordered_by>")
 def products(ordered_by):
     """All products page."""
+    logger.info("All products page")
     with dbSession() as db_session:
         if ordered_by == "code":
             prods = db_session.scalars(
@@ -197,6 +198,7 @@ def products(ordered_by):
                 .order_by(func.lower(Supplier.name), func.lower(Product.name))
             ).unique().all()
         else:
+            logger.warning("Products sorting error(s)")
             flash(gettext("Cannot sort products by %(ordered_by)s",
                           ordered_by=ordered_by), "warning")
             return redirect(url_for("prod.products", ordered_by="code"))
@@ -222,6 +224,7 @@ def products(ordered_by):
 @prod_bp.route("/new", methods=["GET", "POST"])
 def new_product():
     """Create a new product."""
+    logger.info("New product page")
     new_prod_form: CreateProdForm = CreateProdForm()
 
     with dbSession() as db_session:
@@ -262,12 +265,15 @@ def new_product():
                 new_prod_form.populate_obj(new_prod)
                 db_session.add(new_prod)
                 db_session.commit()
+                logger.debug("Product '%s' created", new_prod.name)
                 flash(gettext("Product '%(new_prod_name)s' created",
                               new_prod_name=new_prod.name))
                 return redirect(url_for("prod.products", ordered_by="code"))
             except ValueError as error:
+                logger.warning("Product creation error(s)")
                 flash(str(error), "error")
     elif new_prod_form.errors:
+        logger.warning("Product creation error(s)")
         flash_errors(new_prod_form.errors)
 
     return render_template("prod/new_product.html", form=new_prod_form)
@@ -276,6 +282,7 @@ def new_product():
 @prod_bp.route("/<path:product>/edit", methods=["GET", "POST"])
 def edit_product(product):
     """Edit product."""
+    logger.info("Edit product '%s' page", product)
     edit_prod_form: EditProdForm = EditProdForm()
 
     with dbSession() as db_session:
@@ -309,6 +316,7 @@ def edit_product(product):
             if edit_prod_form.delete.data:
                 db_session.delete(prod)
                 db_session.commit()
+                logger.debug("Product '%s' has been deleted", prod.name)
                 flash(gettext("Product '%(prod_name)s' has been deleted",
                               prod_name=prod.name))
                 return redirect(url_for("prod.products", ordered_by="code"))
@@ -337,12 +345,14 @@ def edit_product(product):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(prod, include_collections=False):
+                    logger.debug("Product updated")
                     flash(gettext("Product updated"))
                     db_session.commit()
                 return redirect(
                     url_for("prod.edit_product", product=prod.name))
 
     elif edit_prod_form.errors:
+        logger.warning("Product editing error(s)")
         flash_errors(edit_prod_form.errors)
 
     with dbSession() as db_session:
@@ -367,6 +377,7 @@ def edit_product(product):
 @prod_bp.route("/products-to-order", methods=["GET", "POST"])
 def products_to_order():
     """Products to order page."""
+    logger.info("Order page")
     prod_to_order_form: ProdToOrderForm = ProdToOrderForm()
 
     if prod_to_order_form.validate_on_submit():
@@ -389,8 +400,10 @@ def products_to_order():
                 else:
                     product.to_order = True
             db_session.commit()
+        logger.debug("Product(s) ordered")
         flash(gettext("Products updated"))
     elif prod_to_order_form.errors:
+        logger.warning("Product order error(s)")
         flash_errors(prod_to_order_form.errors)
 
     with dbSession() as db_session:
@@ -412,6 +425,7 @@ def products_to_order():
             products=prods,
             form=prod_to_order_form)
     else:
+        logger.debug("There are no products that need to be ordered")
         flash(gettext("There are no products that need to be ordered"),
               "warning")
         return redirect(url_for("main.index"))
@@ -427,5 +441,6 @@ def all_products_ordered():
         for product in prods:
             product.to_order = False
         db_session.commit()
+    logger.debug("All products ordered")
     flash(gettext("All products ordered"))
     return redirect(url_for("main.index"))

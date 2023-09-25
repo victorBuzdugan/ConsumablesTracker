@@ -13,7 +13,7 @@ from wtforms import (BooleanField, IntegerField, StringField, SubmitField,
 from wtforms.validators import InputRequired, Length
 
 from database import Supplier, dbSession
-from helpers import admin_required, flash_errors
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -77,6 +77,7 @@ class EditSupForm(CreateSupForm):
 @sup_bp.route("/suppliers")
 def suppliers():
     """All suppliers page."""
+    logger.info("Suppliers page")
     with dbSession() as db_session:
         supps = db_session.scalars(
                 select(Supplier).
@@ -99,6 +100,7 @@ def suppliers():
 @sup_bp.route("/new", methods=["GET", "POST"])
 def new_supplier():
     """Create a new supplier."""
+    logger.info("New supplier page")
     new_sup_form: CreateSupForm = CreateSupForm()
     if new_sup_form.validate_on_submit():
         with dbSession() as db_session:
@@ -107,12 +109,15 @@ def new_supplier():
                 new_sup_form.populate_obj(supplier)
                 db_session.add(supplier)
                 db_session.commit()
+                logger.debug("Supplier '%s' created", supplier.name)
                 flash(gettext("Supplier '%(supplier_name)s' created",
                               supplier_name=supplier.name))
                 return redirect(url_for("sup.suppliers"))
             except ValueError as error:
+                logger.warning("Supplier creation error(s)")
                 flash(str(error), "error")
     elif new_sup_form.errors:
+        logger.warning("Supplier creation error(s)")
         flash_errors(new_sup_form.errors)
 
     return render_template("sup/new_supplier.html", form=new_sup_form)
@@ -121,6 +126,7 @@ def new_supplier():
 @sup_bp.route("/<path:supplier>/edit", methods=["GET", "POST"])
 def edit_supplier(supplier):
     """Edit supplier."""
+    logger.info("Edit supplier %s", supplier)
     edit_sup_form: EditSupForm = EditSupForm()
 
     if edit_sup_form.validate_on_submit():
@@ -136,6 +142,7 @@ def edit_supplier(supplier):
                 else:
                     db_session.delete(sup)
                     db_session.commit()
+                    logger.debug("Supplier '%s' has been deleted", sup.name)
                     flash(gettext("Supplier '%(sup_name)s' has been deleted",
                                   sup_name=sup.name))
                     return redirect(url_for("sup.suppliers"))
@@ -150,11 +157,13 @@ def edit_supplier(supplier):
                 except ValueError as error:
                     flash(str(error), "warning")
                 if db_session.is_modified(sup, include_collections=False):
+                    logger.debug("Supplier updated")
                     flash(gettext("Supplier updated"))
                     db_session.commit()
                 return redirect(
                     url_for("sup.edit_supplier", supplier=sup.name))
     elif edit_sup_form.errors:
+        logger.warning("Supplier editing error(s)")
         flash_errors(edit_sup_form.errors)
 
     with dbSession() as db_session:
@@ -164,6 +173,7 @@ def edit_supplier(supplier):
             edit_sup_form = EditSupForm(obj=sup)
         else:
             # flash(f"{supplier} does not exist!", "error")
+            logger.warning("Supplier editing error(s)")
             flash(gettext("%(supplier)s does not exist!",
                           supplier=supplier), "error")
             return redirect(url_for("sup.suppliers"))
