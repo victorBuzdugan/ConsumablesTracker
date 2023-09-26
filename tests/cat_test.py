@@ -8,7 +8,7 @@ from flask import g, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 
-from database import Category, dbSession
+from database import Category, Product, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
                    create_test_db, create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
@@ -319,4 +319,152 @@ def test_failed_delete_category(client: FlaskClient, admin_logged_in, cat_id):
         assert f"Can't delete category! There are still products attached!" in unescape(response.text)
     with dbSession() as db_session:
         assert db_session.get(Category, cat.id)
+# endregion
+
+# region: reassign category
+def test_landing_page_from_category_edit(client: FlaskClient, admin_logged_in):
+    CAT_ID = 3
+    with dbSession() as db_session:
+        cat = db_session.get(Category, CAT_ID)
+    with client:
+        client.get("/")
+        response = client.get(url_for("cat.edit_category", category=cat.name))
+        assert bytes(cat.name, "UTF-8") in response.data
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": cat.name,
+            "reassign": True,
+        }
+        response = client.post(url_for("cat.edit_category", category=cat.name),
+                            data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("cat.reassign_category", category=cat.name)
+        assert b"Reassign all products for category" in response.data
+        assert bytes(cat.name, "UTF-8") in response.data
+
+
+def test_reassign_category(client: FlaskClient, admin_logged_in):
+    # for testing get category id 3 - Electronics
+    # that has all products responsable_id to 1 - user1
+    CAT_ID = 3
+    RESP_ID = 1
+    NEW_RESP_ID = 2
+    with dbSession() as db_session:
+        cat = db_session.get(Category, CAT_ID)
+        products = db_session.scalars(
+            select(Product)
+            .filter_by(category_id=cat.id)
+            ).all()
+        for product in products:
+            assert product.responsable_id == RESP_ID
+        with client:
+            client.get("/")
+            response = client.get(url_for("cat.reassign_category", category=cat.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(cat.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("cat.reassign_category", category=cat.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert quote(response.request.path) == url_for("cat.reassign_category", category=cat.name)
+            assert b"Category responsable updated" in response.data
+            assert b"You have to select a new responsible first" not in response.data
+        # check and teardown
+        for product in products:
+            db_session.refresh(product)
+            assert product.responsable_id == NEW_RESP_ID
+            product.responsable_id = RESP_ID
+        db_session.commit()
+
+
+def test_failed_reassign_category(client: FlaskClient, admin_logged_in):
+    CAT_ID = 3
+    RESP_ID = 1
+    NEW_RESP_ID = 0
+    with dbSession() as db_session:
+        cat = db_session.get(Category, CAT_ID)
+        products = db_session.scalars(
+            select(Product)
+            .filter_by(category_id=cat.id)
+            ).all()
+        for product in products:
+            assert product.responsable_id == RESP_ID
+        with client:
+            client.get("/")
+            response = client.get(url_for("cat.reassign_category", category=cat.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(cat.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("cat.reassign_category", category=cat.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert quote(response.request.path) == url_for("cat.reassign_category", category=cat.name)
+            assert b"Category responsable updated" not in response.data
+            assert b"You have to select a new responsible first" in response.data
+        # check and teardown
+        for product in products:
+            db_session.refresh(product)
+            assert product.responsable_id == RESP_ID
+
+
+def test_failed_reassign_category_bad_choice(client: FlaskClient, admin_logged_in):
+    CAT_ID = 3
+    RESP_ID = 1
+    NEW_RESP_ID = 15
+    with dbSession() as db_session:
+        cat = db_session.get(Category, CAT_ID)
+        products = db_session.scalars(
+            select(Product)
+            .filter_by(category_id=cat.id)
+            ).all()
+        for product in products:
+            assert product.responsable_id == RESP_ID
+        with client:
+            client.get("/")
+            response = client.get(url_for("cat.reassign_category", category=cat.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(cat.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("cat.reassign_category", category=cat.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert b"Category responsable updated" not in response.data
+            assert b"Not a valid choice." in response.data
+        # check and teardown
+        for product in products:
+            db_session.refresh(product)
+            assert product.responsable_id == RESP_ID
+
+
+def test_failed_reassign_category_bad_name(client: FlaskClient, admin_logged_in):
+    with client:
+        client.get("/")
+        response = client.get(url_for("cat.reassign_category", category="not_existing_category"), follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("cat.categories")
+        assert b"not_existing_category does not exist!" in response.data
 # endregion

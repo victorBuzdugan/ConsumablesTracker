@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v1.4\n"
+"Project-Id-Version:  v1.5\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-09-25 17:26+0300\n"
+"POT-Creation-Date: 2023-09-26 14:22+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -381,6 +381,7 @@ msgid "Category name must have at least 3 characters"
 msgstr "Numele categoriei trebuie să aibă cel puțin 3 caractere "
 
 #: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+#: blueprints/cat/templates/cat/reassign_category.html:22
 #: blueprints/inv/templates/inv/inventory.html:28 blueprints/prod/prod.py:50
 #: blueprints/prod/prod.py:60 blueprints/prod/templates/prod/products.html:25
 #: blueprints/prod/templates/prod/products_to_oder.html:21
@@ -417,28 +418,49 @@ msgstr "Actualizează"
 msgid "Delete"
 msgstr "Șterge"
 
-#: blueprints/cat/cat.py:114
+#: blueprints/cat/cat.py:77 blueprints/cat/cat.py:84
+#: blueprints/cat/templates/cat/reassign_category.html:70
+msgid "Reassign all products"
+msgstr "Redistribuie toate produsele"
+
+#: blueprints/cat/cat.py:87
+msgid "New responsable"
+msgstr "Responsabil nou"
+
+#: blueprints/cat/cat.py:130
 #, python-format
 msgid "Category '%(cat_name)s' created"
 msgstr "Categoria '%(cat_name)s' a fost creată"
 
-#: blueprints/cat/cat.py:140
+#: blueprints/cat/cat.py:156
 msgid "Can't delete category! There are still products attached!"
 msgstr "Nu se poate șterge categoria! Încă mai are produse atașate!"
 
-#: blueprints/cat/cat.py:147
+#: blueprints/cat/cat.py:163
 #, python-format
 msgid "Category '%(cat_name)s' has been deleted"
 msgstr "Categoria '%(cat_name)s' a fost ștearsă"
 
-#: blueprints/cat/cat.py:162
+#: blueprints/cat/cat.py:181
 msgid "Category updated"
 msgstr "Categorie actualizată"
 
-#: blueprints/cat/cat.py:176
+#: blueprints/cat/cat.py:196 blueprints/cat/cat.py:265
 #, python-format
 msgid "%(category)s does not exist!"
 msgstr "%(category)s nu există!"
+
+#: blueprints/cat/cat.py:217
+msgid "Select a new responsible"
+msgstr "Selectează un nou responsabil"
+
+#: blueprints/cat/cat.py:236
+msgid "Category responsable updated"
+msgstr "Responsabil categorie actualizat"
+
+#: blueprints/cat/cat.py:238
+msgid "You have to select a new responsible first"
+msgstr "Trebuie să selectezi un responsabil mai întâi"
 
 #: blueprints/cat/templates/cat/categories.html:3
 #: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:26
@@ -534,6 +556,7 @@ msgid "Category has"
 msgstr "Categoria are"
 
 #: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/cat/templates/cat/reassign_category.html:80
 #: blueprints/main/templates/main/index.html:16
 #: blueprints/main/templates/main/index.html:80
 #: blueprints/main/templates/main/index.html:106
@@ -560,6 +583,7 @@ msgid "This will delete this category! You can't undo this action."
 msgstr "Categoria va fi ștearsă definitiv!"
 
 #: blueprints/cat/templates/cat/edit_category.html:74
+#: blueprints/cat/templates/cat/reassign_category.html:83
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:74
@@ -574,6 +598,76 @@ msgstr "Categorie nouă"
 #: blueprints/cat/templates/cat/new_category.html:13
 msgid "Create new category"
 msgstr "Creează o categorie nouă"
+
+#: blueprints/cat/templates/cat/reassign_category.html:3
+msgid "Reassign category"
+msgstr "Redistribuie categoria"
+
+#: blueprints/cat/templates/cat/reassign_category.html:9
+msgid "Reassign all products for category"
+msgstr "Redistribuie toate produsele pentru categorie"
+
+#: blueprints/cat/templates/cat/reassign_category.html:17
+#: blueprints/prod/templates/prod/products.html:14
+msgid "*Strikethrough products are no longer in use."
+msgstr "*Produsele cu text tăiat sunt scoase din uz."
+
+#: blueprints/cat/templates/cat/reassign_category.html:18
+#: blueprints/inv/templates/inv/inventory.html:23
+#: blueprints/prod/templates/prod/products.html:15
+#: blueprints/prod/templates/prod/products_to_oder.html:17
+msgid "*Critical products are highlighted in red."
+msgstr "*Produsele roșii sunt critice"
+
+#: blueprints/cat/templates/cat/reassign_category.html:21
+#: blueprints/inv/templates/inv/inventory.html:27 blueprints/prod/prod.py:36
+#: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
+#: blueprints/prod/templates/prod/products.html:22
+#: blueprints/prod/templates/prod/products_to_oder.html:20
+msgid "Code"
+msgstr "Cod"
+
+#: blueprints/cat/templates/cat/reassign_category.html:23
+#: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
+#: blueprints/prod/templates/prod/products.html:30
+#: blueprints/prod/templates/prod/products_to_oder.html:22
+msgid "Responsable"
+msgstr "Responsabil"
+
+#: blueprints/cat/templates/cat/reassign_category.html:24
+#: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
+#: blueprints/prod/templates/prod/products.html:37
+#: blueprints/prod/templates/prod/products_to_oder.html:23
+#: templates/layout.html:34
+msgid "Category"
+msgstr "Categorie"
+
+#: blueprints/cat/templates/cat/reassign_category.html:25
+#: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
+#: blueprints/prod/templates/prod/products.html:44
+#: blueprints/prod/templates/prod/products_to_oder.html:24
+#: templates/layout.html:35
+msgid "Supplier"
+msgstr "Furnizor"
+
+#: blueprints/cat/templates/cat/reassign_category.html:26
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Min stock"
+msgstr "Stoc min"
+
+#: blueprints/cat/templates/cat/reassign_category.html:26
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Order qty"
+msgstr "Cant cdă"
+
+#: blueprints/cat/templates/cat/reassign_category.html:76
+msgctxt "question"
+msgid "Reassign all products"
+msgstr "Redistribui toate produsele"
+
+#: blueprints/cat/templates/cat/reassign_category.html:80
+msgid "This will reassign"
+msgstr "Se vor redistribui"
 
 #: blueprints/inv/inv.py:45 blueprints/inv/inv.py:102
 msgid "Inventory has been submitted"
@@ -621,19 +715,6 @@ msgid "*Select to order a product if current stock is less then minimum stock."
 msgstr ""
 "*Selectează un produs pentru comandă dacă stocul curent este mai mic "
 "decât stocul minim"
-
-#: blueprints/inv/templates/inv/inventory.html:23
-#: blueprints/prod/templates/prod/products.html:15
-#: blueprints/prod/templates/prod/products_to_oder.html:17
-msgid "*Critical products are highlighted in red."
-msgstr "*Produsele roșii sunt critice"
-
-#: blueprints/inv/templates/inv/inventory.html:27 blueprints/prod/prod.py:36
-#: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
-#: blueprints/prod/templates/prod/products.html:22
-#: blueprints/prod/templates/prod/products_to_oder.html:20
-msgid "Code"
-msgstr "Cod"
 
 #: blueprints/inv/templates/inv/inventory.html:29
 msgid "Min. Stock"
@@ -782,26 +863,6 @@ msgstr "Descrierea produsului e obligatorie"
 msgid "Product description must be between 3 and 50 characters"
 msgstr "Descrierea produsului trebuie să fie între 3 și 50 caractere"
 
-#: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
-#: blueprints/prod/templates/prod/products.html:30
-#: blueprints/prod/templates/prod/products_to_oder.html:22
-msgid "Responsable"
-msgstr "Responsabil"
-
-#: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
-#: blueprints/prod/templates/prod/products.html:37
-#: blueprints/prod/templates/prod/products_to_oder.html:23
-#: templates/layout.html:34
-msgid "Category"
-msgstr "Categorie"
-
-#: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
-#: blueprints/prod/templates/prod/products.html:44
-#: blueprints/prod/templates/prod/products_to_oder.html:24
-#: templates/layout.html:35
-msgid "Supplier"
-msgstr "Furnizor"
-
 #: blueprints/prod/prod.py:83 blueprints/prod/prod.py:87
 msgid "Measuring unit"
 msgstr "Unitate măsură"
@@ -900,18 +961,6 @@ msgstr "Creează un produs nou"
 #: blueprints/prod/templates/prod/products.html:8 templates/layout.html:28
 msgid "Products"
 msgstr "Produse"
-
-#: blueprints/prod/templates/prod/products.html:14
-msgid "*Strikethrough products are no longer in use."
-msgstr "*Produsele cu text tăiat sunt scoase din uz."
-
-#: blueprints/prod/templates/prod/products.html:47
-msgid "Min stock"
-msgstr "Stoc min"
-
-#: blueprints/prod/templates/prod/products.html:47
-msgid "Order qty"
-msgstr "Cant cdă"
 
 #: blueprints/prod/templates/prod/products.html:82
 msgid "critical product"

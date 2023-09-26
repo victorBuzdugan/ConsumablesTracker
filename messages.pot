@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-25 17:26+0300\n"
+"POT-Creation-Date: 2023-09-26 14:22+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -373,6 +373,7 @@ msgid "Category name must have at least 3 characters"
 msgstr ""
 
 #: blueprints/cat/cat.py:49 blueprints/cat/templates/cat/categories.html:20
+#: blueprints/cat/templates/cat/reassign_category.html:22
 #: blueprints/inv/templates/inv/inventory.html:28 blueprints/prod/prod.py:50
 #: blueprints/prod/prod.py:60 blueprints/prod/templates/prod/products.html:25
 #: blueprints/prod/templates/prod/products_to_oder.html:21
@@ -409,27 +410,48 @@ msgstr ""
 msgid "Delete"
 msgstr ""
 
-#: blueprints/cat/cat.py:114
+#: blueprints/cat/cat.py:77 blueprints/cat/cat.py:84
+#: blueprints/cat/templates/cat/reassign_category.html:70
+msgid "Reassign all products"
+msgstr ""
+
+#: blueprints/cat/cat.py:87
+msgid "New responsable"
+msgstr ""
+
+#: blueprints/cat/cat.py:130
 #, python-format
 msgid "Category '%(cat_name)s' created"
 msgstr ""
 
-#: blueprints/cat/cat.py:140
+#: blueprints/cat/cat.py:156
 msgid "Can't delete category! There are still products attached!"
 msgstr ""
 
-#: blueprints/cat/cat.py:147
+#: blueprints/cat/cat.py:163
 #, python-format
 msgid "Category '%(cat_name)s' has been deleted"
 msgstr ""
 
-#: blueprints/cat/cat.py:162
+#: blueprints/cat/cat.py:181
 msgid "Category updated"
 msgstr ""
 
-#: blueprints/cat/cat.py:176
+#: blueprints/cat/cat.py:196 blueprints/cat/cat.py:265
 #, python-format
 msgid "%(category)s does not exist!"
+msgstr ""
+
+#: blueprints/cat/cat.py:217
+msgid "Select a new responsible"
+msgstr ""
+
+#: blueprints/cat/cat.py:236
+msgid "Category responsable updated"
+msgstr ""
+
+#: blueprints/cat/cat.py:238
+msgid "You have to select a new responsible first"
 msgstr ""
 
 #: blueprints/cat/templates/cat/categories.html:3
@@ -522,6 +544,7 @@ msgid "Category has"
 msgstr ""
 
 #: blueprints/cat/templates/cat/edit_category.html:51
+#: blueprints/cat/templates/cat/reassign_category.html:80
 #: blueprints/main/templates/main/index.html:16
 #: blueprints/main/templates/main/index.html:80
 #: blueprints/main/templates/main/index.html:106
@@ -547,6 +570,7 @@ msgid "This will delete this category! You can't undo this action."
 msgstr ""
 
 #: blueprints/cat/templates/cat/edit_category.html:74
+#: blueprints/cat/templates/cat/reassign_category.html:83
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:74
@@ -560,6 +584,76 @@ msgstr ""
 
 #: blueprints/cat/templates/cat/new_category.html:13
 msgid "Create new category"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:3
+msgid "Reassign category"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:9
+msgid "Reassign all products for category"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:17
+#: blueprints/prod/templates/prod/products.html:14
+msgid "*Strikethrough products are no longer in use."
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:18
+#: blueprints/inv/templates/inv/inventory.html:23
+#: blueprints/prod/templates/prod/products.html:15
+#: blueprints/prod/templates/prod/products_to_oder.html:17
+msgid "*Critical products are highlighted in red."
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:21
+#: blueprints/inv/templates/inv/inventory.html:27 blueprints/prod/prod.py:36
+#: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
+#: blueprints/prod/templates/prod/products.html:22
+#: blueprints/prod/templates/prod/products_to_oder.html:20
+msgid "Code"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:23
+#: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
+#: blueprints/prod/templates/prod/products.html:30
+#: blueprints/prod/templates/prod/products_to_oder.html:22
+msgid "Responsable"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:24
+#: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
+#: blueprints/prod/templates/prod/products.html:37
+#: blueprints/prod/templates/prod/products_to_oder.html:23
+#: templates/layout.html:34
+msgid "Category"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:25
+#: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
+#: blueprints/prod/templates/prod/products.html:44
+#: blueprints/prod/templates/prod/products_to_oder.html:24
+#: templates/layout.html:35
+msgid "Supplier"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:26
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Min stock"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:26
+#: blueprints/prod/templates/prod/products.html:47
+msgid "Order qty"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:76
+msgctxt "question"
+msgid "Reassign all products"
+msgstr ""
+
+#: blueprints/cat/templates/cat/reassign_category.html:80
+msgid "This will reassign"
 msgstr ""
 
 #: blueprints/inv/inv.py:45 blueprints/inv/inv.py:102
@@ -605,19 +699,6 @@ msgstr ""
 
 #: blueprints/inv/templates/inv/inventory.html:22
 msgid "*Select to order a product if current stock is less then minimum stock."
-msgstr ""
-
-#: blueprints/inv/templates/inv/inventory.html:23
-#: blueprints/prod/templates/prod/products.html:15
-#: blueprints/prod/templates/prod/products_to_oder.html:17
-msgid "*Critical products are highlighted in red."
-msgstr ""
-
-#: blueprints/inv/templates/inv/inventory.html:27 blueprints/prod/prod.py:36
-#: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
-#: blueprints/prod/templates/prod/products.html:22
-#: blueprints/prod/templates/prod/products_to_oder.html:20
-msgid "Code"
 msgstr ""
 
 #: blueprints/inv/templates/inv/inventory.html:29
@@ -762,26 +843,6 @@ msgstr ""
 msgid "Product description must be between 3 and 50 characters"
 msgstr ""
 
-#: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
-#: blueprints/prod/templates/prod/products.html:30
-#: blueprints/prod/templates/prod/products_to_oder.html:22
-msgid "Responsable"
-msgstr ""
-
-#: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
-#: blueprints/prod/templates/prod/products.html:37
-#: blueprints/prod/templates/prod/products_to_oder.html:23
-#: templates/layout.html:34
-msgid "Category"
-msgstr ""
-
-#: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
-#: blueprints/prod/templates/prod/products.html:44
-#: blueprints/prod/templates/prod/products_to_oder.html:24
-#: templates/layout.html:35
-msgid "Supplier"
-msgstr ""
-
 #: blueprints/prod/prod.py:83 blueprints/prod/prod.py:87
 msgid "Measuring unit"
 msgstr ""
@@ -879,18 +940,6 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:3
 #: blueprints/prod/templates/prod/products.html:8 templates/layout.html:28
 msgid "Products"
-msgstr ""
-
-#: blueprints/prod/templates/prod/products.html:14
-msgid "*Strikethrough products are no longer in use."
-msgstr ""
-
-#: blueprints/prod/templates/prod/products.html:47
-msgid "Min stock"
-msgstr ""
-
-#: blueprints/prod/templates/prod/products.html:47
-msgid "Order qty"
 msgstr ""
 
 #: blueprints/prod/templates/prod/products.html:82
