@@ -211,6 +211,8 @@ Along with with all the fields presented in [create new user](https://github.com
 ### Edit category, supplier
 You can edit all the fields as described in [create new category or supplier](https://github.com/victorBuzdugan/ConsumablesTracker#new-category-or-supplier).
 
+You can also reassign all product of this category or supplier to a user by clicking reassign all products.
+
 ### Edit products
 Along with with all the fields presented in [create new product](https://github.com/victorBuzdugan/ConsumablesTracker#new-product) you can manually flip the `to order` switch.
 
