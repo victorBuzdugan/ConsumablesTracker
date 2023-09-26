@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-09-26 14:22+0300\n"
+"POT-Creation-Date: 2023-09-26 15:33+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -377,6 +377,7 @@ msgstr ""
 #: blueprints/inv/templates/inv/inventory.html:28 blueprints/prod/prod.py:50
 #: blueprints/prod/prod.py:60 blueprints/prod/templates/prod/products.html:25
 #: blueprints/prod/templates/prod/products_to_oder.html:21
+#: blueprints/sup/templates/sup/reassign_supplier.html:22
 msgid "Description"
 msgstr ""
 
@@ -412,10 +413,12 @@ msgstr ""
 
 #: blueprints/cat/cat.py:77 blueprints/cat/cat.py:84
 #: blueprints/cat/templates/cat/reassign_category.html:70
+#: blueprints/sup/sup.py:76 blueprints/sup/sup.py:83
+#: blueprints/sup/templates/sup/reassign_supplier.html:70
 msgid "Reassign all products"
 msgstr ""
 
-#: blueprints/cat/cat.py:87
+#: blueprints/cat/cat.py:87 blueprints/sup/sup.py:86
 msgid "New responsable"
 msgstr ""
 
@@ -442,7 +445,7 @@ msgstr ""
 msgid "%(category)s does not exist!"
 msgstr ""
 
-#: blueprints/cat/cat.py:217
+#: blueprints/cat/cat.py:217 blueprints/sup/sup.py:216
 msgid "Select a new responsible"
 msgstr ""
 
@@ -450,7 +453,7 @@ msgstr ""
 msgid "Category responsable updated"
 msgstr ""
 
-#: blueprints/cat/cat.py:238
+#: blueprints/cat/cat.py:238 blueprints/sup/sup.py:237
 msgid "You have to select a new responsible first"
 msgstr ""
 
@@ -551,6 +554,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products_to_oder.html:59
 #: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/reassign_supplier.html:80
 #: blueprints/users/templates/users/edit_user.html:98
 msgid "product"
 msgid_plural "products"
@@ -574,6 +578,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/edit_product.html:132
 #: blueprints/prod/templates/prod/products_to_oder.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:74
+#: blueprints/sup/templates/sup/reassign_supplier.html:83
 #: blueprints/users/templates/users/edit_user.html:121
 msgid "Close"
 msgstr ""
@@ -596,6 +601,7 @@ msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:17
 #: blueprints/prod/templates/prod/products.html:14
+#: blueprints/sup/templates/sup/reassign_supplier.html:17
 msgid "*Strikethrough products are no longer in use."
 msgstr ""
 
@@ -603,6 +609,7 @@ msgstr ""
 #: blueprints/inv/templates/inv/inventory.html:23
 #: blueprints/prod/templates/prod/products.html:15
 #: blueprints/prod/templates/prod/products_to_oder.html:17
+#: blueprints/sup/templates/sup/reassign_supplier.html:18
 msgid "*Critical products are highlighted in red."
 msgstr ""
 
@@ -611,6 +618,7 @@ msgstr ""
 #: blueprints/prod/prod.py:46 blueprints/prod/templates/prod/products.html:20
 #: blueprints/prod/templates/prod/products.html:22
 #: blueprints/prod/templates/prod/products_to_oder.html:20
+#: blueprints/sup/templates/sup/reassign_supplier.html:21
 msgid "Code"
 msgstr ""
 
@@ -618,6 +626,7 @@ msgstr ""
 #: blueprints/prod/prod.py:65 blueprints/prod/templates/prod/products.html:28
 #: blueprints/prod/templates/prod/products.html:30
 #: blueprints/prod/templates/prod/products_to_oder.html:22
+#: blueprints/sup/templates/sup/reassign_supplier.html:23
 msgid "Responsable"
 msgstr ""
 
@@ -625,6 +634,7 @@ msgstr ""
 #: blueprints/prod/prod.py:71 blueprints/prod/templates/prod/products.html:35
 #: blueprints/prod/templates/prod/products.html:37
 #: blueprints/prod/templates/prod/products_to_oder.html:23
+#: blueprints/sup/templates/sup/reassign_supplier.html:24
 #: templates/layout.html:34
 msgid "Category"
 msgstr ""
@@ -633,26 +643,31 @@ msgstr ""
 #: blueprints/prod/prod.py:77 blueprints/prod/templates/prod/products.html:42
 #: blueprints/prod/templates/prod/products.html:44
 #: blueprints/prod/templates/prod/products_to_oder.html:24
+#: blueprints/sup/templates/sup/reassign_supplier.html:25
 #: templates/layout.html:35
 msgid "Supplier"
 msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:26
 #: blueprints/prod/templates/prod/products.html:47
+#: blueprints/sup/templates/sup/reassign_supplier.html:26
 msgid "Min stock"
 msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:26
 #: blueprints/prod/templates/prod/products.html:47
+#: blueprints/sup/templates/sup/reassign_supplier.html:26
 msgid "Order qty"
 msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:76
+#: blueprints/sup/templates/sup/reassign_supplier.html:76
 msgctxt "question"
 msgid "Reassign all products"
 msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:80
+#: blueprints/sup/templates/sup/reassign_supplier.html:80
 msgid "This will reassign"
 msgstr ""
 
@@ -984,27 +999,31 @@ msgstr ""
 msgid "Create supplier"
 msgstr ""
 
-#: blueprints/sup/sup.py:113
+#: blueprints/sup/sup.py:129
 #, python-format
 msgid "Supplier '%(supplier_name)s' created"
 msgstr ""
 
-#: blueprints/sup/sup.py:139
+#: blueprints/sup/sup.py:155
 msgid "Can't delete supplier! There are still products attached!"
 msgstr ""
 
-#: blueprints/sup/sup.py:146
+#: blueprints/sup/sup.py:162
 #, python-format
 msgid "Supplier '%(sup_name)s' has been deleted"
 msgstr ""
 
-#: blueprints/sup/sup.py:161
+#: blueprints/sup/sup.py:180
 msgid "Supplier updated"
 msgstr ""
 
-#: blueprints/sup/sup.py:177
+#: blueprints/sup/sup.py:195 blueprints/sup/sup.py:264
 #, python-format
 msgid "%(supplier)s does not exist!"
+msgstr ""
+
+#: blueprints/sup/sup.py:235
+msgid "Supplier responsable updated"
 msgstr ""
 
 #: blueprints/sup/templates/sup/edit_supplier.html:3
@@ -1029,6 +1048,14 @@ msgstr ""
 
 #: blueprints/sup/templates/sup/new_supplier.html:13
 msgid "Create new supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/reassign_supplier.html:3
+msgid "Reassign supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/reassign_supplier.html:9
+msgid "Reassign all products for supplier"
 msgstr ""
 
 #: blueprints/sup/templates/sup/suppliers.html:3

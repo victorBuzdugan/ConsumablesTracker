@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ gettext("Reassign supplier") }}{% endblock %}
+
+{% block main %}
+
+<div class="card mx-auto mb-3" style="max-width: 70rem;">
+    <div class="card-header h5 py-2">
+        {{ gettext("Reassign all products for supplier") }}
+        <br>
+        <span class="text-secondary">{{ request.view_args.supplier }}</span>
+    </div>
+    <ul class="list-group list-group-flush">
+        <li class="list-group-item p-0">
+            <div class="table-responsive mx-auto" style="width: auto;">
+                <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
+                    <caption class="text-center pb-0">{{ gettext("*Strikethrough products are no longer in use.") }}</caption>
+                    <caption class="text-center pb-0">{{ gettext("*Critical products are highlighted in red.") }}</caption>
+                    <thead>
+                        <tr>
+                            <th class="px-1">{{ gettext("Code") }}</th>
+                            <th class="px-1">{{ gettext("Description") }}</th>
+                            <th class="px-1">{{ gettext("Responsable") }}</th>
+                            <th class="px-1">{{ gettext("Category") }}</th>
+                            <th class="px-1">{{ gettext("Supplier") }}</th>
+                            <th>{{ gettext("Min stock") }} / {{ gettext("Order qty") }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <span class="
+                                {% if not product.in_use %}
+                                    text-decoration-line-through
+                                {% endif %}
+                                "><a class="
+                                {% if product.critical %}
+                                    link-danger
+                                {% else %}
+                                    link-dark
+                                {% endif %}
+                                link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('prod.edit_product', product=product.name) }}">{{ product.name }}</a>
+                                </span>
+                            </td>
+                            <td>{{ product.description }}</td>
+                            <td>{{ product.responsable.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.supplier.name }}</td>
+                            <td>{{ product.min_stock }} / {{ product.ord_qty }} {{ product.meas_unit }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </li>
+    </ul>
+
+    <form method="POST">
+        <div class="card-body">
+            {{ form.csrf_token }}
+            <div class="mx-auto m-1" style="max-width: 25rem;">
+                <div class="form-floating">
+                    {{ form.responsable_id }}
+                    {{ form.responsable_id.label }}
+                </div>
+            </div>
+        </div>
+        <div class="card-footer py-3">
+            <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#reassignModal">{{ gettext("Reassign all products") }}</button>
+            
+            <div class="modal fade" id="reassignModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5">{{ pgettext("question", "Reassign all products") }}?</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ gettext("This will reassign") }} {{ products|length }} {{ ngettext("product", "products", products|length) }}!
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
+                            {{ form.reassign }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

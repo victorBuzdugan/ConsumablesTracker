@@ -7,12 +7,12 @@ from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
-from sqlalchemy.orm import joinedload, raiseload
-from wtforms import (BooleanField, IntegerField, StringField, SubmitField,
-                     TextAreaField)
+from sqlalchemy.orm import defer, joinedload, raiseload
+from wtforms import (BooleanField, IntegerField, SelectField, StringField,
+                     SubmitField, TextAreaField)
 from wtforms.validators import InputRequired, Length
 
-from database import Supplier, dbSession
+from database import Category, Product, Supplier, User, dbSession
 from helpers import admin_required, flash_errors, logger
 
 func: Callable
@@ -72,6 +72,22 @@ class EditSupForm(CreateSupForm):
     delete = SubmitField(
         label=lazy_gettext("Delete"),
         render_kw={"class": "btn btn-danger"})
+    reassign = SubmitField(
+        label=lazy_gettext("Reassign all products"),
+        render_kw={"class": "btn btn-warning"})
+
+
+class ReassignSupForm(FlaskForm):
+    """Reassign supplier products form."""
+    reassign = SubmitField(
+        label=lazy_gettext("Reassign all products"),
+        render_kw={"class": "btn btn-warning"})
+    responsable_id = SelectField(
+        label=lazy_gettext("New responsable"),
+        coerce=int,
+        render_kw={
+                "class": "form-select",
+                })
 
 
 @sup_bp.route("/suppliers")
@@ -146,6 +162,9 @@ def edit_supplier(supplier):
                     flash(gettext("Supplier '%(sup_name)s' has been deleted",
                                   sup_name=sup.name))
                     return redirect(url_for("sup.suppliers"))
+            elif edit_sup_form.reassign.data:
+                return redirect(url_for("sup.reassign_supplier",
+                                        supplier=sup.name))
             else:
                 try:
                     sup.name = edit_sup_form.name.data
@@ -172,10 +191,80 @@ def edit_supplier(supplier):
                 .filter_by(name=escape(supplier)))):
             edit_sup_form = EditSupForm(obj=sup)
         else:
-            # flash(f"{supplier} does not exist!", "error")
-            logger.warning("Supplier editing error(s)")
+            logger.debug("'%s' does not exist!", supplier)
             flash(gettext("%(supplier)s does not exist!",
                           supplier=supplier), "error")
             return redirect(url_for("sup.suppliers"))
 
     return render_template("sup/edit_supplier.html", form=edit_sup_form)
+
+
+@sup_bp.route("/<path:supplier>/reassign", methods=["GET", "POST"])
+def reassign_supplier(supplier):
+    """Reassign all products from supplier."""
+    logger.info("Reassign products supplier '%s' page", supplier)
+    reassign_sup_form: ReassignSupForm = ReassignSupForm()
+
+    with dbSession() as db_session:
+        users = db_session.execute(
+            select(User.id, User.name)
+            .filter(User.in_use==True,
+                    User.reg_req==False)
+            .order_by(func.lower(User.name))
+            ).all()
+    reassign_sup_form.responsable_id.choices = [
+        (0, gettext("Select a new responsible"))]
+    reassign_sup_form.responsable_id.choices.extend(
+        [(user.id, user.name) for user in users])
+
+    if reassign_sup_form.validate_on_submit():
+        if reassign_sup_form.responsable_id.data:
+            with dbSession() as db_session:
+                sup = db_session.scalar(
+                    select(Supplier)
+                    .filter_by(name=escape(supplier)))
+                products = db_session.scalars(
+                    select(Product)
+                    .filter_by(supplier_id=sup.id)
+                    ).all()
+                for product in products:
+                    product.responsable_id = (reassign_sup_form
+                                              .responsable_id.data)
+                db_session.commit()
+                logger.debug("Supplier '%s' responsable updated", sup.name)
+                flash(gettext("Supplier responsable updated"))
+        else:
+            flash(gettext("You have to select a new responsible first"),
+                  "error")
+        return redirect(url_for("sup.reassign_supplier", supplier=supplier))
+
+    elif reassign_sup_form.errors:
+        logger.warning("Supplier reassign error(s)")
+        flash_errors(reassign_sup_form.errors)
+
+    with dbSession() as db_session:
+        if (sup := db_session.scalar(
+                select(Supplier)
+                .filter_by(name=escape(supplier)))):
+            products = db_session.scalars(
+                select(Product)
+                .join(Product.supplier)
+                .filter_by(name=sup.name)
+                .options(
+                    defer(Product.to_order, raiseload=True),
+                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.category).load_only(Category.name),
+                    joinedload(Product.supplier).load_only(Supplier.name),
+                    raiseload("*"))
+                .order_by(func.lower(Product.responsable_id),
+                          func.lower(Product.name))
+            ).unique().all()
+        else:
+            logger.debug("'%s' does not exist!", supplier)
+            flash(gettext("%(supplier)s does not exist!",
+                          supplier=supplier), "error")
+            return redirect(url_for("sup.suppliers"))
+
+    return render_template("sup/reassign_supplier.html",
+                           form=reassign_sup_form,
+                           products=products)

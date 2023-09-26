@@ -8,7 +8,7 @@ from flask import g, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 
-from database import Supplier, dbSession
+from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
                    create_test_db, create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
@@ -317,4 +317,146 @@ def test_failed_delete_category(client: FlaskClient, admin_logged_in, sup_id):
         assert f"Can't delete supplier! There are still products attached!" in unescape(response.text)
     with dbSession() as db_session:
         assert db_session.get(Supplier, sup.id)
+# endregion
+
+
+# region: reassign supplier
+def test_landing_page_from_supplier_edit(client: FlaskClient, admin_logged_in):
+    CAT_ID = 1
+    with dbSession() as db_session:
+        sup = db_session.get(Supplier, CAT_ID)
+    with client:
+        client.get("/")
+        response = client.get(url_for("sup.edit_supplier", supplier=sup.name))
+        assert bytes(sup.name, "UTF-8") in response.data
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": sup.name,
+            "reassign": True,
+        }
+        response = client.post(url_for("sup.edit_supplier", supplier=sup.name),
+                            data=data, follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("sup.reassign_supplier", supplier=sup.name)
+        assert b"Reassign all products for supplier" in response.data
+        assert bytes(sup.name, "UTF-8") in response.data
+
+
+def test_reassign_supplier(client: FlaskClient, admin_logged_in):
+    # for testing create a new supplier
+    # that has all products responsable_id to 1 - user1
+    RESP_ID = 1
+    NEW_RESP_ID = 2
+    with dbSession() as db_session:
+        new_sup = Supplier("new_supplier")
+        db_session.add(new_sup)
+        db_session.commit()
+        for ind in range(5):
+            new_product = Product(
+                name=f"new_product_{ind}",
+                description="Some description",
+                responsable=db_session.get(User, RESP_ID),
+                category=db_session.get(Category, RESP_ID),
+                supplier=new_sup,
+                meas_unit="pc",
+                min_stock=0,
+                ord_qty=1)
+            db_session.add(new_product)
+        db_session.commit()
+
+        products = db_session.scalars(
+            select(Product)
+            .filter_by(supplier_id=new_sup.id)
+            ).all()
+        for product in products:
+            assert product.responsable_id == RESP_ID
+        with client:
+            client.get("/")
+            response = client.get(url_for("sup.reassign_supplier", supplier=new_sup.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(new_sup.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("sup.reassign_supplier", supplier=new_sup.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert quote(response.request.path) == url_for("sup.reassign_supplier", supplier=new_sup.name)
+            assert b"Supplier responsable updated" in response.data
+            assert b"You have to select a new responsible first" not in response.data
+        # check and teardown
+        for product in products:
+            db_session.refresh(product)
+            assert product.responsable_id == NEW_RESP_ID
+            db_session.delete(product)
+        db_session.delete(new_sup)
+        db_session.commit()
+
+
+def test_failed_reassign_supplier(client: FlaskClient, admin_logged_in):
+    SUP_ID = 3
+    NEW_RESP_ID = 0
+    with dbSession() as db_session:
+        sup = db_session.get(Supplier, SUP_ID)
+        with client:
+            client.get("/")
+            response = client.get(url_for("sup.reassign_supplier", supplier=sup.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(sup.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("sup.reassign_supplier", supplier=sup.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 1
+            assert response.history[0].status_code == 302
+            assert response.status_code == 200
+            assert quote(response.request.path) == url_for("sup.reassign_supplier", supplier=sup.name)
+            assert b"Supplier responsable updated" not in response.data
+            assert b"You have to select a new responsible first" in response.data
+
+
+def test_failed_reassign_supplier_bad_choice(client: FlaskClient, admin_logged_in):
+    SUP_ID = 2
+    NEW_RESP_ID = 15
+    with dbSession() as db_session:
+        sup = db_session.get(Supplier, SUP_ID)
+        with client:
+            client.get("/")
+            response = client.get(url_for("sup.reassign_supplier", supplier=sup.name))
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert bytes(sup.name, "UTF-8") in response.data
+            data = {
+                "csrf_token": g.csrf_token,
+                "responsable_id": str(NEW_RESP_ID),
+                "submit": True,
+                }
+            response = client.post(url_for("sup.reassign_supplier", supplier=sup.name), 
+                                    data=data, follow_redirects=True)
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert b"Supplier responsable updated" not in response.data
+            assert b"Not a valid choice." in response.data
+
+
+def test_failed_reassign_supplier_bad_name(client: FlaskClient, admin_logged_in):
+    with client:
+        client.get("/")
+        response = client.get(url_for("sup.reassign_supplier", supplier="not_existing_supplier"), follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("sup.suppliers")
+        assert b"not_existing_supplier does not exist!" in response.data
 # endregion
