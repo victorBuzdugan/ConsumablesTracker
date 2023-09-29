@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Callable, List, Optional
 
 from flask_babel import gettext
-from sqlalchemy import ForeignKey, create_engine, func, select
+from sqlalchemy import URL, ForeignKey, create_engine, func, select
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
@@ -13,8 +13,13 @@ from werkzeug.security import generate_password_hash
 
 func: Callable
 
+DB_NAME = "inventory.db"
+
 # factory for creating new database connections objects
-engine = create_engine("sqlite:///inventory.db", echo=True)
+db_url = URL.create(
+    drivername="sqlite",
+    database=DB_NAME)
+engine = create_engine(url=db_url, echo=False)
 
 # factory for Session objects
 dbSession = sessionmaker(bind=engine)

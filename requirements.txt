@@ -1,3 +1,4 @@
+APScheduler==3.10.4
 astroid==2.15.5
 Babel==2.12.1
 blinker==1.6.2
@@ -26,9 +27,11 @@ pylint==2.17.4
 pytest==7.3.2
 python-dotenv==1.0.0
 pytz==2023.3.post1
+six==1.16.0
 SQLAlchemy==2.0.16
 tomlkit==0.11.8
 typing_extensions==4.6.3
+tzlocal==5.0.1
 Werkzeug==2.3.6
 wrapt==1.15.0
 WTForms==3.0.1

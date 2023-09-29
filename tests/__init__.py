@@ -2,17 +2,21 @@
 
 import pytest
 from flask.testing import FlaskClient
-from sqlalchemy import select, create_engine
+from sqlalchemy import URL, create_engine, select
 
 from app import app
-from database import dbSession, Base, User, Category, Supplier, Product
+from database import (DB_NAME, Base, Category, Product, Supplier, User,
+                      dbSession)
 
 
 @pytest.fixture(scope="session")
 def create_test_db():
     """Configure session to a test database. """
+    db_url = URL.create(
+        drivername="sqlite",
+        database="." + DB_NAME)
     testEngine = create_engine(
-        "sqlite:///.inventory.db",
+        url=db_url,
         echo=True,
         pool_size=10,
         max_overflow=20)
