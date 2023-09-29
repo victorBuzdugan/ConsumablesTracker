@@ -10,10 +10,13 @@ from zoneinfo import ZoneInfo
 from apscheduler.schedulers.background import BackgroundScheduler
 from flask import flash, redirect, session, url_for
 from flask_babel import gettext
-
-from database import DB_NAME, db_url
+from sqlalchemy import URL
 
 CURR_DIR = path.dirname(path.realpath(__file__))
+DB_NAME = "inventory.db"
+DB_URL = URL.create(
+    drivername="sqlite",
+    database=path.join(CURR_DIR, DB_NAME))
 
 # region: logging configuration
 log_formatter = logging.Formatter(
@@ -109,7 +112,7 @@ sch_logger.setLevel(logging.DEBUG)
 sch_logger.addHandler(log_handler)
 # configure and start scheduler
 scheduler = BackgroundScheduler(timezone=ZoneInfo("Europe/Bucharest"))
-scheduler.add_jobstore("sqlalchemy", url=str(db_url))
+scheduler.add_jobstore("sqlalchemy", url=str(DB_URL))
 scheduler.start()
 # add jobs
 if not scheduler.get_job("db_reinit"):

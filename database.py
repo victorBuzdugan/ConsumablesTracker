@@ -11,15 +11,12 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
+from helpers import DB_URL
+
 func: Callable
 
-DB_NAME = "inventory.db"
-
 # factory for creating new database connections objects
-db_url = URL.create(
-    drivername="sqlite",
-    database=DB_NAME)
-engine = create_engine(url=db_url, echo=False)
+engine = create_engine(url=DB_URL, echo=False)
 
 # factory for Session objects
 dbSession = sessionmaker(bind=engine)
