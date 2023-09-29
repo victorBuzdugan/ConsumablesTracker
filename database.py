@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from os import path
 from typing import Callable, List, Optional
 
 from flask_babel import gettext
@@ -11,10 +12,14 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
-from helpers import DB_URL
+from helpers import CURR_DIR
 
 func: Callable
 
+DB_NAME = "inventory.db"
+DB_URL = URL.create(
+    drivername="sqlite",
+    database=path.join(CURR_DIR, DB_NAME))
 # factory for creating new database connections objects
 engine = create_engine(url=DB_URL, echo=False)
 

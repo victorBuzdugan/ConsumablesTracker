@@ -5,8 +5,8 @@ from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine, select
 
 from app import app
-from database import Base, Category, Product, Supplier, User, dbSession
-from helpers import DB_NAME
+from database import (DB_NAME, Base, Category, Product, Supplier, User,
+                      dbSession)
 
 
 @pytest.fixture(scope="session")

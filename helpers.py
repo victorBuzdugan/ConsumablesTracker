@@ -1,22 +1,15 @@
 import logging
-import sqlite3
 from datetime import datetime
 from functools import wraps
 from logging.handlers import TimedRotatingFileHandler
 from os import path
-from shutil import copyfile
 from zoneinfo import ZoneInfo
 
-from apscheduler.schedulers.background import BackgroundScheduler
 from flask import flash, redirect, session, url_for
 from flask_babel import gettext
 from sqlalchemy import URL
 
 CURR_DIR = path.dirname(path.realpath(__file__))
-DB_NAME = "inventory.db"
-DB_URL = URL.create(
-    drivername="sqlite",
-    database=path.join(CURR_DIR, DB_NAME))
 
 # region: logging configuration
 log_formatter = logging.Formatter(
@@ -54,87 +47,6 @@ def record_factory(*args, **kwargs):
     return record
 
 logging.setLogRecordFactory(record_factory)
-# endregion
-
-
-# region scheduler
-def db_backup() -> None:
-    """Backup and vacuum the database."""
-    prod_db = path.join(CURR_DIR, DB_NAME)
-    backup_db = path.join(CURR_DIR, path.splitext(DB_NAME)[0] + "_backup.db")
-    source = sqlite3.connect(prod_db)
-    if path.isfile(backup_db):
-        dest = sqlite3.connect(backup_db)
-        with source, dest:
-            try:
-                source.backup(dest)
-                logger.info("Database backed up")
-            except Exception as err:
-                logger.warning("Database could not be backed up")
-                logger.debug(err)
-        dest.close()
-    else:
-        copyfile(prod_db, backup_db)
-        logger.info("Database backed up. Creted a new backup file")
-    try:
-        source.execute("VACUUM")
-        logger.info("Production database vacuumed")
-    except Exception as err:
-        logger.warning("Database could not be vacuumed")
-        logger.debug(err)
-    source.close()
-
-def db_reinit() -> None:
-    """Reinitialise the database from original if it exists.
-    
-    Make sure the scheduled jobs are in the original database
-    """
-    prod_db = path.join(CURR_DIR, DB_NAME)
-    orig_db = path.join(CURR_DIR, path.splitext(DB_NAME)[0] + "_orig.db")
-    if path.isfile(orig_db):
-        source = sqlite3.connect(orig_db)
-        dest = sqlite3.connect(prod_db)
-        with source, dest:
-            try:
-                source.backup(dest)
-                logger.info("Database reinitialised")
-            except Exception as err:
-                logger.warning("Database could not be reinitialised")
-                logger.debug(err)
-        source.close()
-        dest.close()
-    else:
-        logger.debug("No need to reinitialise the database")
-
-# configure scheduler logging
-sch_logger = logging.getLogger('apscheduler')
-sch_logger.setLevel(logging.DEBUG)
-sch_logger.addHandler(log_handler)
-# configure and start scheduler
-scheduler = BackgroundScheduler(timezone=ZoneInfo("Europe/Bucharest"))
-scheduler.add_jobstore("sqlalchemy", url=str(DB_URL))
-scheduler.start()
-# add jobs
-if not scheduler.get_job("db_reinit"):
-    scheduler.add_job(
-        db_reinit,
-        'cron', hour=7, minute=00,
-        id="db_reinit",
-        name="Database reinitialisation",
-        coalesce=True,
-        max_instances=1,
-        replace_existing=True,
-        misfire_grace_time=1)
-if not scheduler.get_job("db_backup"):
-    scheduler.add_job(
-        db_backup,
-        'cron', hour=7, minute=30,
-        id="db_backup",
-        name="Database backup",
-        coalesce=True,
-        max_instances=1,
-        replace_existing=True,
-        misfire_grace_time=None)
 # endregion
 
 
