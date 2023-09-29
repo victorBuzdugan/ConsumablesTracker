@@ -1,5 +1,6 @@
 import logging
 import sqlite3
+from datetime import datetime
 from functools import wraps
 from logging.handlers import TimedRotatingFileHandler
 from os import path
@@ -16,9 +17,7 @@ CURR_DIR = path.dirname(path.realpath(__file__))
 
 # region: logging configuration
 log_formatter = logging.Formatter(
-    fmt='%(asctime)s %(levelname)-8s %(user)-10s: %(message)s',
-    datefmt='%d.%m %H:%M'
-)
+    fmt='%(tztime)s %(levelname)-8s %(user)-10s: %(message)s')
 
 log_handler = TimedRotatingFileHandler(
     filename=path.join(CURR_DIR, 'logger.log'),
@@ -46,6 +45,9 @@ def record_factory(*args, **kwargs):
         record.user = session.get("user_name", default="no_user")
     except RuntimeError:
         record.user = "no_user"
+    # time with timezone
+    record.tztime = datetime.now(
+        tz=ZoneInfo("Europe/Bucharest")).strftime("%d.%m %H:%M")
     return record
 
 logging.setLogRecordFactory(record_factory)
