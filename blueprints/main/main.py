@@ -31,6 +31,7 @@ def index():
             with dbSession() as db_session:
                 users = db_session.scalars(
                     select(User)
+                    .filter(User.name!="Admin")
                     .order_by(
                         User.reg_req.desc(),
                         User.in_use.desc(),

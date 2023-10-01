@@ -225,7 +225,7 @@ def test_validate_last_admin(client):
     with dbSession() as db_session:
         db_session.get(User, 1).admin = False
         db_session.commit()
-        assert db_session.scalar(select(func.count(User.id)).filter_by(admin=True)) == 1
+        assert db_session.scalar(select(func.count(User.id)).filter_by(admin=True, in_use=True)) == 1
         user = db_session.get(User, 2)
         assert user.admin
         try:

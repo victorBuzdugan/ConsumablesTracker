@@ -2,21 +2,23 @@
 
 from __future__ import annotations
 
-from os import path
+from os import path, getenv
 from typing import Callable, List, Optional
 
+from dotenv import load_dotenv
 from flask_babel import gettext
-from sqlalchemy import URL, ForeignKey, create_engine, func, select
+from sqlalchemy import URL, ForeignKey, create_engine, event, func, select
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
-from helpers import CURR_DIR
+from helpers import CURR_DIR, DB_NAME
 
 func: Callable
 
-DB_NAME = "inventory.db"
+load_dotenv()
+
 DB_URL = URL.create(
     drivername="sqlite",
     database=path.join(CURR_DIR, DB_NAME))
@@ -293,7 +295,8 @@ class User(Base):
         if not value:
             with dbSession() as db_session:
                 admins = db_session.scalars(
-                    select(User).filter_by(admin=True)).all()
+                    select(User)
+                    .filter_by(admin=True, in_use=True)).all()
                 if len(admins) == 1 and admins[0].id == self.id:
                     raise ValueError(gettext("You are the last admin!"))
         return value
@@ -780,3 +783,23 @@ class Product(Base):
             raise ValueError(
                 gettext("Can't 'retire' a product that needs to be ordered"))
         return value
+
+
+@event.listens_for(Base.metadata, "after_create")
+def create_hidden_admin(target, connection, **kw):
+    """Create a hidden admin user after db creation."""
+    with dbSession() as db_session:
+        if not db_session.get(User, 0):
+            admin = User(
+                name="Admin",
+                password=getenv('ADMIN_PASSW'),
+                admin=True,
+                in_use=False,
+                reg_req=False,
+                details="Hidden admin")
+            admin.id = 0
+            db_session.add(admin)
+            db_session.commit()
+
+
+Base.metadata.create_all(bind=engine)

@@ -17,12 +17,13 @@ The app is available in english and romanian, but can also be translated to othe
 ## Website
 Follow <https://victorb.eu.pythonanywhere.com> for a working demo.
 
-The database resets every day at 05:00 UTC (08:00 EEST Romania time).
+The database resets every day at 04:00 UTC (07:00 EEST Romania time).
 
 ## Login credentials
 Login credentials:
 | username 	| password 	| admin |
 |:--------:	|:--------:	|:-----:|
+|   Admin  	| .env file	|   x   |
 |   user1  	| Q!111111 	|   x   |
 |   user2  	| Q!222222 	|   x   |
 |   user3  	| Q!333333 	|       |
@@ -37,12 +38,13 @@ Clone the [repository](https://github.com/victorBuzdugan/ConsumablesTracker) fro
 ## Post install
 After cloning install all dependencies from `requirements.txt`
 
-You also have to provide a `.env` file for Flask secret key.
+You also have to provide a `.env` file for Flask secret key and [hidden admin](https://github.com/victorBuzdugan/ConsumablesTracker#hidden-admin) password.
 Create a new file named `.env` in the root folder:
 ```python
 # Optional Flask debug
 # FLASK_DEBUG="true"
 FLASK_SECRET_KEY="replace_this_with_secret_key"
+ADMIN_PASSW="replace_this_with_hidden_admin_password"
 ```
 You can follow the guide in the [official documentation](https://flask.palletsprojects.com/en/2.3.x/quickstart/#sessions) of Flask in order to generate a good `SECRET_KEY`.
 
@@ -51,8 +53,10 @@ The project comes with a demo `inventory.db` SQLite database.
 
 Because of the 'closed' environment nature of the app (users need to be approved by an admin after registration), if you edit the database with [sqlite3 command line shell](https://sqlite.org/cli.html) or a software like [DB Browser for SQLite](https://sqlitebrowser.org) be careful to **leave at least one admin user** in the database.
 
+Empty generated databases (delete demo `inventory.db` and run) will be populated with a [hidden admin](https://github.com/victorBuzdugan/ConsumablesTracker#hidden-admin).
+
 ## Login credentials
-Login credentials for demo `inventory.db` SQLite database are the same as for the demo website.
+Login credentials for demo `inventory.db` SQLite database are the same as for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#login-credentials).
 
 
 # Help
@@ -211,15 +215,41 @@ Along with with all the fields presented in [create new user](https://github.com
 ### Edit category, supplier
 You can edit all the fields as described in [create new category or supplier](https://github.com/victorBuzdugan/ConsumablesTracker#new-category-or-supplier).
 
-You can also reassign all product of this category or supplier to a user by clicking reassign all products.
+You can also reassign all product of this category or supplier to a user by clicking reassign all products. After reviewing all the products that will be modified and selecting the new responsible, confirm the reassignment and all products from this category/supplier will be transferred to the selected user.
 
 ### Edit products
 Along with with all the fields presented in [create new product](https://github.com/victorBuzdugan/ConsumablesTracker#new-product) you can manually flip the `to order` switch.
+
+# Hidden admin
+The _hidden admin_ is a user with administrative rights. He can create and edit elements just like a normal admin but he doesn't appear in any selects (like product responsible), cannot be edited through web interface and doesn't appear in the admin dashboard users table. He is invisible to the other admins.
+
+It's role is as a user with pure administration purposes, like an admin that supervises the app but isn't involved.
+
+It's automatically created when database initialises, with the password provided in the environment variable `ADMIN_PASSW` and with the username `Admin`. The password can be changed just like all other users. All other properties (name, in_use etc) should not be changed as this can lead to unexpected behaviour.
+
+# Extra features
+## Unit testing
+The app has every feature tested with `pytest`. The tests are provided in the repo. The target coverage of test is 100%.
+
+## Daily tasks
+Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
+
+The app provides a file (`daily_task.py`) that includes tasks like daily database backup or daily database reinitialization.
+
+### Backup function
+Makes a backup of the database, overwriting the previous backup if it exists. The function also [vacuums](https://www.sqlite.org/lang_vacuum.html) the working database file. The function doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
+
+### Re-init function
+Reintializes the database to a preset state (as used for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#website)). In order to use this function a file with the same name as the database file but with __orig_ suffix has to exist in the working directory (ex: if the database name is `inventory.db` the preset state database name should be `inventory_orig.db`). This function, also doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
+
+## Logging
+The app has a logger configured to write to a file some important events from the app. The log file (`logger.log`) is a time rotating file resetting after 30 days and keeping 1 file as backup, practically having almost 2 months of log records.
+
+The log records have timezone configuration and also point to the user that produced the event.
+
+The log level is preset on `DEBUG`.
 
 # Flowcharts
 ### User login/registration
 ![User login/registration flowchart](flowcharts/Login_registration.png)
 
-### To do
-- [ ] Test romanian translation
-- [ ] Email alert if action is pending

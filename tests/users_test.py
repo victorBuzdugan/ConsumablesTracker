@@ -217,6 +217,7 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email):
     ("new_user", "#Aaaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
     ("new_user", "1Aaaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
     ("user1", "Q!111111", "", "The user user1 allready exists"),
+    ("Admin", "Q!111111", "", "The user Admin allready exists"),
     ("new_user", "Q!111111", "plainaddress", "Invalid email adress"),
     ("new_user", "Q!111111", "#@%^%#$@#$@#.com", "Invalid email adress"),
     ("new_user", "Q!111111", "@example.com", "Invalid email adress"),
@@ -242,8 +243,8 @@ def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, e
         assert b"Create user" in response.data
         assert flash_message in unescape(response.text)
         assert f"User '{name}' created" not in unescape(response.text)
-    with dbSession() as db_session:
-        if name != "user1":
+    if (name != "user1") and (name != "Admin"):
+        with dbSession() as db_session:
             assert not db_session.scalar(select(User).filter_by(name=name))
 # endregion
 
@@ -419,7 +420,7 @@ def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
     with dbSession() as db_session:
         user = db_session.get(User, 2)
         orig_name = user.name
-        new_name = db_session.get(User, 1).name
+        new_name = db_session.get(User, 0).name
         with client:
             client.get("/")
             response = client.get(url_for("users.edit_user", username=orig_name))
@@ -491,14 +492,27 @@ def test_failed_edit_user_db_validators(client: FlaskClient, admin_logged_in,
 
 
 def test_failed_edit_user_bad_username(client: FlaskClient, admin_logged_in):
+    USERNAME = "not_existing_user"
     with client:
         client.get("/")
-        response = client.get(url_for("users.edit_user", username="not_existing_user"), follow_redirects=True)
+        response = client.get(url_for("users.edit_user", username=USERNAME), follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert b"not_existing_user does not exist!" in response.data
+        assert f"{USERNAME} does not exist!" in response.text
+
+
+def test_failed_edit_user_hidden_admin_bad_username(client: FlaskClient, admin_logged_in):
+    USERNAME = "Admin"
+    with client:
+        client.get("/")
+        response = client.get(url_for("users.edit_user", username=USERNAME), follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert f"{USERNAME} does not exist!" in response.text
 
 
 def test_edit_user_last_admin(client: FlaskClient, admin_logged_in):

@@ -175,7 +175,7 @@ def login():
                 select(User).filter_by(name=login_form.name.data))
         if user and check_password_hash(
                 user.password, login_form.password.data):
-            if user.in_use:
+            if user.in_use or user.name == "Admin":
                 if not user.reg_req:
                     language = session.get("language")
                     session.clear()

@@ -19,7 +19,7 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbar">
-                {% if session["user_id"] %}
+                {% if session["user_id"] is defined %}
                     <ul class="navbar-nav me-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href={{ url_for("inv.inventory") }}>{{ gettext("Inventory") }}</a></li>
                         {% if session["admin"] %}

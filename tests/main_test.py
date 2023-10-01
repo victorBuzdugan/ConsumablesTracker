@@ -6,10 +6,10 @@ from flask.testing import FlaskClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
-from database import User, dbSession, Category, Supplier, Product
+from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_suppliers, create_test_users,
-                   user_logged_in, create_test_products)
+                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_users, hidden_admin_logged_in, user_logged_in)
 
 pytestmark = pytest.mark.main
 
@@ -149,6 +149,38 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert b"Statistici" not in response.data
 
 
+def test_index_hidden_admin_logged_in_user_dashboard(client: FlaskClient, hidden_admin_logged_in):
+    with client:
+        response = client.get("/")
+        assert response.status_code == 200
+        with dbSession() as db_session:
+            user = db_session.scalar(select(User).options(
+                joinedload(User.products)).filter_by(id=session["user_id"]))
+            # user dashboard
+            assert response.status_code == 200
+            assert ('Logged in as <span class="text-secondary">' +
+                    f'{session["user_name"]}') in response.text
+            assert ('You have <span class="text-secondary">' +
+                    f'{user.in_use_products} products') in response.text
+            assert "Inventory check not required" in response.text
+            assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
+        assert b"Admin dashboard" in response.data
+        assert b"Statistics" in response.data
+        assert f'href={url_for("auth.register")}>Register' not in response.text
+        assert f'href={url_for("auth.login")}>Log In' not in response.text
+        assert f'href={url_for("inv.inventory")}>Inventory' in response.text
+        assert f'href={url_for("auth.change_password")}>Change password' in response.text
+        assert f'href={url_for("auth.logout")}>Log Out' in response.text
+        assert f'href={url_for("users.new_user")}>User' in response.text
+        assert f'href={url_for("cat.new_category")}>Category' in response.text
+        assert f'href={url_for("sup.new_supplier")}>Supplier' in response.text
+        assert f'href={url_for("prod.new_product")}>Product' in response.text
+        assert f'href={url_for("cat.categories")}>Categories' in response.text
+        assert f'href={url_for("sup.suppliers")}>Suppliers' in response.text
+        assert f'href={url_for("prod.products", ordered_by="code")}>Products' in response.text
+        assert f'href={url_for("prod.products_to_order")}>Order' in response.text
+
+
 def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_logged_in):
     with client:
         response = client.get("/")
@@ -213,6 +245,44 @@ def test_index_admin_logged_in_admin_dashboard_table(client: FlaskClient, admin_
         assert b'Panou de bord administrator' not in response.data
         assert u'Utilizatorii cu text îngroșat sunt administratori' not in response.text
         assert u'Utilizatorii cu text tăiat sunt scoși din uz' not in response.text
+
+
+def test_index_hidden_admin_logged_in_admin_dashboard_table(client: FlaskClient, hidden_admin_logged_in):
+    with client:
+        response = client.get("/")
+        assert response.status_code == 200
+        assert b"Bolded users have administrative privileges" in response.data
+        assert b"Strikethrough users are no longer in use" in response.data
+        # name
+        assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user1/edit">user1</a>' in response.data
+        assert b'<span class=" fw-bolder"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user2/edit">user2</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user3/edit">user3</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user4/edit">user4</a>' in response.data
+        assert b'<span class=""><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user5/edit">user5</a>' in response.data
+        assert b'<span class="text-decoration-line-through"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="/user/user6/edit">user6</a>' in response.data
+        # assigned products
+        assert b"<td>13</td>" in response.data
+        assert b"<td>16</td>" in response.data
+        assert b"<td>9</td>" in response.data
+        assert b"<td>4</td>" in response.data
+        assert b"<td>0</td>" in response.data
+        # status
+        assert b"check inventory" not in response.data
+        assert b"requested inventory" not in response.data
+        assert f'href="{url_for("users.approve_reg", username="user5")}">requested registration' in response.text
+        with dbSession() as db_session:
+            db_session.get(User, 3).done_inv = False
+            db_session.get(User, 4).req_inv = True
+            db_session.get(User, 5).reg_req = False
+            db_session.commit()
+            response = client.get("/")
+            assert f'href="{url_for("inv.inventory_user", username="user3")}">check inventory' in response.text
+            assert f'href="{url_for("users.approve_check_inv", username="user4")}">requested inventory' in response.text
+            assert b"requested registration" not in response.data
+            db_session.get(User, 3).done_inv = True
+            db_session.get(User, 4).req_inv = False
+            db_session.get(User, 5).reg_req = True
+            db_session.commit()
 
 
 def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(client: FlaskClient, admin_logged_in):

@@ -7,9 +7,9 @@ from zoneinfo import ZoneInfo
 
 from flask import flash, redirect, session, url_for
 from flask_babel import gettext
-from sqlalchemy import URL
 
 CURR_DIR = path.dirname(path.realpath(__file__))
+DB_NAME = "inventory.db"
 
 # region: logging configuration
 log_formatter = logging.Formatter(
@@ -55,7 +55,7 @@ def login_required(f):
     """Decorate routes to require login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("user_id"):
+        if session.get("user_id") == None:
             flash(gettext("You have to be logged in..."), "warning")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
@@ -65,7 +65,7 @@ def admin_required(f):
     """Decorate routes to require admin login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get("user_id") or not session.get("admin"):
+        if (session.get("user_id") == None) or (not session.get("admin")):
             flash(gettext("You have to be an admin..."), "warning")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)

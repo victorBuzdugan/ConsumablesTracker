@@ -1,6 +1,7 @@
 """Authentification blueprint tests."""
 
 from html import unescape
+from os import getenv
 
 import pytest
 from flask import g, session, url_for
@@ -176,12 +177,44 @@ def test_succesfull_login_and_logout(client: FlaskClient):
         assert session["user_id"] == test_user.id
         assert session["admin"] == test_user.admin
         assert session["user_name"] == test_user.name
+        assert f"Welcome {test_user.name}" in response.text
     assert len(response.history) == 1
     assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert response.request.path == "/"
-    assert b"Welcome user4" in response.data
+    # logout
+    with client:
+        client.get("/")
+        response = client.get(url_for("auth.logout"), follow_redirects=True)
+        assert not session.get("user_id")
+        assert not session.get("admin")
+        assert not session.get("user_name")
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
 
+
+def test_succesfull_hidden_admin_login_and_logout(client: FlaskClient):
+    with dbSession() as db_session:
+        test_user = db_session.scalar(
+                select(User).filter_by(name="Admin"))
+    with client:
+        client.get("/")
+        client.get(url_for("auth.login"))
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": test_user.name,
+            "password": getenv('ADMIN_PASSW')}
+        response = client.post("/auth/login", data=data, follow_redirects=True)
+        assert session["user_id"] == test_user.id
+        assert session["admin"] == test_user.admin
+        assert session["user_name"] == test_user.name
+        assert f"Welcome {test_user.name}" in response.text
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
+    assert response.status_code == 200
+    assert response.request.path == "/"
     # logout
     with client:
         client.get("/")

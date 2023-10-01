@@ -274,7 +274,8 @@ def edit_user(username):
     with dbSession() as db_session:
         if (user := db_session.scalar(
                 select(User)
-                .filter_by(name=escape(username)))):
+                .filter(User.name==escape(username),
+                        User.name!="Admin"))):
             edit_user_form = EditUserForm(obj=user)
         else:
             flash(gettext("%(username)s does not exist!",

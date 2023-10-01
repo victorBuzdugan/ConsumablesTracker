@@ -1,23 +1,26 @@
 """Pytest app fixtures."""
 
+import pathlib
+
 import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine, select
 
 from app import app
-from database import (DB_NAME, Base, Category, Product, Supplier, User,
-                      dbSession)
+from database import Base, Category, Product, Supplier, User, dbSession
+from helpers import DB_NAME, log_handler
 
+TEST_DB_NAME = "." + DB_NAME
 
 @pytest.fixture(scope="session")
 def create_test_db():
     """Configure session to a test database. """
     db_url = URL.create(
         drivername="sqlite",
-        database="." + DB_NAME)
+        database=TEST_DB_NAME)
     testEngine = create_engine(
         url=db_url,
-        echo=True,
+        echo=False,
         pool_size=10,
         max_overflow=20)
     dbSession.configure(bind=testEngine)
@@ -37,6 +40,9 @@ def client(
     app.testing = True
     app.secret_key = 'testing'
     yield app.test_client()
+    # delete log file after all tests
+    pathlib.Path.unlink(log_handler.baseFilename, missing_ok=True)
+    pathlib.Path.unlink(TEST_DB_NAME, missing_ok=True)
 
 
 # region: users fixtures
@@ -102,6 +108,23 @@ def admin_logged_in(client: FlaskClient):
     with dbSession() as db_session:
         test_admin = db_session.scalar(
                 select(User).filter_by(name="user1"))
+    # 'log in' test admin
+    with client.session_transaction() as session:
+        session["user_id"] = test_admin.id
+        session["admin"] = test_admin.admin
+        session["user_name"] = test_admin.name
+    
+    yield
+
+    client.get("/auth/logout")
+
+
+@pytest.fixture(scope="function")
+def hidden_admin_logged_in(client: FlaskClient):
+    """Log in admin Admin."""
+    with dbSession() as db_session:
+        test_admin = db_session.scalar(
+                select(User).filter_by(name="Admin"))
     # 'log in' test admin
     with client.session_transaction() as session:
         session["user_id"] = test_admin.id
