@@ -43,7 +43,6 @@ class LoginForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
-            "autocomplete": "off",
             })
     password = PasswordField(
         label=lazy_gettext("Password"),
@@ -87,6 +86,7 @@ class RegisterForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
+            "autocomplete": "new-password",
             })
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
@@ -99,6 +99,7 @@ class RegisterForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Retype password"),
+            "autocomplete": "new-password",
             })
     email = EmailField(
         label="Email",
@@ -130,6 +131,7 @@ class ChgPasswForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Old password"),
+            "autocomplete": "current-password",
             })
     password = PasswordField(
         label=lazy_gettext("New password"),
@@ -144,6 +146,7 @@ class ChgPasswForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("New password"),
+            "autocomplete": "new-password",
             })
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
@@ -156,6 +159,7 @@ class ChgPasswForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Retype password"),
+            "autocomplete": "new-password",
             })
     submit = SubmitField(
         label=lazy_gettext("Change password"),

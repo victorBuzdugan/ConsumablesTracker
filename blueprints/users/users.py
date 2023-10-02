@@ -56,6 +56,7 @@ class CreateUserForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
+            "autocomplete": "new-password",
             })
     email = EmailField(
         label="Email",
@@ -74,6 +75,7 @@ class CreateUserForm(FlaskForm):
                 "class": "form-control",
                 "placeholder": lazy_gettext("Details"),
                 "style": "height: 5rem",
+                "autocomplete": "off",
                 })
     admin = BooleanField(
         label=lazy_gettext("Admin"),
@@ -102,6 +104,7 @@ class EditUserForm(CreateUserForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
+            "autocomplete": "new-password",
             })
     all_products = IntegerField()
     in_use_products = IntegerField()

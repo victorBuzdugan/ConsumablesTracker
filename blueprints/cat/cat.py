@@ -51,6 +51,7 @@ class CreateCatForm(FlaskForm):
                 "class": "form-control",
                 "placeholder": lazy_gettext("Details"),
                 "style": "height: 5rem",
+                "autocomplete": "off",
                 })
     submit = SubmitField(
         label=lazy_gettext("Create category"),

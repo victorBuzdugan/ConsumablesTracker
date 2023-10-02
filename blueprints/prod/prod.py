@@ -85,6 +85,7 @@ class CreateProdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Measuring unit"),
+            "autocomplete": "off",
             })
     min_stock = IntegerField(
         label=lazy_gettext("Minimum stock"),
@@ -96,6 +97,7 @@ class CreateProdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Minimum stock"),
+            "autocomplete": "off",
             })
     ord_qty = IntegerField(
         label=lazy_gettext("Order quantity"),
@@ -107,6 +109,7 @@ class CreateProdForm(FlaskForm):
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Order quantity"),
+            "autocomplete": "off",
             })
     critical = BooleanField(
         label=lazy_gettext("Critical product"),
