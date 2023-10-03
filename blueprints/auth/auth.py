@@ -1,6 +1,7 @@
 """Authentification blueprint."""
 
-from flask import Blueprint, flash, redirect, render_template, session, url_for
+from flask import (Blueprint, flash, redirect, render_template, request,
+                   session, url_for)
 from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from sqlalchemy import select
@@ -201,6 +202,10 @@ def login():
             flash(gettext("Wrong username or password!"), "warning")
     elif login_form.errors:
         flash_errors(login_form.errors)
+    
+    # redirect instead of render to avoid javascript glitches
+    if request.method == "POST":
+        return redirect(url_for(".login", form=login_form))
 
     return render_template("auth/login.html", form=login_form)
 
