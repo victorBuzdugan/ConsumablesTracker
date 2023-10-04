@@ -157,7 +157,10 @@ def test_failed_login(
             "csrf_token": g.csrf_token,
             "name": name,
             "password": password}
-        response = client.post("/auth/login", data=data)
+        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
+        assert response.request.path == url_for("auth.login")
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert flash_message in response.text
 
@@ -230,21 +233,31 @@ def test_succesfull_hidden_admin_login_and_logout(client: FlaskClient):
 
 def test_failed_login_no_csrf(client: FlaskClient):
     with client:
+        client.get("/")
+        client.get(url_for("auth.login"))
         data = {
                 "name": "user4",
                 "password": "P@ssw0rd"}
-        response = client.post("/auth/login", data=data)
+        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
+        assert response.request.path == url_for("auth.login")
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert b"The CSRF token is missing." in response.data
 
 
 def test_failed_login_bad_csrf(client: FlaskClient):
     with client:
+        client.get("/")
+        client.get(url_for("auth.login"))
         data = {
             "csrf_token": "some_random_text",
             "name": "user4",
             "password": "P@ssw0rd"}
-        response = client.post("/auth/login", data=data)
+        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
+        assert response.request.path == url_for("auth.login")
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert b"The CSRF token is invalid." in response.data
 # endregion
