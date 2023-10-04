@@ -130,7 +130,7 @@ class EditUserForm(CreateUserForm):
         render_kw={"class": "btn btn-danger"})
 
 
-@users_bp.route("/<path:username>/approve-registration")
+@users_bp.route("/approve-registration/<path:username>")
 def approve_reg(username):
     """Approve registration of user `username`."""
     with dbSession() as db_session:
@@ -149,7 +149,7 @@ def approve_reg(username):
     return redirect(url_for("main.index"))
 
 
-@users_bp.route("/<path:username>/approve-inventory-check")
+@users_bp.route("/approve-inventory-check/<path:username>")
 def approve_check_inv(username):
     """Approve inventory check for user `username`."""
     with dbSession() as db_session:
@@ -170,7 +170,7 @@ def approve_check_inv(username):
     return redirect(url_for("main.index"))
 
 
-@users_bp.route("/approve-all-inventory-check")
+@users_bp.route("/all-approve-inventory-check")
 def approve_check_inv_all():
     """Approve inventory check for all eligible users."""
     with dbSession() as db_session:
@@ -214,7 +214,7 @@ def new_user():
     return render_template("users/new_user.html", form=new_user_form)
 
 
-@users_bp.route("/<path:username>/edit", methods=["GET", "POST"])
+@users_bp.route("/edit/<path:username>", methods=["GET", "POST"])
 def edit_user(username):
     """Edit user."""
     logger.info("Edit user '%s' page", username)

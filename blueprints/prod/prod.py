@@ -282,7 +282,7 @@ def new_product():
     return render_template("prod/new_product.html", form=new_prod_form)
 
 
-@prod_bp.route("/<path:product>/edit", methods=["GET", "POST"])
+@prod_bp.route("/edit/<path:product>", methods=["GET", "POST"])
 def edit_product(product):
     """Edit product."""
     logger.info("Edit product '%s' page", product)

@@ -141,7 +141,7 @@ def new_category():
     return render_template("cat/new_category.html", form=new_cat_form)
 
 
-@cat_bp.route("/<path:category>/edit", methods=["GET", "POST"])
+@cat_bp.route("/edit/<path:category>", methods=["GET", "POST"])
 def edit_category(category):
     """Edit category."""
     logger.info("Edit category '%s' page", category)
@@ -201,7 +201,7 @@ def edit_category(category):
     return render_template("cat/edit_category.html", form=edit_cat_form)
 
 
-@cat_bp.route("/<path:category>/reassign", methods=["GET", "POST"])
+@cat_bp.route("/reassign/<path:category>", methods=["GET", "POST"])
 def reassign_category(category):
     """Reassign all products from category."""
     logger.info("Reassign products category '%s' page", category)

@@ -140,7 +140,7 @@ def new_supplier():
     return render_template("sup/new_supplier.html", form=new_sup_form)
 
 
-@sup_bp.route("/<path:supplier>/edit", methods=["GET", "POST"])
+@sup_bp.route("/edit/<path:supplier>", methods=["GET", "POST"])
 def edit_supplier(supplier):
     """Edit supplier."""
     logger.info("Edit supplier %s", supplier)
@@ -200,7 +200,7 @@ def edit_supplier(supplier):
     return render_template("sup/edit_supplier.html", form=edit_sup_form)
 
 
-@sup_bp.route("/<path:supplier>/reassign", methods=["GET", "POST"])
+@sup_bp.route("/reassign/<path:supplier>", methods=["GET", "POST"])
 def reassign_supplier(supplier):
     """Reassign all products from supplier."""
     logger.info("Reassign products supplier '%s' page", supplier)
