@@ -194,8 +194,8 @@ def new_user():
         with dbSession() as db_session:
             try:
                 user = User(
-                    new_user_form.name.data,
-                    new_user_form.password.data,
+                    name=new_user_form.name.data,
+                    password=new_user_form.password.data,
                     reg_req=False)
                 new_user_form.populate_obj(user)
                 db_session.add(user)

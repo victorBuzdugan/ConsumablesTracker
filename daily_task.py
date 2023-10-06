@@ -2,7 +2,6 @@
 
 import sqlite3
 from os import path
-from shutil import copyfile
 
 from helpers import CURR_DIR, DB_NAME, logger
 

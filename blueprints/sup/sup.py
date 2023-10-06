@@ -38,7 +38,8 @@ class CreateSupForm(FlaskForm):
             InputRequired(gettext("Supplier name is required")),
             Length(
                 min=3,
-                message=gettext("Supplier name must have at least 3 characters"))],
+                message=gettext(
+                    "Supplier name must have at least 3 characters"))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -122,7 +123,7 @@ def new_supplier():
     if new_sup_form.validate_on_submit():
         with dbSession() as db_session:
             try:
-                supplier = Supplier(new_sup_form.name.data)
+                supplier = Supplier(name=new_sup_form.name.data)
                 new_sup_form.populate_obj(supplier)
                 db_session.add(supplier)
                 db_session.commit()
@@ -209,8 +210,7 @@ def reassign_supplier(supplier):
     with dbSession() as db_session:
         users = db_session.execute(
             select(User.id, User.name)
-            .filter(User.in_use==True,
-                    User.reg_req==False)
+            .filter_by(in_use=True, reg_req=False)
             .order_by(func.lower(User.name))
             ).all()
     reassign_sup_form.responsable_id.choices = [

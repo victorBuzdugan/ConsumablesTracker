@@ -123,7 +123,7 @@ def new_category():
     if new_cat_form.validate_on_submit():
         with dbSession() as db_session:
             try:
-                category = Category(new_cat_form.name.data)
+                category = Category(name=new_cat_form.name.data)
                 new_cat_form.populate_obj(category)
                 db_session.add(category)
                 db_session.commit()
@@ -210,8 +210,7 @@ def reassign_category(category):
     with dbSession() as db_session:
         users = db_session.execute(
             select(User.id, User.name)
-            .filter(User.in_use==True,
-                    User.reg_req==False)
+            .filter_by(in_use=True, reg_req=False)
             .order_by(func.lower(User.name))
             ).all()
     reassign_cat_form.responsable_id.choices = [

@@ -257,14 +257,17 @@ def new_product():
         with dbSession() as db_session:
             try:
                 new_prod = Product(
-                    new_prod_form.name.data,
-                    new_prod_form.description.data,
-                    db_session.get(User, new_prod_form.responsable_id.data),
-                    db_session.get(Category, new_prod_form.category_id.data),
-                    db_session.get(Supplier, new_prod_form.supplier_id.data),
-                    new_prod_form.meas_unit.data,
-                    new_prod_form.min_stock.data,
-                    new_prod_form.ord_qty.data)
+                    name=new_prod_form.name.data,
+                    description=new_prod_form.description.data,
+                    responsable=db_session.get(
+                        User, new_prod_form.responsable_id.data),
+                    category=db_session.get(
+                        Category, new_prod_form.category_id.data),
+                    supplier=db_session.get(
+                        Supplier, new_prod_form.supplier_id.data),
+                    meas_unit=new_prod_form.meas_unit.data,
+                    min_stock=new_prod_form.min_stock.data,
+                    ord_qty=new_prod_form.ord_qty.data)
                 new_prod_form.populate_obj(new_prod)
                 db_session.add(new_prod)
                 db_session.commit()

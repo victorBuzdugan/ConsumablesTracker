@@ -202,7 +202,7 @@ def login():
             flash(gettext("Wrong username or password!"), "warning")
     elif login_form.errors:
         flash_errors(login_form.errors)
-    
+
     # redirect instead of render to avoid javascript glitches
     if request.method == "POST":
         return redirect(url_for(".login", form=login_form))
@@ -237,7 +237,9 @@ def register():
     if reg_form.validate_on_submit():
         with dbSession() as db_session:
             try:
-                user = User(reg_form.name.data, reg_form.password.data)
+                user = User(
+                    name=reg_form.name.data,
+                    password=reg_form.password.data)
                 reg_form.populate_obj(user)
                 db_session.add(user)
                 db_session.commit()

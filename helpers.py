@@ -1,3 +1,5 @@
+"""Helpers module."""
+
 import logging
 from datetime import datetime
 from functools import wraps
@@ -55,7 +57,7 @@ def login_required(f):
     """Decorate routes to require login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if session.get("user_id") == None:
+        if session.get("user_id") is None:
             flash(gettext("You have to be logged in..."), "warning")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
@@ -65,7 +67,7 @@ def admin_required(f):
     """Decorate routes to require admin login."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if (session.get("user_id") == None) or (not session.get("admin")):
+        if (session.get("user_id") is None) or (not session.get("admin")):
             flash(gettext("You have to be an admin..."), "warning")
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
@@ -74,7 +76,7 @@ def admin_required(f):
 
 
 def flash_errors(form_errors: dict) -> None:
-    flash_errors = [error for errors in form_errors.values()
-                    for error in errors]
-    for error in flash_errors:
+    """Flash all errors from form."""
+    errors = [error for errors in form_errors.values() for error in errors]
+    for error in errors:
         flash(error, "error")
