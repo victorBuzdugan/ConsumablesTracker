@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from os import path, getenv
+from os import getenv, path
 from typing import Callable, List, Optional
 
 from dotenv import load_dotenv
 from flask_babel import gettext
-from sqlalchemy import URL, ForeignKey, create_engine, event, func, select
+from sqlalchemy import (URL, ForeignKey, Index, create_engine, event, func,
+                        select)
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
@@ -40,7 +41,7 @@ class Base(MappedAsDataclass, DeclarativeBase):
             return "categories"
         return cls.__name__.lower() + "s"
 
-    # id and name for all tables
+    # id for all tables
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
 
 
@@ -212,6 +213,11 @@ class User(Base):
     req_inv: Mapped[bool] = mapped_column(default=False)
     details: Mapped[Optional[str]] = mapped_column(default="", repr=False)
     email: Mapped[Optional[str]] = mapped_column(default="", repr=False)
+
+    __table_args__ = (
+        Index('idx_user_name', 'name'),
+        Index('idx_user_in_use', 'in_use'),
+    )
 
     username = synonym("name")
 
@@ -424,6 +430,11 @@ class Category(Base):
     description: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
 
+    __table_args__ = (
+        Index('idx_category_name', 'name'),
+        Index('idx_category_in_use', 'in_use'),
+    )
+
     @property
     def in_use_products(self) -> int:
         """Number of `in_use` products for category."""
@@ -493,6 +504,11 @@ class Supplier(Base):
     in_use: Mapped[bool] = mapped_column(default=True)
     details: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
+
+    __table_args__ = (
+        Index('idx_supplier_name', 'name'),
+        Index('idx_supplier_in_use', 'in_use'),
+    )
 
     @property
     def in_use_products(self) -> int:
@@ -587,6 +603,12 @@ class Product(Base):
     to_order: Mapped[bool] = mapped_column(default=False)
     critical: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
+
+    __table_args__ = (
+        Index('idx_product_name', 'name'),
+        Index('idx_product_to_order', 'to_order'),
+        Index('idx_product_in_use', 'in_use'),
+    )
 
     code = synonym("name")
 
@@ -788,6 +810,7 @@ class Product(Base):
 @event.listens_for(Base.metadata, "after_create")
 def create_hidden_admin(target, connection, **kw):
     """Create a hidden admin user after db creation."""
+    # pylint: disable=unused-argument
     with dbSession() as db_session:
         if not db_session.get(User, 0):
             admin = User(
