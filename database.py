@@ -246,9 +246,10 @@ class User(Base):
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("%(el_name)s must have a name",
                                      el_name=gettext("The user")))
+        value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
                 if db_session.scalar(select(User).filter_by(name=value)):
@@ -321,7 +322,7 @@ class User(Base):
             if self.products:
                 raise ValueError(
                     gettext("Can't 'retire' a user if he is still " +
-                    "responsible for products"))
+                            "responsible for products"))
             self.done_inv = True
             self.reg_req = False
             self.req_inv = False
@@ -404,7 +405,7 @@ class User(Base):
             if self.reg_req:
                 raise ValueError(
                     gettext("User with pending registration can't " +
-                    "request inventorying"))
+                            "request inventorying"))
             if not self.done_inv:
                 raise ValueError(gettext("User can allready check inventory"))
             if not self.in_use_products:
@@ -455,9 +456,10 @@ class Category(Base):
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("%(el_name)s must have a name",
                                      el_name=gettext("The category")))
+        value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
                 if db_session.scalar(select(Category).filter_by(name=value)):
@@ -530,9 +532,10 @@ class Supplier(Base):
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("%(el_name)s must have a name",
                                      el_name=gettext("The supplier")))
+        value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
                 if db_session.scalar(select(Supplier).filter_by(name=value)):
@@ -616,9 +619,10 @@ class Product(Base):
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("%(el_name)s must have a name",
                                      el_name=gettext("The product")))
+        value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
                 if db_session.scalar(select(Product).filter_by(name=value)):
@@ -631,9 +635,9 @@ class Product(Base):
     def validate_description(self, key: str, value: str) -> Optional[str]:
         """Check for empty description."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("Product must have a description"))
-        return value
+        return value.strip()
 
     @validates("responsable_id")
     def validate_responsable_id(self, key: str, user_id: int) -> Optional[int]:
@@ -763,9 +767,9 @@ class Product(Base):
     def validate_meas_unit(self, key: str, value: str) -> Optional[str]:
         """Check for empty measuring unit."""
         # pylint: disable=unused-argument
-        if not value:
+        if not value or not value.strip():
             raise ValueError(gettext("Product must have a measuring unit"))
-        return value
+        return value.strip()
 
     @validates("min_stock")
     def validate_min_stock(self, key: str, value: int) -> Optional[int]:

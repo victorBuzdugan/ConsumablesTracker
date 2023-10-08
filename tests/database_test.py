@@ -1,15 +1,16 @@
 """Test SQLAlchemy tables mapping."""
 
+import re
+
 import pytest
 from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import dbSession, User, Category, Supplier, Product
+from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_suppliers, create_test_users,
-                   user_logged_in, create_test_products)
-
+                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.db
 
@@ -73,34 +74,28 @@ def test_change_password(client):
         assert check_password_hash(db_session.get(User, user.id).password, "Q!111111")
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_no_name(client):
-    with dbSession() as db_session:
-        try:
-            db_session.add(User(None, "password"))
-        except ValueError as err:
-            assert "The user must have a name" in str(err)
-            db_session.rollback()
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_no_password(client):
-    with dbSession() as db_session:
-        try:
-            db_session.add(User("name", None))
-        except ValueError as err:
-            assert "User must have a password" in str(err)
-            db_session.rollback()
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_username_duplicate(client):
-    with dbSession() as db_session:
-        try:
-            db_session.add(User("user1", "passw"))
-        except ValueError as err:
-            assert "The user user1 allready exists" in str(err)
-            db_session.rollback()
+@pytest.mark.parametrize(("name", "password", "error_msg"), (
+    # name
+    ("", "password", "The user must have a name"),
+    (" ", "password", "The user must have a name"),
+    (None, "password", "The user must have a name"),
+    ("Admin", "password", "The user Admin allready exists"),
+    ("user1", "password", "The user user1 allready exists"),
+    # password
+    ("test_user", "", "User must have a password"),
+    ("test_user", None, "User must have a password"),
+))
+def test_failed_user_creation(client, name, password, error_msg):
+    with pytest.raises(ValueError, match=re.escape(error_msg)):
+        User(
+            name=name,
+            password=password,
+            admin=0,
+            in_use=1,
+            done_inv=1,
+            reg_req=0,
+            req_inv=0,
+        )
 
 
 def test_bulk_user_insertion(client):
@@ -175,21 +170,17 @@ def test_user_all_products_property(client):
         assert user.all_products == all_products
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_delete_user_with_products_attached(client):
+def test_failed_delete_user_with_products_attached(client):
     with dbSession() as db_session:
         user = db_session.get(User, 1)
-        try:
+        with pytest.raises(ValueError, match="User can't be deleted or does not exist"):
             db_session.delete(user)
             db_session.commit()
-        except ValueError as err:
-            db_session.rollback()
-            assert "User can't be deleted or does not exist" in str(err)
-            assert db_session.get(User, user.id)
+    with dbSession() as db_session:
+        assert db_session.get(User, 1)
 
 
 #region: validators
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (5, "User with pending registration can't have products attached"),
@@ -199,28 +190,20 @@ def test_validate_user_products(client, user_id, err_message):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         user = db_session.get(User, user_id)
-        try:
+        with pytest.raises(ValueError, match=err_message):
             user.products.append(product)
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).responsable == product.responsable
+        assert db_session.get(Product, 1).responsable == product.responsable
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_admin(client):
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         assert user.reg_req
-        try:
+        with pytest.raises(ValueError, match="User with pending registration can't be admin"):
             user.admin = True
-        except ValueError as err:
-            db_session.rollback()
-            assert "User with pending registration can't be admin" in str(err)
-            assert not user.admin
+        assert not user.admin
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_last_admin(client):
     with dbSession() as db_session:
         db_session.get(User, 1).admin = False
@@ -228,27 +211,20 @@ def test_validate_last_admin(client):
         assert db_session.scalar(select(func.count(User.id)).filter_by(admin=True, in_use=True)) == 1
         user = db_session.get(User, 2)
         assert user.admin
-        try:
+        with pytest.raises(ValueError, match="You are the last admin!"):
             user.admin = False
-        except ValueError as err:
-            db_session.rollback()
-            assert "You are the last admin!" in str(err)
-            assert user.admin
-            db_session.get(User, 1).admin = True
-            db_session.commit()
+        assert user.admin
+        db_session.get(User, 1).admin = True
+        db_session.commit()
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_user_in_use(client):
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         assert user.in_use
-        try:
+        with pytest.raises(ValueError, match="Can't 'retire' a user if he is still responsible for products"):
             user.in_use = False
-        except ValueError as err:
-            db_session.rollback()
-            assert "Can't 'retire' a user if he is still responsible for products" in str(err)
-            assert user.in_use
+        assert user.in_use
 
 
 def test_validate_ok_in_use(client):
@@ -281,7 +257,6 @@ def test_validate_ok_in_use(client):
         assert not db_session.scalar(select(User).filter_by(name="temp_user"))
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (5, "User with pending registration can't check inventory"),
@@ -290,22 +265,19 @@ def test_validate_ok_in_use(client):
 def test_validate_done_inv(client, user_id, err_message):
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
-        try:
+        with pytest.raises(ValueError, match=err_message):
             user.done_inv = False
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
+        assert user.done_inv
 
-@pytest.mark.xfail(raises=ValueError)
+
 def test_validate_done_inv_no_prod(client):
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         user.reg_req = False
-        try:
+        with pytest.raises(ValueError, match="User without products attached can't check inventory"):
             user.done_inv = False
-        except ValueError as err:
-            db_session.rollback()
-            assert "User without products attached can't check inventory" in str(err)
+        assert user.done_inv
+
 
 def test_validate_ok_done_inv(client):
     with dbSession() as db_session:
@@ -320,7 +292,6 @@ def test_validate_ok_done_inv(client):
         assert user.check_inv
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (1, "Admin users can't request registration"),
@@ -331,40 +302,31 @@ def test_validate_reg_req(client, user_id, err_message):
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         assert not user.reg_req
-        try:
+        with pytest.raises(ValueError, match=err_message):
             user.reg_req = True
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
+        assert not user.reg_req
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_reg_req_req_inv(client):
     with dbSession() as db_session:
         user = db_session.get(User, 4)
         assert not user.reg_req
         user.req_inv = True
-        try:
+        with pytest.raises(ValueError, match="User that requested inventory can't request registration"):
             user.reg_req = True
-        except ValueError as err:
-            db_session.rollback()
-            assert "User that requested inventory can't request registration" in str(err)
+        assert not user.reg_req
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_reg_req_done_inv(client):
     with dbSession() as db_session:
         user = db_session.get(User, 4)
         assert not user.reg_req
         user.done_inv = False
-        try:
+        with pytest.raises(ValueError, match="User that checks inventory can't request registration"):
             user.reg_req = True
-        except ValueError as err:
-            db_session.rollback()
-            assert "User that checks inventory can't request registration" in str(err)
+        assert not user.reg_req
 
 
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (1, "Admins don't need to request inventorying"),
@@ -375,50 +337,39 @@ def test_validate_req_inv(client, user_id, err_message):
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         assert not user.req_inv
-        try:
+        with pytest.raises(ValueError, match=err_message):
             user.req_inv = True
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
+        assert not user.req_inv
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_req_inv_check_inv(client):
     with dbSession() as db_session:
         user = db_session.get(User, 3)
         assert not user.req_inv
         user.done_inv = False
-        try:
+        with pytest.raises(ValueError, match="User can allready check inventory"):
             user.req_inv = True
-        except ValueError as err:
-            db_session.rollback()
-            assert "User can allready check inventory" in str(err)
+        assert not user.req_inv
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_req_inv_prod(client):
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         assert not user.req_inv
         user.reg_req = False
         assert not user.all_products
-        try:
+        with pytest.raises(ValueError, match="Users without products can't request inventorying"):
             user.req_inv = True
-        except ValueError as err:
-            db_session.rollback()
-            assert "Users without products can't request inventorying" in str(err)
-        
+        assert not user.req_inv
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_admin_request_inventory(client):
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         assert user.admin
-        try:
+        with pytest.raises(ValueError, match="Admins don't need to request inventorying"):
             user.req_inv = True
-        except ValueError:
-            assert not db_session.get(User, 1).req_inv
+        assert not user.req_inv
 # endregion
 # endregion
 
@@ -459,25 +410,17 @@ def test_change_category_name(client):
         assert db_session.get(Category, category.id).name == old_name
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_category_duplicate(client):
+@pytest.mark.parametrize(("name", "error_msg"), (
+    ("", "The category must have a name"),
+    (" ", "The category must have a name"),
+    (None, "The category must have a name"),
+    ("Household", "The category (.)* allready exists"),
+    ("Groceries", "The category (.)* allready exists"),
+))
+def test_failed_category_creation(client, name, error_msg):
     with dbSession() as db_session:
-        category = db_session.get(Category, 1)
-        try:
-            db_session.add(Category(category.name))
-        except ValueError as err:
-            db_session.rollback()
-            assert f"The category {category.name} allready exists" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_category_no_name(client):
-    with dbSession() as db_session:
-        try:
-            db_session.add(Category(None))
-        except ValueError as err:
-            db_session.rollback()
-            assert f"The category must have a name" in str(err)
+        with pytest.raises(ValueError, match=error_msg):
+            Category(name)
 
 
 def test_bulk_category_insertion(client):
@@ -497,17 +440,14 @@ def test_bulk_category_insertion(client):
         db_session.commit()
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_delete_category_with_products_attached(client):
+def test_failed_delete_category_with_products_attached(client):
     with dbSession() as db_session:
         category = db_session.get(Category, 1)
-        try:
+        with pytest.raises(ValueError, match="Category can't be deleted or does not exist"):
             db_session.delete(category)
             db_session.commit()
-        except ValueError as err:
-            db_session.rollback()
-            assert "Category can't be deleted or does not exist" in str(err)
-            assert db_session.get(Category, category.id)
+    with dbSession() as db_session:
+        assert db_session.get(Category, 1)
 
 
 def test_category_in_use_products_property(client):
@@ -540,30 +480,22 @@ def test_category_all_products_property(client):
         assert category.all_products == all_products
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_category_products(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         category = db_session.get(Category, 8)
-        try:
+        with pytest.raises(ValueError, match="Not in use category can't have products attached"):
             category.products.append(product)
-        except ValueError as err:
-            db_session.rollback()
-            assert "Not in use category can't have products attached" in str(err)
-            assert db_session.get(Product, 1).category == product.category
+        assert db_session.get(Product, 1).category == product.category
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_category_not_in_use(client):
     with dbSession() as db_session:
         category = db_session.get(Category, 1)
         assert category.in_use
-        try:
+        with pytest.raises(ValueError, match="Not in use category can't have products attached"):
             category.in_use = False
-        except ValueError as err:
-            db_session.rollback()
-            assert "Not in use category can't have products attached" in str(err)
-            assert category.in_use
+        assert category.in_use
 # endregion
 
 
@@ -601,25 +533,17 @@ def test_change_supplier_name(client):
         assert db_session.get(Supplier, db_supplier.id).name == old_name
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_supplier_duplicate(client):
+@pytest.mark.parametrize(("name", "error_msg"), (
+    ("", "The supplier must have a name"),
+    (" ", "The supplier must have a name"),
+    (None, "The supplier must have a name"),
+    ("Amazon", "The supplier (.)* allready exists"),
+    ("Carrefour", "The supplier (.)* allready exists"),
+))
+def test_failed_supplier_creation(client, name, error_msg):
     with dbSession() as db_session:
-        supplier = db_session.get(Supplier, 1)
-        try:
-            db_session.add(Supplier(supplier.name))
-        except ValueError as err:
-            db_session.rollback()
-            assert f"The supplier {supplier.name} allready exists" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_supplier_no_name(client):
-    with dbSession() as db_session:
-        try:
-            db_session.add(Supplier(None))
-        except ValueError as err:
-            db_session.rollback()
-            assert "The supplier must have a name" in str(err)
+        with pytest.raises(ValueError, match=error_msg):
+            Supplier(name)
 
 
 def test_bulk_supplier_insertion(client):
@@ -639,17 +563,14 @@ def test_bulk_supplier_insertion(client):
         db_session.commit()
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_delete_supplier_with_products_attached(client):
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 1)
-        try:
+        with pytest.raises(ValueError, match="Supplier can't be deleted or does not exist"):
             db_session.delete(supplier)
             db_session.commit()
-        except ValueError as err:
-            db_session.rollback()
-            assert "Supplier can't be deleted or does not exist" in str(err)
-            assert db_session.get(Supplier, supplier.id)
+    with dbSession() as db_session:
+        assert db_session.get(Supplier, 1)
 
 
 def test_supplier_in_use_products_property(client):
@@ -682,29 +603,22 @@ def test_supplier_all_products_property(client):
         assert supplier.all_products == all_products
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_supplier_products(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         supplier = db_session.get(Supplier, 5)
-        try:
+        with pytest.raises(ValueError, match="Not in use supplier can't have products attached"):
             supplier.products.append(product)
-        except ValueError as err:
-            db_session.rollback()
-            assert "Not in use supplier can't have products attached" in str(err)
-            assert db_session.get(Product, 1).supplier == product.supplier
+        assert db_session.get(Product, 1).supplier == product.supplier
 
-@pytest.mark.xfail(raises=ValueError)
+
 def test_validate_supplier_not_in_use(client):
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 1)
         assert supplier.in_use
-        try:
+        with pytest.raises(ValueError, match="Not in use supplier can't have products attached"):
             supplier.in_use = False
-        except ValueError as err:
-            db_session.rollback()
-            assert "Not in use supplier can't have products attached" in str(err)
-            assert supplier.in_use
+        assert supplier.in_use
 # endregion
 
 
@@ -761,138 +675,68 @@ def test_change_product_name(client):
         assert db_session.get(Product, db_product.id).name == old_name
 
 
-@pytest.mark.xfail(raises=ValueError)
-def test_product_duplicate_name(client):
+@pytest.mark.parametrize(("name", "description", "user", "category", "supplier", "meas_unit", "min_stock", "ord_qty", "error_msg"), (
+    # name
+    ("", "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
+    (" ", "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
+    (None, "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
+    ("Toilet paper", "Some description", 1, 1, 1, "measunit", 1, 2, "The product (.)* allready exists"),
+    ("   Toilet paper   ", "Some description", 1, 1, 1, "measunit", 1, 2, "The product (.)* allready exists"),
+    # description
+    ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
+    ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
+    ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
+    # responsible
+    ("__test__producttt__", "Some description", "", 1, 1, "measunit", 1, 2, "User does not exist"),
+    ("__test__producttt__", "Some description", None, 1, 1, "measunit", 1, 2, "User does not exist"),
+    ("__test__producttt__", "Some description", 5, 1, 1, "measunit", 1, 2, "User with pending registration can't have products attached"),
+    ("__test__producttt__", "Some description", 6, 1, 1, "measunit", 1, 2, "'Retired' users can't have products attached"),
+    ("__test__producttt__", "Some description", 8, 1, 1, "measunit", 1, 2, "User does not exist"),
+    # category
+    ("__test__producttt__", "Some description", 1, "", 1, "measunit", 1, 2, "Category does not exist"),
+    ("__test__producttt__", "Some description", 1, None, 1, "measunit", 1, 2, "Category does not exist"),
+    ("__test__producttt__", "Some description", 1, 8, 1, "measunit", 1, 2, "Not in use category can't have products attached"),
+    ("__test__producttt__", "Some description", 1, 9, 1, "measunit", 1, 2, "Category does not exist"),
+    # supplier
+    ("__test__producttt__", "Some description", 1, 1, "", "measunit", 1, 2, "Supplier does not exist"),
+    ("__test__producttt__", "Some description", 1, 1, None, "measunit", 1, 2, "Supplier does not exist"),
+    ("__test__producttt__", "Some description", 1, 1, 5, "measunit", 1, 2, "Not in use supplier can't have products attached"),
+    ("__test__producttt__", "Some description", 1, 1, 6, "measunit", 1, 2, "Supplier does not exist"),
+    # meas unit
+    ("__test__producttt__", "Some description", 1, 1, 1, "", 1, 2, "Product must have a measuring unit"),
+    ("__test__producttt__", "Some description", 1, 1, 1, " ", 1, 2, "Product must have a measuring unit"),
+    ("__test__producttt__", "Some description", 1, 1, 1, None, 1, 2, "Product must have a measuring unit"),
+    # min stock
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", "", 2, "Minimum stock must be ≥ 0"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", None, 2, "Minimum stock must be ≥ 0"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", "0", 2, "Minimum stock must be ≥ 0"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", -3, 2, "Minimum stock must be ≥ 0"),
+    # ord quantity
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, "", "Order quantity must be ≥ 1"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, None, "Order quantity must be ≥ 1"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, "1", "Order quantity must be ≥ 1"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, 0, "Order quantity must be ≥ 1"),
+    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, -3, "Order quantity must be ≥ 1"),
+))
+def test_failed_product_creation(client, name, description, user, category, supplier, meas_unit, min_stock, ord_qty, error_msg):
     with dbSession() as db_session:
-        existing_product = db_session.get(Product, 1)
-        try:
-            product = Product(
-                name=existing_product.name,
-                description="Some description",
-                responsable=db_session.get(User, 1),
-                category=db_session.get(Category, 1),
-                supplier=db_session.get(Supplier, 1),
-                meas_unit="measunit",
-                min_stock=1,
-                ord_qty=1
+        if user:
+            user = db_session.get(User, user)
+        if category:
+            category = db_session.get(Category, category)
+        if supplier:
+            supplier = db_session.get(Supplier, supplier)
+        with pytest.raises(ValueError, match=error_msg):
+            Product(
+                name,
+                description,
+                user,
+                category,
+                supplier,
+                meas_unit,
+                min_stock,
+                ord_qty
             )
-        except ValueError as err:
-            db_session.rollback()
-            assert f"The product {existing_product.name} allready exists" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_name(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name=None,
-                description="Some description",
-                responsable=db_session.get(User, 1),
-                category=db_session.get(Category, 1),
-                supplier=db_session.get(Supplier, 1),
-                meas_unit="measunit",
-                min_stock=2,
-                ord_qty=2
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "The product must have a name" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_description(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name="__test__producttt__",
-                description=None,
-                responsable=db_session.get(User, 1),
-                category=db_session.get(Category, 1),
-                supplier=db_session.get(Supplier, 1),
-                meas_unit="measunit",
-                min_stock=3,
-                ord_qty=3
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "Product must have a description" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_responsable(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name="__test__producttt__",
-                description="Some description",
-                responsable=None,
-                category=db_session.get(Category, 1),
-                supplier=db_session.get(Supplier, 1),
-                meas_unit="measunit",
-                min_stock=4,
-                ord_qty=4
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "User does not exist" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_category(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name="__test__producttt__",
-                description="Some description",
-                responsable=db_session.get(User, 1),
-                category=None,
-                supplier=db_session.get(Supplier, 1),
-                meas_unit="measunit",
-                min_stock=5,
-                ord_qty=5,
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "Category does not exist" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_supplier(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name="__test__producttt__",
-                description="Some description",
-                responsable=db_session.get(User, 1),
-                category=db_session.get(Category, 1),
-                supplier=None,
-                meas_unit="measunit",
-                min_stock=6,
-                ord_qty=6
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "Supplier does not exist" in str(err)
-
-
-@pytest.mark.xfail(raises=ValueError)
-def test_product_no_meas_unit(client):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                name="__test__producttt__",
-                description="Some description",
-                responsable=db_session.get(User, 1),
-                category=db_session.get(Category, 1),
-                supplier=db_session.get(Supplier, 1),
-                meas_unit=None,
-                min_stock=7,
-                ord_qty=7
-            )
-        except ValueError as err:
-            db_session.rollback()
-            assert "Product must have a measuring unit" in str(err)
 
 
 def test_bulk_product_insertion(client):
@@ -979,7 +823,6 @@ def test_product_change_supplier(client):
 
 
 #region: validators
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (5, "User with pending registration can't have products attached"),
@@ -989,12 +832,9 @@ def test_product_change_supplier(client):
 def test_validate_product_responsable_id(client, user_id, err_message):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        try:
+        with pytest.raises(ValueError, match=err_message):
             product.responsable_id = user_id
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).responsable_id == product.responsable_id
+        assert db_session.get(Product, 1).responsable_id == product.responsable_id
 
 
 def test_validate_product_responsable_id_last_product(client):
@@ -1073,26 +913,6 @@ def test_validate_product_responsable_last_product(client):
         db_session.commit()
 
 
-@pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize(
-    ("user_id", "err_message"), (
-    (5, "User with pending registration can't have products attached"),
-    (6, "'Retired' users can't have products attached"),
-    (7, "User does not exist")
-    ))
-def test_validate_product_responsable(client, user_id, err_message):
-    with dbSession() as db_session:
-        product = db_session.get(Product, 1)
-        user = db_session.get(User, user_id)
-        try:
-            product.responsable = user
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).responsable_id == product.responsable_id
-
-
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("category_id", "err_message"), (
     (8, "Not in use category can't have products attached"),
@@ -1101,33 +921,11 @@ def test_validate_product_responsable(client, user_id, err_message):
 def test_validate_product_category_id(client, category_id, err_message):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        try:
+        with pytest.raises(ValueError, match=err_message):
             product.category_id = category_id
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).category_id == product.category_id
+        assert db_session.get(Product, 1).category_id == product.category_id
 
 
-@pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize(
-    ("category_id", "err_message"), (
-    (8, "Not in use category can't have products attached"),
-    (9, "Category does not exist")
-    ))
-def test_validate_product_category(client, category_id, err_message):
-    with dbSession() as db_session:
-        product = db_session.get(Product, 1)
-        category = db_session.get(Category, category_id)
-        try:
-            product.category = category
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).category_id == product.category_id
-
-
-@pytest.mark.xfail(raises=ValueError)
 @pytest.mark.parametrize(
     ("supplier_id", "err_message"), (
     (5, "Not in use supplier can't have products attached"),
@@ -1136,82 +934,24 @@ def test_validate_product_category(client, category_id, err_message):
 def test_validate_product_supplier_id(client, supplier_id, err_message):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        try:
+        with pytest.raises(ValueError, match=err_message):
             product.supplier_id = supplier_id
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).supplier_id == product.supplier_id
+        assert db_session.get(Product, 1).supplier_id == product.supplier_id
 
 
-@pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize(
-    ("supplier_id", "err_message"), (
-    (5, "Not in use supplier can't have products attached"),
-    (6, "Supplier does not exist")
-    ))
-def test_validate_product_supplier(client, supplier_id, err_message):
-    with dbSession() as db_session:
-        product = db_session.get(Product, 1)
-        supplier = db_session.get(Supplier, supplier_id)
-        try:
-            product.supplier = supplier
-        except ValueError as err:
-            db_session.rollback()
-            assert err_message in str(err)
-            assert db_session.get(Product, 1).supplier_id == product.supplier_id
-
-
-@pytest.mark.xfail(raises=ValueError)
-@pytest.mark.parametrize(
-    ("min_stock", "ord_qty", "err_message"), (
-    ("", 1, "Minimum stock must be ≥ 0"),
-    (None, 1, "Minimum stock must be ≥ 0"),
-    ("0", 1, "Minimum stock must be ≥ 0"),
-    (-3, 1, "Minimum stock must be ≥ 0"),
-    (0, "", "Order quantity must be ≥ 1"),
-    (0, None, "Order quantity must be ≥ 1"),
-    (0, "1", "Order quantity must be ≥ 1"),
-    (0, 0, "Order quantity must be ≥ 1"),
-    (0, -3, "Order quantity must be ≥ 1"),
-    ))
-def test_validate_min_stock_and_ord_qty(client, min_stock, ord_qty, err_message):
-    with dbSession() as db_session:
-        try:
-            product = Product(
-                "some product",
-                "some description",
-                db_session.get(User, 1),
-                db_session.get(Category, 1),
-                db_session.get(Supplier, 1),
-                "pc",
-                min_stock,
-                ord_qty
-            )
-        except ValueError as err:
-            assert err_message in str(err)
-            assert not db_session.scalar(select(Product).filter_by(name="some product"))
-
-
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_to_order(client):
     with dbSession() as db_session:
-        try:
+        with pytest.raises(ValueError, match="Can't order not in use products"):
             db_session.get(Product, 43).to_order = True
-        except ValueError as err:
-            assert "Can't order not in use products" in str(err)
-            assert not db_session.get(Product, 43).to_order
+        assert not db_session.get(Product, 43).to_order
 
 
-@pytest.mark.xfail(raises=ValueError)
 def test_validate_product_in_use(client):
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         product.to_order = True
-        try:
+        with pytest.raises(ValueError, match="Can't 'retire' a product that needs to be ordered"):
             product.in_use = False
-        except ValueError as err:
-            assert "Can't 'retire' a product that needs to be ordered" in str(err)
-            assert product.in_use
+        assert product.in_use
 # endregion
 # endregion
