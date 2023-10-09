@@ -10,9 +10,11 @@ from blueprints.cat.cat import cat_bp
 from blueprints.inv.inv import inv_bp
 from blueprints.main.main import main_bp
 from blueprints.prod.prod import prod_bp
+from blueprints.sch.sch import sch_bp
 from blueprints.sup.sup import sup_bp
 from blueprints.users.users import users_bp
 from helpers import logger
+
 
 def get_locale():
     """Set the language the page will be displayed."""
@@ -46,6 +48,7 @@ app.register_blueprint(users_bp)
 app.register_blueprint(cat_bp)
 app.register_blueprint(sup_bp)
 app.register_blueprint(prod_bp)
+app.register_blueprint(sch_bp)
 
 
 @app.route("/language/<language>")

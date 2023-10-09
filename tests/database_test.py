@@ -1,13 +1,14 @@
 """Test SQLAlchemy tables mapping."""
 
 import re
+from datetime import date, timedelta
 
 import pytest
 from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from database import Category, Product, Supplier, User, dbSession
+from database import Category, Product, Schedule, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
                    create_test_db, create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
@@ -74,18 +75,25 @@ def test_change_password(client):
         assert check_password_hash(db_session.get(User, user.id).password, "Q!111111")
 
 
-@pytest.mark.parametrize(("name", "password", "error_msg"), (
+@pytest.mark.parametrize(("name", "password", "sat_group", "error_msg"), (
     # name
-    ("", "password", "The user must have a name"),
-    (" ", "password", "The user must have a name"),
-    (None, "password", "The user must have a name"),
-    ("Admin", "password", "The user Admin allready exists"),
-    ("user1", "password", "The user user1 allready exists"),
+    ("", "password", 1, "The user must have a name"),
+    (" ", "password", 1, "The user must have a name"),
+    (None, "password", 1, "The user must have a name"),
+    ("Admin", "password", 1, "The user Admin allready exists"),
+    ("user1", "password", 1, "The user user1 allready exists"),
     # password
-    ("test_user", "", "User must have a password"),
-    ("test_user", None, "User must have a password"),
+    ("test_user", "", 1, "User must have a password"),
+    ("test_user", None, 1, "User must have a password"),
+    # sat group
+    ("test_user", "password", "", "Invalid sat_group"),
+    ("test_user", "password", "a", "Invalid sat_group"),
+    ("test_user", "password", " ", "Invalid sat_group"),
+    ("test_user", "password", None, "Invalid sat_group"),
+    ("test_user", "password", 3, "Invalid sat_group"),
+    ("test_user", "password", -2, "Invalid sat_group"),
 ))
-def test_failed_user_creation(client, name, password, error_msg):
+def test_failed_user_creation(client, name, password, sat_group, error_msg):
     with pytest.raises(ValueError, match=re.escape(error_msg)):
         User(
             name=name,
@@ -95,6 +103,7 @@ def test_failed_user_creation(client, name, password, error_msg):
             done_inv=1,
             reg_req=0,
             req_inv=0,
+            sat_group=sat_group
         )
 
 
@@ -954,4 +963,94 @@ def test_validate_product_in_use(client):
             product.in_use = False
         assert product.in_use
 # endregion
+# endregion
+
+# region: test "schedule" table
+def test_schedule_creation(client):
+    schedule = Schedule(
+        name="test_schedule",
+        type="group",
+        elem_id=1,
+        next_date=date.today(),
+        update_date=date.today() + timedelta(days=1),
+        update_interval=1
+    )
+    with dbSession() as db_session:
+        db_session.add(schedule)
+        db_session.commit()
+        assert schedule.id is not None
+        db_schedule = db_session.get(Schedule, schedule.id)
+        assert db_schedule.name == schedule.name
+        assert db_schedule.type == schedule.type
+        assert db_schedule.elem_id == schedule.elem_id
+        assert db_schedule.next_date == schedule.next_date
+        assert db_schedule.update_date == schedule.update_date
+        assert db_schedule.update_interval == schedule.update_interval
+        # teardown
+        db_session.delete(db_schedule)
+        db_session.commit()
+        assert not db_session.get(Schedule, db_schedule.id)
+
+@pytest.mark.parametrize(("name", "type", "elem_id", "next_date", "update_date", "update_interval", "error_msg"), (
+    ("", "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
+    (None, "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
+    (" ", "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
+    ("test_schedule", "", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
+    ("test_schedule", None, 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
+    ("test_schedule", "  ", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
+    ("test_schedule", "wrong_type", 1, date.today(), date.today()+timedelta(days=1), 1, "Schedule type is invalid"),
+    ("test_schedule", "group", "", date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
+    ("test_schedule", "group", None, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
+    ("test_schedule", "group", 0, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
+    ("test_schedule", "group", " ", date.today(), date.today()+timedelta(days=1), 1, "invalid literal for int() with base 10: ' '"),
+    ("test_schedule", "group", "a", date.today(), date.today()+timedelta(days=1), 1, "invalid literal for int() with base 10: 'a'"),
+    ("test_schedule", "group", -2, date.today(), date.today()+timedelta(days=1), 1, "Schedule elem_id is invalid"),
+    ("test_schedule", "group", 1, "", date.today()+timedelta(days=1), 1, "The schedule must have a next date"),
+    ("test_schedule", "group", 1, None, date.today()+timedelta(days=1), 1, "The schedule must have a next date"),
+    ("test_schedule", "group", 1, " ", date.today()+timedelta(days=1), 1, "The schedule next date is invalid"),
+    ("test_schedule", "group", 1, "abc", date.today()+timedelta(days=1), 1, "The schedule next date is invalid"),
+    ("test_schedule", "group", 1, date.today()-timedelta(days=1), date.today()+timedelta(days=1), 1, "The schedule next date cannot be in the past"),
+    ("test_schedule", "group", 1, date.today(), "", 1, "The schedule must have an update day"),
+    ("test_schedule", "group", 1, date.today(), None, 1, "The schedule must have an update day"),
+    ("test_schedule", "group", 1, date.today(), " ", 1, "The schedule update date is invalid"),
+    ("test_schedule", "group", 1, date.today(), "abc", 1, "The schedule update date is invalid"),
+    ("test_schedule", "group", 1, date.today(), date.today()-timedelta(days=1), 1, "Schedules 'update day' is less than 'next day'"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), "", "The schedule must have an update interval"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), None, "The schedule must have an update interval"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), 0, "The schedule must have an update interval"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), " ", "invalid literal for int() with base 10: ' '"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), "a", "invalid literal for int() with base 10: 'a'"),
+    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), -2, "Schedule update interval is invalid"),
+))
+def test_failed_schedule_creation(client, name, type, elem_id, next_date, update_date, update_interval, error_msg):
+    with pytest.raises((ValueError, TypeError), match=re.escape(error_msg)):
+        Schedule(name, type, elem_id, next_date, update_date, update_interval)
+
+
+def test_failed_schedule_creation_name_elem_id_combination(client):
+    schedule = Schedule(
+        name="test_schedule",
+        type="group",
+        elem_id=1,
+        next_date=date.today(),
+        update_date=date.today() + timedelta(days=1),
+        update_interval=1
+    )
+    with dbSession() as db_session:
+        db_session.add(schedule)
+        db_session.commit()
+        assert schedule.id is not None
+        with pytest.raises(ValueError, match="Name-Elem_id combination must be unique"):
+            Schedule(
+                name="test_schedule",
+                type="group",
+                elem_id=1,
+                next_date=date.today(),
+                update_date=date.today() + timedelta(days=1),
+                update_interval=1
+            )
+        # teardown
+        db_session.delete(schedule)
+        db_session.commit()
+        assert not db_session.get(Schedule, schedule.id)
 # endregion

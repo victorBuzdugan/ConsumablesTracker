@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import date
 from os import getenv, path
 from typing import Callable, List, Optional
 
 from dotenv import load_dotenv
 from flask_babel import gettext
-from sqlalchemy import (URL, ForeignKey, Index, create_engine, event, func,
-                        select)
+from sqlalchemy import (URL, ForeignKey, Index, UniqueConstraint,
+                        create_engine, event, func, select)
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
-from helpers import CURR_DIR, DB_NAME
+from helpers import CURR_DIR, DB_NAME, logger
 
 func: Callable
 
@@ -65,6 +66,7 @@ class User(Base):
     :param req_inv: user has requested inventorying
     :param details: user details, extra info
     :param email: user email adress
+    :param sat_group: saturday group
 
     Interlocks
     ----------
@@ -213,6 +215,7 @@ class User(Base):
     req_inv: Mapped[bool] = mapped_column(default=False)
     details: Mapped[Optional[str]] = mapped_column(default="", repr=False)
     email: Mapped[Optional[str]] = mapped_column(default="", repr=False)
+    sat_group: Mapped[int] = mapped_column(default=1)
 
     __table_args__ = (
         Index('idx_user_name', 'name'),
@@ -413,6 +416,13 @@ class User(Base):
                     gettext("Users without products can't " +
                             "request inventorying"))
         return value
+
+    @validates("sat_group")
+    def validate_sat_group(self, key: str, value: int) -> Optional[int]:
+        """Validate saturday group"""
+        # pylint: disable=unused-argument
+        if value not in {1, 2}:
+            raise ValueError("Invalid sat_group")
 
 
 class Category(Base):
@@ -811,6 +821,110 @@ class Product(Base):
         return value
 
 
+class Schedule(Base):
+    """Schedules database table mappings.
+
+    :param id: schedule row id
+    :param name: name of the schedule
+    :param type: type of the schedule (group | individual)
+    :param elem_id: schedule element id (group number | user id)
+    :param next_date: scheduled element date
+    :param update_date: when to trigger schedule update
+    :param update_interval: how many days to increment `next_date` and
+        `update_date` when `update_date` is triggered
+    The daily schedule task will search for all records where `update_date` is
+    less or equal to current date:
+    - if it is a group schedule update it will write to db
+        `next_date` += `update_interval`
+        `update_date` += `update_interval`
+    - if it is an individual schedule update it will trigger a function
+        in order to update all other elements
+    """
+    name: Mapped[str]
+    type: Mapped[str]
+    elem_id: Mapped[int]
+    next_date: Mapped[date]
+    update_date: Mapped[date]
+    update_interval: Mapped[int]
+    __table_args__ = (
+        UniqueConstraint('name', 'elem_id', name='uq_schedule_name_elem_id'),
+        Index('idx_schedule_name', 'name'),
+        Index('idx_schedule_elem_id', 'elem_id'),
+        Index('idx_schedule_update_date', 'update_date'),
+    )
+
+    @validates("name")
+    def validate_name(self, key: str, value: str) -> Optional[str]:
+        """Check for empty name."""
+        # pylint: disable=unused-argument
+        if not value or not value.strip():
+            raise ValueError("The schedule must have a name")
+        return value.strip()
+
+    @validates("type")
+    def validate_type(self, key: str, value: str) -> Optional[str]:
+        """Check for empty type or not in list."""
+        # pylint: disable=unused-argument
+        if not value or not value.strip():
+            raise ValueError("The schedule must have a type")
+        value = value.strip()
+        if value not in {"group", "individual"}:
+            raise ValueError("Schedule type is invalid")
+        return value
+
+    @validates("elem_id")
+    def validate_elem_id(self, key: str, value: int) -> Optional[int]:
+        """Check for empty or less then 1 elem_id and
+        unique name-elem_id combination."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError("The schedule must have an element id")
+        if int(value) < 1:
+            raise ValueError("Schedule elem_id is invalid")
+
+        with dbSession() as db_session:
+            if db_session.scalar(select(Schedule)
+                                 .filter_by(name=self.name, elem_id=value)):
+                raise ValueError("Name-Elem_id combination must be unique")
+        return value
+
+    @validates("next_date")
+    def validate_next_date(self, key: str, value: date) -> Optional[date]:
+        """Check for empty value."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError("The schedule must have a next date")
+        if not isinstance(value, date):
+            raise TypeError("The schedule next date is invalid")
+        if value < date.today():
+            raise ValueError("The schedule next date cannot be in the past")
+        return value
+
+    @validates("update_date")
+    def validate_update_date(self, key: str, value: date) -> Optional[date]:
+        """Check for empty value or value less then `next_date`."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError("The schedule must have an update day")
+        if not isinstance(value, date):
+            raise TypeError("The schedule update date is invalid")
+        if value <= self.next_date:
+            raise ValueError("Schedules 'update day' is less than 'next day'")
+        return value
+
+    @validates("update_interval")
+    def validate_update_interval(
+            self, key: str, value: int) -> Optional[int]:
+        """Check for empty value."""
+        # pylint: disable=unused-argument
+        if not value:
+            raise ValueError("The schedule must have an update interval")
+        if int(value) < 1:
+            raise ValueError("Schedule update interval is invalid")
+        return value
+
+
+# region: database init
 @event.listens_for(Base.metadata, "after_create")
 def create_hidden_admin(target, connection, **kw):
     """Create a hidden admin user after db creation."""
@@ -829,4 +943,7 @@ def create_hidden_admin(target, connection, **kw):
             db_session.commit()
 
 
+logger.debug("Database init")
+
 Base.metadata.create_all(bind=engine)
+# endregion
