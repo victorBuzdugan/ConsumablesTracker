@@ -74,7 +74,7 @@ class CreateUserForm(FlaskForm):
         label=lazy_gettext("Saturday movie group"),
         validators=[
             NumberRange(1, 2, gettext("Group number doesn't exist"))],
-        choices=[(1, gettext("Group 1")), (2, gettext("Group 2"))],
+        choices=[(1, lazy_gettext("Group 1")), (2, lazy_gettext("Group 2"))],
         coerce=int,
         default="1",
         render_kw={
