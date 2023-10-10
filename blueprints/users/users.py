@@ -6,8 +6,9 @@ from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import select
 from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
-                     StringField, SubmitField, TextAreaField)
-from wtforms.validators import Email, InputRequired, Length, Optional, Regexp
+                     SelectField, StringField, SubmitField, TextAreaField)
+from wtforms.validators import (Email, InputRequired, Length, NumberRange,
+                                Optional, Regexp)
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
@@ -69,6 +70,16 @@ class CreateUserForm(FlaskForm):
             "placeholder": "Email",
             "autocomplete": "off",
             })
+    sat_group = SelectField(
+        label=lazy_gettext("Saturday movie group"),
+        validators=[
+            NumberRange(1, 2, gettext("Group number doesn't exist"))],
+        choices=[(1, gettext("Group 1")), (2, gettext("Group 2"))],
+        coerce=int,
+        default="1",
+        render_kw={
+                "class": "form-select",
+                })
     details = TextAreaField(
         label=lazy_gettext("Details"),
         render_kw={
@@ -141,6 +152,7 @@ def approve_reg(username):
             logger.debug("%s has been approved", username)
             flash(gettext("%(username)s has been approved",
                           username=username))
+            flash(gettext("Review the working schedule"), "warning")
         else:
             logger.warning("%s does not exist", username)
             flash(gettext("%(username)s does not exist!",
@@ -203,6 +215,7 @@ def new_user():
                 logger.debug("User '%s' created", user.name)
                 flash(gettext("User '%(username)s' created",
                               username=user.name))
+                flash(gettext("Review the working schedule"), "warning")
                 return redirect(url_for("main.index"))
             except ValueError as error:
                 logger.warning("User creation error(s)")
@@ -247,6 +260,7 @@ def edit_user(username):
                 if edit_user_form.password.data:
                     user.password = edit_user_form.password.data
                 user.email = edit_user_form.email.data
+                user.sat_group = edit_user_form.sat_group.data
                 user.details = edit_user_form.details.data
                 try:
                     user.admin = edit_user_form.admin.data

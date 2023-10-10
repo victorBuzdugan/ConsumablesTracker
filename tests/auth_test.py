@@ -13,7 +13,8 @@ from blueprints.auth.auth import (PASSW_MIN_LENGTH, USER_MAX_LENGTH,
                                   USER_MIN_LENGTH, msg)
 from database import User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.auth

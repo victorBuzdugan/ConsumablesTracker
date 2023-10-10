@@ -10,7 +10,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from database import Category, Product, Schedule, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.db
@@ -27,6 +28,7 @@ def test_user_creation(client):
         db_user = db_session.get(User, user.id)
         assert db_user
         assert db_user.name == user.name
+        assert db_user.username == user.name
         assert check_password_hash(db_user.password, "P@ssw0rd")
         assert not db_user.admin
         assert db_user.in_use
@@ -35,6 +37,10 @@ def test_user_creation(client):
         assert db_user.reg_req
         assert not db_user.req_inv
         assert not db_user.details
+        assert not db_user.email
+        assert db_user.sat_group == 1
+        assert not db_user.in_use_products
+        assert not db_user.all_products
         # teardown
         db_session.delete(db_user)
         db_session.commit()
@@ -177,6 +183,26 @@ def test_user_all_products_property(client):
         db_session.get(Product, product.id).responsable_id = user.id
         db_session.commit()
         assert user.all_products == all_products
+
+
+def test_sat_group_this_week_property(client):
+    with dbSession() as db_session:
+        assert db_session.get(User, 1).sat_group_this_week
+        assert not db_session.get(User, 2).sat_group_this_week
+        assert db_session.get(User, 3).sat_group_this_week
+        assert not db_session.get(User, 4).sat_group_this_week
+        # force false
+        schedule = db_session.scalar(
+            select(Schedule)
+            .filter_by(
+                name="Saturday movie",
+                elem_id=1))
+        schedule.name = "renamed"
+        db_session.commit()
+        assert not db_session.get(User, 1).sat_group_this_week
+        # teardown
+        schedule.name = "Saturday movie"
+        db_session.commit()
 
 
 def test_failed_delete_user_with_products_attached(client):

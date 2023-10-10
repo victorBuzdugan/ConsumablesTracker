@@ -22,6 +22,7 @@
                 {% if session["user_id"] is defined %}
                     <ul class="navbar-nav me-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href={{ url_for("inv.inventory") }}>{{ gettext("Inventory") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href={{ url_for("sch.schedule") }}>{{ gettext("Schedule") }}</a></li>
                         {% if session["admin"] %}
                         <li class="nav-item"><a class="nav-link" href={{ url_for("cat.categories") }}>{{ gettext("Categories") }}</a></li>
                         <li class="nav-item"><a class="nav-link" href={{ url_for("sup.suppliers") }}>{{ gettext("Suppliers") }}</a></li>
@@ -39,7 +40,6 @@
                         {% endif %}
                     </ul>
                     <ul class="navbar-nav ms-auto mt-2">
-                        </li>
                         <li class="nav-item"><a class="nav-link" href={{ url_for("auth.change_password") }}>{{ gettext("Change password") }}</a></li>
                         <li class="nav-item"><a class="nav-link" href={{ url_for("auth.logout") }}>Log Out</a></li>
                 {% else %}

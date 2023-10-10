@@ -1,14 +1,15 @@
 """Inventory blueprint tests."""
 
 import pytest
-from flask import session, url_for, g
+from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import func, select
 
-from database import User, dbSession, Category, Supplier, Product
+from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_suppliers, create_test_users,
-                   user_logged_in, create_test_products)
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
+                   create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.inv
 

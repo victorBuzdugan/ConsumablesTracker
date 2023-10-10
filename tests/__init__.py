@@ -1,13 +1,14 @@
 """Pytest app fixtures."""
 
 import pathlib
+from datetime import date, timedelta
 
 import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine, select
 
 from app import app
-from database import Base, Category, Product, Supplier, User, dbSession
+from database import Base, Category, Product, Schedule, Supplier, User, dbSession
 from helpers import DB_NAME, log_handler
 
 TEST_DB_NAME = "." + DB_NAME
@@ -34,7 +35,8 @@ def client(
     create_test_users,
     create_test_categories,
     create_test_suppliers,
-    create_test_products
+    create_test_products,
+    create_test_group_schedule
     ) -> FlaskClient:
     """Yield a test client."""
     app.testing = True
@@ -59,7 +61,8 @@ def create_test_users(create_test_db):
         "user2",
         "Q!222222",
         admin=True,
-        reg_req=False))
+        reg_req=False,
+        sat_group=2))
     users.append(User(
         "user3",
         "Q!333333",
@@ -67,7 +70,8 @@ def create_test_users(create_test_db):
     users.append(User(
         "user4",
         "Q!444444",
-        reg_req=False))
+        reg_req=False,
+        sat_group=2))
     users.append(User(
         "user5",
         "Q!555555"))
@@ -130,7 +134,7 @@ def hidden_admin_logged_in(client: FlaskClient):
         session["user_id"] = test_admin.id
         session["admin"] = test_admin.admin
         session["user_name"] = test_admin.name
-    
+
     yield
 
     client.get("/auth/logout")
@@ -317,3 +321,26 @@ def create_test_products():
 # endregion
 
 
+# region: schedules fixtures
+@pytest.fixture(scope="session")
+def create_test_group_schedule():
+    """Insert into db a 2 group 1 week interval schedule."""
+    schedule_group_1 = Schedule(
+        name="Saturday movie",
+        type="group",
+        elem_id=1,
+        next_date=date.today(),
+        update_date=date.today() + timedelta(days=1),
+        update_interval=14)
+    schedule_group_2 = Schedule(
+        name="Saturday movie",
+        type="group",
+        elem_id=2,
+        next_date=date.today() + timedelta(days=7),
+        update_date=date.today() + timedelta(days=8),
+        update_interval=14)
+    with dbSession() as db_session:
+        db_session.add(schedule_group_1)
+        db_session.add(schedule_group_2)
+        db_session.commit()
+# endregion

@@ -4,18 +4,22 @@ from datetime import date, timedelta
 
 import pytest
 from freezegun import freeze_time
+from flask import session, url_for
+from flask.testing import FlaskClient
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
 from blueprints.sch.sch import GroupSchedule
-from database import Schedule, dbSession
+from database import Schedule, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.sch
 
 
+# region: group schedule creation
 @pytest.mark.parametrize(("num_groups", "first_group", "sch_day", "sch_day_update", "groups_switch", "start_date"), (
     (2, 1, 6, 1, timedelta(weeks=2), date.today()),
     (3, 2, 1, 3, timedelta(weeks=1), date.today() + timedelta(weeks=1)),
@@ -234,3 +238,57 @@ def test_failed_group_schedule_creation(client, num_groups, first_group, sch_day
 def test_failed_group_schedule_creation_db_fallback(client, caplog: LogCaptureFixture):
     GroupSchedule("", 1, 2, timedelta(weeks=2))
     assert "The schedule must have a name" in caplog.messages
+# endregion
+
+
+# region: schedule page
+def test_schedule_page_group_schedule_user_logged_in(client: FlaskClient, user_logged_in):
+    with client:
+        client.get("/")
+        response = client.get(url_for("sch.schedule"))
+        assert response.status_code == 200
+        assert b"Schedules" in response.data
+        assert b"Saturday movie schedule" in response.data
+        assert b"Group 1" in response.data
+        assert b"Group 2" in response.data
+        assert f"<b>{session['user_name']}</b>" in response.text
+        with dbSession() as db_session:
+            users_in_use = db_session.scalars(
+                select(User.name)
+                .filter_by(in_use=True, reg_req=False)).all()
+            users_not_in_use = db_session.scalars(
+                select(User.name)
+                .filter_by(in_use=False)).all()
+            users_reg_req = db_session.scalars(
+                select(User.name)
+                .filter_by(reg_req=True)).all()
+        for username in users_in_use:
+            assert username in response.text
+        for username in users_not_in_use:
+            assert username not in response.text
+        for username in users_reg_req:
+            assert username not in response.text
+        assert f"<b>{date.today().strftime('%d.%m.%Y')}</b>" in response.text
+        for week in range(1, 6):
+            assert (date.today() + timedelta(weeks=week)).strftime("%d.%m.%Y") in response.text
+
+
+def test_schedule_page_group_schedule_admin_logged_in(client: FlaskClient, admin_logged_in):
+    with dbSession() as db_session:
+         db_session.get(Schedule, 1).next_date = date.today() + timedelta(weeks=2)
+         db_session.commit()
+    with client:
+        client.get("/")
+        response = client.get(url_for("sch.schedule"))
+        assert response.status_code == 200
+        assert b"Schedules" in response.data
+        assert b"Saturday movie schedule" in response.data
+        assert b"Group 1" in response.data
+        assert b"Group 2" in response.data
+        assert f"<b>{session['user_name']}</b>" in response.text
+        assert f"<b>{(date.today() + timedelta(weeks=1)).strftime('%d.%m.%Y')}</b>" in response.text
+    # teardown
+    with dbSession() as db_session:
+        db_session.get(Schedule, 1).next_date = date.today()
+        db_session.commit()
+# endregion

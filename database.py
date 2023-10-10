@@ -245,6 +245,19 @@ class User(Base):
         """Check inventory flag. Reverese of `done_inv`"""
         return not self.done_inv
 
+    @property
+    def sat_group_this_week(self) -> bool:
+        """Check if sat_group this week."""
+        with dbSession() as db_session:
+            if (user_sat_group_date := db_session.scalar(
+                    select(Schedule.next_date)
+                    .filter_by(
+                        name="Saturday movie",
+                        elem_id=self.sat_group))):
+                return (user_sat_group_date.isocalendar().week ==
+                        date.today().isocalendar().week)
+        return False
+
     @validates("name")
     def validate_name(self, key: str, value: str) -> Optional[str]:
         """Check for duplicate or empty name."""
@@ -423,6 +436,7 @@ class User(Base):
         # pylint: disable=unused-argument
         if value not in {1, 2}:
             raise ValueError("Invalid sat_group")
+        return value
 
 
 class Category(Base):

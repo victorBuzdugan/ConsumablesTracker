@@ -8,7 +8,8 @@ from sqlalchemy.orm import joinedload
 
 from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
                    create_test_users, hidden_admin_logged_in, user_logged_in)
 
 pytestmark = pytest.mark.main
@@ -28,6 +29,7 @@ def test_index_user_not_logged_in(client: FlaskClient):
         assert f'href={url_for("auth.login")}>Log In' in response.text
 
         assert f'href={url_for("inv.inventory")}>Inventory' not in response.text
+        assert f'href={url_for("sch.schedule")}>Schedule' not in response.text
         assert f'href={url_for("auth.change_password")}>Change password' not in response.text
         assert f'href={url_for("auth.logout")}>Log Out' not in response.text
 
@@ -54,6 +56,8 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
             assert ('You have <span class="text-secondary">' +
                     f'{len(user.products)} products') in response.text
             assert b"Inventory check not required" in response.data
+            assert user.sat_group == 2
+            assert b"You're not choosing the movie this saturday" in response.data
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' in response.text
             user.done_inv = False
             db_session.commit()
@@ -75,6 +79,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
         assert f'href={url_for("auth.login")}>Log In' not in response.text
 
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
+        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
@@ -101,7 +106,9 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
                     f'{session["user_name"]}') in response.text
             assert ('You have <span class="text-secondary">' +
                     f'{user.in_use_products} products') in response.text
-            assert "Inventory check not required" in response.text
+            assert b"Inventory check not required" in response.data
+            assert user.sat_group == 1
+            assert b"You're choosing the movie this saturday" in response.data
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
             user.done_inv = False
             db_session.commit()
@@ -119,6 +126,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert f'href={url_for("auth.login")}>Log In' not in response.text
         
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
+        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
@@ -162,13 +170,16 @@ def test_index_hidden_admin_logged_in_user_dashboard(client: FlaskClient, hidden
                     f'{session["user_name"]}') in response.text
             assert ('You have <span class="text-secondary">' +
                     f'{user.in_use_products} products') in response.text
-            assert "Inventory check not required" in response.text
+            assert b"Inventory check not required" in response.data
+            assert user.sat_group == 1
+            assert b"You're not choosing the movie this saturday" in response.data
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
         assert b"Admin dashboard" in response.data
         assert b"Statistics" in response.data
         assert f'href={url_for("auth.register")}>Register' not in response.text
         assert f'href={url_for("auth.login")}>Log In' not in response.text
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
+        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
         assert f'href={url_for("users.new_user")}>User' in response.text

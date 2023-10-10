@@ -9,11 +9,13 @@ email-validator==2.0.0.post2
 Flask==2.3.2
 flask-babel==3.1.0
 Flask-WTF==1.1.1
+freezegun==1.2.2
 idna==3.4
 iniconfig==2.0.0
 isort==5.12.0
 itsdangerous==2.1.2
 Jinja2==3.1.2
+lazy-object-proxy==1.9.0
 MarkupSafe==2.1.3
 mccabe==0.7.0
 packaging==23.1
@@ -22,10 +24,13 @@ pluggy==1.0.0
 pycodestyle==2.10.0
 pylint==2.17.4
 pytest==7.3.2
+python-dateutil==2.8.2
 python-dotenv==1.0.0
 pytz==2023.3.post1
+six==1.16.0
 SQLAlchemy==2.0.16
 tomlkit==0.11.8
 typing_extensions==4.6.3
 Werkzeug==2.3.6
+wrapt==1.15.0
 WTForms==3.0.1

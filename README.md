@@ -12,10 +12,13 @@ Based on the business, there can be a lot of consumables that you would want to 
 ## Language
 The app is available in english and romanian, but can also be translated to other languages because of already existing _.pot_ file and _gettext_ methods.
 
+## Schedules
+The app includes a group schedule that allows the users to be split in two or more groups and flexible time interval between groups.
+
 # Live demo
 
 ## Website
-Follow <https://victorb.eu.pythonanywhere.com> for a working demo.
+Follow <https://victorb.eu.pythonanywhere.com> for a working demo. The demo imagines a family inventory with a movie night schedule.
 
 The database resets every day at 04:00 UTC (07:00 EEST Romania time).
 
@@ -94,20 +97,23 @@ The swiches will not be greyed out and the submit button will display `Submit in
 
 Proceed with inventorying selecting to order only the products that are less than the minimal stock displayed. If all the products assigned to you are above the minimal stock don't select anything. After finishing inventorying press the `Submit inventory` button. You will be redirected to the main page and an alert message will tell you that you successfully submitted the inventory.
 
-
+## Schedules
+On the schedule page users can check the current schedules.
 
 # Admin
 An admin is a user with administrative rights.
 
 ## Authentification
-Authentification is similar to [user authentification](https://github.com/victorBuzdugan/ConsumablesTracker#authentification) with the following difference: an admin requests registration as a 'normal' user and is given administrative rights by another admin in the `Edit user` page
+Authentification is similar to [user authentification](https://github.com/victorBuzdugan/ConsumablesTracker#authentification) with the following difference: an admin requests registration as a 'normal' user and is given administrative rights by another admin in the `Edit user` page.
+
+An admin can also be created by another admin in the `New` -> `User` menu option and checking `Admin` option.
 
 
 ## Main page
 On the main page you can look at your user dashboard, admin dashboard and statistics.
 
 ### User dashboard
-Here you can see some stats about login name, products assigned and if you need to check the inventory.
+Here you can see some stats about login name, products assigned, schedules information and if you need to check the inventory.
 
 ### Admin dashboard
 You can see a table of all the users, number of products assigned to them and their status:
@@ -183,7 +189,7 @@ Underlined fields are mandatory.
 Take note of fields lenght such as product code which must have at least 3 characters but not more than 15.
 
 ### New user
-To create a new user you must provide at least a unique username and a password. You can provide extra details and decide if this user will be an admin or not.
+To create a new user you must provide at least a unique username and a password. Check also the schedules data. You can provide extra details and decide if this user will be an admin or not.
 
 ### New category or supplier
 To create a new category or supplier you must provide a unique name. Providing a description is optional.
@@ -242,12 +248,20 @@ Makes a backup of the database, overwriting the previous backup if it exists. Th
 ### Re-init function
 Reintializes the database to a preset state (as used for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#website)). In order to use this function a file with the same name as the database file but with __orig_ suffix has to exist in the working directory (ex: if the database name is `inventory.db` the preset state database name should be `inventory_orig.db`). This function, also doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
 
+### Update schedules function
+Checks in the database for schedules that need to be updated by comparing the `Update date` of the schedule with the current date.
+
 ## Logging
 The app has a logger configured to write to a file some important events from the app. The log file (`logger.log`) is a time rotating file resetting after 30 days and keeping 1 file as backup, practically having almost 2 months of log records.
 
 The log records have timezone configuration and also point to the user that produced the event.
 
 The log level is preset on `DEBUG`.
+
+## Schedules
+The app features group schedules allowing the users to be split in two or more groups. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, wich group should be first and a date for when the schedule should start.
+
+The demo website features a "Saturday movie" schedule in wich users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week.
 
 # Flowcharts
 ### User login/registration

@@ -23,9 +23,9 @@ def index():
     logger.info("Index page")
     with dbSession() as db_session:
         user = db_session.scalar(
-            select(User).
-            filter_by(id=session.get("user_id")).
-            options(joinedload(User.products), raiseload("*")))
+            select(User)
+            .filter_by(id=session.get("user_id"))
+            .options(joinedload(User.products), raiseload("*")))
 
         if session.get("admin"):
             with dbSession() as db_session:

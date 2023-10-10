@@ -25,6 +25,13 @@
                     {% endif %}
                 {% endif %}
             </li>
+            <li class="list-group-item">
+                {% if user.sat_group_this_week and user.name != "Admin" %}
+                    <span class="text-warning">{{ gettext("You're choosing the movie this saturday") }}</span>
+                {% else %}
+                    <span class="text-secondary">{{ gettext("You're not choosing the movie this saturday") }}</span>
+                {% endif %}
+            </li>
         </ul>
     </div>
     {% if not session.admin and user.in_use_products and user.done_inv and not user.req_inv %}

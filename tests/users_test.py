@@ -8,10 +8,11 @@ from flask.testing import FlaskClient
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
-from blueprints.auth.auth import msg, PASSW_SYMB
+from blueprints.auth.auth import PASSW_SYMB, msg
 from database import User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_products, create_test_suppliers,
+                   create_test_db, create_test_group_schedule,
+                   create_test_products, create_test_suppliers,
                    create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.users
@@ -29,6 +30,7 @@ def test_approve_registration(client: FlaskClient, admin_logged_in):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert b"user5 has been approved" in response.data
+        assert b"Review the working schedule" in response.data
         with dbSession() as db_session:
             assert not db_session.get(User, 5).reg_req
             db_session.get(User, 5).reg_req = True
@@ -162,14 +164,14 @@ def test_approve_all_check_inventory(client: FlaskClient, admin_logged_in):
 
 
 # region: new user
-@pytest.mark.parametrize(("details", "admin", "email"), (
-    ("", "", ""),
-    ("some details", "", ""),
-    ("", "on", ""),
-    ("some details", "on", ""),
-    ("some details", "on", "some.user@somewebsite.com"),
+@pytest.mark.parametrize(("details", "admin", "email", "sat_group"), (
+    ("", "", "", "1"),
+    ("some details", "", "", "2"),
+    ("", "on", "", "1"),
+    ("some details", "on", "", "2"),
+    ("some details", "on", "some.user@somewebsite.com", "1"),
 ))
-def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email):
+def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email, sat_group):
     name = "new_user"
     password = "Q!111111"
     with client:
@@ -183,6 +185,7 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email):
             "details": details,
             "admin": admin,
             "email": email,
+            "sat_group": sat_group,
             }
         response = client.post(
             url_for("users.new_user"), data=data, follow_redirects=True)
@@ -191,6 +194,7 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert "User 'new_user' created" in unescape(response.text)
+        assert b"Review the working schedule" in response.data
         assert name in response.text
     with dbSession() as db_session:
         user = db_session.scalar(select(User).filter_by(name=name))
@@ -202,30 +206,34 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email):
         assert not user.req_inv
         assert user.details == details
         assert user.email == email
+        assert user.sat_group == int(sat_group)
         db_session.delete(user)
         db_session.commit()
 
 
-@pytest.mark.parametrize(("name", "password", "email", "flash_message"), (
-    ("", "Q!111111", "", msg["usr_req"]),
-    ("us", "Q!111111", "", msg["usr_len"]),
-    ("useruseruseruser", "Q!111111", "", msg["usr_len"]),
-    ("new_user", "", "", msg["psw_req"]),
-    ("new_user", "Q!1", "", msg["psw_len"]),
-    ("new_user", "aaaaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("new_user", "#1aaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("new_user", "#Aaaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("new_user", "1Aaaaaaa", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("user1", "Q!111111", "", "The user user1 allready exists"),
-    ("Admin", "Q!111111", "", "The user Admin allready exists"),
-    ("new_user", "Q!111111", "plainaddress", "Invalid email adress"),
-    ("new_user", "Q!111111", "#@%^%#$@#$@#.com", "Invalid email adress"),
-    ("new_user", "Q!111111", "@example.com", "Invalid email adress"),
-    ("new_user", "Q!111111", "Joe Smith <email@example.com>", "Invalid email adress"),
-    ("new_user", "Q!111111", "email@example@example.com", "Invalid email adress"),
-    ("new_user", "Q!111111", "email@-example.com", "Invalid email adress"),
+@pytest.mark.parametrize(("name", "password", "email", "sat_group", "flash_message"), (
+    ("", "Q!111111", "", "1", msg["usr_req"]),
+    ("us", "Q!111111", "", "1", msg["usr_len"]),
+    ("useruseruseruser", "Q!111111", "", "1", msg["usr_len"]),
+    ("new_user", "", "", "1", msg["psw_req"]),
+    ("new_user", "Q!1", "", "1", msg["psw_len"]),
+    ("new_user", "aaaaaaaa", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("new_user", "#1aaaaaa", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("new_user", "#Aaaaaaa", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("new_user", "1Aaaaaaa", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("user1", "Q!111111", "", "1", "The user user1 allready exists"),
+    ("Admin", "Q!111111", "", "1", "The user Admin allready exists"),
+    ("new_user", "Q!111111", "1", "plainaddress", "Invalid email adress"),
+    ("new_user", "Q!111111", "1", "#@%^%#$@#$@#.com", "Invalid email adress"),
+    ("new_user", "Q!111111", "1", "@example.com", "Invalid email adress"),
+    ("new_user", "Q!111111", "1", "Joe Smith <email@example.com>", "Invalid email adress"),
+    ("new_user", "Q!111111", "1", "email@example@example.com", "Invalid email adress"),
+    ("new_user", "Q!111111", "1", "email@-example.com", "Invalid email adress"),
+    ("new_user", "Q!111111", "3", "email@example.com", "Invalid Choice: could not coerce"),
+    ("new_user", "Q!111111", "", "email@example.com", "Invalid Choice: could not coerce"),
+    ("new_user", "Q!111111", "a", "email@example.com", "Invalid Choice: could not coerce"),
 ))
-def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, email, flash_message):
+def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, email, sat_group, flash_message):
     with client:
         client.get("/")
         response = client.get(url_for("users.new_user"))
@@ -235,6 +243,7 @@ def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, e
             "name": name,
             "password": password,
             "email": email,
+            "sat_group": sat_group,
             }
         response = client.post(
             url_for("users.new_user"), data=data, follow_redirects=True)
@@ -250,58 +259,58 @@ def test_failed_new_user(client: FlaskClient, admin_logged_in, name, password, e
 
 
 # region: edit user
-@pytest.mark.parametrize(("id", "new_name", "orig_password", "new_password", "new_details", "new_check_inv", "new_admin", "new_in_use", "new_email"), (
+@pytest.mark.parametrize(("id", "new_name", "orig_password", "new_password", "new_details", "new_check_inv", "new_admin", "new_in_use", "new_email", "new_sat_group"), (
     # 1 element
-    ("4", "test_user", "Q!444444", "", "", "", "", "on", "validemail@gmail.com"),
-    ("4", "user4", "Q!444444", "Q!111111", "", "", "", "on", ""),
-    ("4", "user4", "Q!444444", "", "Some detail", "", "", "on", ""),
-    ("4", "user4", "Q!444444", "", "", "on", "", "on", "validemail@gmail.com"),
-    ("4", "user4", "Q!444444", "", "", "", "on", "on", ""),
-    ("5", "user5", "Q!555555", "", "", "", "", "", ""),
+    ("4", "test_user", "Q!444444", "", "", "", "", "on", "validemail@gmail.com", "1"),
+    ("4", "user4", "Q!444444", "Q!111111", "", "", "", "on", "", "1"),
+    ("4", "user4", "Q!444444", "", "Some detail", "", "", "on", "", "2"),
+    ("4", "user4", "Q!444444", "", "", "on", "", "on", "validemail@gmail.com", "1"),
+    ("4", "user4", "Q!444444", "", "", "", "on", "on", "", "1"),
+    ("5", "user5", "Q!555555", "", "", "", "", "", "", "1"),
     # 2 elements
-    ("3", "test_user", "Q!333333", "Q!111111", "", "", "", "on", ""),
-    ("3", "test_user", "Q!333333", "", "Some detail", "", "", "on", "validemail@gmail.com"),
-    ("3", "test_user", "Q!333333", "", "", "on", "", "on", ""),
-    ("3", "test_user", "Q!333333", "", "", "", "on", "on", ""),
-    ("6", "test_user", "Q!666666", "", "", "", "", "on", ""),
-    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "", "on", "on", ""),
-    ("2", "user2", "Q!222222", "Q!111111", "", "on", "on", "on", ""),
-    ("2", "user2", "Q!222222", "Q!111111", "", "", "", "on", "validemail@gmail.com"),
-    ("7", "user7", "Q!777777", "Q!111111", "", "", "", "", ""),
-    ("1", "user1", "Q!111111", "", "Some detail", "on", "on", "on", ""),
-    ("2", "user2", "Q!222222", "", "Some detail", "", "", "on", ""),
-    ("5", "user5", "Q!555555", "", "Some detail", "", "", "", ""),
-    ("2", "user2", "Q!222222", "", "", "on", "", "on", ""),
-    ("6", "user6", "Q!666666", "", "", "", "on", "on", "validemail@gmail.com"),
+    ("3", "test_user", "Q!333333", "Q!111111", "", "", "", "on", "", "1"),
+    ("3", "test_user", "Q!333333", "", "Some detail", "", "", "on", "validemail@gmail.com", "1"),
+    ("3", "test_user", "Q!333333", "", "", "on", "", "on", "", "2"),
+    ("3", "test_user", "Q!333333", "", "", "", "on", "on", "", "1"),
+    ("6", "test_user", "Q!666666", "", "", "", "", "on", "", "1"),
+    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "", "on", "on", "", "1"),
+    ("2", "user2", "Q!222222", "Q!111111", "", "on", "on", "on", "", "1"),
+    ("2", "user2", "Q!222222", "Q!111111", "", "", "", "on", "validemail@gmail.com", "2"),
+    ("7", "user7", "Q!777777", "Q!111111", "", "", "", "", "", "1"),
+    ("1", "user1", "Q!111111", "", "Some detail", "on", "on", "on", "", "1"),
+    ("2", "user2", "Q!222222", "", "Some detail", "", "", "on", "", "1"),
+    ("5", "user5", "Q!555555", "", "Some detail", "", "", "", "", "1"),
+    ("2", "user2", "Q!222222", "", "", "on", "", "on", "", "1"),
+    ("6", "user6", "Q!666666", "", "", "", "on", "on", "validemail@gmail.com", "2"),
     # 3 elements
-    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "", "on", "on", ""),
-    ("1", "test_user", "Q!111111", "Q!222222", "", "on", "on", "on", ""),
-    ("2", "test_user", "Q!222222", "Q!111111", "", "", "", "on", ""),
-    ("7", "test_user", "Q!777777", "Q!111111", "", "", "", "", ""),
-    ("3", "test_user", "Q!333333", "", "Some detail", "on", "", "on", "validemail@gmail.com"),
-    ("3", "test_user", "Q!333333", "", "Some detail", "", "on", "on", ""),
-    ("5", "test_user", "Q!555555", "", "Some detail", "", "", "", ""),
-    ("3", "test_user", "Q!333333", "", "", "on", "on", "on", ""),
-    ("6", "test_user", "Q!666666", "", "", "", "on", "on", ""),
-    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "on", "", "on", ""),
-    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "", "on", "on", ""),
-    ("5", "user5", "Q!555555", "Q!111111", "Some detail", "", "", "", "validemail@gmail.com"),
-    ("4", "user4", "Q!444444", "", "Some detail", "on", "on", "on", ""),
-    ("7", "user7", "Q!777777", "", "Some detail", "", "on", "", ""),
+    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "", "on", "on", "", "1"),
+    ("1", "test_user", "Q!111111", "Q!222222", "", "on", "on", "on", "", "1"),
+    ("2", "test_user", "Q!222222", "Q!111111", "", "", "", "on", "", "1"),
+    ("7", "test_user", "Q!777777", "Q!111111", "", "", "", "", "", "2"),
+    ("3", "test_user", "Q!333333", "", "Some detail", "on", "", "on", "validemail@gmail.com", "1"),
+    ("3", "test_user", "Q!333333", "", "Some detail", "", "on", "on", "", "1"),
+    ("5", "test_user", "Q!555555", "", "Some detail", "", "", "", "", "1"),
+    ("3", "test_user", "Q!333333", "", "", "on", "on", "on", "", "1"),
+    ("6", "test_user", "Q!666666", "", "", "", "on", "on", "", "2"),
+    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "on", "", "on", "", "1"),
+    ("4", "user4", "Q!444444", "Q!111111", "Some detail", "", "on", "on", "", "1"),
+    ("5", "user5", "Q!555555", "Q!111111", "Some detail", "", "", "", "validemail@gmail.com", "1"),
+    ("4", "user4", "Q!444444", "", "Some detail", "on", "on", "on", "", "1"),
+    ("7", "user7", "Q!777777", "", "Some detail", "", "on", "", "", "1"),
     # 4 elements
-    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "on", "on", "on", ""),
-    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "", "", "on", ""),
-    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "", "on", ""),
-    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "on", "", "on", ""),
-    ("7", "user7", "Q!777777", "Q!111111", "Some detail", "", "on", "", "validemail@gmail.com"),
+    ("1", "test_user", "Q!111111", "Q!222222", "Some detail", "on", "on", "on", "", "1"),
+    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "", "", "on", "", "2"),
+    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "", "on", "", "1"),
+    ("2", "user2", "Q!222222", "Q!111111", "Some detail", "on", "", "on", "", "1"),
+    ("7", "user7", "Q!777777", "Q!111111", "Some detail", "", "on", "", "validemail@gmail.com", "1"),
     # 5 elements
-    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "on", "", "on", ""),
-    ("4", "test_user", "Q!444444", "Q!111111", "Some detail", "on", "on", "on", ""),
-    ("7", "test_user", "Q!777777", "Q!111111", "Some detail", "", "on", "", "validemail@gmail.com"),
-    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "on", "on", ""),
+    ("2", "test_user", "Q!222222", "Q!111111", "Some detail", "on", "", "on", "", "2"),
+    ("4", "test_user", "Q!444444", "Q!111111", "Some detail", "on", "on", "on", "", "1"),
+    ("7", "test_user", "Q!777777", "Q!111111", "Some detail", "", "on", "", "validemail@gmail.com", "1"),
+    ("6", "test_user", "Q!666666", "Q!111111", "Some detail", "", "on", "on", "", "1"),
 ))
 def test_edit_user(client: FlaskClient, admin_logged_in,
-        id, new_name, orig_password, new_password, new_details, new_check_inv, new_admin, new_in_use, new_email):
+        id, new_name, orig_password, new_password, new_details, new_check_inv, new_admin, new_in_use, new_email, new_sat_group):
     with dbSession() as db_session:
         user = db_session.get(User, id)
         orig_in_use = user.in_use
@@ -311,6 +320,7 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
         orig_done_inv = user.done_inv
         orig_admin = user.admin
         orig_reg_req = user.reg_req
+        orig_sat_group = user.sat_group
         with client:
             client.get("/")
             response = client.get(url_for("users.edit_user", username=user.name))
@@ -326,6 +336,7 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
                 "check_inv": new_check_inv,
                 "admin": new_admin,
                 "in_use": new_in_use,
+                "sat_group": new_sat_group,
                 "submit": True,
             }
             response = client.post(url_for("users.edit_user", username=orig_name),
@@ -346,6 +357,8 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
         assert user.done_inv != bool(new_check_inv)
         assert user.admin == bool(new_admin)
         assert user.in_use == bool(new_in_use)
+        assert user.email == new_email
+        assert user.sat_group == int(new_sat_group)
         # teardown
         user.in_use = orig_in_use
         db_session.commit()
@@ -356,36 +369,41 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
         user.email = orig_email
         user.done_inv = orig_done_inv
         user.admin = orig_admin
+        user.sat_group = orig_sat_group
         db_session.commit()
         db_session.refresh(user)
         user.reg_req = orig_reg_req
         db_session.commit()
 
 
-@pytest.mark.parametrize(("id", "new_name", "new_password", "new_check_inv", "new_admin", "new_email", "flash_message"), (
-    ("4", "", "", "", "", "", msg["usr_req"]),
-    ("3", "us", "", "", "", "", msg["usr_len"]),
-    ("2", "useruseruseruser", "", "", "on", "", msg["usr_len"]),
-    ("2", "new_user", "Q!1", "", "on", "", msg["psw_len"]),
-    ("3", "new_user", "aaaaaaaa", "", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("4", "new_user", "#1aaaaaa", "", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("3", "new_user", "#Aaaaaaa", "", "", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("1", "new_user", "1Aaaaaaa", "", "on", "", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
-    ("1", "new_user", "Q!111112", "", "on", "plainaddress", "Invalid email adress"),
-    ("2", "new_user", "Q!111112", "", "on", "#@%^%#$@#$@#.com", "Invalid email adress"),
-    ("3", "new_user", "Q!111112", "", "", "@example.com", "Invalid email adress"),
-    ("4", "new_user", "Q!111112", "", "", "Joe Smith <email@example.com>", "Invalid email adress"),
-    ("1", "new_user", "Q!111112", "", "on", "email@example@example.com", "Invalid email adress"),
-    ("3", "new_user", "Q!111112", "", "", "email@-example.com", "Invalid email adress"),
+@pytest.mark.parametrize(("id", "new_name", "new_password", "new_check_inv", "new_admin", "new_email", "new_sat_group", "flash_message"), (
+    ("4", "", "", "", "", "", "1", msg["usr_req"]),
+    ("3", "us", "", "", "", "", "1", msg["usr_len"]),
+    ("2", "useruseruseruser", "", "", "on", "", "1", msg["usr_len"]),
+    ("2", "new_user", "Q!1", "", "on", "", "1", msg["psw_len"]),
+    ("3", "new_user", "aaaaaaaa", "", "", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("4", "new_user", "#1aaaaaa", "", "", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("3", "new_user", "#Aaaaaaa", "", "", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("1", "new_user", "1Aaaaaaa", "", "on", "", "1", f"Password must have 1 big letter, 1 number, 1 special char ({PASSW_SYMB})!"),
+    ("1", "new_user", "Q!111112", "", "on", "plainaddress", "1", "Invalid email adress"),
+    ("2", "new_user", "Q!111112", "", "on", "#@%^%#$@#$@#.com", "1", "Invalid email adress"),
+    ("3", "new_user", "Q!111112", "", "", "@example.com", "1", "Invalid email adress"),
+    ("4", "new_user", "Q!111112", "", "", "Joe Smith <email@example.com>", "1", "Invalid email adress"),
+    ("1", "new_user", "Q!111112", "", "on", "email@example@example.com", "1", "Invalid email adress"),
+    ("3", "new_user", "Q!111112", "", "", "email@-example.com", "1", "Invalid email adress"),
+    ("2", "new_user", "Q!111112", "", "on", "email@-example.com", "", "Invalid Choice: could not coerce"),
+    ("4", "new_user", "Q!111112", "", "", "email@-example.com", "3", "Not a valid choice"),
+    ("1", "new_user", "Q!111112", "", "on", "email@-example.com", "a", "Invalid Choice: could not coerce"),
 ))
 def test_failed_edit_user_form_validators(client: FlaskClient, admin_logged_in,
-        id, new_name, new_password, new_check_inv, new_admin, new_email, flash_message):
+        id, new_name, new_password, new_check_inv, new_admin, new_email, new_sat_group, flash_message):
     with dbSession() as db_session:
         user = db_session.get(User, id)
         orig_name = user.name
         orig_done_inv = user.done_inv
         orig_admin = user.admin
         orig_in_use = user.in_use
+        orig_sat_group = user.sat_group
         with client:
             client.get("/")
             response = client.get(url_for("users.edit_user", username=orig_name))
@@ -399,6 +417,7 @@ def test_failed_edit_user_form_validators(client: FlaskClient, admin_logged_in,
                 "check_inv": new_check_inv,
                 "admin": new_admin,
                 "in_use": "on",
+                "sat_group": new_sat_group,
                 "submit": True,
             }
             response = client.post(url_for("users.edit_user", username=orig_name),
@@ -414,6 +433,7 @@ def test_failed_edit_user_form_validators(client: FlaskClient, admin_logged_in,
         assert user.done_inv == orig_done_inv
         assert user.admin == orig_admin
         assert user.in_use == orig_in_use
+        assert user.sat_group == orig_sat_group
 
 
 def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
@@ -432,6 +452,7 @@ def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
                 "details": "",
                 "admin": "on",
                 "in_use": "on",
+                "sat_group": "2",
                 "submit": True,
             }
             response = client.post(url_for("users.edit_user", username=orig_name),

@@ -5,10 +5,10 @@ from datetime import date, timedelta
 from typing import Callable
 # from sqlite3 import IntegrityError
 
-from flask import Blueprint
-from sqlalchemy import select
+from flask import Blueprint, render_template
+from sqlalchemy import func, select
 
-from database import Schedule, dbSession
+from database import Schedule, User, dbSession
 from helpers import login_required, logger
 
 func: Callable
@@ -102,8 +102,7 @@ class GroupSchedule():
                         elem_id=group_no,
                         next_date=next_date,
                         update_date=update_date,
-                        update_interval=(self.groups_switch
-                                         * self.num_groups)
+                        update_interval=(self.groups_switch * self.num_groups)
                                          .days))
             except ValueError as sch_err:
                 logger.warning(str(sch_err))
@@ -132,3 +131,53 @@ class GroupSchedule():
 #     logger.warning(str(err))
 # except IntegrityError as err:
 #     logger.critical(str(err))
+
+@sch_bp.route("")
+def schedule():
+    """Schedules page."""
+    logger.info("Schedule page")
+
+    # region: sat_group
+    with dbSession() as db_session:
+        sat_group_1_names = db_session.scalars(
+            select(User.name)
+            .filter_by(sat_group=1, in_use=True, reg_req=False)
+            .order_by(func.lower(User.name))).all()
+        sat_group_2_names = db_session.scalars(
+            select(User.name)
+            .filter_by(sat_group=2, in_use=True, reg_req=False)
+            .order_by(func.lower(User.name))).all()
+        sat_group_1_next_date = db_session.scalar(
+            select(Schedule.next_date)
+            .filter_by(
+                name = "Saturday movie",
+                elem_id = 1))
+        sat_group_2_next_date = db_session.scalar(
+            select(Schedule.next_date)
+            .filter_by(
+                name = "Saturday movie",
+                elem_id = 2))
+        sat_group_interval = db_session.scalar(
+            select(Schedule.update_interval)
+            .filter_by(
+                name = "Saturday movie",
+                elem_id = 1))
+    if sat_group_1_next_date < sat_group_2_next_date:
+        next_sat_group = 1
+    else:
+        next_sat_group = 2
+    sat_group_1_dates = []
+    sat_group_2_dates = []
+    for _ in range(3):
+        sat_group_1_dates.append(sat_group_1_next_date.strftime("%d.%m.%Y"))
+        sat_group_2_dates.append(sat_group_2_next_date.strftime("%d.%m.%Y"))
+        sat_group_1_next_date += timedelta(days=sat_group_interval)
+        sat_group_2_next_date += timedelta(days=sat_group_interval)
+    # endregion
+
+    return render_template("sch/schedule.html",
+                           sat_group_1_names=sat_group_1_names,
+                           sat_group_2_names=sat_group_2_names,
+                           sat_group_1_dates=sat_group_1_dates,
+                           sat_group_2_dates=sat_group_2_dates,
+                           next_sat_group=next_sat_group)
