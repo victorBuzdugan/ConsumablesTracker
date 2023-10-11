@@ -122,43 +122,43 @@ def test_update_schedules_1(create_test_db, caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
-    update_schedules(date.today())
+    update_schedules(TEST_DB_NAME, date.today())
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert "No need to update schedules" in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" not in caplog.messages
+        assert "schedule(s) updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=2)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "1 schedule(s) updated" in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=15)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert "No need to update schedules" in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" not in caplog.messages
+        assert "schedule(s) updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=16)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "1 schedule(s) updated" in caplog.messages
         caplog.clear()
     with freeze_time(date(2023, 10, 9)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "2 schedule(s) updated" in caplog.messages
         caplog.clear()
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(select(Schedule)).all()
@@ -201,48 +201,48 @@ def test_update_schedules_2(create_test_db, caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
-    update_schedules(date.today())
+    update_schedules(TEST_DB_NAME, date.today())
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     with freeze_time(date.today() + timedelta(days=2)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" not in caplog.messages
+        assert "schedule(s) updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=3)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "1 schedule(s) updated" in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=9)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" not in caplog.messages
-        assert f"Schedules updated" not in caplog.messages
+        assert "schedule(s) updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=10)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" not in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "1 schedule(s) updated" in caplog.messages
         caplog.clear()
     with freeze_time(date(2023, 10, 6)):
-        update_schedules(date.today())
+        update_schedules(TEST_DB_NAME, date.today())
         assert date.today().isoweekday() == 5
         assert "No need to update schedules" not in caplog.messages
         assert f"Group 1 '{name}' schedule will be updated" in caplog.messages
         assert f"Group 2 '{name}' schedule will be updated" in caplog.messages
-        assert f"Schedules updated" in caplog.messages
+        assert "2 schedule(s) updated" in caplog.messages
         caplog.clear()
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(select(Schedule)).all()
