@@ -30,7 +30,7 @@ def test_approve_registration(client: FlaskClient, admin_logged_in):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert b"user5 has been approved" in response.data
-        assert b"Review the working schedule" in response.data
+        assert b"Review the schedules" in response.data
         with dbSession() as db_session:
             assert not db_session.get(User, 5).reg_req
             db_session.get(User, 5).reg_req = True
@@ -194,7 +194,7 @@ def test_new_user(client: FlaskClient, admin_logged_in, details, admin, email, s
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert "User 'new_user' created" in unescape(response.text)
-        assert b"Review the working schedule" in response.data
+        assert b"Review the schedules" in response.data
         assert name in response.text
     with dbSession() as db_session:
         user = db_session.scalar(select(User).filter_by(name=name))

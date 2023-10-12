@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v1.7\n"
+"Project-Id-Version:  v1.75\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-10-10 22:36+0300\n"
+"POT-Creation-Date: 2023-10-12 20:46+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -23,167 +23,167 @@ msgstr ""
 msgid "Language changed"
 msgstr "Limba a fost schimbată"
 
-#: database.py:266 database.py:484 database.py:560 database.py:647
+#: database.py:267 database.py:485 database.py:561 database.py:648
 #, python-format
 msgid "%(el_name)s must have a name"
 msgstr "%(el_name)s trebuie să aibă un nume"
 
-#: database.py:267 database.py:274
+#: database.py:268 database.py:275
 msgid "The user"
 msgstr "Utilizatorul"
 
-#: database.py:273 database.py:491 database.py:567 database.py:654
+#: database.py:274 database.py:492 database.py:568 database.py:655
 #, python-format
 msgid "%(el_name)s %(value)s allready exists"
 msgstr "%(el_name)s %(value)s există deja"
 
-#: database.py:283
+#: database.py:284
 msgid "User must have a password"
 msgstr "Utilizatorul trebuie să aibă o parolă"
 
-#: database.py:298 database.py:679 database.py:705
+#: database.py:299 database.py:680 database.py:706
 msgid "'Retired' users can't have products attached"
 msgstr "Utilizatorii scoși din uz nu pot fi responsabili de produse"
 
-#: database.py:301 database.py:682 database.py:708
+#: database.py:302 database.py:683 database.py:709
 msgid "User with pending registration can't have products attached"
 msgstr "Utilizatorii în curs de aprobare nu pot fi responsabili de produse"
 
-#: database.py:315
+#: database.py:316
 msgid "User with pending registration can't be admin"
 msgstr "Utilizatorii în curs de aprobare nu pot fi administratori"
 
-#: database.py:324
+#: database.py:325
 msgid "You are the last admin!"
 msgstr "Ești ultimul administrator!"
 
-#: database.py:340
+#: database.py:341
 msgid "Can't 'retire' a user if he is still responsible for products"
 msgstr "Un utilizator nu poate fi scos din uz dacă încă e responsabil de produse"
 
-#: database.py:359
+#: database.py:360
 msgid "'Retired' user can't check inventory"
 msgstr "Un utilizator scos din uz nu poate inventaria"
 
-#: database.py:362
+#: database.py:363
 msgid "User with pending registration can't check inventory"
 msgstr "Un utilizator în curs de aprobare nu poate inventaria"
 
-#: database.py:366
+#: database.py:367
 msgid "User without products attached can't check inventory"
 msgstr "Un utilizator nu poate inventaria dacă nu răspunde de nici un produs"
 
-#: database.py:385
+#: database.py:386
 msgid "Admin users can't request registration"
 msgstr "Un administrator nu poate cere aprobare pentru înregistrare"
 
-#: database.py:388
+#: database.py:389
 msgid "'Retired' users can't request registration"
 msgstr "Un utilizator scos din uz nu poate cere aprobare pentru înregistrare"
 
-#: database.py:391
+#: database.py:392
 msgid "User that checks inventory can't request registration"
 msgstr "Un utilizator ce inventariază nu poate cere aprobare pentru înregistrare"
 
-#: database.py:395
+#: database.py:396
 msgid "User that requested inventory can't request registration"
 msgstr ""
 "Un utilizator care a cerut inventariere nu poate cere aprobare pentru "
 "înregistrare"
 
-#: database.py:399
+#: database.py:400
 msgid "Users with products attached can't request registration"
 msgstr ""
 "Un utilizator ce răspunde de produse nu poate cere aprobare pentru "
 "înregistrare"
 
-#: database.py:417
+#: database.py:418
 msgid "Admins don't need to request inventorying"
 msgstr "Administratorii nu trebuie să ceară inventariere"
 
-#: database.py:420
+#: database.py:421
 msgid "'Retired' users can't request inventorying"
 msgstr "Un utilizator scos din uz nu poate cere inventariere"
 
-#: database.py:423
+#: database.py:424
 msgid "User with pending registration can't request inventorying"
 msgstr "Un utilizator în curs de aprobare nu poate cere inventariere"
 
-#: database.py:426
+#: database.py:427
 msgid "User can allready check inventory"
 msgstr "Utilizatorul poate deja inventaria"
 
-#: database.py:429
+#: database.py:430
 msgid "Users without products can't request inventorying"
 msgstr ""
 "Un utilizator nu poate cere inventariere dacă nu răspunde de nici un "
 "produs"
 
-#: database.py:485 database.py:492
+#: database.py:486 database.py:493
 msgid "The category"
 msgstr "Categoria"
 
-#: database.py:504 database.py:514 database.py:736 database.py:752
+#: database.py:505 database.py:515 database.py:737 database.py:753
 msgid "Not in use category can't have products attached"
 msgstr "O categorie scoasă din uz nu poate avea produse atașate"
 
-#: database.py:561 database.py:568
+#: database.py:562 database.py:569
 msgid "The supplier"
 msgstr "Furnizorul"
 
-#: database.py:580 database.py:590 database.py:771 database.py:787
+#: database.py:581 database.py:591 database.py:772 database.py:788
 msgid "Not in use supplier can't have products attached"
 msgstr "Un furnizor scos din uz nu poate avea produse atașate"
 
-#: database.py:648 database.py:655
+#: database.py:649 database.py:656
 msgid "The product"
 msgstr "Produsul"
 
-#: database.py:663
+#: database.py:664
 msgid "Product must have a description"
 msgstr "Produsul trebuie să aibă o descriere"
 
-#: database.py:672
+#: database.py:673
 msgid "User can't be deleted or does not exist"
 msgstr "Utilizatorul nu poate fi șters sau nu există"
 
-#: database.py:676 database.py:702
+#: database.py:677 database.py:703
 msgid "User does not exist"
 msgstr "Utilizatorul nu există"
 
-#: database.py:729
+#: database.py:730
 msgid "Category can't be deleted or does not exist"
 msgstr "Categoria nu poate fi ștearsă sau nu există"
 
-#: database.py:733 database.py:749
+#: database.py:734 database.py:750
 msgid "Category does not exist"
 msgstr "Categoria nu există"
 
-#: database.py:764
+#: database.py:765
 msgid "Supplier can't be deleted or does not exist"
 msgstr "Furnizorul nu poate fi șters sau nu există"
 
-#: database.py:768 database.py:784
+#: database.py:769 database.py:785
 msgid "Supplier does not exist"
 msgstr "Furnizorul nu există"
 
-#: database.py:795
+#: database.py:796
 msgid "Product must have a measuring unit"
 msgstr "Produsul trebuie să aibă unitate de măsură"
 
-#: database.py:804 database.py:806
+#: database.py:805 database.py:807
 msgid "Minimum stock must be ≥ 0"
 msgstr "Stocul minim trebuie să fie ≥ 0"
 
-#: database.py:815 database.py:817
+#: database.py:816 database.py:818
 msgid "Order quantity must be ≥ 1"
 msgstr "Cantitatea de comandă trebui să fie ≥ 1"
 
-#: database.py:825
+#: database.py:826
 msgid "Can't order not in use products"
 msgstr "Nu se poate comanda un produs scos din uz"
 
-#: database.py:834
+#: database.py:835
 msgid "Can't 'retire' a product that needs to be ordered"
 msgstr "Nu se poate scoate din uz un produs ce trebuie comandat"
 
@@ -1016,22 +1016,18 @@ msgstr "Confirmă toate produsele comandate"
 msgid "Confirm that all products were ordered"
 msgstr "Confirmă că toate produsele au fost comandate"
 
-#: blueprints/sch/templates/sch/schedule.html:3
-#: blueprints/sch/templates/sch/schedule.html:8
+#: blueprints/sch/__init__.py:13
+msgid "Saturday movie"
+msgstr "Filmul de sâmbătă"
+
+#: blueprints/sch/templates/sch/schedules.html:3
+#: blueprints/sch/templates/sch/schedules.html:8
 msgid "Schedules"
 msgstr "Programe"
 
-#: blueprints/sch/templates/sch/schedule.html:11
-msgid "Saturday movie schedule"
-msgstr "Filmul de sâmbătă"
-
-#: blueprints/sch/templates/sch/schedule.html:13 blueprints/users/users.py:77
-msgid "Group 1"
-msgstr "Grup 1"
-
-#: blueprints/sch/templates/sch/schedule.html:49 blueprints/users/users.py:77
-msgid "Group 2"
-msgstr "Grup 2"
+#: blueprints/sch/templates/sch/schedules.html:14
+msgid "Group"
+msgstr "Grup"
 
 #: blueprints/sup/sup.py:38
 msgid "Supplier name is required"
@@ -1130,6 +1126,14 @@ msgstr "Grup filmul de sâmbătă"
 msgid "Group number doesn't exist"
 msgstr "Numărul grupului nu există"
 
+#: blueprints/users/users.py:77
+msgid "Group 1"
+msgstr "Grup 1"
+
+#: blueprints/users/users.py:77
+msgid "Group 2"
+msgstr "Grup 2"
+
 #: blueprints/users/users.py:92
 msgid "Admin"
 msgstr "Admin"
@@ -1144,8 +1148,8 @@ msgid "%(username)s has been approved"
 msgstr "%(username)s a fost aprobat"
 
 #: blueprints/users/users.py:155 blueprints/users/users.py:218
-msgid "Review the working schedule"
-msgstr "Verifică programul de lucru"
+msgid "Review the schedules"
+msgstr "Verifică programul"
 
 #: blueprints/users/users.py:158 blueprints/users/users.py:179
 #: blueprints/users/users.py:298

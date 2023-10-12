@@ -40,7 +40,7 @@ def record_factory(*args, **kwargs):
     record = old_factory(*args, **kwargs)
     # bypass flask no request context runtime error
     try:
-        record.user = session.get("user_name", default="no_user")
+        record.user = session.get("user_name", default="_sys_")
     except RuntimeError:
         record.user = "no_user"
     # time with timezone

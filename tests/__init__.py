@@ -3,12 +3,15 @@
 import pathlib
 from datetime import date, timedelta
 
-import pytest
 from flask.testing import FlaskClient
+import pytest
 from sqlalchemy import URL, create_engine, select
 
 from app import app
-from database import Base, Category, Product, Schedule, Supplier, User, dbSession
+from blueprints.sch import SAT_GROUP_SCH_NAME
+from blueprints.sch.sch import GroupSchedule
+from database import (Base, Category, Product, Schedule, Supplier, User,
+                      dbSession)
 from helpers import DB_NAME, log_handler
 
 TEST_DB_NAME = "." + DB_NAME
@@ -19,14 +22,14 @@ def create_test_db():
     db_url = URL.create(
         drivername="sqlite",
         database=TEST_DB_NAME)
-    testEngine = create_engine(
+    test_engine = create_engine(
         url=db_url,
         echo=False,
         pool_size=10,
         max_overflow=20)
-    dbSession.configure(bind=testEngine)
-    Base.metadata.drop_all(bind=testEngine)
-    Base.metadata.create_all(bind=testEngine)
+    dbSession.configure(bind=test_engine)
+    Base.metadata.drop_all(bind=test_engine)
+    Base.metadata.create_all(bind=test_engine)
 
 
 @pytest.fixture(scope="session")
@@ -53,36 +56,36 @@ def create_test_users(create_test_db):
     """Insert into db a set of test users."""
     users = []
     users.append(User(
-        "user1",
-        "Q!111111",
+        name="user1",
+        password="Q!111111",
         admin=True,
         reg_req=False))
     users.append(User(
-        "user2",
-        "Q!222222",
+        name="user2",
+        password="Q!222222",
         admin=True,
         reg_req=False,
         sat_group=2))
     users.append(User(
-        "user3",
-        "Q!333333",
+        name="user3",
+        password="Q!333333",
         reg_req=False))
     users.append(User(
-        "user4",
-        "Q!444444",
+        name="user4",
+        password="Q!444444",
         reg_req=False,
         sat_group=2))
     users.append(User(
-        "user5",
-        "Q!555555"))
+        name="user5",
+        password="Q!555555"))
     users.append(User(
-        "user6",
-        "Q!666666",
+        name="user6",
+        password="Q!666666",
         reg_req=False,
         in_use=False))
     users.append(User(
-        "user7",
-        "Q!777777",
+        name="user7",
+        password="Q!777777",
         reg_req=False))
     with dbSession() as db_session:
         db_session.add_all(users)
@@ -100,9 +103,7 @@ def user_logged_in(client: FlaskClient):
         session["user_id"] = test_user.id
         session["admin"] = test_user.admin
         session["user_name"] = test_user.name
-    
     yield
-
     client.get("/auth/logout")
 
 
@@ -117,9 +118,7 @@ def admin_logged_in(client: FlaskClient):
         session["user_id"] = test_admin.id
         session["admin"] = test_admin.admin
         session["user_name"] = test_admin.name
-    
     yield
-
     client.get("/auth/logout")
 
 
@@ -134,9 +133,7 @@ def hidden_admin_logged_in(client: FlaskClient):
         session["user_id"] = test_admin.id
         session["admin"] = test_admin.admin
         session["user_name"] = test_admin.name
-
     yield
-
     client.get("/auth/logout")
 # endregion
 
@@ -146,16 +143,16 @@ def hidden_admin_logged_in(client: FlaskClient):
 def create_test_categories():
     """Insert into db a set of test categories."""
     categories = []
-    categories.append(Category("Household",
+    categories.append(Category(name="Household",
                                description="Household consumables"))
-    categories.append(Category("Personal",
+    categories.append(Category(name="Personal",
                                description="Personal consumables"))
-    categories.append(Category("Electronics"))
-    categories.append(Category("Kids"))
-    categories.append(Category("Health"))
-    categories.append(Category("Groceries"))
-    categories.append(Category("Pets"))
-    categories.append(Category("Others", in_use=False))
+    categories.append(Category(name="Electronics"))
+    categories.append(Category(name="Kids"))
+    categories.append(Category(name="Health"))
+    categories.append(Category(name="Groceries"))
+    categories.append(Category(name="Pets"))
+    categories.append(Category(name="Others", in_use=False))
     with dbSession() as db_session:
         db_session.add_all(categories)
         db_session.commit()
@@ -167,11 +164,11 @@ def create_test_categories():
 def create_test_suppliers():
     """Insert into db a set of test suppliers."""
     suppliers = []
-    suppliers.append(Supplier("Amazon", details="www.amazon.com"))
-    suppliers.append(Supplier("eBay", details="www.ebay.com"))
-    suppliers.append(Supplier("Kaufland"))
-    suppliers.append(Supplier("Carrefour"))
-    suppliers.append(Supplier("Other", in_use=False))
+    suppliers.append(Supplier(name="Amazon", details="www.amazon.com"))
+    suppliers.append(Supplier(name="eBay", details="www.ebay.com"))
+    suppliers.append(Supplier(name="Kaufland"))
+    suppliers.append(Supplier(name="Carrefour"))
+    suppliers.append(Supplier(name="Other", in_use=False))
     with dbSession() as db_session:
         db_session.add_all(suppliers)
         db_session.commit()
@@ -183,140 +180,480 @@ def create_test_suppliers():
 def create_test_products():
     """Insert into db a set of test products."""
     with dbSession() as db_session:
-        users = db_session.scalars(select(User)).all()
-        categories = db_session.scalars(select(User)).all()
-        suppliers = db_session.scalars(select(User)).all()
-        db_session.add(Product("Toilet paper", "Toilet paper 3-Ply",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 3), "roll", 5, 20, False, True))
-        db_session.add(Product("Paper towels", "Kitchen paper towels",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "roll", 2, 4, False, False))
-        db_session.add(Product("Trash bag small", "Trash bag 35l",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "bag", 3, 10, False, True))
-        db_session.add(Product("Trash bag large", "Trash bag 70l",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "bag", 3, 10, False, False))
-        db_session.add(Product("Glass cleaner", "Glass cleaner",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 1), "bottle", 0, 1, False, False))
-        db_session.add(Product("Bathroom cleaner", "Bathroom cleaner",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 1), "bottle", 0, 1, False, False))
-        db_session.add(Product("Wood cleaner", "Pronto wood cleaner",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 1), "spray", 0, 1, False, False))
-        db_session.add(Product("Kitchen cleaner", "Kitchen cleaner",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 1), "spray", 0, 1, False, False))
-        db_session.add(Product("Kitchen sponge", "Kitchen scrub sponge",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "pc", 2, 8, False, False))
-        db_session.add(Product("Cleaning Cloth", "Microfiber Cleaning Cloth",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 3), "pc", 1, 6, False, False))
-        db_session.add(Product("AA Batteries", "Ultra AA Batteries",
-            db_session.get(User, 1), db_session.get(Category, 3),
-            db_session.get(Supplier, 2), "pc", 2, 8, False, True))
-        db_session.add(Product("AAA Batteries", "Ultra AAA Batteries",
-            db_session.get(User, 1), db_session.get(Category, 3),
-            db_session.get(Supplier, 2), "pc", 2, 6, False, False))
-        db_session.add(Product("Laundry Detergent", "Powder Laundry Detergent",
-            db_session.get(User, 2), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "bag", 0, 1, False, False))
-        db_session.add(Product("Matches", "Matches",
-            db_session.get(User, 1), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "box", 1, 3, False, False))
-        db_session.add(Product("Facial tissues", "Facial tissues",
-            db_session.get(User, 3), db_session.get(Category, 2),
-            db_session.get(Supplier, 1), "pack", 2, 10, False, False))
-        db_session.add(Product("Personal wipes", "Personal cleansing wipes",
-            db_session.get(User, 3), db_session.get(Category, 2),
-            db_session.get(Supplier, 1), "pack", 1, 6, False, True))
-        db_session.add(Product("Eyeglass wipes", "Eyeglass wipes",
-            db_session.get(User, 1), db_session.get(Category, 2),
-            db_session.get(Supplier, 1), "pack", 0, 2, False, False))
         db_session.add(Product(
-            "Photo printer cartridge", "Photo printer ink cartridge",
-            db_session.get(User, 1), db_session.get(Category, 3),
-            db_session.get(Supplier, 1), "pc", 1, 1, False, False))
-        db_session.add(Product("Photo printer paper", "Photo printer paper",
-            db_session.get(User, 1), db_session.get(Category, 3),
-            db_session.get(Supplier, 1), "pc", 10, 20, False, False))
-        db_session.add(Product("Drawing paper", "Drawing paper",
-            db_session.get(User, 4), db_session.get(Category, 4),
-            db_session.get(Supplier, 1), "pc", 10, 20, False, False))
-        db_session.add(Product("Drawing crayons", "Drawing crayons",
-            db_session.get(User, 4), db_session.get(Category, 4),
-            db_session.get(Supplier, 1), "pc", 0, 1, False, False))
-        db_session.add(Product("Car cleaner", "Car plastics cleaner",
-            db_session.get(User, 1), db_session.get(Category, 1),
-            db_session.get(Supplier, 4), "spray", 0, 1, False, False))
-        db_session.add(Product("Face cream", "Face cream",
-            db_session.get(User, 2), db_session.get(Category, 2),
-            db_session.get(Supplier, 4), "pc", 0, 1, False, False))
-        db_session.add(Product("Toothpaste", "Toothpaste",
-            db_session.get(User, 3), db_session.get(Category, 2),
-            db_session.get(Supplier, 4), "pc", 1, 1, False, True))
-        db_session.add(Product("Vitamins", "Multi-vitamins",
-            db_session.get(User, 1), db_session.get(Category, 5),
-            db_session.get(Supplier, 3), "pc", 10, 30, False, True))
-        db_session.add(Product("Bandages", "Mixed bandages",
-            db_session.get(User, 3), db_session.get(Category, 5),
-            db_session.get(Supplier, 4), "pack", 0, 1, False, True))
-        db_session.add(Product("Cat food", "Cat food",
-            db_session.get(User, 3), db_session.get(Category, 7),
-            db_session.get(Supplier, 2), "bag", 0, 1, False, True))
-        db_session.add(Product("Cat litter", "Cat litter",
-            db_session.get(User, 3), db_session.get(Category, 7),
-            db_session.get(Supplier, 2), "bag", 0, 1, False, True))
-        db_session.add(Product("Playdough", "Playdough",
-            db_session.get(User, 3), db_session.get(Category, 4),
-            db_session.get(Supplier, 2), "set", 0, 1, False, False))
-        db_session.add(Product("Bread", "Sliced bread",
-            db_session.get(User, 1), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "pc", 1, 1, False, True))
-        db_session.add(Product("Oranges", "Oranges",
-            db_session.get(User, 3), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "bag", 0, 1, False, False))
-        db_session.add(Product("Bananas", "Bananas",
-            db_session.get(User, 3), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "pc", 3, 10, False, False))
-        db_session.add(Product("Milk", "Milk",
-            db_session.get(User, 1), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "bottle", 0, 1, False, True))
-        db_session.add(Product("Cereals", "Cereals",
-            db_session.get(User, 4), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "bag", 1, 1, False, True))
-        db_session.add(Product("Chocolate", "Chocolate",
-            db_session.get(User, 4), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "pc", 1, 2, False, True))
-        db_session.add(Product("Eggs", "Eggs",
-            db_session.get(User, 2), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "pc", 5, 10, False, True))
-        db_session.add(Product("Pasta", "Pasta",
-            db_session.get(User, 2), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "pack", 0, 1, False, True))
-        db_session.add(Product("Coffee", "Coffee",
-            db_session.get(User, 1), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "bag", 0, 1, False, True))
-        db_session.add(Product("Cheese", "Cheese",
-            db_session.get(User, 2), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "pc", 0, 1, False, False))
-        db_session.add(Product("Mustard", "Mustard",
-            db_session.get(User, 1), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "bottle", 0, 1, False, False))
-        db_session.add(Product("Ketchup", "Ketchup",
-            db_session.get(User, 1), db_session.get(Category, 6),
-            db_session.get(Supplier, 3), "bottle", 0, 1, False, False))
-        db_session.add(Product("Sunflower oil", "Sunflower oil",
-            db_session.get(User, 2), db_session.get(Category, 6),
-            db_session.get(Supplier, 4), "bottle", 0, 1, False, False))
-        db_session.add(Product("Other", "Other",
-            db_session.get(User, 1), db_session.get(Category, 3),
-            db_session.get(Supplier, 2), "pc", 1, 2, False, False,
-            False))
+            name="Toilet paper",
+            description="Toilet paper 3-Ply",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="roll",
+            min_stock=5,
+            ord_qty=20,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Paper towels",
+            description="Kitchen paper towels",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="roll",
+            min_stock=2,
+            ord_qty=4,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Trash bag small",
+            description="Trash bag 35l",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bag",
+            min_stock=3,
+            ord_qty=10,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Trash bag large",
+            description="Trash bag 70l",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bag",
+            min_stock=3,
+            ord_qty=10,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Glass cleaner",
+            description="Glass cleaner",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Bathroom cleaner",
+            description="Bathroom cleaner",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Wood cleaner",
+            description="Pronto wood cleaner",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="spray",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Kitchen cleaner",
+            description="Kitchen cleaner",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="spray",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Kitchen sponge",
+            description="Kitchen scrub sponge",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pc",
+            min_stock=2,
+            ord_qty=8,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Cleaning Cloth",
+            description="Microfiber Cleaning Cloth",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=6,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="AA Batteries",
+            description="Ultra AA Batteries",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 3),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="pc",
+            min_stock=2,
+            ord_qty=8,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="AAA Batteries",
+            description="Ultra AAA Batteries",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 3),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="pc",
+            min_stock=2,
+            ord_qty=6,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Laundry Detergent",
+            description="Powder Laundry Detergent",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bag",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Matches",
+            description="Matches",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="box",
+            min_stock=1,
+            ord_qty=3,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Facial tissues",
+            description="Facial tissues",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 2),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pack",
+            min_stock=2,
+            ord_qty=10,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Personal wipes",
+            description="Personal cleansing wipes",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 2),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pack",
+            min_stock=1,
+            ord_qty=6,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Eyeglass wipes",
+            description="Eyeglass wipes",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 2),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pack",
+            min_stock=0,
+            ord_qty=2,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Photo printer cartridge",
+            description="Photo printer ink cartridge",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 3),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Photo printer paper",
+            description="Photo printer paper",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 3),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pc",
+            min_stock=10,
+            ord_qty=20,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Drawing paper",
+            description="Drawing paper",
+            responsable=db_session.get(User, 4),
+            category=db_session.get(Category, 4),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pc",
+            min_stock=10,
+            ord_qty=20,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Drawing crayons",
+            description="Drawing crayons",
+            responsable=db_session.get(User, 4),
+            category=db_session.get(Category, 4),
+            supplier=db_session.get(Supplier, 1),
+            meas_unit="pc",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Car cleaner",
+            description="Car plastics cleaner",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 1),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="spray",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Face cream",
+            description="Face cream",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 2),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pc",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Toothpaste",
+            description="Toothpaste",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 2),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Vitamins",
+            description="Multi-vitamins",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 5),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="pc",
+            min_stock=10,
+            ord_qty=30,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Bandages",
+            description="Mixed bandages",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 5),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pack",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Cat food",
+            description="Cat food",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 7),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="bag",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Cat litter",
+            description="Cat litter",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 7),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="bag",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Playdough",
+            description="Playdough",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 4),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="set",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Bread",
+            description="Sliced bread",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Oranges",
+            description="Oranges",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bag",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Bananas",
+            description="Bananas",
+            responsable=db_session.get(User, 3),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pc",
+            min_stock=3,
+            ord_qty=10,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Milk",
+            description="Milk",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Cereals",
+            description="Cereals",
+            responsable=db_session.get(User, 4),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="bag",
+            min_stock=1,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Chocolate",
+            description="Chocolate",
+            responsable=db_session.get(User, 4),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=2,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Eggs",
+            description="Eggs",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pc",
+            min_stock=5,
+            ord_qty=10,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Pasta",
+            description="Pasta",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="pack",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Coffee",
+            description="Coffee",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bag",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=True))
+        db_session.add(Product(
+            name="Cheese",
+            description="Cheese",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="pc",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Mustard",
+            description="Mustard",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Ketchup",
+            description="Ketchup",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 3),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Sunflower oil",
+            description="Sunflower oil",
+            responsable=db_session.get(User, 2),
+            category=db_session.get(Category, 6),
+            supplier=db_session.get(Supplier, 4),
+            meas_unit="bottle",
+            min_stock=0,
+            ord_qty=1,
+            to_order=False,
+            critical=False))
+        db_session.add(Product(
+            name="Other",
+            description="Other",
+            responsable=db_session.get(User, 1),
+            category=db_session.get(Category, 3),
+            supplier=db_session.get(Supplier, 2),
+            meas_unit="pc",
+            min_stock=1,
+            ord_qty=2,
+            to_order=False,
+            critical=False,
+            in_use=False))
         db_session.commit()
 # endregion
 
@@ -324,23 +661,15 @@ def create_test_products():
 # region: schedules fixtures
 @pytest.fixture(scope="session")
 def create_test_group_schedule():
-    """Insert into db a 2 group 1 week interval schedule."""
-    schedule_group_1 = Schedule(
-        name="Saturday movie",
-        type="group",
-        elem_id=1,
-        next_date=date.today(),
-        update_date=date.today() + timedelta(days=1),
-        update_interval=14)
-    schedule_group_2 = Schedule(
-        name="Saturday movie",
-        type="group",
-        elem_id=2,
-        next_date=date.today() + timedelta(days=7),
-        update_date=date.today() + timedelta(days=8),
-        update_interval=14)
-    with dbSession() as db_session:
-        db_session.add(schedule_group_1)
-        db_session.add(schedule_group_2)
-        db_session.commit()
+    """Mock into db a 2 group 1 week interval schedule."""
+    test_schedule = GroupSchedule(
+        name=SAT_GROUP_SCH_NAME["db_name"],
+        user_attr=User.sat_group.name,
+        num_groups=2,
+        first_group=1,
+        sch_day=date.today().isocalendar()[2],
+        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
+        groups_switch=timedelta(weeks=1),
+        start_date=date.today())
+    test_schedule.register()
 # endregion

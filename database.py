@@ -15,6 +15,7 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
+from blueprints.sch import SAT_GROUP_SCH_NAME
 from helpers import CURR_DIR, DB_NAME, logger
 
 func: Callable
@@ -252,7 +253,7 @@ class User(Base):
             if (user_sat_group_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name="Saturday movie",
+                        name=SAT_GROUP_SCH_NAME["db_name"],
                         elem_id=self.sat_group))):
                 return (user_sat_group_date.isocalendar().week ==
                         date.today().isocalendar().week)

@@ -9,6 +9,7 @@ from flask.testing import FlaskClient
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
+from blueprints.sch import SAT_GROUP_SCH_NAME
 from blueprints.sch.sch import GroupSchedule
 from database import Schedule, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
@@ -26,12 +27,21 @@ pytestmark = pytest.mark.sch
     (4, 4, 5, 4, timedelta(weeks=2), date.today()),
 ))
 def test_group_schedule_creation(client, num_groups, first_group, sch_day, sch_day_update, groups_switch, start_date):
-    GroupSchedule("test_sch", sch_day, sch_day_update, groups_switch, num_groups, first_group, start_date)
+    SCH_NAME = "test_sch"
+    GroupSchedule(
+        name=SCH_NAME,
+        user_attr=User.sat_group.name,
+        num_groups=num_groups,
+        first_group=first_group,
+        sch_day=sch_day,
+        sch_day_update=sch_day_update,
+        groups_switch=groups_switch,
+        start_date=start_date).register()
     with dbSession() as db_session:
         # check name
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name="test_sch")).all()
+            .filter_by(name=SCH_NAME)).all()
         # check num_groups
         assert len(schedules) == num_groups
 
@@ -64,22 +74,24 @@ def test_group_schedule_creation(client, num_groups, first_group, sch_day, sch_d
             db_session.delete(schedule)
         db_session.commit()
 
+
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_1(client, caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 2 weeks interval"""
-    name = "Saturday working schedule"
+    name = "Test saturday working"
     num_groups = 2
     groups_switch = timedelta(weeks=2)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
         name=name,
+        user_attr=User.sat_group.name,
         num_groups=num_groups,
         first_group=1,
         sch_day=6,
         sch_day_update=1,
         groups_switch=groups_switch,
-        start_date=date.today())
+        start_date=date.today()).register()
     assert f"Group schedule '{name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
@@ -107,19 +119,20 @@ def test_explicit_group_schedule_creation_1(client, caplog: LogCaptureFixture):
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_2(client, caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 1 week interval"""
-    name = "Sunday movie"
+    name = "Test sunday movie"
     num_groups = 2
     groups_switch = timedelta(weeks=1)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
         name=name,
+        user_attr=User.sat_group.name,
         num_groups=num_groups,
         first_group=2,
         sch_day=7,
         sch_day_update=1,
         groups_switch=groups_switch,
-        start_date=date(2023, 10, 14))
+        start_date=date(2023, 10, 14)).register()
     assert f"Group schedule '{name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
@@ -147,19 +160,20 @@ def test_explicit_group_schedule_creation_2(client, caplog: LogCaptureFixture):
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_3(client, caplog: LogCaptureFixture):
     """Explicit date checking 3 groups 3 weeks interval"""
-    name = "Some schedule"
+    name = "Test some other schedule"
     num_groups = 3
     groups_switch = timedelta(weeks=3)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
         name=name,
+        user_attr=User.sat_group.name,
         num_groups=num_groups,
         first_group=2,
         sch_day=4,
         sch_day_update=6,
         groups_switch=groups_switch,
-        start_date=date.today())
+        start_date=date.today()).register()
     assert f"Group schedule '{name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
@@ -191,19 +205,18 @@ def test_explicit_group_schedule_creation_3(client, caplog: LogCaptureFixture):
 
 
 def test_failed_group_schedule_creation_duplicate(client, caplog: LogCaptureFixture):
-    name = "Some schedule"
-    GroupSchedule(
+    name = "Test some schedule"
+    test_schedule = GroupSchedule(
         name=name,
+        user_attr=User.sat_group.name,
         sch_day=6,
         sch_day_update=1,
         groups_switch=timedelta(weeks=1))
+    test_schedule.register()
     assert f"Group schedule '{name}' created" in caplog.messages
-    with pytest.raises(AssertionError, match="Schedule '(.)*' allready exists"):
-        GroupSchedule(
-            name=name,
-            sch_day=6,
-            sch_day_update=1,
-            groups_switch=timedelta(weeks=1))
+    caplog.clear()
+    test_schedule.register()
+    assert f"Schedule '{name}' allready exists" in caplog.messages
     # teardown
     with dbSession() as db_session:
         schedules = db_session.scalars(
@@ -213,31 +226,53 @@ def test_failed_group_schedule_creation_duplicate(client, caplog: LogCaptureFixt
             db_session.delete(schedule)
         db_session.commit()
 
-@pytest.mark.parametrize(("num_groups", "first_group", "sch_day", "sch_day_update", "groups_switch", "start_date", "err_msg"), (
-    (1, 1, 6, 1, timedelta(weeks=2), date.today(), "You must have at least two groups"),
-    (-2, 1, 6, 1, timedelta(weeks=2), date.today(), "You must have at least two groups"),
-    (2, 0, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
-    (2, 3, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
-    (2, -2, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
-    (2, 1, 0, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
-    (2, 1, -2, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
-    (2, 1, 9, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
-    (2, 1, 6, 0, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
-    (2, 1, 6, -2, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
-    (2, 1, 6, 9, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
-    (2, 1, 6, 6, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
-    (2, 1, 6, 1, timedelta(hours=23), date.today(), "Schedule groups switch attribute is not valid"),
-    (2, 1, 6, 1, timedelta(weeks=2), date.today() - timedelta(days=1), "Schedule start date cannot be in the past"),
+
+@pytest.mark.parametrize(("name", "user_attr", "num_groups", "first_group", "sch_day", "sch_day_update", "groups_switch", "start_date", "err_msg"), (
+    ("", "sat_group", 2, 1, 6, 1, timedelta(weeks=2), date.today(), "The schedule must have a name"),
+    (" ", "sat_group", 2, 1, 6, 1, timedelta(weeks=2), date.today(), "The schedule must have a name"),
+    ("test_sch", "", 2, 1, 6, 1, timedelta(weeks=2), date.today(), "User has no attribute"),
+    ("test_sch", " ", 2, 1, 6, 1, timedelta(weeks=2), date.today(), "User has no attribute"),
+    ("test_sch", "wrong_attr", 2, 1, 6, 1, timedelta(weeks=2), date.today(), "User has no attribute"),
+    ("test_sch", "sat_group", 1, 1, 6, 1, timedelta(weeks=2), date.today(), "You must have at least two groups"),
+    ("test_sch", "sat_group", -2, 1, 6, 1, timedelta(weeks=2), date.today(), "You must have at least two groups"),
+    ("test_sch", "sat_group", 2, 0, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
+    ("test_sch", "sat_group", 2, 3, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
+    ("test_sch", "sat_group", 2, -2, 6, 1, timedelta(weeks=2), date.today(), "First group attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 0, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, -2, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 9, 1, timedelta(weeks=2), date.today(), "Schedule day attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, 0, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, -2, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, 9, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, 6, timedelta(weeks=2), date.today(), "Schedule day change attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, 1, timedelta(hours=23), date.today(), "Schedule groups switch attribute is not valid"),
+    ("test_sch", "sat_group", 2, 1, 6, 1, timedelta(weeks=2), date.today() - timedelta(days=1), "Schedule start date cannot be in the past"),
 ))
-def test_failed_group_schedule_creation(client, num_groups, first_group, sch_day, sch_day_update, groups_switch, start_date, err_msg, caplog: LogCaptureFixture):
-    with pytest.raises(ValueError, match=err_msg):
-        GroupSchedule("test_sch", sch_day, sch_day_update, groups_switch, num_groups, first_group, start_date)
+def test_failed_group_schedule_creation(client, name, user_attr, num_groups, first_group, sch_day, sch_day_update, groups_switch, start_date, err_msg, caplog: LogCaptureFixture):
+    with pytest.raises((ValueError, AttributeError), match=err_msg):
+        GroupSchedule(
+            name=name,
+            user_attr=user_attr,
+            num_groups=num_groups,
+            first_group=first_group,
+            sch_day=sch_day,
+            sch_day_update=sch_day_update,
+            groups_switch=groups_switch,
+            start_date=start_date)
     assert "Group schedule 'test_sch' created" not in caplog.messages
 
 
-def test_failed_group_schedule_creation_db_fallback(client, caplog: LogCaptureFixture):
-    GroupSchedule("", 1, 2, timedelta(weeks=2))
-    assert "The schedule must have a name" in caplog.messages
+def test_group_schedule_unregister(client, caplog: LogCaptureFixture):
+    SCH_NAME = "test_sch"
+    test_schedule = GroupSchedule(SCH_NAME, User.sat_group.name)
+    # test auto-registering
+    test_schedule.data()
+    with dbSession() as db_session:
+        assert db_session.scalar(select(Schedule).filter_by(name=SCH_NAME))
+        assert f"Group schedule '{SCH_NAME}' created" in caplog.messages
+        test_schedule.unregister()
+        assert not db_session.scalar(select(Schedule).filter_by(name=SCH_NAME))
+        assert f"Group schedule '{SCH_NAME}' deleted" in caplog.messages
 # endregion
 
 
@@ -248,10 +283,11 @@ def test_schedule_page_group_schedule_user_logged_in(client: FlaskClient, user_l
         response = client.get(url_for("sch.schedule"))
         assert response.status_code == 200
         assert b"Schedules" in response.data
-        assert b"Saturday movie schedule" in response.data
+        assert SAT_GROUP_SCH_NAME["db_name"] in response.text
         assert b"Group 1" in response.data
         assert b"Group 2" in response.data
-        assert f"<b>{session['user_name']}</b>" in response.text
+        assert f'<span class="fw-bolder">{session["user_name"]}</span>' in response.text
+        assert url_for("users.edit_user", username=session["user_name"]) not in response.text
         with dbSession() as db_session:
             users_in_use = db_session.scalars(
                 select(User.name)
@@ -274,21 +310,16 @@ def test_schedule_page_group_schedule_user_logged_in(client: FlaskClient, user_l
 
 
 def test_schedule_page_group_schedule_admin_logged_in(client: FlaskClient, admin_logged_in):
-    with dbSession() as db_session:
-         db_session.get(Schedule, 1).next_date = date.today() + timedelta(weeks=2)
-         db_session.commit()
     with client:
-        client.get("/")
-        response = client.get(url_for("sch.schedule"))
-        assert response.status_code == 200
-        assert b"Schedules" in response.data
-        assert b"Saturday movie schedule" in response.data
-        assert b"Group 1" in response.data
-        assert b"Group 2" in response.data
-        assert f"<b>{session['user_name']}</b>" in response.text
-        assert f"<b>{(date.today() + timedelta(weeks=1)).strftime('%d.%m.%Y')}</b>" in response.text
-    # teardown
-    with dbSession() as db_session:
-        db_session.get(Schedule, 1).next_date = date.today()
-        db_session.commit()
+        with freeze_time(date.today() + timedelta(weeks=1)):
+            client.get("/")
+            response = client.get(url_for("sch.schedule"))
+            assert response.status_code == 200
+            assert b"Schedules" in response.data
+            assert SAT_GROUP_SCH_NAME["db_name"] in response.text
+            assert b"Group 1" in response.data
+            assert b"Group 2" in response.data
+            assert f'<span class="fw-bolder">{session["user_name"]}</span>' not in response.text
+            assert url_for("users.edit_user", username=session["user_name"]) in response.text
+            assert f"<b>{date.today().strftime('%d.%m.%Y')}</b>" in response.text
 # endregion

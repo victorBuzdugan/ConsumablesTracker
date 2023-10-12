@@ -152,7 +152,7 @@ def approve_reg(username):
             logger.debug("%s has been approved", username)
             flash(gettext("%(username)s has been approved",
                           username=username))
-            flash(gettext("Review the working schedule"), "warning")
+            flash(gettext("Review the schedules"), "warning")
         else:
             logger.warning("%s does not exist", username)
             flash(gettext("%(username)s does not exist!",
@@ -215,7 +215,7 @@ def new_user():
                 logger.debug("User '%s' created", user.name)
                 flash(gettext("User '%(username)s' created",
                               username=user.name))
-                flash(gettext("Review the working schedule"), "warning")
+                flash(gettext("Review the schedules"), "warning")
                 return redirect(url_for("main.index"))
             except ValueError as error:
                 logger.warning("User creation error(s)")

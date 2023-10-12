@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-10 22:36+0300\n"
+"POT-Creation-Date: 2023-10-12 20:46+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,161 +21,161 @@ msgstr ""
 msgid "Language changed"
 msgstr ""
 
-#: database.py:266 database.py:484 database.py:560 database.py:647
+#: database.py:267 database.py:485 database.py:561 database.py:648
 #, python-format
 msgid "%(el_name)s must have a name"
 msgstr ""
 
-#: database.py:267 database.py:274
+#: database.py:268 database.py:275
 msgid "The user"
 msgstr ""
 
-#: database.py:273 database.py:491 database.py:567 database.py:654
+#: database.py:274 database.py:492 database.py:568 database.py:655
 #, python-format
 msgid "%(el_name)s %(value)s allready exists"
 msgstr ""
 
-#: database.py:283
+#: database.py:284
 msgid "User must have a password"
 msgstr ""
 
-#: database.py:298 database.py:679 database.py:705
+#: database.py:299 database.py:680 database.py:706
 msgid "'Retired' users can't have products attached"
 msgstr ""
 
-#: database.py:301 database.py:682 database.py:708
+#: database.py:302 database.py:683 database.py:709
 msgid "User with pending registration can't have products attached"
 msgstr ""
 
-#: database.py:315
+#: database.py:316
 msgid "User with pending registration can't be admin"
 msgstr ""
 
-#: database.py:324
+#: database.py:325
 msgid "You are the last admin!"
 msgstr ""
 
-#: database.py:340
+#: database.py:341
 msgid "Can't 'retire' a user if he is still responsible for products"
 msgstr ""
 
-#: database.py:359
+#: database.py:360
 msgid "'Retired' user can't check inventory"
 msgstr ""
 
-#: database.py:362
+#: database.py:363
 msgid "User with pending registration can't check inventory"
 msgstr ""
 
-#: database.py:366
+#: database.py:367
 msgid "User without products attached can't check inventory"
 msgstr ""
 
-#: database.py:385
+#: database.py:386
 msgid "Admin users can't request registration"
 msgstr ""
 
-#: database.py:388
+#: database.py:389
 msgid "'Retired' users can't request registration"
 msgstr ""
 
-#: database.py:391
+#: database.py:392
 msgid "User that checks inventory can't request registration"
 msgstr ""
 
-#: database.py:395
+#: database.py:396
 msgid "User that requested inventory can't request registration"
 msgstr ""
 
-#: database.py:399
+#: database.py:400
 msgid "Users with products attached can't request registration"
 msgstr ""
 
-#: database.py:417
+#: database.py:418
 msgid "Admins don't need to request inventorying"
 msgstr ""
 
-#: database.py:420
+#: database.py:421
 msgid "'Retired' users can't request inventorying"
 msgstr ""
 
-#: database.py:423
+#: database.py:424
 msgid "User with pending registration can't request inventorying"
 msgstr ""
 
-#: database.py:426
+#: database.py:427
 msgid "User can allready check inventory"
 msgstr ""
 
-#: database.py:429
+#: database.py:430
 msgid "Users without products can't request inventorying"
 msgstr ""
 
-#: database.py:485 database.py:492
+#: database.py:486 database.py:493
 msgid "The category"
 msgstr ""
 
-#: database.py:504 database.py:514 database.py:736 database.py:752
+#: database.py:505 database.py:515 database.py:737 database.py:753
 msgid "Not in use category can't have products attached"
 msgstr ""
 
-#: database.py:561 database.py:568
+#: database.py:562 database.py:569
 msgid "The supplier"
 msgstr ""
 
-#: database.py:580 database.py:590 database.py:771 database.py:787
+#: database.py:581 database.py:591 database.py:772 database.py:788
 msgid "Not in use supplier can't have products attached"
 msgstr ""
 
-#: database.py:648 database.py:655
+#: database.py:649 database.py:656
 msgid "The product"
 msgstr ""
 
-#: database.py:663
+#: database.py:664
 msgid "Product must have a description"
 msgstr ""
 
-#: database.py:672
+#: database.py:673
 msgid "User can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:676 database.py:702
+#: database.py:677 database.py:703
 msgid "User does not exist"
 msgstr ""
 
-#: database.py:729
+#: database.py:730
 msgid "Category can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:733 database.py:749
+#: database.py:734 database.py:750
 msgid "Category does not exist"
 msgstr ""
 
-#: database.py:764
+#: database.py:765
 msgid "Supplier can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:768 database.py:784
+#: database.py:769 database.py:785
 msgid "Supplier does not exist"
 msgstr ""
 
-#: database.py:795
+#: database.py:796
 msgid "Product must have a measuring unit"
 msgstr ""
 
-#: database.py:804 database.py:806
+#: database.py:805 database.py:807
 msgid "Minimum stock must be ≥ 0"
 msgstr ""
 
-#: database.py:815 database.py:817
+#: database.py:816 database.py:818
 msgid "Order quantity must be ≥ 1"
 msgstr ""
 
-#: database.py:825
+#: database.py:826
 msgid "Can't order not in use products"
 msgstr ""
 
-#: database.py:834
+#: database.py:835
 msgid "Can't 'retire' a product that needs to be ordered"
 msgstr ""
 
@@ -995,21 +995,17 @@ msgstr ""
 msgid "Confirm that all products were ordered"
 msgstr ""
 
-#: blueprints/sch/templates/sch/schedule.html:3
-#: blueprints/sch/templates/sch/schedule.html:8
+#: blueprints/sch/__init__.py:13
+msgid "Saturday movie"
+msgstr ""
+
+#: blueprints/sch/templates/sch/schedules.html:3
+#: blueprints/sch/templates/sch/schedules.html:8
 msgid "Schedules"
 msgstr ""
 
-#: blueprints/sch/templates/sch/schedule.html:11
-msgid "Saturday movie schedule"
-msgstr ""
-
-#: blueprints/sch/templates/sch/schedule.html:13 blueprints/users/users.py:77
-msgid "Group 1"
-msgstr ""
-
-#: blueprints/sch/templates/sch/schedule.html:49 blueprints/users/users.py:77
-msgid "Group 2"
+#: blueprints/sch/templates/sch/schedules.html:14
+msgid "Group"
 msgstr ""
 
 #: blueprints/sup/sup.py:38
@@ -1107,6 +1103,14 @@ msgstr ""
 msgid "Group number doesn't exist"
 msgstr ""
 
+#: blueprints/users/users.py:77
+msgid "Group 1"
+msgstr ""
+
+#: blueprints/users/users.py:77
+msgid "Group 2"
+msgstr ""
+
 #: blueprints/users/users.py:92
 msgid "Admin"
 msgstr ""
@@ -1121,7 +1125,7 @@ msgid "%(username)s has been approved"
 msgstr ""
 
 #: blueprints/users/users.py:155 blueprints/users/users.py:218
-msgid "Review the working schedule"
+msgid "Review the schedules"
 msgstr ""
 
 #: blueprints/users/users.py:158 blueprints/users/users.py:179
