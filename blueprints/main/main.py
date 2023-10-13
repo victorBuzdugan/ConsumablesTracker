@@ -6,6 +6,7 @@ from flask import Blueprint, render_template, session
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, raiseload
 
+from blueprints.sch import SAT_GROUP_SCH
 from database import Category, Product, Supplier, User, dbSession
 from helpers import logger, login_required
 
@@ -65,7 +66,9 @@ def index():
                 "main/index.html",
                 user=user,
                 users=users,
-                stats=stats)
+                stats=stats,
+                sat_group_sch=SAT_GROUP_SCH)
 
     return render_template("main/index.html",
-                           user=user)
+                           user=user,
+                           sat_group_sch=SAT_GROUP_SCH)

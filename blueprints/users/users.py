@@ -12,6 +12,7 @@ from wtforms.validators import (Email, InputRequired, Length, NumberRange,
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
+from blueprints.sch import SAT_GROUP_SCH
 from database import User, dbSession
 from helpers import admin_required, flash_errors, logger
 
@@ -71,7 +72,7 @@ class CreateUserForm(FlaskForm):
             "autocomplete": "off",
             })
     sat_group = SelectField(
-        label=lazy_gettext("Saturday movie group"),
+        label=SAT_GROUP_SCH["name"],
         validators=[
             NumberRange(1, 2, gettext("Group number doesn't exist"))],
         choices=[(1, lazy_gettext("Group 1")), (2, lazy_gettext("Group 2"))],

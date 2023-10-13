@@ -8,6 +8,7 @@ from sqlalchemy import func, insert, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from blueprints.sch import SAT_GROUP_SCH
 from database import Category, Product, Schedule, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
                    create_test_db, create_test_group_schedule,
@@ -195,13 +196,13 @@ def test_sat_group_this_week_property(client):
         schedule = db_session.scalar(
             select(Schedule)
             .filter_by(
-                name="Saturday movie",
+                name=SAT_GROUP_SCH["db_name"],
                 elem_id=1))
         schedule.name = "renamed"
         db_session.commit()
         assert not db_session.get(User, 1).sat_group_this_week
         # teardown
-        schedule.name = "Saturday movie"
+        schedule.name = SAT_GROUP_SCH["db_name"]
         db_session.commit()
 
 

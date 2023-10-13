@@ -27,9 +27,9 @@
             </li>
             <li class="list-group-item">
                 {% if user.sat_group_this_week and user.name != "Admin" %}
-                    <span class="text-warning">{{ gettext("You're choosing the movie this saturday") }}</span>
+                    <span class="text-warning">{{ sat_group_sch["positive"] }}</span>
                 {% else %}
-                    <span class="text-secondary">{{ gettext("You're not choosing the movie this saturday") }}</span>
+                    <span class="text-secondary">{{ sat_group_sch["negative"] }}</span>
                 {% endif %}
             </li>
         </ul>

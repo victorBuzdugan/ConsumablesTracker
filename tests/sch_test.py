@@ -9,7 +9,7 @@ from flask.testing import FlaskClient
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
-from blueprints.sch import SAT_GROUP_SCH_NAME
+from blueprints.sch import SAT_GROUP_SCH
 from blueprints.sch.sch import GroupSchedule
 from database import Schedule, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
@@ -283,7 +283,7 @@ def test_schedule_page_group_schedule_user_logged_in(client: FlaskClient, user_l
         response = client.get(url_for("sch.schedule"))
         assert response.status_code == 200
         assert b"Schedules" in response.data
-        assert SAT_GROUP_SCH_NAME["db_name"] in response.text
+        assert SAT_GROUP_SCH["name_for_test"] in response.text
         assert b"Group 1" in response.data
         assert b"Group 2" in response.data
         assert f'<span class="fw-bolder">{session["user_name"]}</span>' in response.text
@@ -316,7 +316,7 @@ def test_schedule_page_group_schedule_admin_logged_in(client: FlaskClient, admin
             response = client.get(url_for("sch.schedule"))
             assert response.status_code == 200
             assert b"Schedules" in response.data
-            assert SAT_GROUP_SCH_NAME["db_name"] in response.text
+            assert SAT_GROUP_SCH["name_for_test"] in response.text
             assert b"Group 1" in response.data
             assert b"Group 2" in response.data
             assert f'<span class="fw-bolder">{session["user_name"]}</span>' not in response.text

@@ -48,7 +48,7 @@
                         <li class="nav-item"><a class="nav-link" href={{ url_for("auth.login") }}>Log In</a></li>
                 {% endif %}
                         <li class="nav-item dropdown">
-                            {% if session["language"] == "ro" %}
+                        {% if session["language"] == "ro" %}
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><img src="/static/images/RO-flag.png" alt="RO"></a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href={{ url_for("set_language", language="en") }}><img src="/static/images/UK-flag.png" alt="UK"></a></li>

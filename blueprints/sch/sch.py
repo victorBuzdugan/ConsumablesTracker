@@ -7,7 +7,7 @@ from typing import Callable
 from flask import Blueprint, render_template
 from sqlalchemy import func, select
 
-from blueprints.sch import SAT_GROUP_SCH_NAME
+from blueprints.sch import SAT_GROUP_SCH
 from database import Schedule, User, dbSession
 from helpers import login_required, logger
 
@@ -181,7 +181,7 @@ class GroupSchedule():
 
 # region: group schedules init
 sat_group_schedule = GroupSchedule(
-    name=SAT_GROUP_SCH_NAME["db_name"],
+    name=SAT_GROUP_SCH["db_name"],
     user_attr=User.sat_group.name,
     num_groups=2,
     first_group=1,
@@ -202,7 +202,7 @@ def schedule():
     # schedule view registration
     group_schedules = []
     group_schedules.append(
-        [SAT_GROUP_SCH_NAME["name"], sat_group_schedule.data()])
+        [SAT_GROUP_SCH["name"], sat_group_schedule.data()])
 
     return render_template("sch/schedules.html",
                            group_schedules=group_schedules)

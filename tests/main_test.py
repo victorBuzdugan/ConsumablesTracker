@@ -6,6 +6,7 @@ from flask.testing import FlaskClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
+from blueprints.sch import SAT_GROUP_SCH
 from database import Category, Product, Supplier, User, dbSession
 from tests import (admin_logged_in, client, create_test_categories,
                    create_test_db, create_test_group_schedule,
@@ -57,7 +58,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
                     f'{len(user.products)} products') in response.text
             assert b"Inventory check not required" in response.data
             assert user.sat_group == 2
-            assert b"You're not choosing the movie this saturday" in response.data
+            assert SAT_GROUP_SCH["negative_for_test"] in response.text
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' in response.text
             user.done_inv = False
             db_session.commit()
@@ -108,7 +109,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
                     f'{user.in_use_products} products') in response.text
             assert b"Inventory check not required" in response.data
             assert user.sat_group == 1
-            assert b"You're choosing the movie this saturday" in response.data
+            assert SAT_GROUP_SCH["positive_for_test"] in response.text
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
             user.done_inv = False
             db_session.commit()
@@ -172,7 +173,7 @@ def test_index_hidden_admin_logged_in_user_dashboard(client: FlaskClient, hidden
                     f'{user.in_use_products} products') in response.text
             assert b"Inventory check not required" in response.data
             assert user.sat_group == 1
-            assert b"You're not choosing the movie this saturday" in response.data
+            assert SAT_GROUP_SCH["negative_for_test"] in response.text
             assert f'href="{url_for("inv.inventory_request")}">Request inventory' not in response.text
         assert b"Admin dashboard" in response.data
         assert b"Statistics" in response.data

@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import URL, create_engine, select
 
 from app import app
-from blueprints.sch import SAT_GROUP_SCH_NAME
+from blueprints.sch import SAT_GROUP_SCH
 from blueprints.sch.sch import GroupSchedule
 from database import (Base, Category, Product, Schedule, Supplier, User,
                       dbSession)
@@ -663,7 +663,7 @@ def create_test_products():
 def create_test_group_schedule():
     """Mock into db a 2 group 1 week interval schedule."""
     test_schedule = GroupSchedule(
-        name=SAT_GROUP_SCH_NAME["db_name"],
+        name=SAT_GROUP_SCH["db_name"],
         user_attr=User.sat_group.name,
         num_groups=2,
         first_group=1,
