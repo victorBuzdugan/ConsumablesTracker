@@ -2,7 +2,8 @@
 
 from typing import Callable
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import (Blueprint, flash, redirect, render_template, request,
+                   session, url_for)
 from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
@@ -152,6 +153,7 @@ class ProdToOrderForm(FlaskForm):
 def products(ordered_by):
     """All products page."""
     logger.info("All products page")
+    session["last_url"] = url_for(".products", ordered_by=ordered_by)
     with dbSession() as db_session:
         if ordered_by == "code":
             prods = db_session.scalars(
@@ -204,7 +206,7 @@ def products(ordered_by):
             logger.warning("Products sorting error(s)")
             flash(gettext("Cannot sort products by %(ordered_by)s",
                           ordered_by=ordered_by), "warning")
-            return redirect(url_for("prod.products", ordered_by="code"))
+            return redirect(url_for(".products", ordered_by="code"))
         stats = {
                 "all_products": db_session.scalar(
                     select(func.count(Product.id))),
@@ -274,7 +276,7 @@ def new_product():
                 logger.debug("Product '%s' created", new_prod.name)
                 flash(gettext("Product '%(new_prod_name)s' created",
                               new_prod_name=new_prod.name))
-                return redirect(url_for("prod.products", ordered_by="code"))
+                return redirect(url_for(".products", ordered_by="code"))
             except ValueError as error:
                 logger.warning("Product creation error(s)")
                 flash(str(error), "error")
@@ -325,7 +327,7 @@ def edit_product(product):
                 logger.debug("Product '%s' has been deleted", prod.name)
                 flash(gettext("Product '%(prod_name)s' has been deleted",
                               prod_name=prod.name))
-                return redirect(url_for("prod.products", ordered_by="code"))
+                return redirect(session["last_url"])
             else:
                 try:
                     prod.name = edit_prod_form.name.data
@@ -354,8 +356,7 @@ def edit_product(product):
                     logger.debug("Product updated")
                     flash(gettext("Product updated"))
                     db_session.commit()
-                return redirect(
-                    url_for("prod.edit_product", product=prod.name))
+                return redirect(session["last_url"])
 
     elif edit_prod_form.errors:
         logger.warning("Product editing error(s)")
@@ -375,7 +376,7 @@ def edit_product(product):
         else:
             flash(gettext("%(product)s does not exist!",
                           product=product), "error")
-            return redirect(url_for("prod.products", ordered_by="code"))
+            return redirect(url_for(".products", ordered_by="code"))
 
     return render_template("prod/edit_product.html", form=edit_prod_form)
 
@@ -385,7 +386,6 @@ def products_to_order():
     """Products to order page."""
     logger.info("Order page")
     prod_to_order_form: ProdToOrderForm = ProdToOrderForm()
-
     if prod_to_order_form.validate_on_submit():
         with dbSession() as db_session:
             prods = db_session.scalars(
@@ -408,6 +408,7 @@ def products_to_order():
             db_session.commit()
         logger.debug("Product(s) ordered")
         flash(gettext("Products updated"))
+        session["last_url"] = url_for("main.index")
     elif prod_to_order_form.errors:
         logger.warning("Product order error(s)")
         flash_errors(prod_to_order_form.errors)
@@ -426,6 +427,7 @@ def products_to_order():
             .order_by(func.lower(Supplier.name))
         ).unique().all()
     if prods:
+        session["last_url"] = url_for(".products_to_order")
         return render_template(
             "prod/products_to_oder.html",
             products=prods,
@@ -434,7 +436,7 @@ def products_to_order():
         logger.debug("There are no products that need to be ordered")
         flash(gettext("There are no products that need to be ordered"),
               "warning")
-        return redirect(url_for("main.index"))
+        return redirect(session["last_url"])
 
 
 @prod_bp.route("/products-ordered")

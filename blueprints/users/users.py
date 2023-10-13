@@ -159,7 +159,7 @@ def approve_reg(username):
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")
 
-    return redirect(url_for("main.index"))
+    return redirect(session["last_url"])
 
 
 @users_bp.route("/approve-inventory-check/<path:username>")
@@ -180,7 +180,7 @@ def approve_check_inv(username):
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")
 
-    return redirect(url_for("main.index"))
+    return redirect(session["last_url"])
 
 
 @users_bp.route("/all-approve-inventory-check")
@@ -252,7 +252,7 @@ def edit_user(username):
                                   username=user.name))
                     if user.id == session.get("user_id"):
                         return redirect(url_for("auth.logout"))
-                    return redirect(url_for("main.index"))
+                    return redirect(session["last_url"])
             else:
                 try:
                     user.name = edit_user_form.name.data
@@ -284,7 +284,7 @@ def edit_user(username):
                         if not user.admin:
                             session["admin"] = False
                             return redirect(url_for("main.index"))
-                return redirect(url_for("users.edit_user", username=user.name))
+                return redirect(session["last_url"])
     elif edit_user_form.errors:
         logger.warning("User editing error(s)")
         flash_errors(edit_user_form.errors)

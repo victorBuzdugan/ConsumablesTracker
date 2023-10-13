@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
@@ -96,6 +96,7 @@ class ReassignSupForm(FlaskForm):
 def suppliers():
     """All suppliers page."""
     logger.info("Suppliers page")
+    session["last_url"] = url_for(".suppliers")
     with dbSession() as db_session:
         supps = db_session.scalars(
                 select(Supplier).
@@ -130,7 +131,7 @@ def new_supplier():
                 logger.debug("Supplier '%s' created", supplier.name)
                 flash(gettext("Supplier '%(supplier_name)s' created",
                               supplier_name=supplier.name))
-                return redirect(url_for("sup.suppliers"))
+                return redirect(url_for(".suppliers"))
             except ValueError as error:
                 logger.warning("Supplier creation error(s)")
                 flash(str(error), "error")
@@ -163,9 +164,9 @@ def edit_supplier(supplier):
                     logger.debug("Supplier '%s' has been deleted", sup.name)
                     flash(gettext("Supplier '%(sup_name)s' has been deleted",
                                   sup_name=sup.name))
-                    return redirect(url_for("sup.suppliers"))
+                    return redirect(session["last_url"])
             elif edit_sup_form.reassign.data:
-                return redirect(url_for("sup.reassign_supplier",
+                return redirect(url_for(".reassign_supplier",
                                         supplier=sup.name))
             else:
                 try:
@@ -181,8 +182,7 @@ def edit_supplier(supplier):
                     logger.debug("Supplier updated")
                     flash(gettext("Supplier updated"))
                     db_session.commit()
-                return redirect(
-                    url_for("sup.edit_supplier", supplier=sup.name))
+                return redirect(session["last_url"])
     elif edit_sup_form.errors:
         logger.warning("Supplier editing error(s)")
         flash_errors(edit_sup_form.errors)
@@ -196,7 +196,7 @@ def edit_supplier(supplier):
             logger.debug("'%s' does not exist!", supplier)
             flash(gettext("%(supplier)s does not exist!",
                           supplier=supplier), "error")
-            return redirect(url_for("sup.suppliers"))
+            return redirect(url_for(".suppliers"))
 
     return render_template("sup/edit_supplier.html", form=edit_sup_form)
 
@@ -237,7 +237,7 @@ def reassign_supplier(supplier):
         else:
             flash(gettext("You have to select a new responsible first"),
                   "error")
-        return redirect(url_for("sup.reassign_supplier", supplier=supplier))
+        return redirect(url_for(".reassign_supplier", supplier=supplier))
 
     elif reassign_sup_form.errors:
         logger.warning("Supplier reassign error(s)")
@@ -264,7 +264,7 @@ def reassign_supplier(supplier):
             logger.debug("'%s' does not exist!", supplier)
             flash(gettext("%(supplier)s does not exist!",
                           supplier=supplier), "error")
-            return redirect(url_for("sup.suppliers"))
+            return redirect(url_for(".suppliers"))
 
     return render_template("sup/reassign_supplier.html",
                            form=reassign_sup_form,

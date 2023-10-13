@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from flask import Blueprint, render_template, session
+from flask import Blueprint, render_template, session, url_for
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload, raiseload
 
@@ -22,6 +22,7 @@ main_bp = Blueprint("main",
 def index():
     """Index page."""
     logger.info("Index page")
+    session["last_url"] = url_for(".index")
     with dbSession() as db_session:
         user = db_session.scalar(
             select(User)

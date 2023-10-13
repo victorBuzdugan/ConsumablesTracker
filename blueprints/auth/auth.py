@@ -169,6 +169,14 @@ class ChgPasswForm(FlaskForm):
             "disabled": ""})
 
 
+def clear_session():
+    """Clear the session."""
+    language = session.get("language")
+    session.clear()
+    if language:
+        session["language"] = language
+
+
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
     """Login user if conditions are met."""
@@ -215,12 +223,9 @@ def login():
 def logout():
     """Logout and clear session."""
     logger.info("Logging out")
-    language = session.get("language")
-    session.clear()
-    if language:
-        session["language"] = language
+    clear_session()
     flash(gettext("Succesfully logged out..."))
-    return redirect(url_for("auth.login"))
+    return redirect(url_for(".login"))
 
 
 @auth_bp.route("/register", methods=["GET", "POST"])
@@ -246,7 +251,7 @@ def register():
                 logger.debug("Registration requested")
                 flash(gettext("Registration request sent. " +
                               "Please contact an admin."))
-                return redirect(url_for("auth.login"))
+                return redirect(url_for(".login"))
             except ValueError as error:
                 flash(str(error), "error")
     elif reg_form.errors:
@@ -272,10 +277,10 @@ def change_password():
                     user.password, chg_pass_form.old_password.data):
                 chg_pass_form.populate_obj(user)
                 db_session.commit()
-                session.clear()
+                clear_session()
                 logger.debug("Password changed")
                 flash(gettext("Password changed."))
-                return redirect(url_for("auth.login"))
+                return redirect(url_for(".login"))
             else:
                 logger.warning("Wrong old password")
                 flash(gettext("Wrong old password!"), "error")

@@ -344,10 +344,9 @@ def test_edit_user(client: FlaskClient, admin_logged_in,
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("users.edit_user", username=new_name)
+            assert response.request.path == url_for("main.index")
             assert b"User updated" in response.data
             assert bytes(new_name, "UTF-8") in response.data
-            assert bytes(new_details, "UTF-8") in response.data
         
         db_session.refresh(user)
         assert user.name == new_name
@@ -443,6 +442,7 @@ def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
         new_name = db_session.get(User, 0).name
         with client:
             client.get("/")
+            client.get(url_for("sch.schedules"))
             response = client.get(url_for("users.edit_user", username=orig_name))
             assert bytes(user.name, "UTF-8") in response.data
             data = {
@@ -460,7 +460,7 @@ def test_failed_edit_user_name_duplicate(client: FlaskClient, admin_logged_in):
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("users.edit_user", username=orig_name)
+            assert response.request.path == url_for("sch.schedules")
             assert b"User updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
             assert f"The user {new_name} allready exists" in response.text
@@ -502,7 +502,7 @@ def test_failed_edit_user_db_validators(client: FlaskClient, admin_logged_in,
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("users.edit_user", username=user.name)
+            assert response.request.path == url_for("main.index")
             assert b"User updated" not in response.data
             assert bytes(user.name, "UTF-8") in response.data
             assert flash_message in unescape(response.text)
@@ -557,7 +557,7 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("users.edit_user", username=username)
+        assert response.request.path == url_for("main.index")
         assert b"User updated" not in response.data
         assert bytes(username, "UTF-8") in response.data
         assert b"You are the last admin!" in response.data
@@ -586,7 +586,7 @@ def test_edit_user_change_admin_name(client: FlaskClient, admin_logged_in):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("users.edit_user", username=new_name)
+        assert response.request.path == url_for("main.index")
         assert b"User updated" in response.data
         assert bytes(new_name, "UTF-8") in response.data
         assert session.get("user_name") == new_name
@@ -603,7 +603,7 @@ def test_edit_user_change_admin_name(client: FlaskClient, admin_logged_in):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("users.edit_user", username=old_name)
+        assert response.request.path == url_for("main.index")
         assert b"User updated" in response.data
         assert bytes(old_name, "UTF-8") in response.data
         assert session.get("user_name") == old_name

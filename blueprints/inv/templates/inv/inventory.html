@@ -33,7 +33,13 @@
                     <tbody>
                         {% for product in products %}
                         <tr>
-                            <td>{{ product.name }}</td>
+                            <td>
+                            {% if session.admin %}
+                                <a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('prod.edit_product', product=product.name) }}">{{ product.name }}</a>
+                            {% else %}
+                                {{ product.name }}
+                            {% endif %}
+                            </td>
                             <td>{{ product.description }}</td>
                             <td {% if product.critical %}class="text-danger"{% endif %}>{{ product.min_stock }} {{ product.meas_unit }}</td>
                             <td>

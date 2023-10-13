@@ -129,6 +129,7 @@ def test_edit_supplier(client: FlaskClient, admin_logged_in,
         orig_details = sup.details
         with client:
             client.get("/")
+            client.get(url_for("sup.suppliers"))
             response = client.get(url_for("sup.edit_supplier", supplier=sup.name))
             assert len(response.history) == 0
             assert response.status_code == 200
@@ -145,7 +146,7 @@ def test_edit_supplier(client: FlaskClient, admin_logged_in,
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("sup.edit_supplier", supplier=new_name)
+            assert quote(response.request.path) == url_for("sup.suppliers")
             assert b"Supplier updated" in response.data
             assert bytes(new_name, "UTF-8") in response.data
             assert bytes(new_details, "UTF-8") in response.data
@@ -205,6 +206,7 @@ def test_failed_edit_supplier_name_duplicate(client: FlaskClient, admin_logged_i
         new_name = db_session.get(Supplier, 1).name
         with client:
             client.get("/")
+            client.get(url_for("sup.suppliers"))
             response = client.get(url_for("sup.edit_supplier", supplier=orig_name))
             assert bytes(sup.name, "UTF-8") in response.data
             data = {
@@ -219,7 +221,7 @@ def test_failed_edit_supplier_name_duplicate(client: FlaskClient, admin_logged_i
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("sup.edit_supplier", supplier=orig_name)
+            assert response.request.path == url_for("sup.suppliers")
             assert b"Supplier updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
             assert f"The supplier {new_name} allready exists" in response.text
@@ -232,6 +234,7 @@ def test_failed_edit_supplier_in_use(client: FlaskClient, admin_logged_in):
         sup = db_session.get(Supplier, 3)
         with client:
             client.get("/")
+            client.get(url_for("sup.suppliers"))
             response = client.get(url_for("sup.edit_supplier", supplier=sup.name))
             assert bytes(sup.name, "UTF-8") in response.data
             data = {
@@ -246,7 +249,7 @@ def test_failed_edit_supplier_in_use(client: FlaskClient, admin_logged_in):
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("sup.edit_supplier", supplier=sup.name)
+            assert response.request.path == url_for("sup.suppliers")
             assert b"Supplier updated" not in response.data
             assert bytes(sup.name, "UTF-8") in response.data
             assert "Not in use supplier can't have products attached" in unescape(response.text)
@@ -287,7 +290,7 @@ def test_delete_supplier(client: FlaskClient, admin_logged_in):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("sup.suppliers")
+        assert response.request.path == url_for("main.index")
         assert f"Supplier '{sup.name}' has been deleted" in unescape(response.text)
     with dbSession() as db_session:
         assert not db_session.get(Supplier, sup.id)

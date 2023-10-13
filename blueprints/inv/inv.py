@@ -25,6 +25,7 @@ class InventoryForm(FlaskForm):
 def inventory():
     """Inventory check page."""
     logger.info("Inventory check page")
+    session["last_url"] = url_for(".inventory")
     inv_form: InventoryForm = InventoryForm()
     with dbSession() as db_session:
         user = db_session.get(User, session.get("user_id"))
@@ -68,6 +69,7 @@ def inventory():
 def inventory_user(username):
     """Inventory check page for other users."""
     logger.info("Inventory check page for user '%s'", username)
+    session["last_url"] = url_for(".inventory_user", username=username)
     inv_form: InventoryForm = InventoryForm()
     with dbSession() as db_session:
         user = db_session.scalar(select(User).filter_by(name=escape(username)))
@@ -138,6 +140,6 @@ def inventory_request():
                 db_session.commit()
             except ValueError as error:
                 flash(str(error), "warning")
-                return redirect(url_for("inv.inventory"))
+                return redirect(url_for(".inventory"))
 
     return redirect(url_for("main.index"))

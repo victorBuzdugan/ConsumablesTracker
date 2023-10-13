@@ -4,12 +4,12 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable
 
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, session, url_for
 from sqlalchemy import func, select
 
 from blueprints.sch import SAT_GROUP_SCH
 from database import Schedule, User, dbSession
-from helpers import login_required, logger
+from helpers import logger, login_required
 
 func: Callable
 
@@ -126,11 +126,11 @@ class GroupSchedule():
     def unregister(self) -> None:
         """Unregister/delete the schedule from the database."""
         with dbSession() as db_session:
-            schedules = db_session.scalars(
+            db_schedules = db_session.scalars(
                 select(Schedule)
                 .filter_by(name=self.name)).all()
-            for sch in schedules:
-                db_session.delete(sch)
+            for db_schedule in db_schedules:
+                db_session.delete(db_schedule)
             db_session.commit()
             logger.info("Group schedule '%s' deleted", self.name)
 
@@ -201,6 +201,7 @@ sat_group_schedule = GroupSchedule(
 def schedules():
     """Schedules page."""
     logger.info("Schedules page")
+    session["last_url"] = url_for(".schedules")
 
     # schedule view registration
     group_schedules = []

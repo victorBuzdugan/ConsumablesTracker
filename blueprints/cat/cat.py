@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, session, url_for
 from flask_babel import gettext, lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
@@ -96,6 +96,7 @@ class ReassignCatForm(FlaskForm):
 def categories():
     """All categories page."""
     logger.info("Categories page")
+    session["last_url"] = url_for(".categories")
     with dbSession() as db_session:
         cats = db_session.scalars(
                 select(Category).
@@ -130,7 +131,7 @@ def new_category():
                 logger.debug("Category '%s' created", category.name)
                 flash(gettext("Category '%(cat_name)s' created",
                               cat_name=category.name))
-                return redirect(url_for("cat.categories"))
+                return redirect(url_for(".categories"))
             except ValueError as error:
                 logger.warning("Category creation error")
                 flash(str(error), "error")
@@ -163,9 +164,9 @@ def edit_category(category):
                     logger.debug("Category '%s' has been deleted", cat.name)
                     flash(gettext("Category '%(cat_name)s' has been deleted",
                                   cat_name=cat.name))
-                    return redirect(url_for("cat.categories"))
+                    return redirect(session["last_url"])
             elif edit_cat_form.reassign.data:
-                return redirect(url_for("cat.reassign_category",
+                return redirect(url_for(".reassign_category",
                                         category=cat.name))
             else:
                 try:
@@ -181,8 +182,7 @@ def edit_category(category):
                     logger.debug("Category updated")
                     flash(gettext("Category updated"))
                     db_session.commit()
-                return redirect(
-                    url_for("cat.edit_category", category=cat.name))
+                return redirect(session["last_url"])
     elif edit_cat_form.errors:
         logger.warning("Category edit error(s)")
         flash_errors(edit_cat_form.errors)
@@ -237,7 +237,7 @@ def reassign_category(category):
         else:
             flash(gettext("You have to select a new responsible first"),
                   "error")
-        return redirect(url_for("cat.reassign_category", category=category))
+        return redirect(url_for(".reassign_category", category=category))
 
     elif reassign_cat_form.errors:
         logger.warning("Category reassign error(s)")
@@ -264,7 +264,7 @@ def reassign_category(category):
             logger.debug("'%s' does not exist!", category)
             flash(gettext("%(category)s does not exist!",
                           category=category), "error")
-            return redirect(url_for("cat.categories"))
+            return redirect(url_for(".categories"))
 
     return render_template("cat/reassign_category.html",
                            form=reassign_cat_form,

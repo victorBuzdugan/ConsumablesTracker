@@ -209,6 +209,7 @@ def test_edit_product(client: FlaskClient, admin_logged_in,
                        "critical", "to_order", "in_use"}}
         with client:
             client.get("/")
+            client.get(url_for("prod.products", ordered_by="code"))
             response = client.get(url_for("prod.edit_product", product=prod.name))
             assert len(response.history) == 0
             assert response.status_code == 200
@@ -233,7 +234,7 @@ def test_edit_product(client: FlaskClient, admin_logged_in,
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.edit_product", product=new_name)
+            assert quote(response.request.path) == url_for("prod.products", ordered_by="code")
             assert b"Product updated" in response.data
             assert bytes(new_name, "UTF-8") in response.data
             assert bytes(new_description, "UTF-8") in response.data
@@ -339,6 +340,7 @@ def test_failed_edit_product_name_duplicate(client: FlaskClient, admin_logged_in
         new_name = db_session.get(Product, 1).name
         with client:
             client.get("/")
+            client.get(url_for("prod.products", ordered_by="code"))
             response = client.get(url_for("prod.edit_product", product=orig_name))
             assert bytes(prod.name, "UTF-8") in response.data
             data = {
@@ -361,7 +363,7 @@ def test_failed_edit_product_name_duplicate(client: FlaskClient, admin_logged_in
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.edit_product", product=orig_name)
+            assert quote(response.request.path) == url_for("prod.products", ordered_by="code")
             assert b"Product updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
             assert f"The product {new_name} allready exists" in response.text
@@ -376,6 +378,7 @@ def test_failed_edit_product_to_order_in_use_validator(client: FlaskClient, admi
         db_session.commit()
         with client:
             client.get("/")
+            client.get(url_for("prod.products", ordered_by="code"))
             response = client.get(url_for("prod.edit_product", product=prod.name))
             assert bytes(prod.name, "UTF-8") in response.data
             data = {
@@ -398,7 +401,7 @@ def test_failed_edit_product_to_order_in_use_validator(client: FlaskClient, admi
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.edit_product", product=prod.name)
+            assert quote(response.request.path) == url_for("prod.products", ordered_by="code")
             assert b"Product updated" not in response.data
             assert bytes(prod.name, "UTF-8") in response.data
             assert f"Can't order not in use products" in unescape(response.text)
@@ -410,6 +413,7 @@ def test_failed_edit_product_to_order_in_use_validator(client: FlaskClient, admi
         db_session.commit()
         with client:
             client.get("/")
+            client.get(url_for("prod.products", ordered_by="code"))
             response = client.get(url_for("prod.edit_product", product=prod.name))
             assert bytes(prod.name, "UTF-8") in response.data
             data = {
@@ -432,7 +436,7 @@ def test_failed_edit_product_to_order_in_use_validator(client: FlaskClient, admi
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.edit_product", product=prod.name)
+            assert quote(response.request.path) == url_for("prod.products", ordered_by="code")
             assert b"Product updated" not in response.data
             assert bytes(prod.name, "UTF-8") in response.data
             assert f"Can't 'retire' a product that needs to be ordered" in unescape(response.text)
@@ -490,7 +494,7 @@ def test_delete_product(client: FlaskClient, admin_logged_in):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("prod.products", ordered_by="code")
+        assert response.request.path == url_for("main.index")
         assert f"Product '{prod.name}' has been deleted" in unescape(response.text)
     with dbSession() as db_session:
         assert not db_session.get(Product, prod.id)

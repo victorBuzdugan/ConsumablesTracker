@@ -128,6 +128,7 @@ def test_edit_category(client: FlaskClient, admin_logged_in,
         orig_description = cat.description
         with client:
             client.get("/")
+            client.get(url_for("cat.categories"))
             response = client.get(url_for("cat.edit_category", category=cat.name))
             assert len(response.history) == 0
             assert response.status_code == 200
@@ -144,7 +145,7 @@ def test_edit_category(client: FlaskClient, admin_logged_in,
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("cat.edit_category", category=new_name)
+            assert quote(response.request.path) == url_for("cat.categories")
             assert b"Category updated" in response.data
             assert bytes(new_name, "UTF-8") in response.data
             assert bytes(new_description, "UTF-8") in response.data
@@ -204,6 +205,7 @@ def test_failed_edit_category_name_duplicate(client: FlaskClient, admin_logged_i
         new_name = db_session.get(Category, 1).name
         with client:
             client.get("/")
+            client.get(url_for("cat.categories"))
             response = client.get(url_for("cat.edit_category", category=orig_name))
             assert bytes(cat.name, "UTF-8") in response.data
             data = {
@@ -218,7 +220,7 @@ def test_failed_edit_category_name_duplicate(client: FlaskClient, admin_logged_i
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("cat.edit_category", category=orig_name)
+            assert response.request.path == url_for("cat.categories")
             assert b"Category updated" not in response.data
             assert bytes(orig_name, "UTF-8") in response.data
             assert f"The category {new_name} allready exists" in response.text
@@ -245,9 +247,8 @@ def test_failed_edit_category_in_use(client: FlaskClient, admin_logged_in):
             assert len(response.history) == 1
             assert response.history[0].status_code == 302
             assert response.status_code == 200
-            assert response.request.path == url_for("cat.edit_category", category=cat.name)
+            assert response.request.path == url_for("main.index")
             assert b"Category updated" not in response.data
-            assert bytes(cat.name, "UTF-8") in response.data
             assert "Not in use category can't have products attached" in unescape(response.text)
         db_session.refresh(cat)
         assert cat.in_use
@@ -274,6 +275,7 @@ def test_delete_category(client: FlaskClient, admin_logged_in):
         assert cat.id
     with client:
         client.get("/")
+        client.get(url_for("cat.categories"))
         response = client.get(url_for("cat.edit_category", category=cat.name))
         assert bytes(cat.name, "UTF-8") in response.data
         data = {
