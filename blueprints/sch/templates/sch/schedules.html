@@ -8,6 +8,7 @@
         {{ gettext("Schedules") }}
     </div>
     <div class="card-body">
+    {# Group schedules #}
     {% for group_schedule in group_schedules %}
         <h5 class="card-title mb-3">{{ group_schedule[0] }}</h5>
         {% for group in group_schedule[1] %}

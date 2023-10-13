@@ -280,7 +280,7 @@ def test_group_schedule_unregister(client, caplog: LogCaptureFixture):
 def test_schedule_page_group_schedule_user_logged_in(client: FlaskClient, user_logged_in):
     with client:
         client.get("/")
-        response = client.get(url_for("sch.schedule"))
+        response = client.get(url_for("sch.schedules"))
         assert response.status_code == 200
         assert b"Schedules" in response.data
         assert SAT_GROUP_SCH["name_for_test"] in response.text
@@ -313,7 +313,7 @@ def test_schedule_page_group_schedule_admin_logged_in(client: FlaskClient, admin
     with client:
         with freeze_time(date.today() + timedelta(weeks=1)):
             client.get("/")
-            response = client.get(url_for("sch.schedule"))
+            response = client.get(url_for("sch.schedules"))
             assert response.status_code == 200
             assert b"Schedules" in response.data
             assert SAT_GROUP_SCH["name_for_test"] in response.text

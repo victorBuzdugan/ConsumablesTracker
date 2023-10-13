@@ -30,7 +30,7 @@ def test_index_user_not_logged_in(client: FlaskClient):
         assert f'href={url_for("auth.login")}>Log In' in response.text
 
         assert f'href={url_for("inv.inventory")}>Inventory' not in response.text
-        assert f'href={url_for("sch.schedule")}>Schedule' not in response.text
+        assert f'href={url_for("sch.schedules")}>Schedule' not in response.text
         assert f'href={url_for("auth.change_password")}>Change password' not in response.text
         assert f'href={url_for("auth.logout")}>Log Out' not in response.text
 
@@ -80,7 +80,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in):
         assert f'href={url_for("auth.login")}>Log In' not in response.text
 
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
-        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
+        assert f'href={url_for("sch.schedules")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
@@ -127,7 +127,7 @@ def test_index_admin_logged_in_user_dashboard(client: FlaskClient, admin_logged_
         assert f'href={url_for("auth.login")}>Log In' not in response.text
         
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
-        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
+        assert f'href={url_for("sch.schedules")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
 
@@ -180,7 +180,7 @@ def test_index_hidden_admin_logged_in_user_dashboard(client: FlaskClient, hidden
         assert f'href={url_for("auth.register")}>Register' not in response.text
         assert f'href={url_for("auth.login")}>Log In' not in response.text
         assert f'href={url_for("inv.inventory")}>Inventory' in response.text
-        assert f'href={url_for("sch.schedule")}>Schedule' in response.text
+        assert f'href={url_for("sch.schedules")}>Schedule' in response.text
         assert f'href={url_for("auth.change_password")}>Change password' in response.text
         assert f'href={url_for("auth.logout")}>Log Out' in response.text
         assert f'href={url_for("users.new_user")}>User' in response.text

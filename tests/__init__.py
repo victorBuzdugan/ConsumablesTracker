@@ -3,15 +3,14 @@
 import pathlib
 from datetime import date, timedelta
 
-from flask.testing import FlaskClient
 import pytest
+from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine, select
 
 from app import app
 from blueprints.sch import SAT_GROUP_SCH
 from blueprints.sch.sch import GroupSchedule
-from database import (Base, Category, Product, Schedule, Supplier, User,
-                      dbSession)
+from database import Base, Category, Product, Supplier, User, dbSession
 from helpers import DB_NAME, log_handler
 
 TEST_DB_NAME = "." + DB_NAME

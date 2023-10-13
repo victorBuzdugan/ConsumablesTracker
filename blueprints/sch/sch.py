@@ -26,7 +26,6 @@ def user_logged_in():
     """Require user logged in for all routes."""
 
 
-# region: group schedules
 @dataclass
 class GroupSchedule():
     """Schedule for groups of users.
@@ -164,10 +163,15 @@ class GroupSchedule():
                     .filter_by(
                         name = self.name,
                         elem_id = group))
+                group_interval = db_session.scalar(
+                    select(Schedule.update_interval)
+                    .filter_by(
+                        name = self.name,
+                        elem_id = group))
                 next_date = group_next_date
                 for _ in range(3):
                     group_dates.append(next_date.strftime("%d.%m.%Y"))
-                    next_date += self.groups_switch * self.num_groups
+                    next_date += timedelta(days=group_interval)
                 group_data.append(group_dates)
                 # index [2] - flag if groups next date is this week
                 if (group_next_date.isocalendar()[1] ==
@@ -191,11 +195,10 @@ sat_group_schedule = GroupSchedule(
     start_date=date.today())
 # sat_group_schedule.register()
 # endregion
-# endregion
 
 
 @sch_bp.route("")
-def schedule():
+def schedules():
     """Schedules page."""
     logger.info("Schedules page")
 
