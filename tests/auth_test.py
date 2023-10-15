@@ -9,60 +9,79 @@ from flask.testing import FlaskClient
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
-from blueprints.auth.auth import (PASSW_MIN_LENGTH, USER_MAX_LENGTH,
-                                  USER_MIN_LENGTH, msg)
+from blueprints.auth.auth import msg
 from database import User, dbSession
-from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_group_schedule,
-                   create_test_products, create_test_suppliers,
-                   create_test_users, user_logged_in)
 
 pytestmark = pytest.mark.auth
 
 
 # region: registration page
 def test_registration_landing_page(client: FlaskClient):
+    """test_registration_landing_page"""
     with client:
         client.get("/")
         response = client.get(url_for("auth.register"))
         assert response.status_code == 200
-        assert b'type="submit" value="Request registration"' in response.data
+        assert 'type="submit" value="Request registration"' in response.text
 
 
-def test_clear_session_if_user_logged_in(client: FlaskClient, user_logged_in):
+def test_clear_session_if_user_logged_in(
+        client: FlaskClient, user_logged_in: User):
+    """test_clear_session_if_user_logged_in"""
     with client:
         client.get("/")
-        assert session.get("user_id")
+        assert session.get("user_id") == user_logged_in.id
         response = client.get(url_for("auth.register"))
         assert response.status_code == 200
-        assert b'You have been logged out...' in response.data
+        assert 'You have been logged out...' in response.text
         assert not session.get("user_id")
 
 
-@pytest.mark.parametrize(("name", "password", "confirm", "email", "flash_message"), (
-    ("", "a", "a", "", msg["usr_req"]),
-    ("aa", "a", "a", "", msg["usr_len"]),
-    ("aaaaaaaaaaaaaaaa", "a", "a", "", msg["usr_len"]),
-    ("aaa", "", "a", "", msg["psw_req"]),
-    ("aaa", "aaaaaaa", "a", "", msg["psw_len"]),
-    ("aaa", "aaaaaaaa", "", "", msg["psw_req"]),
-    ("aaa", "aaaaaaaa", "aaaaaaa", "", msg["psw_len"]),
-    ("aaa", "aaaaaaaa", "aaaaaaab", "", msg["psw_eq"]),
-    ("aaa", "aaaaaaaa", "aaaaaaaa", "", msg["psw_rules"]),
-    ("aaa", "#1aaaaaa", "#1aaaaaa", "", msg["psw_rules"]),
-    ("aaa", "#Aaaaaaa", "#Aaaaaaa", "", msg["psw_rules"]),
-    ("aaa", "1Aaaaaaa", "1Aaaaaaa", "", msg["psw_rules"]),
-    ("user5", "P@ssw0rd", "P@ssw0rd", "", f"The user user5 allready exists"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "plainaddress", "Invalid email adress"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "#@%^%#$@#$@#.com", "Invalid email adress"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "@example.com", "Invalid email adress"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "Joe Smith <email@example.com>", "Invalid email adress"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@example@example.com", "Invalid email adress"),
-    ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@-example.com", "Invalid email adress"),
-))
+@pytest.mark.parametrize(
+    ("name", "password", "confirm", "email", "flash_message"), (
+        ("", "a", "a", "",
+            msg["usr_req"]),
+        ("aa", "a", "a", "",
+            msg["usr_len"]),
+        ("aaaaaaaaaaaaaaaa", "a", "a", "",
+            msg["usr_len"]),
+        ("aaa", "", "a", "",
+            msg["psw_req"]),
+        ("aaa", "aaaaaaa", "a", "",
+            msg["psw_len"]),
+        ("aaa", "aaaaaaaa", "", "",
+            msg["psw_req"]),
+        ("aaa", "aaaaaaaa", "aaaaaaa", "",
+            msg["psw_len"]),
+        ("aaa", "aaaaaaaa", "aaaaaaa", "",
+            msg["psw_eq"]),
+        ("aaa", "aaaaaaaa", "aaaaaaaa", "",
+            msg["psw_rules"]),
+        ("aaa", "#1aaaaaa", "#1aaaaaa", "",
+            msg["psw_rules"]),
+        ("aaa", "#Aaaaaaa", "#Aaaaaaa", "",
+            msg["psw_rules"]),
+        ("aaa", "1Aaaaaaa", "1Aaaaaaa", "",
+            msg["psw_rules"]),
+        ("user5", "P@ssw0rd", "P@ssw0rd", "",
+            "The user user5 allready exists"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd",
+            "plainaddress", "Invalid email adress"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "#@%^%#$@#$@#.com",
+            "Invalid email adress"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "@example.com",
+            "Invalid email adress"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "Joe Smith <joe@smith.com>",
+            "Invalid email adress"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@example@example.com",
+            "Invalid email adress"),
+        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@-example.com",
+            "Invalid email adress"),
+    ))
 def test_failed_registration(
         client: FlaskClient,
         name, password, confirm, email, flash_message):
+    """test_failed_registration"""
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
@@ -78,6 +97,7 @@ def test_failed_registration(
 
 
 def test_successful_registration(client: FlaskClient):
+    """test_successful_registration"""
     user = User(
         name="__testt_userr_",
         password="P@ssw0rd"
@@ -96,61 +116,67 @@ def test_successful_registration(client: FlaskClient):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert b"Registration request sent. Please contact an admin." \
-            in response.data
+        assert "Registration request sent. Please contact an admin." \
+            in response.text
 
     with dbSession() as db_session:
-        test_user = db_session.scalar(
+        db_user = db_session.scalar(
             select(User).filter_by(name=user.name))
-        assert check_password_hash(test_user.password, user.password)
-        assert test_user.reg_req
+        assert check_password_hash(db_user.password, user.password)
+        assert db_user.reg_req
 
-        db_session.delete(test_user)
+        db_session.delete(db_user)
         db_session.commit()
-
-        test_user = db_session.scalar(
-            select(User).filter_by(name=user.name))
-        assert test_user is None
+        assert not db_session.get(User, db_user.id)
 # endregion
 
 
 # region: login and logout methods
 def test_login_landing_page(client: FlaskClient):
+    """test_login_landing_page"""
     with client:
         client.get("/")
         response = client.get(url_for("auth.login"))
         assert response.status_code == 200
-        assert b'type="submit" value="Log In"' in response.data
+        assert 'type="submit" value="Log In"' in response.text
         client.get(url_for("set_language", language="ro"))
         response = client.get(url_for("auth.login"))
-        assert b'Language changed' not in response.data
-        assert b'Username' not in response.data
-        assert b'Password' not in response.data
-        assert u'Limba a fost schimbată' in response.text
-        assert u'Nume' in response.text
-        assert u'Parolă' in response.text
+        assert 'Language changed' not in response.text
+        assert 'Username' not in response.text
+        assert 'Password' not in response.text
+        assert "Limba a fost schimbată" in response.text
+        assert "Nume" in response.text
+        assert "Parolă" in response.text
         client.get(url_for("set_language", language="en"))
         response = client.get(url_for("auth.login"))
-        assert b'Language changed' in response.data
-        assert b'Username' in response.data
-        assert b'Password' in response.data
-        assert u'Limba a fost schimbată' not in response.text
-        assert u'Nume' not in response.text
-        assert u'Parolă' not in response.text
+        assert "Language changed" in response.text
+        assert "Username" in response.text
+        assert "Password" in response.text
+        assert "Limba a fost schimbată" not in response.text
+        assert "Nume" not in response.text
+        assert "Parolă" not in response.text
 
 
 @pytest.mark.parametrize(("name", "password", "flash_message"), (
-    ("", "", msg["usr_req"]),
-    ("a", "", msg["psw_req"]),
-    ("a", "a", "Wrong username or password!"),
-    ("a", "password", "Wrong username or password!"),
-    ("user5", "a", "Wrong username or password!"),
-    ("user6", "Q!666666", "This user is not in use anymore!"),
+    ("", "",
+        msg["usr_req"]),
+    ("a", "",
+        msg["psw_req"]),
+    ("a", "a",
+        "Wrong username or password!"),
+    ("a", "password",
+        "Wrong username or password!"),
+    ("user5", "a",
+        "Wrong username or password!"),
+    ("user6", "Q!666666",
+        "This user is not in use anymore!"),
     ("user5", "Q!555555",
         "Your registration is pending. Contact an admin."),
 ))
 def test_failed_login(
-        client: FlaskClient, name, password, flash_message):
+        client: FlaskClient,
+        name, password, flash_message):
+    """test_failed_login"""
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
@@ -158,7 +184,8 @@ def test_failed_login(
             "csrf_token": g.csrf_token,
             "name": name,
             "password": password}
-        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
+        response = client.post(url_for("auth.login"), data=data,
+                               follow_redirects=True)
         assert response.request.path == url_for("auth.login")
     assert len(response.history) == 1
     assert response.history[0].status_code == 302
@@ -166,29 +193,35 @@ def test_failed_login(
     assert flash_message in response.text
 
 
-def test_succesfull_login_and_logout(client: FlaskClient):
+@pytest.mark.parametrize(("name", "password"), (
+    ("Admin", getenv('ADMIN_PASSW')),
+    ("user1", "Q!111111"),
+    ("user2", "Q!222222"),
+    ("user3", "Q!333333"),
+    ("user4", "Q!444444"),
+))
+def test_succesfull_login_and_logout(client: FlaskClient, name, password):
+    """test_succesfull_login_and_logout"""
     with dbSession() as db_session:
         test_user = db_session.scalar(
-                select(User).filter_by(name="user4"))
+                select(User).filter_by(name=name))
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
         data = {
             "csrf_token": g.csrf_token,
             "name": test_user.name,
-            "password": "Q!444444"}
+            "password": password}
         response = client.post("/auth/login", data=data, follow_redirects=True)
         assert session["user_id"] == test_user.id
         assert session["admin"] == test_user.admin
-        assert session["user_name"] == test_user.name
-        assert f"Welcome {test_user.name}" in response.text
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/"
-    # logout
-    with client:
-        client.get("/")
+        assert session["user_name"] == name
+        assert f"Welcome {name}" in response.text
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        # logout
         response = client.get(url_for("auth.logout"), follow_redirects=True)
         assert not session.get("user_id")
         assert not session.get("admin")
@@ -199,80 +232,42 @@ def test_succesfull_login_and_logout(client: FlaskClient):
         assert response.request.path == url_for("auth.login")
 
 
-def test_succesfull_hidden_admin_login_and_logout(client: FlaskClient):
-    with dbSession() as db_session:
-        test_user = db_session.scalar(
-                select(User).filter_by(name="Admin"))
+@pytest.mark.parametrize(("csrf", "flash_message"),(
+        (None, "The CSRF token is missing"),
+        ("", "The CSRF token is missing"),
+        (" ", "The CSRF token is invalid"),
+        ("some_random_text", "The CSRF token is invalid"),
+))
+def test_failed_login_csrf(client: FlaskClient, csrf, flash_message):
+    """test_failed_login_csrf"""
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
         data = {
-            "csrf_token": g.csrf_token,
-            "name": test_user.name,
-            "password": getenv('ADMIN_PASSW')}
-        response = client.post("/auth/login", data=data, follow_redirects=True)
-        assert session["user_id"] == test_user.id
-        assert session["admin"] == test_user.admin
-        assert session["user_name"] == test_user.name
-        assert f"Welcome {test_user.name}" in response.text
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert response.request.path == "/"
-    # logout
-    with client:
-        client.get("/")
-        response = client.get(url_for("auth.logout"), follow_redirects=True)
-        assert not session.get("user_id")
-        assert not session.get("admin")
-        assert not session.get("user_name")
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
-
-
-def test_failed_login_no_csrf(client: FlaskClient):
-    with client:
-        client.get("/")
-        client.get(url_for("auth.login"))
-        data = {
-                "name": "user4",
-                "password": "P@ssw0rd"}
-        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
-        assert response.request.path == url_for("auth.login")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
-    assert b"The CSRF token is missing." in response.data
-
-
-def test_failed_login_bad_csrf(client: FlaskClient):
-    with client:
-        client.get("/")
-        client.get(url_for("auth.login"))
-        data = {
-            "csrf_token": "some_random_text",
+            "csrf_token": csrf,
             "name": "user4",
             "password": "P@ssw0rd"}
-        response = client.post(url_for("auth.login"), data=data, follow_redirects=True)
+        response = client.post(url_for("auth.login"), data=data,
+                               follow_redirects=True)
         assert response.request.path == url_for("auth.login")
     assert len(response.history) == 1
     assert response.history[0].status_code == 302
     assert response.status_code == 200
-    assert b"The CSRF token is invalid." in response.data
+    assert flash_message in response.text
 # endregion
 
 
 # region: change password
 # also tests @login_required
 def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
+    """test_change_password_landing_page_if_not_logged_in"""
     with client:
         client.get("/")
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-        response = client.get(url_for("auth.change_password"), follow_redirects=True)
+        response = client.get(url_for("auth.change_password"),
+                              follow_redirects=True)
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
@@ -280,33 +275,37 @@ def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert b'type="submit" value="Log In"' in response.data
-        assert b"You have to be logged in..." in response.data
+        assert 'type="submit" value="Log In"' in response.text
+        assert "You have to be logged in..." in response.text
 
 # also tests @login_required
 def test_change_password_landing_page_if_user_logged_in(
-        client: FlaskClient, user_logged_in):
+        client: FlaskClient, user_logged_in: User):
+    """test_change_password_landing_page_if_user_logged_in"""
     with client:
         client.get("/")
         response = client.get(url_for("auth.change_password"))
-        assert session.get("user_id")
-        assert session.get("admin") is False
-        assert session.get("user_name")
+        assert session.get("user_id") == user_logged_in.id
+        assert session.get("admin") == user_logged_in.admin
+        assert not session.get("admin")
+        assert session.get("user_name") == user_logged_in.name
     assert response.status_code == 200
-    assert b'type="submit" value="Change password"' in response.data
+    assert 'type="submit" value="Change password"' in response.text
 
 
 # also tests @login_required if admin
 def test_change_password_landing_page_if_admin_logged_in(
-        client: FlaskClient, admin_logged_in):
+        client: FlaskClient, admin_logged_in: User):
+    """test_change_password_landing_page_if_admin_logged_in"""
     with client:
         client.get("/")
         response = client.get(url_for("auth.change_password"))
-        assert session.get("user_id")
+        assert session.get("user_id") == admin_logged_in.id
+        assert session.get("admin") == admin_logged_in.admin
         assert session.get("admin")
-        assert session.get("user_name")
+        assert session.get("user_name") == admin_logged_in.username
     assert response.status_code == 200
-    assert b'type="submit" value="Change password"' in response.data
+    assert 'type="submit" value="Change password"' in response.text
 
 
 @pytest.mark.parametrize(
@@ -325,9 +324,9 @@ def test_change_password_landing_page_if_admin_logged_in(
     ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd", "Wrong old password!"),
 ))
 def test_failed_change_password(
-        client: FlaskClient,
-        user_logged_in,
+        client: FlaskClient, user_logged_in: User,
         old_password, password, confirm, flash_message):
+    """test_failed_change_password"""
     with client:
         client.get("/")
         client.get(url_for("auth.change_password"))
@@ -339,10 +338,13 @@ def test_failed_change_password(
         response = client.post(url_for("auth.change_password"), data=data)
     assert response.status_code == 200
     assert flash_message in unescape(response.text)
+    with dbSession() as db_session:
+        user_logged_in = db_session.get(User, user_logged_in.id)
+        assert not check_password_hash(user_logged_in.password, password)
 
 
-def test_successful_change_password(client: FlaskClient, user_logged_in):
-    user_name = "user4"
+def test_successful_change_password(client: FlaskClient, user_logged_in: User):
+    """test_successful_change_password"""
     old_password = "Q!444444"
     new_password = "Q!4444444"
     with client:
@@ -362,15 +364,13 @@ def test_successful_change_password(client: FlaskClient, user_logged_in):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert b"Password changed." in response.data
+        assert "Password changed." in response.text
 
     with dbSession() as db_session:
-        test_user = db_session.scalar(
-            select(User).filter_by(name=user_name))
-        assert check_password_hash(test_user.password, new_password)
-        test_user.password = old_password
+        user_logged_in = db_session.get(User, user_logged_in.id)
+        assert check_password_hash(user_logged_in.password, new_password)
+        user_logged_in.password = old_password
         db_session.commit()
-        test_user = db_session.scalar(
-            select(User).filter_by(name=user_name))
-        assert check_password_hash(test_user.password, old_password)
+        db_session.refresh(user_logged_in)
+        assert check_password_hash(user_logged_in.password, old_password)
 # endregion

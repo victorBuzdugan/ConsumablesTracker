@@ -1,27 +1,25 @@
 """Test SQLAlchemy tables mapping."""
 
 import re
+from typing import Callable
 from datetime import date, timedelta
 
 import pytest
 from sqlalchemy import func, insert, select
-from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from blueprints.sch import SAT_GROUP_SCH
 from database import Category, Product, Schedule, Supplier, User, dbSession
-from tests import (admin_logged_in, client, create_test_categories,
-                   create_test_db, create_test_group_schedule,
-                   create_test_products, create_test_suppliers,
-                   create_test_users, user_logged_in)
+
+func: Callable
 
 pytestmark = pytest.mark.db
 
 
 # region: test "users" table
-def test_user_creation(client):
+def test_user_creation():
     """Test default user creation and database insertion."""
-    user = User("user11", "P@ssw0rd")
+    user = User(name="user11", password="P@ssw0rd")
     with dbSession() as db_session:
         db_session.add(user)
         db_session.commit()
@@ -48,7 +46,8 @@ def test_user_creation(client):
         assert not db_session.get(User, user.id)
 
 
-def test_change_username(client):
+def test_change_username():
+    """test_change_username"""
     old_name = "user1"
     new_name = "user11"
     with dbSession() as db_session:
@@ -65,21 +64,25 @@ def test_change_username(client):
         assert db_session.get(User, db_user.id).name == old_name
 
 
-def test_change_password(client):
+def test_change_password():
+    """test_change_password"""
+    name = "user1"
+    old_password = "Q!111111"
+    new_password = "P@ssw0rd"
     with dbSession() as db_session:
         user = db_session.scalar(
-            select(User).filter_by(name="user1"))
-        user.password = "P@ssw0rd"
-        assert user in db_session.dirty
+            select(User).filter_by(name=name))
+        assert check_password_hash(user.password, old_password)
+        user.password = new_password
         db_session.commit()
-        db_user = db_session.get(User, user.id)
-        assert check_password_hash(db_user.password, "P@ssw0rd")
-
+        db_session.refresh(user)
+        assert check_password_hash(user.password, new_password)
         # teardown
-        db_user.password = "Q!111111"
-        assert db_user in db_session.dirty
+        db_session.refresh(user)
+        user.password = old_password
         db_session.commit()
-        assert check_password_hash(db_session.get(User, user.id).password, "Q!111111")
+        db_session.refresh(user)
+        assert check_password_hash(user.password, old_password)
 
 
 @pytest.mark.parametrize(("name", "password", "sat_group", "error_msg"), (
@@ -100,7 +103,8 @@ def test_change_password(client):
     ("test_user", "password", 3, "Invalid sat_group"),
     ("test_user", "password", -2, "Invalid sat_group"),
 ))
-def test_failed_user_creation(client, name, password, sat_group, error_msg):
+def test_failed_user_creation(name, password, sat_group, error_msg):
+    """test_failed_user_creation"""
     with pytest.raises(ValueError, match=re.escape(error_msg)):
         User(
             name=name,
@@ -114,7 +118,8 @@ def test_failed_user_creation(client, name, password, sat_group, error_msg):
         )
 
 
-def test_bulk_user_insertion(client):
+def test_bulk_user_insertion():
+    """test_bulk_user_insertion"""
     with dbSession() as db_session:
         last_id = db_session.scalar(
             select(User).order_by(User.id.desc())).id
@@ -140,23 +145,25 @@ def test_bulk_user_insertion(client):
         db_session.commit()
 
 
-def test_admin_creation(client):
+def test_admin_creation():
     """Test user creation with admin credentials (admin: True)"""
     user = User(
-        "admin1",
-        "P@ssw0rd",
+        name="admin1",
+        password="P@ssw0rd",
         admin=True,
         reg_req=False)
     with dbSession() as db_session:
         db_session.add(user)
         db_session.commit()
-        assert db_session.get(User, user.id).admin is True
+        db_session.refresh(user)
+        assert user.admin
         # teardown
-        db_session.delete(db_session.get(User, user.id))
+        db_session.delete(user)
         db_session.commit()
 
 
-def test_user_in_use_products_property(client):
+def test_user_in_use_products_property():
+    """test_user_in_use_products_property"""
     with dbSession() as db_session:
         user = db_session.get(User, 2)
         assert user.all_products == len(user.products)
@@ -165,12 +172,15 @@ def test_user_in_use_products_property(client):
             filter_by(in_use=True, responsable_id = user.id))
         product.in_use = False
         db_session.commit()
-        assert db_session.get(User, user.id).in_use_products == user.all_products - 1
-        db_session.get(Product, product.id).in_use = True
+        db_session.refresh(user)
+        assert user.in_use_products == user.all_products - 1
+        db_session.refresh(product)
+        product.in_use = True
         db_session.commit()
 
 
-def test_user_all_products_property(client):
+def test_user_all_products_property():
+    """test_user_all_products_property"""
     with dbSession() as db_session:
         user = db_session.get(User, 3)
         assert user.all_products == len(user.products)
@@ -180,13 +190,16 @@ def test_user_all_products_property(client):
             filter_by(responsable_id = user.id))
         product.responsable_id = 2
         db_session.commit()
-        assert db_session.get(User, user.id).all_products == all_products - 1
-        db_session.get(Product, product.id).responsable_id = user.id
+        db_session.refresh(user)
+        assert user.all_products == all_products - 1
+        db_session.refresh(product)
+        product.responsable_id = user.id
         db_session.commit()
         assert user.all_products == all_products
 
 
-def test_sat_group_this_week_property(client):
+def test_sat_group_this_week_property():
+    """test_sat_group_this_week_property"""
     with dbSession() as db_session:
         assert db_session.get(User, 1).sat_group_this_week
         assert not db_session.get(User, 2).sat_group_this_week
@@ -206,10 +219,12 @@ def test_sat_group_this_week_property(client):
         db_session.commit()
 
 
-def test_failed_delete_user_with_products_attached(client):
+def test_failed_delete_user_with_products_attached():
+    """test_failed_delete_user_with_products_attached"""
     with dbSession() as db_session:
         user = db_session.get(User, 1)
-        with pytest.raises(ValueError, match="User can't be deleted or does not exist"):
+        with pytest.raises(ValueError,
+                           match="User can't be deleted or does not exist"):
             db_session.delete(user)
             db_session.commit()
     with dbSession() as db_session:
@@ -222,7 +237,8 @@ def test_failed_delete_user_with_products_attached(client):
     (5, "User with pending registration can't have products attached"),
     (6, "'Retired' users can't have products attached"),
     ))
-def test_validate_user_products(client, user_id, err_message):
+def test_validate_user_products(user_id, err_message):
+    """test_validate_user_products"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         user = db_session.get(User, user_id)
@@ -231,20 +247,26 @@ def test_validate_user_products(client, user_id, err_message):
         assert db_session.get(Product, 1).responsable == product.responsable
 
 
-def test_validate_admin(client):
+def test_validate_admin():
+    """test_validate_admin"""
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         assert user.reg_req
-        with pytest.raises(ValueError, match="User with pending registration can't be admin"):
+        with pytest.raises(
+                ValueError,
+                match="User with pending registration can't be admin"):
             user.admin = True
         assert not user.admin
 
 
-def test_validate_last_admin(client):
+def test_validate_last_admin():
+    """test_validate_last_admin"""
     with dbSession() as db_session:
         db_session.get(User, 1).admin = False
         db_session.commit()
-        assert db_session.scalar(select(func.count(User.id)).filter_by(admin=True, in_use=True)) == 1
+        assert db_session.scalar(
+            select(func.count(User.id))
+            .filter_by(admin=True, in_use=True)) == 1
         user = db_session.get(User, 2)
         assert user.admin
         with pytest.raises(ValueError, match="You are the last admin!"):
@@ -254,28 +276,33 @@ def test_validate_last_admin(client):
         db_session.commit()
 
 
-def test_validate_user_in_use(client):
+def test_validate_user_in_use():
+    """test_validate_user_in_use"""
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         assert user.in_use
-        with pytest.raises(ValueError, match="Can't 'retire' a user if he is still responsible for products"):
+        with pytest.raises(
+                ValueError,
+                match="Can't 'retire' a user if he is still " +
+                    "responsible for products"):
             user.in_use = False
         assert user.in_use
 
 
-def test_validate_ok_in_use(client):
-    with dbSession() as db_session:
-        values = [{
-            "name": "temp_user",
-            "password": "P@ssw0rd",
-            "done_inv": False,
-            "reg_req": True,
-            "req_inv": True,
-            }]
+def test_validate_in_use():
+    """test_validate_in_use"""
+    values = [{
+        "name": "temp_user",
+        "password": "P@ssw0rd",
+        "done_inv": False,
+        "reg_req": True,
+        "req_inv": True,
+        }]
     with dbSession() as db_session:
         db_session.execute(insert(User), values)
         db_session.commit()
-        user = db_session.scalar(select(User).filter_by(name="temp_user"))
+        user = db_session.scalar(
+            select(User).filter_by(name=values[0]["name"]))
         assert user.in_use
         assert not user.done_inv
         assert user.check_inv
@@ -283,14 +310,15 @@ def test_validate_ok_in_use(client):
         assert user.req_inv
         user.in_use = False
         db_session.commit()
-        user = db_session.scalar(select(User).filter_by(name="temp_user"))
+        db_session.refresh(user)
         assert not user.in_use
         assert user.done_inv
         assert not user.reg_req
         assert not user.req_inv
+        # teardown
         db_session.delete(user)
         db_session.commit()
-        assert not db_session.scalar(select(User).filter_by(name="temp_user"))
+        assert not db_session.get(User, user.id)
 
 
 @pytest.mark.parametrize(
@@ -298,7 +326,8 @@ def test_validate_ok_in_use(client):
     (5, "User with pending registration can't check inventory"),
     (6, "'Retired' user can't check inventory"),
     ))
-def test_validate_done_inv(client, user_id, err_message):
+def test_validate_done_inv(user_id, err_message):
+    """test_validate_done_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         with pytest.raises(ValueError, match=err_message):
@@ -306,16 +335,20 @@ def test_validate_done_inv(client, user_id, err_message):
         assert user.done_inv
 
 
-def test_validate_done_inv_no_prod(client):
+def test_validate_done_inv_no_prod():
+    """test_validate_done_inv_no_prod"""
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         user.reg_req = False
-        with pytest.raises(ValueError, match="User without products attached can't check inventory"):
+        with pytest.raises(
+                ValueError,
+                match="User without products attached can't check inventory"):
             user.done_inv = False
         assert user.done_inv
 
 
-def test_validate_ok_done_inv(client):
+def test_validate_ok_done_inv():
+    """test_validate_ok_done_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, 3)
         assert user.done_inv
@@ -334,7 +367,8 @@ def test_validate_ok_done_inv(client):
     (3, "Users with products attached can't request registration"),
     (6, "'Retired' users can't request registration"),
     ))
-def test_validate_reg_req(client, user_id, err_message):
+def test_validate_reg_req(user_id, err_message):
+    """test_validate_reg_req"""
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         assert not user.reg_req
@@ -343,22 +377,29 @@ def test_validate_reg_req(client, user_id, err_message):
         assert not user.reg_req
 
 
-def test_validate_reg_req_req_inv(client):
+def test_validate_reg_req_req_inv():
+    """test_validate_reg_req_req_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, 4)
         assert not user.reg_req
         user.req_inv = True
-        with pytest.raises(ValueError, match="User that requested inventory can't request registration"):
+        with pytest.raises(
+                ValueError,
+                match="User that requested inventory can't " +
+                    "request registration"):
             user.reg_req = True
         assert not user.reg_req
 
 
-def test_validate_reg_req_done_inv(client):
+def test_validate_reg_req_done_inv():
+    """test_validate_reg_req_done_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, 4)
         assert not user.reg_req
         user.done_inv = False
-        with pytest.raises(ValueError, match="User that checks inventory can't request registration"):
+        with pytest.raises(
+                ValueError,
+                match="User that checks inventory can't request registration"):
             user.reg_req = True
         assert not user.reg_req
 
@@ -369,7 +410,8 @@ def test_validate_reg_req_done_inv(client):
     (6, "'Retired' users can't request inventorying"),
     (5, "User with pending registration can't request inventorying"),
     ))
-def test_validate_req_inv(client, user_id, err_message):
+def test_validate_req_inv(user_id, err_message):
+    """test_validate_req_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         assert not user.req_inv
@@ -378,32 +420,39 @@ def test_validate_req_inv(client, user_id, err_message):
         assert not user.req_inv
 
 
-def test_validate_req_inv_check_inv(client):
+def test_validate_req_inv_check_inv():
+    """test_validate_req_inv_check_inv"""
     with dbSession() as db_session:
         user = db_session.get(User, 3)
         assert not user.req_inv
         user.done_inv = False
-        with pytest.raises(ValueError, match="User can allready check inventory"):
+        with pytest.raises(ValueError,
+                           match="User can allready check inventory"):
             user.req_inv = True
         assert not user.req_inv
 
 
-def test_validate_req_inv_prod(client):
+def test_validate_req_inv_prod():
+    """test_validate_req_inv_prod"""
     with dbSession() as db_session:
         user = db_session.get(User, 5)
         assert not user.req_inv
         user.reg_req = False
         assert not user.all_products
-        with pytest.raises(ValueError, match="Users without products can't request inventorying"):
+        with pytest.raises(
+                ValueError,
+                match="Users without products can't request inventorying"):
             user.req_inv = True
         assert not user.req_inv
 
 
-def test_admin_request_inventory(client):
+def test_admin_request_inventory():
+    """test_admin_request_inventory"""
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         assert user.admin
-        with pytest.raises(ValueError, match="Admins don't need to request inventorying"):
+        with pytest.raises(ValueError,
+                           match="Admins don't need to request inventorying"):
             user.req_inv = True
         assert not user.req_inv
 # endregion
@@ -411,26 +460,28 @@ def test_admin_request_inventory(client):
 
 
 # region: test "categories" table
-def test_category_creation(client):
+def test_category_creation():
+    """test_category_creation"""
     category = Category(
-        "category11",
+        name="category11",
         description="Some description")
     with dbSession() as db_session:
         db_session.add(category)
         db_session.commit()
         assert category.id is not None
-        db_category = db_session.get(Category, category.id)
-        assert db_category.name == category.name
-        assert db_category.products == []
-        assert db_category.in_use is True
-        assert db_category.description == category.description
+        db_session.refresh(category)
+        assert category.name == category.name
+        assert category.products == []
+        assert category.in_use is True
+        assert category.description == category.description
         # teardown
-        db_session.delete(db_category)
+        db_session.delete(category)
         db_session.commit()
-        assert not db_session.get(Category, db_category.id)
+        assert not db_session.get(Category, category.id)
 
 
-def test_change_category_name(client):
+def test_change_category_name():
+    """test_change_category_name"""
     with dbSession() as db_session:
         category = db_session.get(Category, 1)
         old_name = category.name
@@ -438,12 +489,13 @@ def test_change_category_name(client):
         category.name = new_name
         assert category in db_session.dirty
         db_session.commit()
-        db_category = db_session.get(Category, category.id)
-        assert db_category.name == new_name
+        db_session.refresh(category)
+        assert category.name == new_name
         # teardown
-        db_category.name = old_name
+        category.name = old_name
         db_session.commit()
-        assert db_session.get(Category, category.id).name == old_name
+        db_session.refresh(category)
+        assert category.name == old_name
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
@@ -453,20 +505,21 @@ def test_change_category_name(client):
     ("Household", "The category (.)* allready exists"),
     ("Groceries", "The category (.)* allready exists"),
 ))
-def test_failed_category_creation(client, name, error_msg):
-    with dbSession() as db_session:
-        with pytest.raises(ValueError, match=error_msg):
-            Category(name)
+def test_failed_category_creation(name, error_msg):
+    """test_failed_category_creation"""
+    with pytest.raises(ValueError, match=error_msg):
+        Category(name=name)
 
 
-def test_bulk_category_insertion(client):
+def test_bulk_category_insertion():
+    """test_bulk_category_insertion"""
     values = [{"name": f"category{no}"} for no in range(1,4)]
     with dbSession() as db_session:
         db_session.execute(insert(Category), values)
         db_session.commit()
         categories = db_session.scalars(
             select(Category).where(Category.name.like("category%"))).all()
-        assert len(categories) == 3
+        assert len(categories) == len(values)
         for category in categories:
             assert category.products == []
             assert category.in_use
@@ -476,17 +529,22 @@ def test_bulk_category_insertion(client):
         db_session.commit()
 
 
-def test_failed_delete_category_with_products_attached(client):
+def test_failed_delete_category_with_products_attached():
+    """test_failed_delete_category_with_products_attached"""
+    cat_id = 1
     with dbSession() as db_session:
-        category = db_session.get(Category, 1)
-        with pytest.raises(ValueError, match="Category can't be deleted or does not exist"):
+        category = db_session.get(Category, cat_id)
+        with pytest.raises(
+                ValueError,
+                match="Category can't be deleted or does not exist"):
             db_session.delete(category)
             db_session.commit()
     with dbSession() as db_session:
-        assert db_session.get(Category, 1)
+        assert db_session.get(Category, cat_id)
 
 
-def test_category_in_use_products_property(client):
+def test_category_in_use_products_property():
+    """test_category_in_use_products_property"""
     with dbSession() as db_session:
         category = db_session.get(Category, 2)
         assert category.all_products == len(category.products)
@@ -495,12 +553,15 @@ def test_category_in_use_products_property(client):
             filter_by(in_use=True, category_id = category.id))
         product.in_use = False
         db_session.commit()
-        assert db_session.get(Category, category.id).in_use_products == category.all_products - 1
-        db_session.get(Product, product.id).in_use = True
+        db_session.refresh(category)
+        assert category.in_use_products == category.all_products - 1
+        db_session.refresh(product)
+        product.in_use = True
         db_session.commit()
 
 
-def test_category_all_products_property(client):
+def test_category_all_products_property():
+    """test_category_all_products_property"""
     with dbSession() as db_session:
         category = db_session.get(Category, 3)
         assert category.all_products == len(category.products)
@@ -510,50 +571,62 @@ def test_category_all_products_property(client):
             filter_by(category_id = category.id))
         product.category_id = 2
         db_session.commit()
-        assert db_session.get(Category, category.id).all_products == all_products - 1
-        db_session.get(Product, product.id).category_id = category.id
+        db_session.refresh(category)
+        assert category.all_products == all_products - 1
+        db_session.refresh(product)
+        product.category_id = category.id
         db_session.commit()
         assert category.all_products == all_products
 
 
-def test_validate_category_products(client):
+def test_validate_category_products():
+    """test_validate_category_products"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
+        old_cat_id = product.category.id
         category = db_session.get(Category, 8)
-        with pytest.raises(ValueError, match="Not in use category can't have products attached"):
+        assert not category.in_use
+        with pytest.raises(
+                ValueError,
+                match="Not in use category can't have products attached"):
             category.products.append(product)
-        assert db_session.get(Product, 1).category == product.category
+        db_session.refresh(product)
+        assert product.category.id == old_cat_id
 
 
-def test_validate_category_not_in_use(client):
+def test_validate_category_not_in_use():
+    """test_validate_category_not_in_use"""
     with dbSession() as db_session:
         category = db_session.get(Category, 1)
         assert category.in_use
-        with pytest.raises(ValueError, match="Not in use category can't have products attached"):
+        with pytest.raises(
+                ValueError,
+                match="Not in use category can't have products attached"):
             category.in_use = False
         assert category.in_use
 # endregion
 
 
 # region: test "suppliers" table
-def test_supplier_creation(client):
-    supplier = Supplier("supplier1", details="Some description")
+def test_supplier_creation():
+    """test_supplier_creation"""
     with dbSession() as db_session:
+        supplier = Supplier(name="supplier1", details="Some description")
         db_session.add(supplier)
         db_session.commit()
         assert supplier.id is not None
-        db_supplier = db_session.get(Supplier, supplier.id)
-        assert db_supplier.name == supplier.name
-        assert db_supplier.products == []
-        assert db_supplier.in_use is True
-        assert db_supplier.details == supplier.details
+        db_session.refresh(supplier)
+        assert supplier.products == []
+        assert supplier.in_use is True
+        assert supplier.details
         # teardown
-        db_session.delete(db_supplier)
+        db_session.delete(supplier)
         db_session.commit()
-        assert not db_session.get(Supplier, db_supplier.id)
+        assert not db_session.get(Supplier, supplier.id)
 
 
-def test_change_supplier_name(client):
+def test_change_supplier_name():
+    """test_change_supplier_name"""
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 1)
         old_name = supplier.name
@@ -561,12 +634,13 @@ def test_change_supplier_name(client):
         supplier.name = new_name
         assert supplier in db_session.dirty
         db_session.commit()
-        db_supplier = db_session.get(Supplier, supplier.id)
-        assert db_supplier.name == new_name
+        db_session.refresh(supplier)
+        assert supplier.name == new_name
         # teardown
-        db_supplier.name = old_name
+        supplier.name = old_name
         db_session.commit()
-        assert db_session.get(Supplier, db_supplier.id).name == old_name
+        db_session.refresh(supplier)
+        assert supplier.name == old_name
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
@@ -576,20 +650,21 @@ def test_change_supplier_name(client):
     ("Amazon", "The supplier (.)* allready exists"),
     ("Carrefour", "The supplier (.)* allready exists"),
 ))
-def test_failed_supplier_creation(client, name, error_msg):
-    with dbSession() as db_session:
-        with pytest.raises(ValueError, match=error_msg):
-            Supplier(name)
+def test_failed_supplier_creation(name, error_msg):
+    """test_failed_supplier_creation"""
+    with pytest.raises(ValueError, match=error_msg):
+        Supplier(name=name)
 
 
-def test_bulk_supplier_insertion(client):
+def test_bulk_supplier_insertion():
+    """test_bulk_supplier_insertion"""
     values = [{"name": f"supplier{no}"} for no in range(1,4)]
     with dbSession() as db_session:
         db_session.execute(insert(Supplier), values)
         db_session.commit()
         suppliers = db_session.scalars(
             select(Supplier).where(Supplier.name.like("supplier%"))).all()
-        assert len(suppliers) == 3
+        assert len(suppliers) == len(values)
         for supplier in suppliers:
             assert supplier.products == []
             assert supplier.in_use
@@ -599,17 +674,22 @@ def test_bulk_supplier_insertion(client):
         db_session.commit()
 
 
-def test_delete_supplier_with_products_attached(client):
+def test_delete_supplier_with_products_attached():
+    """test_delete_supplier_with_products_attached"""
+    sup_id = 1
     with dbSession() as db_session:
-        supplier = db_session.get(Supplier, 1)
-        with pytest.raises(ValueError, match="Supplier can't be deleted or does not exist"):
+        supplier = db_session.get(Supplier, sup_id)
+        with pytest.raises(
+                ValueError,
+                match="Supplier can't be deleted or does not exist"):
             db_session.delete(supplier)
             db_session.commit()
     with dbSession() as db_session:
-        assert db_session.get(Supplier, 1)
+        assert db_session.get(Supplier, sup_id)
 
 
-def test_supplier_in_use_products_property(client):
+def test_supplier_in_use_products_property():
+    """test_supplier_in_use_products_property"""
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 1)
         assert supplier.all_products == len(supplier.products)
@@ -618,12 +698,15 @@ def test_supplier_in_use_products_property(client):
             filter_by(in_use=True, supplier_id = supplier.id))
         product.in_use = False
         db_session.commit()
-        assert db_session.get(Supplier, supplier.id).in_use_products == supplier.all_products - 1
-        db_session.get(Product, product.id).in_use = True
+        db_session.refresh(supplier)
+        assert supplier.in_use_products == supplier.all_products - 1
+        db_session.refresh(product)
+        product.in_use = True
         db_session.commit()
 
 
-def test_supplier_all_products_property(client):
+def test_supplier_all_products_property():
+    """test_supplier_all_products_property"""
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 3)
         assert supplier.all_products == len(supplier.products)
@@ -633,33 +716,43 @@ def test_supplier_all_products_property(client):
             filter_by(supplier_id = supplier.id))
         product.supplier_id = 2
         db_session.commit()
-        assert db_session.get(Supplier, supplier.id).all_products == all_products - 1
-        db_session.get(Product, product.id).supplier_id = supplier.id
+        db_session.refresh(supplier)
+        assert supplier.all_products == all_products - 1
+        db_session.refresh(product)
+        product.supplier_id = supplier.id
         db_session.commit()
+        db_session.refresh(supplier)
         assert supplier.all_products == all_products
 
 
-def test_validate_supplier_products(client):
+def test_validate_supplier_products():
+    """test_validate_supplier_products"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         supplier = db_session.get(Supplier, 5)
-        with pytest.raises(ValueError, match="Not in use supplier can't have products attached"):
+        with pytest.raises(
+                ValueError,
+                match="Not in use supplier can't have products attached"):
             supplier.products.append(product)
         assert db_session.get(Product, 1).supplier == product.supplier
 
 
-def test_validate_supplier_not_in_use(client):
+def test_validate_supplier_not_in_use():
+    """test_validate_supplier_not_in_use"""
     with dbSession() as db_session:
         supplier = db_session.get(Supplier, 1)
         assert supplier.in_use
-        with pytest.raises(ValueError, match="Not in use supplier can't have products attached"):
+        with pytest.raises(
+                ValueError,
+                match="Not in use supplier can't have products attached"):
             supplier.in_use = False
         assert supplier.in_use
 # endregion
 
 
 # region: test "products" table
-def test_product_creation(client):
+def test_product_creation():
+    """test_product_creation"""
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         category = db_session.get(Category, 1)
@@ -677,84 +770,124 @@ def test_product_creation(client):
         db_session.add(product)
         db_session.commit()
         assert product.id is not None
-        db_product = db_session.get(Product, product.id)
-        assert db_product.name == product.name
-        assert db_product.description == product.description
-        assert db_product.responsable.name == user.name
-        assert db_product.category.name == category.name
-        assert db_product.supplier.name == supplier.name
-        assert db_product.meas_unit == product.meas_unit
-        assert db_product.min_stock == product.min_stock
-        assert db_product.ord_qty == product.ord_qty
-        assert db_product.to_order == product.to_order
-        assert db_product.critical == product.critical
-        assert db_product.in_use == product.in_use
+        db_session.refresh(product)
+        assert product.name == product.name
+        assert product.description == product.description
+        assert product.responsable.name == user.name
+        assert product.category.name == category.name
+        assert product.supplier.name == supplier.name
+        assert product.meas_unit == product.meas_unit
+        assert product.min_stock == product.min_stock
+        assert product.ord_qty == product.ord_qty
+        assert product.to_order == product.to_order
+        assert product.critical == product.critical
+        assert product.in_use == product.in_use
         # teardown
-        db_session.delete(db_product)
+        db_session.delete(product)
         db_session.commit()
-        assert not db_session.get(Product, db_product.id)
+        assert not db_session.get(Product, product.id)
 
 
-def test_change_product_name(client):
+def test_change_product_name():
+    """test_change_product_name"""
+    new_name = "product1"
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_name = product.name
-        new_name = "product1"
         product.name = new_name
         assert product in db_session.dirty
         db_session.commit()
-        db_product = db_session.get(Product, product.id)
-        assert db_product.name == new_name
+        db_session.refresh(product)
+        assert product.name == new_name
         # teardown
-        db_product.name = old_name
+        product.name = old_name
         db_session.commit()
-        assert db_session.get(Product, db_product.id).name == old_name
+        db_session.refresh(product)
+        assert product.name == old_name
 
 
-@pytest.mark.parametrize(("name", "description", "user", "category", "supplier", "meas_unit", "min_stock", "ord_qty", "error_msg"), (
-    # name
-    ("", "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
-    (" ", "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
-    (None, "Some description", 1, 1, 1, "measunit", 1, 2, "The product must have a name"),
-    ("Toilet paper", "Some description", 1, 1, 1, "measunit", 1, 2, "The product (.)* allready exists"),
-    ("   Toilet paper   ", "Some description", 1, 1, 1, "measunit", 1, 2, "The product (.)* allready exists"),
-    # description
-    ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
-    ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
-    ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2, "Product must have a description"),
-    # responsible
-    ("__test__producttt__", "Some description", "", 1, 1, "measunit", 1, 2, "User does not exist"),
-    ("__test__producttt__", "Some description", None, 1, 1, "measunit", 1, 2, "User does not exist"),
-    ("__test__producttt__", "Some description", 5, 1, 1, "measunit", 1, 2, "User with pending registration can't have products attached"),
-    ("__test__producttt__", "Some description", 6, 1, 1, "measunit", 1, 2, "'Retired' users can't have products attached"),
-    ("__test__producttt__", "Some description", 8, 1, 1, "measunit", 1, 2, "User does not exist"),
-    # category
-    ("__test__producttt__", "Some description", 1, "", 1, "measunit", 1, 2, "Category does not exist"),
-    ("__test__producttt__", "Some description", 1, None, 1, "measunit", 1, 2, "Category does not exist"),
-    ("__test__producttt__", "Some description", 1, 8, 1, "measunit", 1, 2, "Not in use category can't have products attached"),
-    ("__test__producttt__", "Some description", 1, 9, 1, "measunit", 1, 2, "Category does not exist"),
-    # supplier
-    ("__test__producttt__", "Some description", 1, 1, "", "measunit", 1, 2, "Supplier does not exist"),
-    ("__test__producttt__", "Some description", 1, 1, None, "measunit", 1, 2, "Supplier does not exist"),
-    ("__test__producttt__", "Some description", 1, 1, 5, "measunit", 1, 2, "Not in use supplier can't have products attached"),
-    ("__test__producttt__", "Some description", 1, 1, 6, "measunit", 1, 2, "Supplier does not exist"),
-    # meas unit
-    ("__test__producttt__", "Some description", 1, 1, 1, "", 1, 2, "Product must have a measuring unit"),
-    ("__test__producttt__", "Some description", 1, 1, 1, " ", 1, 2, "Product must have a measuring unit"),
-    ("__test__producttt__", "Some description", 1, 1, 1, None, 1, 2, "Product must have a measuring unit"),
-    # min stock
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", "", 2, "Minimum stock must be ≥ 0"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", None, 2, "Minimum stock must be ≥ 0"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", "0", 2, "Minimum stock must be ≥ 0"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", -3, 2, "Minimum stock must be ≥ 0"),
-    # ord quantity
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, "", "Order quantity must be ≥ 1"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, None, "Order quantity must be ≥ 1"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, "1", "Order quantity must be ≥ 1"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, 0, "Order quantity must be ≥ 1"),
-    ("__test__producttt__", "Some description", 1, 1, 1, "measunit", 1, -3, "Order quantity must be ≥ 1"),
+@pytest.mark.parametrize(
+    ("name", "description", "user", "category", "supplier",
+    "meas_unit", "min_stock", "ord_qty", "error_msg"), (
+        # name
+        ("", "description", 1, 1, 1, "measunit", 1, 2,
+            "The product must have a name"),
+        (" ", "description", 1, 1, 1, "measunit", 1, 2,
+            "The product must have a name"),
+        (None, "description", 1, 1, 1, "measunit", 1, 2,
+            "The product must have a name"),
+        ("Toilet paper", "description", 1, 1, 1, "measunit", 1, 2,
+            "The product (.)* allready exists"),
+        ("   Toilet paper   ", "description", 1, 1, 1, "measunit", 1, 2,
+            "The product (.)* allready exists"),
+        # description
+        ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2,
+            "Product must have a description"),
+        ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2,
+            "Product must have a description"),
+        ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2,
+            "Product must have a description"),
+        # responsible
+        ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
+            "User does not exist"),
+        ("__test__producttt__", "description", None, 1, 1, "measunit", 1, 2,
+            "User does not exist"),
+        ("__test__producttt__", "description", 5, 1, 1, "measunit", 1, 2,
+            "User with pending registration can't have products attached"),
+        ("__test__producttt__", "description", 6, 1, 1, "measunit", 1, 2,
+            "'Retired' users can't have products attached"),
+        ("__test__producttt__", "description", 8, 1, 1, "measunit", 1, 2,
+            "User does not exist"),
+        # category
+        ("__test__producttt__", "description", 1, "", 1, "measunit", 1, 2,
+            "Category does not exist"),
+        ("__test__producttt__", "description", 1, None, 1, "measunit", 1, 2,
+            "Category does not exist"),
+        ("__test__producttt__", "description", 1, 8, 1, "measunit", 1, 2,
+            "Not in use category can't have products attached"),
+        ("__test__producttt__", "description", 1, 9, 1, "measunit", 1, 2,
+            "Category does not exist"),
+        # supplier
+        ("__test__producttt__", "description", 1, 1, "", "measunit", 1, 2,
+            "Supplier does not exist"),
+        ("__test__producttt__", "description", 1, 1, None, "measunit", 1, 2,
+            "Supplier does not exist"),
+        ("__test__producttt__", "description", 1, 1, 5, "measunit", 1, 2,
+            "Not in use supplier can't have products attached"),
+        ("__test__producttt__", "description", 1, 1, 6, "measunit", 1, 2,
+            "Supplier does not exist"),
+        # meas unit
+        ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
+            "Product must have a measuring unit"),
+        ("__test__producttt__", "description", 1, 1, 1, " ", 1, 2,
+            "Product must have a measuring unit"),
+        ("__test__producttt__", "description", 1, 1, 1, None, 1, 2,
+            "Product must have a measuring unit"),
+        # min stock
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
+            "Minimum stock must be ≥ 0"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", None, 2,
+            "Minimum stock must be ≥ 0"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", "0", 2,
+            "Minimum stock must be ≥ 0"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", -3, 2,
+            "Minimum stock must be ≥ 0"),
+        # ord quantity
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "",
+            "Order quantity must be ≥ 1"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, None,
+            "Order quantity must be ≥ 1"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "1",
+            "Order quantity must be ≥ 1"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, 0,
+            "Order quantity must be ≥ 1"),
+        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, -3,
+            "Order quantity must be ≥ 1"),
 ))
-def test_failed_product_creation(client, name, description, user, category, supplier, meas_unit, min_stock, ord_qty, error_msg):
+def test_failed_product_creation(
+        name, description, user, category, supplier,
+        meas_unit, min_stock, ord_qty, error_msg):
+    """test_failed_product_creation"""
     with dbSession() as db_session:
         if user:
             user = db_session.get(User, user)
@@ -764,18 +897,18 @@ def test_failed_product_creation(client, name, description, user, category, supp
             supplier = db_session.get(Supplier, supplier)
         with pytest.raises(ValueError, match=error_msg):
             Product(
-                name,
-                description,
-                user,
-                category,
-                supplier,
-                meas_unit,
-                min_stock,
-                ord_qty
-            )
+                name=name,
+                description=description,
+                responsable=user,
+                category=category,
+                supplier=supplier,
+                meas_unit=meas_unit,
+                min_stock=min_stock,
+                ord_qty=ord_qty)
 
 
-def test_bulk_product_insertion(client):
+def test_bulk_product_insertion():
+    """test_bulk_product_insertion"""
     with dbSession() as db_session:
         last_id = db_session.scalar(
             select(Product).order_by(Product.id.desc())).id
@@ -813,7 +946,8 @@ def test_bulk_product_insertion(client):
         db_session.commit()
 
 
-def test_product_change_responsable(client):
+def test_product_change_responsable():
+    """test_product_change_responsable"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_user = product.responsable
@@ -821,14 +955,16 @@ def test_product_change_responsable(client):
         new_user = db_session.get(User, 1)
         product.responsable = new_user
         db_session.commit()
-        db_product = db_session.get(Product, product.id)
-        assert db_product.responsable == db_session.get(User, new_user.id)
-        db_product.responsable = db_session.get(User, old_user.id)
+        db_session.refresh(product)
+        assert product.responsable == db_session.get(User, new_user.id)
+        product.responsable = db_session.get(User, old_user.id)
         db_session.commit()
-        assert db_session.get(Product, product.id).responsable == db_session.get(User, old_user.id)
+        db_session.refresh(product)
+        assert product.responsable == db_session.get(User, old_user.id)
 
 
-def test_product_change_category(client):
+def test_product_change_category():
+    """test_product_change_category"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_category = product.category
@@ -836,14 +972,16 @@ def test_product_change_category(client):
         new_category = db_session.get(Category, 2)
         product.category = new_category
         db_session.commit()
-        db_product = db_session.get(Product, product.id)
-        assert db_product.category == db_session.get(Category, new_category.id)
-        db_product.category = db_session.get(Category, old_category.id)
+        db_session.refresh(product)
+        assert product.category == db_session.get(Category, new_category.id)
+        product.category = db_session.get(Category, old_category.id)
         db_session.commit()
-        assert db_session.get(Product, product.id).category == db_session.get(Category, old_category.id)
+        db_session.refresh(product)
+        assert product.category == db_session.get(Category, old_category.id)
 
 
-def test_product_change_supplier(client):
+def test_product_change_supplier():
+    """test_product_change_supplier"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         old_supplier = product.supplier
@@ -851,11 +989,12 @@ def test_product_change_supplier(client):
         new_supplier = db_session.get(Supplier, 1)
         product.supplier = new_supplier
         db_session.commit()
-        db_product = db_session.get(Product, product.id)
-        assert db_product.supplier == db_session.get(Supplier, new_supplier.id)
-        db_product.supplier = db_session.get(Supplier, old_supplier.id)
+        db_session.refresh(product)
+        assert product.supplier == db_session.get(Supplier, new_supplier.id)
+        product.supplier = db_session.get(Supplier, old_supplier.id)
         db_session.commit()
-        assert db_session.get(Product, product.id).supplier == db_session.get(Supplier, old_supplier.id)
+        db_session.refresh(product)
+        assert product.supplier == db_session.get(Supplier, old_supplier.id)
 
 
 #region: validators
@@ -865,15 +1004,18 @@ def test_product_change_supplier(client):
     (6, "'Retired' users can't have products attached"),
     (8, "User does not exist")
     ))
-def test_validate_product_responsable_id(client, user_id, err_message):
+def test_validate_product_responsable_id(user_id, err_message):
+    """test_validate_product_responsable_id"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         with pytest.raises(ValueError, match=err_message):
             product.responsable_id = user_id
-        assert db_session.get(Product, 1).responsable_id == product.responsable_id
+        db_session.refresh(product)
+        assert product.responsable_id == product.responsable_id
 
 
-def test_validate_product_responsable_id_last_product(client):
+def test_validate_product_responsable_id_last_product():
+    """test_validate_product_responsable_id_last_product"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         orig_resp_id = product.responsable_id
@@ -892,7 +1034,7 @@ def test_validate_product_responsable_id_last_product(client):
         product.responsable_id = orig_resp_id
         db_session.refresh(user)
         assert user.done_inv
-        
+
         product.responsable_id = user.id
         db_session.commit()
         assert user.all_products == 1
@@ -911,7 +1053,8 @@ def test_validate_product_responsable_id_last_product(client):
         db_session.commit()
 
 
-def test_validate_product_responsable_last_product(client):
+def test_validate_product_responsable_last_product():
+    """test_validate_product_responsable_last_product"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         orig_resp = product.responsable
@@ -930,7 +1073,7 @@ def test_validate_product_responsable_last_product(client):
         product.responsable = orig_resp
         db_session.refresh(user)
         assert user.done_inv
-        
+
         product.responsable = user
         db_session.commit()
         assert user.all_products == 1
@@ -954,12 +1097,14 @@ def test_validate_product_responsable_last_product(client):
     (8, "Not in use category can't have products attached"),
     (9, "Category does not exist")
     ))
-def test_validate_product_category_id(client, category_id, err_message):
+def test_validate_product_category_id(category_id, err_message):
+    """test_validate_product_category_id"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         with pytest.raises(ValueError, match=err_message):
             product.category_id = category_id
-        assert db_session.get(Product, 1).category_id == product.category_id
+        db_session.refresh(product)
+        assert product.category_id == product.category_id
 
 
 @pytest.mark.parametrize(
@@ -967,94 +1112,178 @@ def test_validate_product_category_id(client, category_id, err_message):
     (5, "Not in use supplier can't have products attached"),
     (6, "Supplier does not exist")
     ))
-def test_validate_product_supplier_id(client, supplier_id, err_message):
+def test_validate_product_supplier_id(supplier_id, err_message):
+    """test_validate_product_supplier_id"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         with pytest.raises(ValueError, match=err_message):
             product.supplier_id = supplier_id
-        assert db_session.get(Product, 1).supplier_id == product.supplier_id
+        db_session.refresh(product)
+        assert product.supplier_id == product.supplier_id
 
 
-def test_validate_to_order(client):
+def test_validate_to_order():
+    """test_validate_to_order"""
     with dbSession() as db_session:
-        with pytest.raises(ValueError, match="Can't order not in use products"):
+        with pytest.raises(ValueError,
+                           match="Can't order not in use products"):
             db_session.get(Product, 43).to_order = True
         assert not db_session.get(Product, 43).to_order
 
 
-def test_validate_product_in_use(client):
+def test_validate_product_in_use():
+    """test_validate_product_in_use"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         product.to_order = True
-        with pytest.raises(ValueError, match="Can't 'retire' a product that needs to be ordered"):
+        with pytest.raises(
+                ValueError,
+                match="Can't 'retire' a product that needs to be ordered"):
             product.in_use = False
+        db_session.refresh(product)
         assert product.in_use
 # endregion
 # endregion
 
 # region: test "schedule" table
-def test_schedule_creation(client):
+def test_schedule_creation():
+    """test_schedule_creation"""
     schedule = Schedule(
         name="test_schedule",
         type="group",
         elem_id=1,
         next_date=date.today(),
         update_date=date.today() + timedelta(days=1),
-        update_interval=1
-    )
+        update_interval=1)
     with dbSession() as db_session:
         db_session.add(schedule)
         db_session.commit()
         assert schedule.id is not None
-        db_schedule = db_session.get(Schedule, schedule.id)
-        assert db_schedule.name == schedule.name
-        assert db_schedule.type == schedule.type
-        assert db_schedule.elem_id == schedule.elem_id
-        assert db_schedule.next_date == schedule.next_date
-        assert db_schedule.update_date == schedule.update_date
-        assert db_schedule.update_interval == schedule.update_interval
+        db_session.refresh(schedule)
+        assert schedule.name == schedule.name
+        assert schedule.type == schedule.type
+        assert schedule.elem_id == schedule.elem_id
+        assert schedule.next_date == schedule.next_date
+        assert schedule.update_date == schedule.update_date
+        assert schedule.update_interval == schedule.update_interval
         # teardown
-        db_session.delete(db_schedule)
+        db_session.delete(schedule)
         db_session.commit()
-        assert not db_session.get(Schedule, db_schedule.id)
+        assert not db_session.get(Schedule, schedule.id)
 
-@pytest.mark.parametrize(("name", "type", "elem_id", "next_date", "update_date", "update_interval", "error_msg"), (
-    ("", "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
-    (None, "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
-    (" ", "group", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a name"),
-    ("test_schedule", "", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
-    ("test_schedule", None, 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
-    ("test_schedule", "  ", 1, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have a type"),
-    ("test_schedule", "wrong_type", 1, date.today(), date.today()+timedelta(days=1), 1, "Schedule type is invalid"),
-    ("test_schedule", "group", "", date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
-    ("test_schedule", "group", None, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
-    ("test_schedule", "group", 0, date.today(), date.today()+timedelta(days=1), 1, "The schedule must have an element id"),
-    ("test_schedule", "group", " ", date.today(), date.today()+timedelta(days=1), 1, "invalid literal for int() with base 10: ' '"),
-    ("test_schedule", "group", "a", date.today(), date.today()+timedelta(days=1), 1, "invalid literal for int() with base 10: 'a'"),
-    ("test_schedule", "group", -2, date.today(), date.today()+timedelta(days=1), 1, "Schedule elem_id is invalid"),
-    ("test_schedule", "group", 1, "", date.today()+timedelta(days=1), 1, "The schedule must have a next date"),
-    ("test_schedule", "group", 1, None, date.today()+timedelta(days=1), 1, "The schedule must have a next date"),
-    ("test_schedule", "group", 1, " ", date.today()+timedelta(days=1), 1, "The schedule next date is invalid"),
-    ("test_schedule", "group", 1, "abc", date.today()+timedelta(days=1), 1, "The schedule next date is invalid"),
-    ("test_schedule", "group", 1, date.today()-timedelta(days=1), date.today()+timedelta(days=1), 1, "The schedule next date cannot be in the past"),
-    ("test_schedule", "group", 1, date.today(), "", 1, "The schedule must have an update day"),
-    ("test_schedule", "group", 1, date.today(), None, 1, "The schedule must have an update day"),
-    ("test_schedule", "group", 1, date.today(), " ", 1, "The schedule update date is invalid"),
-    ("test_schedule", "group", 1, date.today(), "abc", 1, "The schedule update date is invalid"),
-    ("test_schedule", "group", 1, date.today(), date.today()-timedelta(days=1), 1, "Schedules 'update day' is less than 'next day'"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), "", "The schedule must have an update interval"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), None, "The schedule must have an update interval"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), 0, "The schedule must have an update interval"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), " ", "invalid literal for int() with base 10: ' '"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), "a", "invalid literal for int() with base 10: 'a'"),
-    ("test_schedule", "group", 1, date.today(), date.today()+timedelta(days=1), -2, "Schedule update interval is invalid"),
+@pytest.mark.parametrize(
+        ("name", "sch_type", "elem_id", "next_date",
+         "update_date", "update_interval", "error_msg"), (
+            # name
+            ("", "group", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a name"),
+            (None, "group", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a name"),
+            (" ", "group", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a name"),
+            # type
+            ("test_schedule", "", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a type"),
+            ("test_schedule", None, 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a type"),
+            ("test_schedule", "  ", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a type"),
+            ("test_schedule", "wrong_type", 1, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "Schedule type is invalid"),
+            # elem_id
+            ("test_schedule", "group", "", date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have an element id"),
+            ("test_schedule", "group", None, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have an element id"),
+            ("test_schedule", "group", 0, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have an element id"),
+            ("test_schedule", "group", " ", date.today(),
+                date.today()+timedelta(days=1), 1,
+                "invalid literal for int() with base 10: ' '"),
+            ("test_schedule", "group", "a", date.today(),
+                date.today()+timedelta(days=1), 1,
+                "invalid literal for int() with base 10: 'a'"),
+            ("test_schedule", "group", -2, date.today(),
+                date.today()+timedelta(days=1), 1,
+                "Schedule elem_id is invalid"),
+            # next_date
+            ("test_schedule", "group", 1, "",
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a next date"),
+            ("test_schedule", "group", 1, None,
+                date.today()+timedelta(days=1), 1,
+                "The schedule must have a next date"),
+            ("test_schedule", "group", 1, " ",
+                date.today()+timedelta(days=1), 1,
+                "The schedule next date is invalid"),
+            ("test_schedule", "group", 1, "abc",
+                date.today()+timedelta(days=1), 1,
+                "The schedule next date is invalid"),
+            ("test_schedule", "group", 1, date.today()-timedelta(days=1),
+                date.today()+timedelta(days=1), 1,
+                "The schedule next date cannot be in the past"),
+            # update_date
+            ("test_schedule", "group", 1, date.today(),
+                "", 1,
+                "The schedule must have an update day"),
+            ("test_schedule", "group", 1, date.today(),
+                None, 1,
+                "The schedule must have an update day"),
+            ("test_schedule", "group", 1, date.today(),
+                " ", 1,
+                "The schedule update date is invalid"),
+            ("test_schedule", "group", 1, date.today(),
+                "abc", 1,
+                "The schedule update date is invalid"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()-timedelta(days=1), 1,
+                "Schedules 'update day' is less than 'next day'"),
+            # update_interval
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), "",
+                "The schedule must have an update interval"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), None,
+                "The schedule must have an update interval"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), 0,
+                "The schedule must have an update interval"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), " ",
+                "invalid literal for int() with base 10: ' '"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), "a",
+                "invalid literal for int() with base 10: 'a'"),
+            ("test_schedule", "group", 1, date.today(),
+                date.today()+timedelta(days=1), -2,
+                "Schedule update interval is invalid"),
 ))
-def test_failed_schedule_creation(client, name, type, elem_id, next_date, update_date, update_interval, error_msg):
+def test_failed_schedule_creation(
+        name, sch_type, elem_id, next_date,
+        update_date, update_interval, error_msg):
+    """test_failed_schedule_creation"""
     with pytest.raises((ValueError, TypeError), match=re.escape(error_msg)):
-        Schedule(name, type, elem_id, next_date, update_date, update_interval)
+        Schedule(
+            name=name,
+            type=sch_type,
+            elem_id=elem_id,
+            next_date=next_date,
+            update_date=update_date,
+            update_interval=update_interval)
 
 
-def test_failed_schedule_creation_name_elem_id_combination(client):
+def test_failed_schedule_creation_name_elem_id_combination():
+    """test_failed_schedule_creation_name_elem_id_combination"""
     schedule = Schedule(
         name="test_schedule",
         type="group",
@@ -1067,7 +1296,8 @@ def test_failed_schedule_creation_name_elem_id_combination(client):
         db_session.add(schedule)
         db_session.commit()
         assert schedule.id is not None
-        with pytest.raises(ValueError, match="Name-Elem_id combination must be unique"):
+        with pytest.raises(ValueError,
+                           match="Name-Elem_id combination must be unique"):
             Schedule(
                 name="test_schedule",
                 type="group",
