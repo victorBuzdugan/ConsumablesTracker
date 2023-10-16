@@ -1,6 +1,7 @@
 """Main app."""
 
 from datetime import datetime
+from typing import Literal
 
 from flask import Flask, flash, redirect, request, session
 from flask_babel import Babel, gettext
@@ -16,7 +17,7 @@ from blueprints.users.users import users_bp
 from helpers import logger
 
 
-def get_locale():
+def get_locale() -> Literal["ro", "en"]:
     """Set the language the page will be displayed."""
     if language := session.get("language"):
         return language

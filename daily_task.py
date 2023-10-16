@@ -108,5 +108,5 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
         logger.info("No need to update schedules")
     con.close()
 
-if __name__== "__main__":
+if __name__== "__main__":   # pragma: no cover
     main()

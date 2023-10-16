@@ -19,14 +19,16 @@ PASSW_MIN_LENGTH = 8
 PASSW_REGEX = r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}"
 PASSW_SYMB = "!@#$%^&*_=+"
 msg = {
-    "usr_req": gettext("Username is required!"),
-    "usr_len": gettext("Username must be between %(m)i and %(M)i characters!",
-                       m=USER_MIN_LENGTH, M=USER_MAX_LENGTH),
-    "psw_req": gettext("Password is required!"),
-    "psw_len": gettext("Password should have at least %(pmin)i characters!",
-                pmin=PASSW_MIN_LENGTH),
-    "psw_rules": gettext("Check password rules!"),
-    "psw_eq": gettext("Passwords don't match!"),
+    "usr_req": lazy_gettext("Username is required!"),
+    "usr_len": lazy_gettext(
+        "Username must be between %(m)i and %(M)i characters!",
+        m=USER_MIN_LENGTH, M=USER_MAX_LENGTH),
+    "psw_req": lazy_gettext("Password is required!"),
+    "psw_len": lazy_gettext(
+        "Password should have at least %(pmin)i characters!",
+        pmin=PASSW_MIN_LENGTH),
+    "psw_rules": lazy_gettext("Check password rules!"),
+    "psw_eq": lazy_gettext("Passwords don't match!"),
 }
 
 auth_bp = Blueprint("auth",

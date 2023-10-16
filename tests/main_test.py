@@ -8,6 +8,7 @@ from flask.testing import FlaskClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
 
+from app import app, babel, get_locale
 from blueprints.sch import SAT_GROUP_SCH
 from database import Category, Product, Supplier, User, dbSession
 
@@ -175,7 +176,9 @@ def test_index_admin_logged_in_user_dashboard(
         assert f'href={url_for("prod.products_to_order")}>Order' \
             in response.text
 
+        babel.init_app(app=app, locale_selector=get_locale)
         client.get(url_for("set_language", language="ro"))
+        assert session["language"] == "ro"
         response = client.get(url_for("main.index"))
         assert "Language changed" not in response.text
         assert "Admin dashboard" not in response.text
@@ -184,6 +187,7 @@ def test_index_admin_logged_in_user_dashboard(
         assert "Panou de bord utilizator" in response.text
         assert "Statistici" in response.text
         client.get(url_for("set_language", language="en"))
+        assert session["language"] == "en"
         response = client.get(url_for("main.index"))
         assert 'Language changed' in response.text
         assert "Admin dashboard" in response.text
@@ -191,6 +195,7 @@ def test_index_admin_logged_in_user_dashboard(
         assert 'Limba a fost schimbată' not in response.text
         assert "Panou de bord utilizator" not in response.text
         assert "Statistici" not in response.text
+        babel.init_app(app=app, locale_selector=lambda: "en")
 
 
 def test_index_hidden_admin_logged_in_user_dashboard(
@@ -306,7 +311,9 @@ def test_index_admin_logged_in_admin_dashboard_table(
             db_session.get(User, 5).reg_req = True
             db_session.commit()
 
+        babel.init_app(app=app, locale_selector=get_locale)
         client.get(url_for("set_language", language="ro"))
+        assert session["language"] == "ro"
         response = client.get(url_for("main.index"))
         assert 'Language changed' not in response.text
         assert 'Admin dashboard' not in response.text
@@ -319,6 +326,7 @@ def test_index_admin_logged_in_admin_dashboard_table(
             in response.text
         assert 'Utilizatorii cu text tăiat sunt scoși din uz' in response.text
         client.get(url_for("set_language", language="en"))
+        assert session["language"] == "en"
         response = client.get(url_for("main.index"))
         assert 'Language changed' in response.text
         assert 'Admin dashboard' in response.text
@@ -330,6 +338,7 @@ def test_index_admin_logged_in_admin_dashboard_table(
             not in response.text
         assert 'Utilizatorii cu text tăiat sunt scoși din uz' \
             not in response.text
+        babel.init_app(app=app, locale_selector=lambda: "en")
 
 
 def test_index_hidden_admin_logged_in_admin_dashboard_table(

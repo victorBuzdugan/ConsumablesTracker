@@ -8,7 +8,8 @@ from flask.testing import FlaskClient
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
-from blueprints.auth.auth import PASSW_SYMB, msg
+from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_SYMB,
+                                  USER_MAX_LENGTH, USER_MIN_LENGTH)
 from database import User, dbSession
 
 pytestmark = pytest.mark.users
@@ -248,15 +249,17 @@ def test_new_user(client: FlaskClient, admin_logged_in: User,
     ("name", "password", "email", "sat_group",
      "flash_message"), (
         ("", "Q!111111", "", "1",
-         msg["usr_req"]),
+         "Username is required!"),
         ("us", "Q!111111", "", "1",
-         msg["usr_len"]),
+         f"Username must be between {USER_MIN_LENGTH} and " +
+         f"{USER_MAX_LENGTH} characters!"),
         ("useruseruseruser", "Q!111111", "", "1",
-         msg["usr_len"]),
+         f"Username must be between {USER_MIN_LENGTH} and " +
+         f"{USER_MAX_LENGTH} characters!"),
         ("new_user", "", "", "1",
-         msg["psw_req"]),
+         "Password is required!"),
         ("new_user", "Q!1", "", "1",
-         msg["psw_len"]),
+         f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
         ("new_user", "aaaaaaaa", "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
          f"{PASSW_SYMB})!"),
@@ -544,16 +547,18 @@ def test_edit_user(
         # name
         ("4", "", "", "", "",
          "", "1",
-         msg["usr_req"]),
+         "Username is required!"),
         ("3", "us", "", "", "",
          "", "1",
-         msg["usr_len"]),
+         f"Username must be between {USER_MIN_LENGTH} and " +
+         f"{USER_MAX_LENGTH} characters!"),
         ("2", "useruseruseruser", "", "", "on",
          "", "1",
-         msg["usr_len"]),
+         f"Username must be between {USER_MIN_LENGTH} and " +
+         f"{USER_MAX_LENGTH} characters!"),
         ("2", "new_user", "Q!1", "", "on",
          "", "1",
-         msg["psw_len"]),
+         f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
         # password
         ("3", "new_user", "aaaaaaaa", "", "",
          "", "1",

@@ -7,7 +7,7 @@ import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine
 
-from app import app
+from app import app, babel
 from blueprints.sch import SAT_GROUP_SCH
 from blueprints.sch.sch import GroupSchedule
 from database import Base, Category, Product, Supplier, User, dbSession
@@ -39,6 +39,8 @@ def fixture_client() -> FlaskClient:
     print("\nYield client")
     app.testing = True
     app.secret_key = 'testing'
+    # make sure to allways display en messages for testing purposes
+    babel.init_app(app=app, locale_selector=lambda: "en")
     yield app.test_client()
     # teardown
     # delete log file and test database

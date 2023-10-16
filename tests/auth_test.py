@@ -9,7 +9,9 @@ from flask.testing import FlaskClient
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
-from blueprints.auth.auth import msg
+from app import app, babel, get_locale
+from blueprints.auth.auth import (PASSW_MIN_LENGTH, USER_MAX_LENGTH,
+                                  USER_MIN_LENGTH)
 from database import User, dbSession
 
 pytestmark = pytest.mark.auth
@@ -40,29 +42,31 @@ def test_clear_session_if_user_logged_in(
 @pytest.mark.parametrize(
     ("name", "password", "confirm", "email", "flash_message"), (
         ("", "a", "a", "",
-            msg["usr_req"]),
+            "Username is required!"),
         ("aa", "a", "a", "",
-            msg["usr_len"]),
+            f"Username must be between {USER_MIN_LENGTH} and " +
+            f"{USER_MAX_LENGTH} characters!"),
         ("aaaaaaaaaaaaaaaa", "a", "a", "",
-            msg["usr_len"]),
+            f"Username must be between {USER_MIN_LENGTH} and " +
+            f"{USER_MAX_LENGTH} characters!"),
         ("aaa", "", "a", "",
-            msg["psw_req"]),
+            "Password is required!"),
         ("aaa", "aaaaaaa", "a", "",
-            msg["psw_len"]),
+            f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
         ("aaa", "aaaaaaaa", "", "",
-            msg["psw_req"]),
+            "Password is required!"),
         ("aaa", "aaaaaaaa", "aaaaaaa", "",
-            msg["psw_len"]),
+            f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
         ("aaa", "aaaaaaaa", "aaaaaaa", "",
-            msg["psw_eq"]),
+            "Passwords don't match!"),
         ("aaa", "aaaaaaaa", "aaaaaaaa", "",
-            msg["psw_rules"]),
+            "Check password rules!"),
         ("aaa", "#1aaaaaa", "#1aaaaaa", "",
-            msg["psw_rules"]),
+            "Check password rules!"),
         ("aaa", "#Aaaaaaa", "#Aaaaaaa", "",
-            msg["psw_rules"]),
+            "Check password rules!"),
         ("aaa", "1Aaaaaaa", "1Aaaaaaa", "",
-            msg["psw_rules"]),
+            "Check password rules!"),
         ("user5", "P@ssw0rd", "P@ssw0rd", "",
             "The user user5 allready exists"),
         ("__testt_userr_", "P@ssw0rd", "P@ssw0rd",
@@ -136,10 +140,12 @@ def test_login_landing_page(client: FlaskClient):
     """test_login_landing_page"""
     with client:
         client.get("/")
+        babel.init_app(app=app, locale_selector=get_locale)
         response = client.get(url_for("auth.login"))
         assert response.status_code == 200
         assert 'type="submit" value="Log In"' in response.text
         client.get(url_for("set_language", language="ro"))
+        assert session["language"] == "ro"
         response = client.get(url_for("auth.login"))
         assert 'Language changed' not in response.text
         assert 'Username' not in response.text
@@ -148,6 +154,7 @@ def test_login_landing_page(client: FlaskClient):
         assert "Nume" in response.text
         assert "Parolă" in response.text
         client.get(url_for("set_language", language="en"))
+        assert session["language"] == "en"
         response = client.get(url_for("auth.login"))
         assert "Language changed" in response.text
         assert "Username" in response.text
@@ -155,13 +162,14 @@ def test_login_landing_page(client: FlaskClient):
         assert "Limba a fost schimbată" not in response.text
         assert "Nume" not in response.text
         assert "Parolă" not in response.text
+        babel.init_app(app=app, locale_selector=lambda: "en")
 
 
 @pytest.mark.parametrize(("name", "password", "flash_message"), (
     ("", "",
-        msg["usr_req"]),
+        "Username is required!"),
     ("a", "",
-        msg["psw_req"]),
+        "Password is required!"),
     ("a", "a",
         "Wrong username or password!"),
     ("a", "password",
@@ -309,19 +317,32 @@ def test_change_password_landing_page_if_admin_logged_in(
 
 
 @pytest.mark.parametrize(
-    ("old_password", "password", "confirm", "flash_message"), (
-    ("", "P@ssw0rdd", "P@ssw0rdd", msg["psw_req"]),
-    ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd", msg["psw_len"]),
-    ("P@ssw0rd", "", "P@ssw0rdd", msg["psw_req"]),
-    ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd", msg["psw_len"]),
-    ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa", msg["psw_rules"]),
-    ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa", msg["psw_rules"]),
-    ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa", msg["psw_rules"]),
-    ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa", msg["psw_rules"]),
-    ("P@ssw0rd", "P@ssw0rdd", "", msg["psw_req"]),
-    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r", msg["psw_len"]),
-    ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd", msg["psw_eq"]),
-    ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd", "Wrong old password!"),
+    ("old_password", "password", "confirm",
+     "flash_message"), (
+        ("", "P@ssw0rdd", "P@ssw0rdd",
+        "Password is required!"),
+        ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd",
+        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        ("P@ssw0rd", "", "P@ssw0rdd",
+        "Password is required!"),
+        ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd",
+        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa",
+         "Check password rules!"),
+        ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa",
+         "Check password rules!"),
+        ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa",
+         "Check password rules!"),
+        ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa",
+         "Check password rules!"),
+        ("P@ssw0rd", "P@ssw0rdd", "",
+         "Password is required!"),
+        ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r",
+        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd",
+         "Passwords don't match!"),
+        ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd",
+         "Wrong old password!"),
 ))
 def test_failed_change_password(
         client: FlaskClient, user_logged_in: User,
