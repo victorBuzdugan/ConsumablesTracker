@@ -57,6 +57,15 @@ def test_db_backup_update_file(caplog: LogCaptureFixture):
     remove(backup_db)
 
 
+def test_db_backup_not_needed(caplog: LogCaptureFixture):
+    """test_db_backup_not_needed"""
+    copyfile(prod_db, orig_db)
+    db_backup(TEST_DB_NAME)
+    assert "No need to backup database as it will be reinitialised" \
+        in caplog.messages
+    remove(orig_db)
+
+
 def test_failed_db_backup(caplog: LogCaptureFixture):
     """test_failed_db_backup"""
     rename(prod_db, temp_db)
@@ -72,6 +81,7 @@ def test_failed_db_backup(caplog: LogCaptureFixture):
 def test_db_reinit(caplog: LogCaptureFixture):
     """test_db_reinit"""
     user_id = 7
+    sch_id = 1
     copyfile(prod_db, orig_db)
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
@@ -82,8 +92,32 @@ def test_db_reinit(caplog: LogCaptureFixture):
     db_reinit(TEST_DB_NAME)
     with dbSession() as db_session:
         assert db_session.get(User, user_id)
+        assert db_session.get(Schedule, sch_id).next_date == date.today()
     assert "Database reinitialised" in caplog.messages
+    caplog.clear()
+    # test remember schedules dates
+    with freeze_time(date.today() + timedelta(days=1)):
+        update_schedules(TEST_DB_NAME, date.today())
+    assert "Group 1 'Saturday movie' schedule will be updated" \
+        in caplog.messages
+    assert "1 schedule(s) updated" in caplog.messages
+    assert "No need to update schedules" not in caplog.messages
+    caplog.clear()
+    with dbSession() as db_session:
+        assert db_session.get(Schedule, sch_id).next_date \
+            == date.today() + timedelta(weeks=2)
+    db_reinit(TEST_DB_NAME)
+    assert "Database reinitialised" in caplog.messages
+    update_schedules(TEST_DB_NAME, date.today())
+    assert "Group 1 'Saturday movie' schedule will be updated" \
+        not in caplog.messages
+    assert "1 schedule(s) updated" not in caplog.messages
+    assert "No need to update schedules" in caplog.messages
+    with dbSession() as db_session:
+        assert db_session.get(Schedule, sch_id).next_date \
+            == date.today() + timedelta(weeks=2)
     # teardown
+    copyfile(orig_db, prod_db)
     remove(orig_db)
 
 
@@ -98,6 +132,7 @@ def test_failed_db_reinit(caplog: LogCaptureFixture):
     remove(orig_db)
 # endregion
 # endregion
+
 
 # region: schedules
 @freeze_time("2023-05-06")

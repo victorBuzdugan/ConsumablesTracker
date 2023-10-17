@@ -22,28 +22,33 @@ def db_backup(db_name: str) -> None:
     # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
     backup_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_backup.db")
-    try:
-        if not path.isfile(prod_db):
-            raise FileNotFoundError("Database doesn't exist")
-        source = sqlite3.connect(prod_db)
-        if not path.isfile(backup_db):
-            logger.debug("Starting first-time backup")
-        # sqlite3.connect creates the file if it doesn't exist
-        dest = sqlite3.connect(backup_db)
-        with source, dest:
-            source.backup(dest)
-            logger.info("Database backed up")
-        dest.close()
-    except Exception as err:
-        logger.warning("Database could not be backed up")
-        logger.debug(err)
-    try:
-        source.execute("VACUUM")
-        logger.info("Production database vacuumed")
-        source.close()
-    except Exception as err:
-        logger.warning("Database could not be vacuumed")
-        logger.debug(err)
+    orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
+    if path.isfile(orig_db):
+        logger.info("No need to backup database as it will be reinitialised")
+    else:
+        try:
+            if not path.isfile(prod_db):
+                raise FileNotFoundError("Database doesn't exist")
+            source = sqlite3.connect(prod_db)
+            if not path.isfile(backup_db):
+                logger.debug("Starting first-time backup")
+            # sqlite3.connect creates the file if it doesn't exist
+            dest = sqlite3.connect(backup_db)
+            with source, dest:
+                source.backup(dest)
+                logger.info("Database backed up")
+            dest.close()
+        except Exception as err:
+            logger.warning("Database could not be backed up")
+            logger.debug(err)
+        try:
+            source.execute("VACUUM")
+            logger.info("Production database vacuumed")
+            source.close()
+        except Exception as err:
+            logger.warning("Database could not be vacuumed")
+            logger.debug(err)
+
 
 def db_reinit(db_name: str) -> None:
     """Reinitialise the database from original if it exists."""
@@ -56,10 +61,31 @@ def db_reinit(db_name: str) -> None:
             if not path.isfile(prod_db):
                 raise FileNotFoundError("Database doesn't exist")
             dest = sqlite3.connect(prod_db)
+            # record current schedules dates
+            dest.row_factory = sqlite3.Row
+            cur = dest.cursor()
+            all_group_sch = cur.execute("""
+                SELECT id, next_date, update_date
+                FROM schedules
+                WHERE type = 'group'
+                """).fetchall()
+            # reinit db
             with source, dest:
                 source.backup(dest)
                 logger.info("Database reinitialised")
             source.close()
+            # write back recorded schedules dates
+            for group_sch in all_group_sch:
+                cur.execute("""
+                    UPDATE schedules
+                    SET next_date = ?, update_date = ?
+                    WHERE id = ?
+                    """,
+                    (group_sch["next_date"],
+                    group_sch["update_date"],
+                    group_sch["id"])
+                )
+            dest.commit()
             dest.close()
         except Exception as err:
             logger.warning("Database could not be reinitialised")
