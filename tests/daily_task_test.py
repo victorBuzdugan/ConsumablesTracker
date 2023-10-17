@@ -9,6 +9,7 @@ from freezegun import freeze_time
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
+from blueprints.sch import SAT_GROUP_SCH
 from daily_task import db_backup, db_reinit, main, update_schedules
 from database import Schedule, User, dbSession
 from helpers import CURR_DIR
@@ -98,7 +99,7 @@ def test_db_reinit(caplog: LogCaptureFixture):
     # test remember schedules dates
     with freeze_time(date.today() + timedelta(days=1)):
         update_schedules(TEST_DB_NAME, date.today())
-    assert "Group 1 'Saturday movie' schedule will be updated" \
+    assert f"Group 1 '{SAT_GROUP_SCH['db_name']}' schedule will be updated" \
         in caplog.messages
     assert "1 schedule(s) updated" in caplog.messages
     assert "No need to update schedules" not in caplog.messages
