@@ -12,17 +12,35 @@ from helpers import CURR_DIR, DB_NAME, logger
 
 
 def main(db_name: str = DB_NAME) -> None:
-    """Run daily tasks."""
-    db_backup(db_name)
+    """Run tasks."""
+    # daily tasks
     db_reinit(db_name)
     update_schedules(db_name)
+    if date.today().day == 1:
+        db_backup(db_name, "monthly")
+    elif date.today().isoweekday() == 1:
+        db_backup(db_name, "weekly")
+    else:
+        db_backup(db_name, "daily")
 
-def db_backup(db_name: str) -> None:
+def db_backup(db_name: str, task: str = "daily") -> None:
     """Backup and vacuum the database."""
     # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
-    backup_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_backup.db")
     orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
+    backup_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_backup")
+    match task:
+        case "daily":
+            backup_db = backup_db + "_daily.db"
+        case "weekly":
+            backup_db = backup_db + "_weekly.db"
+            logger.debug("Weekly backup")
+        case "monthly":
+            backup_db = backup_db + "_monthly.db"
+            logger.debug("Monthly backup")
+        case other:
+            logger.error("Backup task argument '%s' invalid", str(other))
+            backup_db = backup_db + "_daily.db"
     if path.isfile(orig_db):
         logger.info("No need to backup database as it will be reinitialised")
     else:

@@ -19,10 +19,18 @@ from tests.conftest import TEST_DB_NAME
 pytestmark = pytest.mark.daily
 
 prod_db = path.join(CURR_DIR, TEST_DB_NAME)
-backup_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_backup.db")
+backup_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_backup")
+if date.today().day == 1:   # pragma: no cover
+    backup_db = backup_db + "_monthly.db"
+elif date.today().day == 1: # pragma: no cover
+    backup_db = backup_db + "_weekly.db"
+else:   # pragma: no cover
+    backup_db = backup_db + "_daily.db"
 orig_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
 temp_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
+
+# region: main
 def test_main(caplog: LogCaptureFixture):
     """test_main"""
     assert path.isfile(prod_db)
@@ -39,6 +47,124 @@ def test_main(caplog: LogCaptureFixture):
     assert "No need to update schedules" in caplog.messages
     # teardown
     remove(backup_db)
+
+
+@freeze_time("2023-04-02")
+def test_main_timeline(caplog: LogCaptureFixture):
+    """Test db_backup in time."""
+    assert path.isfile(prod_db)
+    backup_file = backup_db.rsplit("_", 1)[0]
+    backup_db_daily = backup_file + "_daily.db"
+    backup_db_weekly = backup_file + "_weekly.db"
+    backup_db_monthly = backup_file + "_monthly.db"
+
+    assert not path.isfile(backup_db_daily)
+    assert not path.isfile(backup_db_weekly)
+    assert not path.isfile(backup_db_monthly)
+    assert date.today() == date(2023, 4, 2)
+    assert date.today().isoweekday() == 7
+
+    main(TEST_DB_NAME)
+    assert path.isfile(backup_db_daily)
+    assert not path.isfile(backup_db_weekly)
+    assert not path.isfile(backup_db_monthly)
+    assert "Starting first-time backup" in caplog.messages
+    assert "Database backed up" in caplog.messages
+    assert "Weekly backup" not in caplog.messages
+    assert "Monthly backup" not in caplog.messages
+    caplog.clear()
+
+    with freeze_time("2023-04-03"):
+        assert date.today().isoweekday() == 1
+        record_daily_time = path.getmtime(backup_db_daily)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) == record_daily_time
+        assert path.isfile(backup_db_weekly)
+        assert not path.isfile(backup_db_monthly)
+        assert "Starting first-time backup" in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" in caplog.messages
+        assert "Monthly backup" not in caplog.messages
+        caplog.clear()
+
+    with freeze_time("2023-04-09"):
+        assert date.today().isoweekday() == 7
+        record_daily_time = path.getmtime(backup_db_daily)
+        record_weekly_time = path.getmtime(backup_db_weekly)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) > record_daily_time
+        assert path.getmtime(backup_db_weekly) == record_weekly_time
+        assert not path.isfile(backup_db_monthly)
+        assert "Starting first-time backup" not in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" not in caplog.messages
+        assert "Monthly backup" not in caplog.messages
+        caplog.clear()
+
+    with freeze_time("2023-04-10"):
+        assert date.today().isoweekday() == 1
+        record_daily_time = path.getmtime(backup_db_daily)
+        record_weekly_time = path.getmtime(backup_db_weekly)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) == record_daily_time
+        assert path.getmtime(backup_db_weekly) > record_weekly_time
+        assert not path.isfile(backup_db_monthly)
+        assert "Starting first-time backup" not in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" in caplog.messages
+        assert "Monthly backup" not in caplog.messages
+        caplog.clear()
+
+    with freeze_time("2023-05-01"):
+        assert date.today().isoweekday() == 1
+        record_daily_time = path.getmtime(backup_db_daily)
+        record_weekly_time = path.getmtime(backup_db_weekly)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) == record_daily_time
+        assert path.getmtime(backup_db_weekly) == record_weekly_time
+        assert path.isfile(backup_db_monthly)
+        assert "Starting first-time backup" in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" not in caplog.messages
+        assert "Monthly backup" in caplog.messages
+        caplog.clear()
+
+    with freeze_time("2023-05-07"):
+        assert date.today().isoweekday() == 7
+        record_daily_time = path.getmtime(backup_db_daily)
+        record_weekly_time = path.getmtime(backup_db_weekly)
+        record_monthly_time = path.getmtime(backup_db_monthly)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) > record_daily_time
+        assert path.getmtime(backup_db_weekly) == record_weekly_time
+        assert path.getmtime(backup_db_monthly) == record_monthly_time
+        assert "Starting first-time backup" not in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" not in caplog.messages
+        assert "Monthly backup" not in caplog.messages
+        caplog.clear()
+
+    with freeze_time("2023-06-01"):
+        assert date.today().isoweekday() == 4
+        record_daily_time = path.getmtime(backup_db_daily)
+        record_weekly_time = path.getmtime(backup_db_weekly)
+        record_monthly_time = path.getmtime(backup_db_monthly)
+        main(TEST_DB_NAME)
+        assert path.getmtime(backup_db_daily) == record_daily_time
+        assert path.getmtime(backup_db_weekly) == record_weekly_time
+        assert path.getmtime(backup_db_monthly) > record_monthly_time
+        assert "Starting first-time backup" not in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" not in caplog.messages
+        assert "Monthly backup" in caplog.messages
+        caplog.clear()
+
+    # teardown
+    remove(backup_db_daily)
+    remove(backup_db_weekly)
+    remove(backup_db_monthly)
+# endregion
+
 
 # region: backup/reinit
 # region: backup and vacuum
@@ -76,6 +202,76 @@ def test_failed_db_backup(caplog: LogCaptureFixture):
     assert "Database could not be vacuumed" in caplog.messages
     # teardown
     rename(temp_db, prod_db)
+
+
+def test_db_backup_task(caplog: LogCaptureFixture):
+    """Test database backup task argument."""
+    assert not path.isfile(backup_db)
+    backup_file = backup_db.rsplit("_", 1)[0]
+    backup_db_daily = backup_file + "_daily.db"
+    backup_db_weekly = backup_file + "_weekly.db"
+    backup_db_monthly = backup_file + "_monthly.db"
+
+    db_backup(TEST_DB_NAME, "daily")
+    assert path.isfile(backup_db_daily)
+    assert not path.isfile(backup_db_weekly)
+    assert not path.isfile(backup_db_monthly)
+    assert "Starting first-time backup" in caplog.messages
+    assert "Database backed up" in caplog.messages
+    assert "Weekly backup" not in caplog.messages
+    assert "Monthly backup" not in caplog.messages
+    # teardown
+    caplog.clear()
+    remove(backup_db_daily)
+
+    db_backup(TEST_DB_NAME, "weekly")
+    assert not path.isfile(backup_db_daily)
+    assert path.isfile(backup_db_weekly)
+    assert not path.isfile(backup_db_monthly)
+    assert "Starting first-time backup" in caplog.messages
+    assert "Database backed up" in caplog.messages
+    assert "Weekly backup" in caplog.messages
+    assert "Monthly backup" not in caplog.messages
+    # teardown
+    caplog.clear()
+    remove(backup_db_weekly)
+
+    db_backup(TEST_DB_NAME, "monthly")
+    assert not path.isfile(backup_db_daily)
+    assert not path.isfile(backup_db_weekly)
+    assert path.isfile(backup_db_monthly)
+    assert "Starting first-time backup" in caplog.messages
+    assert "Database backed up" in caplog.messages
+    assert "Weekly backup" not in caplog.messages
+    assert "Monthly backup" in caplog.messages
+    # teardown
+    caplog.clear()
+    remove(backup_db_monthly)
+
+
+@pytest.mark.parametrize("task", (
+    "",
+    " ",
+    None,
+    2,
+    "some random text",
+    True,
+))
+def test_db_backup_task_daily_fallback(task, caplog: LogCaptureFixture):
+    """Test database backup task argument fallback to `daily`."""
+    backup_file = backup_db.rsplit("_", 1)[0]
+    backup_db_daily = backup_file + "_daily.db"
+    assert not path.isfile(backup_db_daily)
+    db_backup(TEST_DB_NAME, task)
+    assert "Starting first-time backup" in caplog.messages
+    assert "Database backed up" in caplog.messages
+    assert "Weekly backup" not in caplog.messages
+    assert "Monthly backup" not in caplog.messages
+    assert f"Backup task argument '{task}' invalid" in caplog.messages
+    assert path.isfile(backup_db_daily)
+    # teardown
+    caplog.clear()
+    remove(backup_db_daily)
 # endregion
 
 
