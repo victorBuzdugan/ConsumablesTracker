@@ -1,10 +1,11 @@
 """Test SQLAlchemy tables mapping."""
 
 import re
-from typing import Callable
 from datetime import date, timedelta
+from typing import Callable
 
 import pytest
+from freezegun import freeze_time
 from sqlalchemy import func, insert, select
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -1171,6 +1172,31 @@ def test_schedule_creation():
         db_session.commit()
         assert not db_session.get(Schedule, schedule.id)
 
+
+@freeze_time("2023-10-12")
+def test_schedule_creation_next_date_in_the_past():
+    """Freeze time on a thursday. Next date - monday."""
+    schedule = Schedule(
+        name="test_schedule",
+        type="group",
+        elem_id=1,
+        # next day in the past (that monday)
+        next_date=date(2023, 10, 9),
+        update_date=date.today() + timedelta(days=2),
+        update_interval=7)
+    with dbSession() as db_session:
+        db_session.add(schedule)
+        db_session.commit()
+        assert schedule.id is not None
+        db_session.refresh(schedule)
+        assert schedule.next_date == date(2023, 10, 9)
+        assert schedule.update_date == date(2023, 10, 14)
+        # teardown
+        db_session.delete(schedule)
+        db_session.commit()
+        assert not db_session.get(Schedule, schedule.id)
+
+
 @pytest.mark.parametrize(
         ("name", "sch_type", "elem_id", "next_date",
          "update_date", "update_interval", "error_msg"), (
@@ -1225,13 +1251,13 @@ def test_schedule_creation():
                 "The schedule must have a next date"),
             ("test_schedule", "group", 1, " ",
                 date.today()+timedelta(days=1), 1,
-                "The schedule next date is invalid"),
+                "Schedule's next date is invalid"),
             ("test_schedule", "group", 1, "abc",
                 date.today()+timedelta(days=1), 1,
-                "The schedule next date is invalid"),
-            ("test_schedule", "group", 1, date.today()-timedelta(days=1),
+                "Schedule's next date is invalid"),
+            ("test_schedule", "group", 1, date.today()-timedelta(days=7),
                 date.today()+timedelta(days=1), 1,
-                "The schedule next date cannot be in the past"),
+                "The schedule's next date cannot be older than this week"),
             # update_date
             ("test_schedule", "group", 1, date.today(),
                 "", 1,
@@ -1241,13 +1267,16 @@ def test_schedule_creation():
                 "The schedule must have an update day"),
             ("test_schedule", "group", 1, date.today(),
                 " ", 1,
-                "The schedule update date is invalid"),
+                "Schedule's update date is invalid"),
             ("test_schedule", "group", 1, date.today(),
                 "abc", 1,
-                "The schedule update date is invalid"),
+                "Schedule's update date is invalid"),
             ("test_schedule", "group", 1, date.today(),
-                date.today()-timedelta(days=1), 1,
-                "Schedules 'update day' is less than 'next day'"),
+                date.today(), 1,
+                "Schedule's 'update date' cannot be in the past"),
+            ("test_schedule", "group", 1, date.today()+timedelta(days=7),
+                date.today()+timedelta(days=7), 1,
+                "Schedule's 'update date' is older than 'next date'"),
             # update_interval
             ("test_schedule", "group", 1, date.today(),
                 date.today()+timedelta(days=1), "",

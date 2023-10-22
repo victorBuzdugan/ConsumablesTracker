@@ -32,6 +32,13 @@
                     <span class="text-secondary">{{ sat_group_sch["negative"] }}</span>
                 {% endif %}
             </li>
+            <li class="list-group-item">
+                {% if user.clean_this_week %}
+                    <span class="text-warning">{{ cleaning_sch["positive"] }}</span>
+                {% else %}
+                    <span class="text-secondary">{{ cleaning_sch["negative"] }}</span>
+                {% endif %}
+            </li>
         </ul>
     </div>
     {% if not session.admin and user.in_use_products and user.done_inv and not user.req_inv %}

@@ -64,6 +64,7 @@ class EditCatForm(CreateCatForm):
     in_use_products = IntegerField()
     in_use = BooleanField(
         label=lazy_gettext("In use"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",

@@ -15,7 +15,7 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
-from blueprints.sch import SAT_GROUP_SCH
+from blueprints.sch import SAT_GROUP_SCH, CLEANING_SCH
 from helpers import CURR_DIR, DB_NAME, logger
 
 func: Callable
@@ -68,6 +68,8 @@ class User(Base):
     :param details: user details, extra info
     :param email: user email adress
     :param sat_group: saturday group
+    :param sat_group_this_week: check if saturday group is this week
+    :param clean_this_week: check if user is scheduled for cleaning
 
     Interlocks
     ----------
@@ -256,6 +258,19 @@ class User(Base):
                         name=SAT_GROUP_SCH["db_name"],
                         elem_id=self.sat_group))):
                 return (user_sat_group_date.isocalendar().week ==
+                        date.today().isocalendar().week)
+        return False
+
+    @property
+    def clean_this_week(self) -> bool:
+        """Check if user is scheduled for cleaning."""
+        with dbSession() as db_session:
+            if (user_cleaning_date := db_session.scalar(
+                    select(Schedule.next_date)
+                    .filter_by(
+                        name=CLEANING_SCH["db_name"],
+                        elem_id=self.id))):
+                return (user_cleaning_date.isocalendar().week ==
                         date.today().isocalendar().week)
         return False
 
@@ -845,8 +860,9 @@ class Schedule(Base):
     :param elem_id: schedule element id (group number | user id)
     :param next_date: scheduled element date
     :param update_date: when to trigger schedule update
-    :param update_interval: how many days to increment `next_date` and
+    :param update_interval: group - how many days to increment `next_date` and
         `update_date` when `update_date` is triggered
+        individual - when users change
     The daily schedule task will search for all records where `update_date` is
     less or equal to current date:
     - if it is a group schedule update it will write to db
@@ -910,21 +926,29 @@ class Schedule(Base):
         if not value:
             raise ValueError("The schedule must have a next date")
         if not isinstance(value, date):
-            raise TypeError("The schedule next date is invalid")
-        if value < date.today():
-            raise ValueError("The schedule next date cannot be in the past")
+            raise TypeError("Schedule's next date is invalid")
+        if value < date.fromisocalendar(
+                year=date.today().year,
+                week=date.today().isocalendar()[1],
+                day=1):
+            raise ValueError(
+                "The schedule's next date cannot be older than this week")
         return value
 
     @validates("update_date")
     def validate_update_date(self, key: str, value: date) -> Optional[date]:
-        """Check for empty value or value less then `next_date`."""
+        """Check for empty value or value older than `next_date` or today."""
         # pylint: disable=unused-argument
         if not value:
             raise ValueError("The schedule must have an update day")
         if not isinstance(value, date):
-            raise TypeError("The schedule update date is invalid")
+            raise TypeError("Schedule's update date is invalid")
+        if value <= date.today():
+            raise ValueError(
+                "Schedule's 'update date' cannot be in the past")
         if value <= self.next_date:
-            raise ValueError("Schedules 'update day' is less than 'next day'")
+            raise ValueError(
+                "Schedule's 'update date' is older than 'next date'")
         return value
 
     @validates("update_interval")

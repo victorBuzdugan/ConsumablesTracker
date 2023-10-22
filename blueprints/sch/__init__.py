@@ -22,4 +22,12 @@ SAT_GROUP_SCH: dict[str,str] = {
     "positive_for_test": "You're choosing the movie this saturday",
     "negative": lazy_gettext("You're not choosing the movie this saturday"),
     "negative_for_test": "You're not choosing the movie this saturday"}
+CLEANING_SCH: dict[str,str] = {
+    "name": lazy_gettext("Cleaning schedule"),
+    "name_for_test": "Cleaning schedule",
+    "db_name": "Cleaning schedule",
+    "positive": lazy_gettext("You're scheduled for cleaning this week"),
+    "positive_for_test": "You're scheduled for cleaning this week",
+    "negative": lazy_gettext("You're not scheduled for cleaning this week"),
+    "negative_for_test": "You're not scheduled for cleaning this week"}
 # endregion

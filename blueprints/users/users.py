@@ -1,10 +1,12 @@
 """Users blueprint."""
 
+from typing import Callable
+
 from flask import Blueprint, flash, redirect, render_template, session, url_for
-from flask_babel import gettext, lazy_gettext
+from flask_babel import gettext, lazy_gettext, ngettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
-from sqlalchemy import select
+from sqlalchemy import func, select
 from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
                      SelectField, StringField, SubmitField, TextAreaField)
 from wtforms.validators import (Email, InputRequired, Length, NumberRange,
@@ -12,9 +14,12 @@ from wtforms.validators import (Email, InputRequired, Length, NumberRange,
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
-from blueprints.sch import SAT_GROUP_SCH
+from blueprints.sch import CLEANING_SCH, SAT_GROUP_SCH
+from blueprints.sch.sch import cleaning_schedule
 from database import User, dbSession
 from helpers import admin_required, flash_errors, logger
+
+func: Callable
 
 users_bp = Blueprint(
     "users",
@@ -91,6 +96,7 @@ class CreateUserForm(FlaskForm):
                 })
     admin = BooleanField(
         label=lazy_gettext("Admin"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
@@ -118,22 +124,36 @@ class EditUserForm(CreateUserForm):
             "placeholder": lazy_gettext("Password"),
             "autocomplete": "new-password",
             })
+    clean_order = SelectField(
+        label=CLEANING_SCH["name"],
+        validators=[Optional()],
+        coerce=int,
+        default=None,
+        render_kw={
+                "class": "form-select",
+                })
     all_products = IntegerField()
     in_use_products = IntegerField()
     in_use = BooleanField(
         label=lazy_gettext("In use"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     check_inv = BooleanField(
         label=lazy_gettext("Inventory check"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
-    reg_req = BooleanField(validators=[Optional()])
-    req_inv = BooleanField(validators=[Optional()])
+    reg_req = BooleanField(
+        false_values = ("False", False, "false", ""),
+        validators=[Optional()])
+    req_inv = BooleanField(
+        false_values = ("False", False, "false", ""),
+        validators=[Optional()])
     submit = SubmitField(
         label=lazy_gettext("Update"),
         render_kw={"class": "btn btn-primary px-4"})
@@ -151,6 +171,7 @@ def approve_reg(username):
             user.reg_req = False
             db_session.commit()
             logger.debug("%s has been approved", username)
+            cleaning_schedule.add_user(user.id)
             flash(gettext("%(username)s has been approved",
                           username=username))
             flash(gettext("Review the schedules"), "warning")
@@ -214,6 +235,7 @@ def new_user():
                 db_session.add(user)
                 db_session.commit()
                 logger.debug("User '%s' created", user.name)
+                cleaning_schedule.add_user(user.id)
                 flash(gettext("User '%(username)s' created",
                               username=user.name))
                 flash(gettext("Review the schedules"), "warning")
@@ -234,6 +256,16 @@ def edit_user(username):
     logger.info("Edit user '%s' page", username)
     edit_user_form: EditUserForm = EditUserForm()
 
+    with dbSession() as db_session:
+        user_len = db_session.scalar(
+            select(func.count(User.id))
+            .filter_by(reg_req=False, in_use=True))
+    clean_order_choices = (
+        [(0, gettext("This week"))] +
+        [(ind, gettext("In") + f" {ind} " + ngettext("week", "weeks", ind))
+            for ind in range(1, user_len)])
+    edit_user_form.clean_order.choices = clean_order_choices
+
     if edit_user_form.validate_on_submit():
         with dbSession().no_autoflush as db_session:
             user = db_session.scalar(
@@ -248,6 +280,7 @@ def edit_user(username):
                     db_session.delete(user)
                     db_session.commit()
                     logger.debug("User '%s' has been deleted", username)
+                    cleaning_schedule.remove_user(user.id)
                     flash(gettext("User '%(username)s' has been deleted",
                                   username=user.name))
                     if user.id == session.get("user_id"):
@@ -262,6 +295,18 @@ def edit_user(username):
                     user.password = edit_user_form.password.data
                 user.email = edit_user_form.email.data
                 user.sat_group = edit_user_form.sat_group.data
+                # cleaning schedule
+                if user.in_use and not user.reg_req:
+                    try:
+                        curr_order = cleaning_schedule.current_order()\
+                                                .index(user.id)
+                        if int(edit_user_form.clean_order.data) != curr_order:
+                            cleaning_schedule.change_user_pos(
+                                user.id,
+                                edit_user_form.clean_order.data)
+                            flash(gettext("Schedule updated"))
+                    except (ValueError, TypeError):
+                        flash("Not a valid choice.")
                 user.details = edit_user_form.details.data
                 try:
                     user.admin = edit_user_form.admin.data
@@ -272,6 +317,7 @@ def edit_user(username):
                 except ValueError as error:
                     flash(str(error), "warning")
                 try:
+                    initial_in_use = user.in_use
                     user.in_use = edit_user_form.in_use.data
                 except ValueError as error:
                     flash(str(error), "warning")
@@ -279,6 +325,12 @@ def edit_user(username):
                     logger.debug("User updated")
                     flash(gettext("User updated"))
                     db_session.commit()
+                    if  user.in_use is not initial_in_use:
+                        # add or remove from schedule
+                        if user.in_use:
+                            cleaning_schedule.add_user(user.id)
+                        else:
+                            cleaning_schedule.remove_user(user.id)
                     if user.id == session.get("user_id"):
                         session["user_name"] = user.name
                         if not user.admin:
@@ -295,6 +347,10 @@ def edit_user(username):
                 .filter(User.name==escape(username),
                         User.name!="Admin"))):
             edit_user_form = EditUserForm(obj=user)
+            if user.in_use and not user.reg_req:
+                edit_user_form.clean_order.choices = clean_order_choices
+                edit_user_form.clean_order.data = \
+                    cleaning_schedule.current_order().index(user.id)
         else:
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")

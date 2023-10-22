@@ -49,5 +49,34 @@
             </div>
         {% endfor %}
     {% endfor %}
+
+    {# Individual schedules #}
+    {% for indiv_schedule in indiv_schedules %}
+        <h5 class="card-title mb-3">{{ indiv_schedule[0] }}</h5>
+        <div class="table-responsive mx-auto mb-3" style="max-width: 30rem; border: 1px solid var(--bs-border-color); border-radius: 10px;">
+            <table class="table align-middle table-sm table-hover table-striped m-0">
+                <tbody>
+                {% for user_data in indiv_schedule[1] %}
+                    <tr>
+                        <td style="width: 50%; border-right: solid 1px var(--bs-border-color)">
+                        {% if session.admin %}
+                            <span class="{% if user_data[0] == session['user_name']%}fw-bolder{% endif %}"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('users.edit_user', username=user_data[0]) }}">{{ user_data[0] }}</a></span>
+                        {% else %}
+                            <span class="{% if user_data[0] == session['user_name']%}fw-bolder{% endif %}">{{ user_data[0] }}</span>
+                        {% endif %}
+                        </td>
+                        <td style="width: 50%; border-right: solid 1px var(--bs-border-color)">
+                        {% if user_data[0] == session["user_name"] %}
+                            <b>{{ user_data[1] }}</b>
+                        {% else %}
+                            {{ user_data[1] }}
+                        {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
     </div>
 {% endblock %}

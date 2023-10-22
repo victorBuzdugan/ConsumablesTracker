@@ -64,10 +64,9 @@ def db_reinit(db_name: str) -> None:
             # record current schedules dates
             dest.row_factory = sqlite3.Row
             cur = dest.cursor()
-            all_group_sch = cur.execute("""
+            schedules = cur.execute("""
                 SELECT id, next_date, update_date
                 FROM schedules
-                WHERE type = 'group'
                 """).fetchall()
             # reinit db
             with source, dest:
@@ -75,15 +74,15 @@ def db_reinit(db_name: str) -> None:
                 logger.info("Database reinitialised")
             source.close()
             # write back recorded schedules dates
-            for group_sch in all_group_sch:
+            for schedule in schedules:
                 cur.execute("""
                     UPDATE schedules
                     SET next_date = ?, update_date = ?
                     WHERE id = ?
                     """,
-                    (group_sch["next_date"],
-                    group_sch["update_date"],
-                    group_sch["id"])
+                    (schedule["next_date"],
+                    schedule["update_date"],
+                    schedule["id"])
                 )
             dest.commit()
             dest.close()
@@ -92,6 +91,7 @@ def db_reinit(db_name: str) -> None:
             logger.debug(err)
     else:
         logger.debug("This app doesn't need database reinit")
+
 
 def update_schedules(db_name: str, base_date: date = date.today()) -> None:
     """Check update_date in schedules and update if necessary.
@@ -102,18 +102,25 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
     con = sqlite3.connect(prod_db)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
-    all_group_sch = cur.execute("""
-        SELECT id, name, elem_id, next_date, update_date, update_interval
+    schedules = cur.execute("""
+        SELECT *
         FROM schedules
-        WHERE type = 'group'
         """).fetchall()
-    for group_sch in all_group_sch:
-        update_date = date.fromisoformat(group_sch["update_date"])
+    for schedule in schedules:
+        update_date = date.fromisoformat(schedule["update_date"])
         if update_date <= base_date:
-            next_date = date.fromisoformat(group_sch["next_date"])
-            sch_interval = timedelta(days=group_sch["update_interval"])
+            # count all the schedules with this name and type
+            sch_count = cur.execute("""
+                SELECT COUNT(id)
+                FROM schedules
+                WHERE type = ? AND name = ?
+                """, (schedule["type"], schedule["name"])
+                ).fetchone()[0]
+            next_date = date.fromisoformat(schedule["next_date"])
+            sch_interval = (timedelta(days=schedule["update_interval"])
+                            * sch_count)
             diff = math.ceil((base_date - next_date).days
-                             / group_sch["update_interval"])
+                             / sch_interval.days)
             next_date += sch_interval * diff
             update_date += sch_interval * diff
             cur.execute("""
@@ -123,10 +130,10 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
                 """,
                 (next_date.isoformat(),
                  update_date.isoformat(),
-                 group_sch["id"])
+                 schedule["id"])
                  )
-            logger.debug("Group %d '%s' schedule will be updated",
-                         group_sch["elem_id"], group_sch["name"])
+            logger.debug("Schedule '%s' element '%d' will be updated",
+                         schedule["name"], schedule["elem_id"])
     if con.in_transaction:
         logger.info("%d schedule(s) updated", con.total_changes)
         con.commit()

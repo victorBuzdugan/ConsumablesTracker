@@ -5,18 +5,21 @@ from html import unescape
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
+from pytest import LogCaptureFixture
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH)
+from blueprints.sch.sch import cleaning_schedule
 from database import User, dbSession
 
 pytestmark = pytest.mark.users
 
 
 # region: approve registration
-def test_approve_registration(client: FlaskClient, admin_logged_in: User):
+def test_approve_registration(
+        client: FlaskClient, admin_logged_in: User, caplog: LogCaptureFixture):
     """test_approve_registration"""
     unreg_user = "user5"
     with client:
@@ -24,6 +27,9 @@ def test_approve_registration(client: FlaskClient, admin_logged_in: User):
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         assert "requested registration" in response.text
+        response = client.get(url_for("sch.schedules"))
+        assert unreg_user not in response.text
+        client.get(url_for("main.index"))
         response = client.get(
             url_for("users.approve_reg", username=unreg_user),
             follow_redirects=True)
@@ -33,10 +39,16 @@ def test_approve_registration(client: FlaskClient, admin_logged_in: User):
         assert response.request.path == url_for("main.index")
         assert f"{unreg_user} has been approved" in response.text
         assert "Review the schedules" in response.text
+        response = client.get(url_for("sch.schedules"))
+        assert unreg_user in response.text
+        assert f"Schedule '{cleaning_schedule.name}' added '{unreg_user}'" \
+            in caplog.messages
         with dbSession() as db_session:
             assert not db_session.get(User, 5).reg_req
+            # teardown
             db_session.get(User, 5).reg_req = True
             db_session.commit()
+            cleaning_schedule.remove_user(5)
 
 
 def test_failed_approve_registration_bad_username(
@@ -201,8 +213,9 @@ def test_approve_all_check_inventory(
     ("some details", "on", "", "2"),
     ("some details", "on", "some.user@somewebsite.com", "1"),
 ))
-def test_new_user(client: FlaskClient, admin_logged_in: User,
-                  details, admin, email, sat_group):
+def test_new_user(
+        client: FlaskClient, admin_logged_in: User, caplog: LogCaptureFixture,
+        details, admin, email, sat_group):
     """test_new_user"""
     name = "new_user"
     password = "Q!111111"
@@ -210,6 +223,8 @@ def test_new_user(client: FlaskClient, admin_logged_in: User,
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
+        response = client.get(url_for("sch.schedules"))
+        assert name not in response.text
         response = client.get(url_for("users.new_user"))
         assert "Create user" in response.text
         data = {
@@ -229,6 +244,10 @@ def test_new_user(client: FlaskClient, admin_logged_in: User,
         assert response.request.path == url_for("main.index")
         assert f"User '{name}' created" in unescape(response.text)
         assert "Review the schedules" in response.text
+        response = client.get(url_for("sch.schedules"))
+        assert name in response.text
+        assert f"Schedule '{cleaning_schedule.name}' added '{name}'" \
+            in caplog.messages
         assert name in response.text
     with dbSession() as db_session:
         user = db_session.scalar(select(User).filter_by(name=name))
@@ -241,8 +260,10 @@ def test_new_user(client: FlaskClient, admin_logged_in: User,
         assert user.details == details
         assert user.email == email
         assert user.sat_group == int(sat_group)
+        # teardown
         db_session.delete(user)
         db_session.commit()
+        cleaning_schedule.remove_user(user.id)
 
 
 @pytest.mark.parametrize(
@@ -319,7 +340,7 @@ def test_failed_new_user(
         assert "Create user" in response.text
         assert flash_message in unescape(response.text)
         assert f"User '{name}' created" not in unescape(response.text)
-    if (name != "user1") and (name != "Admin"):
+    if name not in {"user1", "Admin"}:
         with dbSession() as db_session:
             assert not db_session.scalar(select(User).filter_by(name=name))
 # endregion
@@ -470,7 +491,7 @@ def test_edit_user(
         user_id, new_name, orig_password, new_password, new_details,
         new_check_inv, new_admin, new_in_use,
         new_email, new_sat_group):
-    """test_edit_user"""
+    """Test user editing"""
     with dbSession() as db_session:
         user = db_session.get(User, user_id)
         orig_in_use = user.in_use
@@ -485,6 +506,12 @@ def test_edit_user(
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
             assert session["admin"]
+            response = client.get(url_for("sch.schedules"))
+            if user.reg_req or not user.in_use:
+                assert user.name not in response.text
+            else:
+                assert user.name in response.text
+            client.get(url_for("main.index"))
             response = client.get(
                 url_for("users.edit_user", username=user.name))
             assert len(response.history) == 0
@@ -512,8 +539,13 @@ def test_edit_user(
             assert response.request.path == url_for("main.index")
             assert "User updated" in response.text
             assert new_name in response.text
+            db_session.refresh(user)
+            response = client.get(url_for("sch.schedules"))
+            if user.reg_req or not user.in_use:
+                assert user.name not in response.text
+            else:
+                assert user.name in response.text
 
-        db_session.refresh(user)
         assert user.name == new_name
         if new_password:
             assert check_password_hash(user.password, new_password)
@@ -538,6 +570,8 @@ def test_edit_user(
         db_session.refresh(user)
         user.reg_req = orig_reg_req
         db_session.commit()
+        cleaning_schedule.unregister()
+        cleaning_schedule.register()
 
 
 @pytest.mark.parametrize(
@@ -902,21 +936,210 @@ def test_edit_user_change_admin_logged_in_admin_status(
         assert not db_session.get(User, 1).admin
         db_session.get(User, 1).admin = True
         db_session.commit()
-# endregion
 
 
-# region: delete user
-def test_delete_user(client: FlaskClient, admin_logged_in: User):
-    """test_delete_user"""
-    with dbSession() as db_session:
-        user = User(name="new_user", password="Q!111111")
-        db_session.add(user)
-        db_session.commit()
-        assert user.id
+@pytest.mark.parametrize(
+    ("name", "order"), (
+        ("user1", 0),
+        ("user2", 1),
+        ("user3", 2),
+        ("user4", 3),
+        ("user5", None),
+        ("user6", None),
+        ("user7", 4),
+))
+def test_edit_user_clean_order_choices(
+        client: FlaskClient, admin_logged_in: User,
+        name, order):
+    """test_edit_user_clean_order_choices"""
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
+        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+        response = client.get(
+            url_for("users.edit_user", username=name))
+    if order is not None:
+        assert cleaning_schedule.name in response.text
+        assert 'value="0">This week</option>' in response.text
+        assert 'value="1">In 1 week</option>' in response.text
+        assert 'value="2">In 2 weeks</option>' in response.text
+        assert 'value="3">In 3 weeks</option>' in response.text
+        assert 'value="4">In 4 weeks</option>' in response.text
+        assert f'<option selected value="{order}">' in response.text
+    else:
+        assert cleaning_schedule.name not in response.text
+        assert 'value="0">This week</option>' not in response.text
+        assert 'value="1">In 1 week</option>' not in response.text
+        assert 'value="2">In 2 weeks</option>' not in response.text
+        assert 'value="3">In 3 weeks</option>' not in response.text
+        assert 'value="4">In 4 weeks</option>' not in response.text
+
+
+def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
+    """test_edit_user_clean_order"""
+    with client:
+        client.get("/")
+        assert session["user_name"] == admin_logged_in.name
+        assert session["admin"]
+        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+
+        with dbSession() as db_session:
+            user = db_session.get(User, 1)
+        response = client.get(
+            url_for("users.edit_user", username=user.name))
+        assert user.name in response.text
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "details": user.details,
+            "email": user.email,
+            "check_inv": user.check_inv,
+            "admin": user.admin,
+            "in_use": user.in_use,
+            "sat_group": user.sat_group,
+            "clean_order": "2",
+            "submit": True,
+            }
+        response = client.post(
+            url_for("users.edit_user", username=user.name),
+            data=data,
+            follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert "Schedule updated" in response.text
+        assert "User updated" not in response.text
+        assert cleaning_schedule.current_order() == [2, 3, 1, 4, 7]
+
+        assert session["admin"]
+        with dbSession() as db_session:
+            user = db_session.get(User, 4)
+        response = client.get(
+            url_for("users.edit_user", username=user.name))
+        assert user.name in response.text
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "details": user.details,
+            "email": user.email,
+            "check_inv": user.check_inv,
+            "admin": user.admin,
+            "in_use": user.in_use,
+            "sat_group": user.sat_group,
+            "clean_order": "4",
+            "submit": True,
+            }
+        response = client.post(
+            url_for("users.edit_user", username=user.name),
+            data=data,
+            follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert "Schedule updated" in response.text
+        assert "User updated" not in response.text
+        assert cleaning_schedule.current_order() == [2, 3, 1, 7, 4]
+
+        assert session["admin"]
+        with dbSession() as db_session:
+            user = db_session.get(User, 7)
+        response = client.get(
+            url_for("users.edit_user", username=user.name))
+        assert user.name in response.text
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "details": user.details,
+            "email": user.email,
+            "check_inv": user.check_inv,
+            "admin": user.admin,
+            "in_use": user.in_use,
+            "sat_group": user.sat_group,
+            "clean_order": "0",
+            "submit": True,
+            }
+        response = client.post(
+            url_for("users.edit_user", username=user.name),
+            data=data,
+            follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("main.index")
+        assert "Schedule updated" in response.text
+        assert "User updated" not in response.text
+        assert cleaning_schedule.current_order() == [7, 2, 3, 1, 4]
+        # teardown
+        cleaning_schedule.unregister()
+        cleaning_schedule.register()
+
+
+@pytest.mark.parametrize(
+        ("user_id", "clean_order", "flash_err"), (
+            (1, "", "Not a valid choice"),
+            (2, " ", "Not a valid choice"),
+            (3, None, "Not a valid choice"),
+            (4, "-2", "Not a valid choice"),
+            (2, "5", "Not a valid choice"),
+))
+def test_failed_edit_user_clean_order(
+        client: FlaskClient, admin_logged_in: User,
+        user_id, clean_order, flash_err):
+    """test_failed_edit_user_clean_order"""
+    with client:
+        client.get("/")
+        assert session["user_name"] == admin_logged_in.name
+        assert session["admin"]
+        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+
+        with dbSession() as db_session:
+            user = db_session.get(User, user_id)
+        response = client.get(
+            url_for("users.edit_user", username=user.name))
+        assert user.name in response.text
+        data = {
+            "csrf_token": g.csrf_token,
+            "name": user.name,
+            "details": user.details,
+            "email": user.email,
+            "check_inv": user.check_inv,
+            "admin": user.admin,
+            "in_use": user.in_use,
+            "sat_group": user.sat_group,
+            "clean_order": clean_order,
+            "submit": True,
+            }
+        response = client.post(
+            url_for("users.edit_user", username=user.name),
+            data=data,
+            follow_redirects=True)
+        assert "Schedule updated" not in response.text
+        assert "User updated" not in response.text
+        assert flash_err in response.text
+        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+# endregion
+
+
+# region: delete user
+def test_delete_user(
+        client: FlaskClient, admin_logged_in: User, caplog: LogCaptureFixture):
+    """test_delete_user"""
+    with dbSession() as db_session:
+        user = User(name="new_user", password="Q!111111", reg_req=False)
+        db_session.add(user)
+        db_session.commit()
+        cleaning_schedule.add_user(user.id)
+        assert f"Schedule '{cleaning_schedule.name}' added '{user.name}'" \
+            in caplog.messages
+    with client:
+        client.get("/")
+        assert session["user_name"] == admin_logged_in.name
+        assert session["admin"]
+        response = client.get(url_for("sch.schedules"))
+        assert user.name in response.text
         response = client.get(url_for("users.edit_user", username=user.name))
         assert user.name in response.text
         data = {
@@ -931,14 +1154,19 @@ def test_delete_user(client: FlaskClient, admin_logged_in: User):
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
-        assert response.request.path == url_for("main.index")
+        assert response.request.path == url_for("sch.schedules")
         assert f"User '{user.name}' has been deleted" \
             in unescape(response.text)
+        response = client.get(url_for("sch.schedules"))
+        assert user.name not in response.text
+        assert (f"Schedule '{cleaning_schedule.name}' removed user with id " +
+                f"'{user.id}'") in caplog.messages
     with dbSession() as db_session:
         assert not db_session.get(User, user.id)
 
 
-def test_delete_user_admin_log_out(client: FlaskClient):
+def test_delete_user_admin_log_out(
+        client: FlaskClient, caplog: LogCaptureFixture):
     """test_delete_user_admin_log_out"""
     with dbSession() as db_session:
         user = User(
@@ -948,6 +1176,7 @@ def test_delete_user_admin_log_out(client: FlaskClient):
             reg_req=False)
         db_session.add(user)
         db_session.commit()
+        cleaning_schedule.add_user(user.id)
         assert user.id
     with client:
         client.get("/")
@@ -973,6 +1202,8 @@ def test_delete_user_admin_log_out(client: FlaskClient):
         assert response.history[1].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
+        assert (f"Schedule '{cleaning_schedule.name}' removed user with id " +
+                f"'{user.id}'") in caplog.messages
         assert "Succesfully logged out..." in response.text
 
 

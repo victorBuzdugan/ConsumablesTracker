@@ -13,7 +13,7 @@ Based on the business, there can be a lot of consumables that you would want to 
 The app is available in english and romanian, but can also be translated to other languages because of already existing _.pot_ file and _gettext_ methods.
 
 ## Schedules
-The app includes a group schedule that allows the users to be split in two or more groups and flexible time interval between groups.
+The app includes a group schedule that allows the users to be split in two or more groups and flexible time interval between groups. Also includes an individual schedule where users are rotated on a flexible time interval.
 
 # Live demo
 
@@ -216,7 +216,7 @@ If you are sure that you won't need this element in the (at least) near future (
 All elements (except products) cannot be deleted or retired if they still have products (also retired products) attached to them. If you could delete (or retire) a user then all the product would remain orphan by not having a responsable for inventorying them. In order to delete (or retire) an element you must first reassign all the attached products.
 
 ### Edit user
-Along with with all the fields presented in [create new user](https://github.com/victorBuzdugan/ConsumablesTracker#new-user) you can switch the inventory check to release inventory for this user as explained in the [inventory check start](https://github.com/victorBuzdugan/ConsumablesTracker#inventory-check-start).
+Along with with all the fields presented in [create new user](https://github.com/victorBuzdugan/ConsumablesTracker#new-user) you can switch the inventory check to release inventory for this user as explained in the [inventory check start](https://github.com/victorBuzdugan/ConsumablesTracker#inventory-check-start) and change the user's order in the individual schedule.
 
 ### Edit category, supplier
 You can edit all the fields as described in [create new category or supplier](https://github.com/victorBuzdugan/ConsumablesTracker#new-category-or-supplier).
@@ -240,7 +240,7 @@ The app has every feature tested with `pytest`. The tests are provided in the re
 ## Daily tasks
 Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
 
-The app provides a file (`daily_task.py`) that includes tasks like daily database backup or daily database reinitialization.
+The app provides a file (`daily_task.py`) that includes tasks like daily database backup, daily database reinitialization or schedules update.
 
 ### Backup function
 Makes a backup of the database, overwriting the previous backup if it exists. The function also [vacuums](https://www.sqlite.org/lang_vacuum.html) the working database file. The function doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
@@ -259,9 +259,9 @@ The log records have timezone configuration and also point to the user that prod
 The log level is preset on `DEBUG`.
 
 ## Schedules
-The app features group schedules allowing the users to be split in two or more groups. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, wich group should be first and a date for when the schedule should start.
+The app features group schedules allowing the users to be split in two or more groups or individual schedules. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, wich group should be first and a date for when the schedule should start.
 
-The demo website features a "Saturday movie" schedule in wich users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week.
+The demo website features a "Saturday movie" schedule in wich users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week and a "Cleaning schedule" where users are rotated weekly.
 
 # Flowcharts
 ### User login/registration

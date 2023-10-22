@@ -114,6 +114,7 @@ class CreateProdForm(FlaskForm):
             })
     critical = BooleanField(
         label=lazy_gettext("Critical product"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
@@ -127,12 +128,14 @@ class EditProdForm(CreateProdForm):
     """Edit product form."""
     to_order = BooleanField(
         label=lazy_gettext("To order"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",
                 })
     in_use = BooleanField(
         label=lazy_gettext("In use"),
+        false_values = ("False", False, "false", ""),
         render_kw={
                 "class": "form-check-input",
                 "role": "switch",

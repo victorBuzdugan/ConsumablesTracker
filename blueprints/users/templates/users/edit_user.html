@@ -42,6 +42,13 @@
                 {{ form.sat_group.label(class="text-decoration-underline") }}
             </div>
 
+            {% if form.clean_order.data is not none %}
+                <div class="form-floating mb-3">
+                    {{ form.clean_order }}
+                    {{ form.clean_order.label(class="text-decoration-underline") }}
+                </div>
+            {% endif %}
+            
             <div class="row row-cols-3 row-cols-md-3 g-1 g-md-3 mb-3">
                 <div class="col">
                     <div class="card h-100">
