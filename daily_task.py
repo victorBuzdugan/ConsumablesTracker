@@ -79,30 +79,11 @@ def db_reinit(db_name: str) -> None:
             if not path.isfile(prod_db):
                 raise FileNotFoundError("Database doesn't exist")
             dest = sqlite3.connect(prod_db)
-            # record current schedules dates
-            dest.row_factory = sqlite3.Row
-            cur = dest.cursor()
-            schedules = cur.execute("""
-                SELECT id, next_date, update_date
-                FROM schedules
-                """).fetchall()
             # reinit db
             with source, dest:
                 source.backup(dest)
                 logger.info("Database reinitialised")
             source.close()
-            # write back recorded schedules dates
-            for schedule in schedules:
-                cur.execute("""
-                    UPDATE schedules
-                    SET next_date = ?, update_date = ?
-                    WHERE id = ?
-                    """,
-                    (schedule["next_date"],
-                    schedule["update_date"],
-                    schedule["id"])
-                )
-            dest.commit()
             dest.close()
         except Exception as err:
             logger.warning("Database could not be reinitialised")

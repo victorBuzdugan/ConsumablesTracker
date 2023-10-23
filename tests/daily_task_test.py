@@ -22,10 +22,13 @@ prod_db = path.join(CURR_DIR, TEST_DB_NAME)
 backup_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_backup")
 if date.today().day == 1:   # pragma: no cover
     backup_db = backup_db + "_monthly.db"
-elif date.today().day == 1: # pragma: no cover
+    TASK = "monthly"
+elif date.today().isoweekday() == 1: # pragma: no cover
     backup_db = backup_db + "_weekly.db"
+    TASK = "weekly"
 else:   # pragma: no cover
     backup_db = backup_db + "_daily.db"
+    TASK = "daily"
 orig_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
 temp_db = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
@@ -171,13 +174,13 @@ def test_main_timeline(caplog: LogCaptureFixture):
 def test_db_backup_update_file(caplog: LogCaptureFixture):
     """test_db_backup_update_file"""
     assert not path.isfile(backup_db)
-    db_backup(TEST_DB_NAME)
+    db_backup(TEST_DB_NAME, TASK)
     assert path.isfile(backup_db)
     assert "Starting first-time backup" in caplog.messages
     assert "Database backed up" in caplog.messages
     caplog.clear()
     first_backup_time = path.getmtime(backup_db)
-    db_backup(TEST_DB_NAME)
+    db_backup(TEST_DB_NAME, TASK)
     assert "Starting first-time backup" not in caplog.messages
     assert "Database backed up" in caplog.messages
     assert path.getmtime(backup_db) > first_backup_time
@@ -293,7 +296,7 @@ def test_db_reinit(caplog: LogCaptureFixture):
         assert db_session.get(Schedule, sch_id).next_date == date.today()
     assert "Database reinitialised" in caplog.messages
     caplog.clear()
-    # test remember schedules dates
+    # test DON'T remember schedules dates
     with freeze_time(date.today() + timedelta(days=1)):
         update_schedules(TEST_DB_NAME, date.today())
     assert f"Schedule '{SAT_GROUP_SCH['db_name']}' element '1' will be updated"\
@@ -306,11 +309,12 @@ def test_db_reinit(caplog: LogCaptureFixture):
             == date.today() + timedelta(weeks=2)
     db_reinit(TEST_DB_NAME)
     assert "Database reinitialised" in caplog.messages
-    update_schedules(TEST_DB_NAME, date.today())
+    with freeze_time(date.today() + timedelta(days=1)):
+        update_schedules(TEST_DB_NAME, date.today())
     assert f"Schedule '{SAT_GROUP_SCH['db_name']}' element '1' will be updated"\
-        not in caplog.messages
-    assert "1 schedule(s) updated" not in caplog.messages
-    assert "No need to update schedules" in caplog.messages
+        in caplog.messages
+    assert "1 schedule(s) updated" in caplog.messages
+    assert "No need to update schedules" not in caplog.messages
     with dbSession() as db_session:
         assert db_session.get(Schedule, sch_id).next_date \
             == date.today() + timedelta(weeks=2)

@@ -1058,8 +1058,14 @@ def test_schedule_page_user_logged_in(
         # individual schedule dates
         # pylint: disable=protected-access
         first_date = cleaning_schedule._first_date()
-        assert f"<b>{first_date.strftime('%d.%m.%Y')}</b>" \
-            not in response.text
+        with dbSession() as db_session:
+            this_user_date = db_session.scalar(
+                select(Schedule.next_date)
+                .filter_by(
+                    name=cleaning_schedule.name,
+                    elem_id=user_logged_in.id))
+        assert f"<b>{this_user_date.strftime('%d.%m.%Y')}</b>" \
+            in response.text
         for week in range(len(users_in_use)):
             assert (first_date + timedelta(weeks=week)
                     ).strftime("%d.%m.%Y") in response.text
