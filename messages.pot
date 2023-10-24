@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-22 13:38+0300\n"
+"POT-Creation-Date: 2023-10-24 15:37+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: app.py:60
+#: app.py:62
 msgid "Language changed"
 msgstr ""
 
-#: database.py:282 database.py:512 database.py:588 database.py:675
+#: database.py:282 database.py:500 database.py:576 database.py:663
 #, python-format
 msgid "%(el_name)s must have a name"
 msgstr ""
@@ -30,7 +30,7 @@ msgstr ""
 msgid "The user"
 msgstr ""
 
-#: database.py:289 database.py:519 database.py:595 database.py:682
+#: database.py:289 database.py:507 database.py:583 database.py:670
 #, python-format
 msgid "%(el_name)s %(value)s allready exists"
 msgstr ""
@@ -39,11 +39,11 @@ msgstr ""
 msgid "User must have a password"
 msgstr ""
 
-#: database.py:314 database.py:707 database.py:733
+#: database.py:314 database.py:695 database.py:721
 msgid "'Retired' users can't have products attached"
 msgstr ""
 
-#: database.py:317 database.py:710 database.py:736
+#: database.py:317 database.py:698 database.py:724
 msgid "User with pending registration can't have products attached"
 msgstr ""
 
@@ -91,91 +91,91 @@ msgstr ""
 msgid "Users with products attached can't request registration"
 msgstr ""
 
-#: database.py:445
+#: database.py:433
 msgid "Admins don't need to request inventorying"
 msgstr ""
 
-#: database.py:448
+#: database.py:436
 msgid "'Retired' users can't request inventorying"
 msgstr ""
 
-#: database.py:451
+#: database.py:439
 msgid "User with pending registration can't request inventorying"
 msgstr ""
 
-#: database.py:454
+#: database.py:442
 msgid "User can allready check inventory"
 msgstr ""
 
-#: database.py:457
+#: database.py:445
 msgid "Users without products can't request inventorying"
 msgstr ""
 
-#: database.py:513 database.py:520
+#: database.py:501 database.py:508
 msgid "The category"
 msgstr ""
 
-#: database.py:532 database.py:542 database.py:764 database.py:780
+#: database.py:520 database.py:530 database.py:752 database.py:768
 msgid "Not in use category can't have products attached"
 msgstr ""
 
-#: database.py:589 database.py:596
+#: database.py:577 database.py:584
 msgid "The supplier"
 msgstr ""
 
-#: database.py:608 database.py:618 database.py:799 database.py:815
+#: database.py:596 database.py:606 database.py:787 database.py:803
 msgid "Not in use supplier can't have products attached"
 msgstr ""
 
-#: database.py:676 database.py:683
+#: database.py:664 database.py:671
 msgid "The product"
 msgstr ""
 
-#: database.py:691
+#: database.py:679
 msgid "Product must have a description"
 msgstr ""
 
-#: database.py:700
+#: database.py:688
 msgid "User can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:704 database.py:730
+#: database.py:692 database.py:718
 msgid "User does not exist"
 msgstr ""
 
-#: database.py:757
+#: database.py:745
 msgid "Category can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:761 database.py:777
+#: database.py:749 database.py:765
 msgid "Category does not exist"
 msgstr ""
 
-#: database.py:792
+#: database.py:780
 msgid "Supplier can't be deleted or does not exist"
 msgstr ""
 
-#: database.py:796 database.py:812
+#: database.py:784 database.py:800
 msgid "Supplier does not exist"
 msgstr ""
 
-#: database.py:823
+#: database.py:811
 msgid "Product must have a measuring unit"
 msgstr ""
 
-#: database.py:832 database.py:834
+#: database.py:820 database.py:822
 msgid "Minimum stock must be ≥ 0"
 msgstr ""
 
-#: database.py:843 database.py:845
+#: database.py:831 database.py:833
 msgid "Order quantity must be ≥ 1"
 msgstr ""
 
-#: database.py:853
+#: database.py:841
 msgid "Can't order not in use products"
 msgstr ""
 
-#: database.py:862
+#: database.py:850
 msgid "Can't 'retire' a product that needs to be ordered"
 msgstr ""
 
@@ -250,7 +250,7 @@ msgstr ""
 
 #: blueprints/auth/auth.py:168
 #: blueprints/auth/templates/auth/change_password.html:16
-#: templates/layout.html:43
+#: templates/layout.html:45
 msgid "Change password"
 msgstr ""
 
@@ -346,7 +346,7 @@ msgid "Enter password"
 msgstr ""
 
 #: blueprints/auth/templates/auth/register.html:7
-#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:47
+#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:49
 msgid "Register"
 msgstr ""
 
@@ -458,7 +458,7 @@ msgid "You have to select a new responsible first"
 msgstr ""
 
 #: blueprints/cat/templates/cat/categories.html:3
-#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:27
+#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:29
 msgid "Categories"
 msgstr ""
 
@@ -635,7 +635,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:37
 #: blueprints/prod/templates/prod/products_to_oder.html:23
 #: blueprints/sup/templates/sup/reassign_supplier.html:24
-#: templates/layout.html:35
+#: templates/layout.html:37
 msgid "Category"
 msgstr ""
 
@@ -644,7 +644,7 @@ msgstr ""
 #: blueprints/prod/templates/prod/products.html:44
 #: blueprints/prod/templates/prod/products_to_oder.html:24
 #: blueprints/sup/templates/sup/reassign_supplier.html:25
-#: templates/layout.html:36
+#: templates/layout.html:38
 msgid "Supplier"
 msgstr ""
 
@@ -669,6 +669,59 @@ msgstr ""
 #: blueprints/cat/templates/cat/reassign_category.html:80
 #: blueprints/sup/templates/sup/reassign_supplier.html:80
 msgid "This will reassign"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:3
+#: blueprints/guide/templates/guide/guide.html:8 templates/layout.html:26
+msgid "Guide"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:11
+msgid "Scope"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:12
+msgid ""
+"The scope of this page is to provide general guidelines, rules and extra "
+"informations."
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:13
+msgid "Home usage"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:14
+msgid "Provide home rules and guidelines."
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:15
+msgid "Business usage"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:16
+msgid ""
+"Businesses can really make use of this page by providing company rules, "
+"guidelines and other business specific informations."
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:18
+msgid "Rules/Guides"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:19
+msgid "Provide rules or guideline using tables, graphics..."
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:20
+msgid "Screws torque table"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:25
+msgid "Screw"
+msgstr ""
+
+#: blueprints/guide/templates/guide/guide.html:26
+msgid "Torque"
 msgstr ""
 
 #: blueprints/inv/inv.py:46 blueprints/inv/inv.py:104
@@ -722,7 +775,7 @@ msgstr ""
 
 #: blueprints/inv/templates/inv/inventory.html:30
 #: blueprints/prod/templates/prod/products_to_oder.html:3
-#: templates/layout.html:30
+#: templates/layout.html:32
 msgid "Order"
 msgstr ""
 
@@ -953,7 +1006,7 @@ msgid "Create new product"
 msgstr ""
 
 #: blueprints/prod/templates/prod/products.html:3
-#: blueprints/prod/templates/prod/products.html:8 templates/layout.html:29
+#: blueprints/prod/templates/prod/products.html:8 templates/layout.html:31
 msgid "Products"
 msgstr ""
 
@@ -1092,7 +1145,7 @@ msgid "Reassign all products for supplier"
 msgstr ""
 
 #: blueprints/sup/templates/sup/suppliers.html:3
-#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:28
+#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:30
 msgid "Suppliers"
 msgstr ""
 
@@ -1222,15 +1275,15 @@ msgstr ""
 msgid "Schedule"
 msgstr ""
 
-#: templates/layout.html:32
+#: templates/layout.html:34
 msgid "New"
 msgstr ""
 
-#: templates/layout.html:34
+#: templates/layout.html:36
 msgid "User"
 msgstr ""
 
-#: templates/layout.html:37
+#: templates/layout.html:39
 msgid "Product"
 msgstr ""
 

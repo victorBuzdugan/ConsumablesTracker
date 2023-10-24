@@ -23,6 +23,8 @@
                     <ul class="navbar-nav me-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href={{ url_for("inv.inventory") }}>{{ gettext("Inventory") }}</a></li>
                         <li class="nav-item"><a class="nav-link" href={{ url_for("sch.schedules") }}>{{ gettext("Schedule") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href={{ url_for("guide.guide") }}>{{ gettext("Guide") }}</a></li>
+                        <li class="m-1"></li>
                         {% if session["admin"] %}
                         <li class="nav-item"><a class="nav-link" href={{ url_for("cat.categories") }}>{{ gettext("Categories") }}</a></li>
                         <li class="nav-item"><a class="nav-link" href={{ url_for("sup.suppliers") }}>{{ gettext("Suppliers") }}</a></li>

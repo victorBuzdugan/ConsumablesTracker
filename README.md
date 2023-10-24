@@ -243,7 +243,12 @@ Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage 
 The app provides a file (`daily_task.py`) that includes tasks like daily database backup, daily database reinitialization or schedules update.
 
 ### Backup function
-Makes a backup of the database, overwriting the previous backup if it exists. The function also [vacuums](https://www.sqlite.org/lang_vacuum.html) the working database file. The function doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
+Makes backups of the database, overwriting the previous backup if it exists. The function also [vacuums](https://www.sqlite.org/lang_vacuum.html) the working database file. The function doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
+
+There are 3 instances of backups:
+- a monthly backup
+- a weekly backup
+- a daily backup
 
 ### Re-init function
 Reintializes the database to a preset state (as used for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#website)). In order to use this function a file with the same name as the database file but with __orig_ suffix has to exist in the working directory (ex: if the database name is `inventory.db` the preset state database name should be `inventory_orig.db`). This function, also doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
@@ -262,6 +267,9 @@ The log level is preset on `DEBUG`.
 The app features group schedules allowing the users to be split in two or more groups or individual schedules. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, wich group should be first and a date for when the schedule should start.
 
 The demo website features a "Saturday movie" schedule in wich users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week and a "Cleaning schedule" where users are rotated weekly.
+
+## Guide page
+A guide page for presenting general guidelines, rules and other informations.
 
 # Flowcharts
 ### User login/registration

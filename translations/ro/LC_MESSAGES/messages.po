@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v1.9\n"
+"Project-Id-Version:  v1.91\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-10-22 13:38+0300\n"
+"POT-Creation-Date: 2023-10-24 15:37+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -19,11 +19,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: app.py:60
+#: app.py:62
 msgid "Language changed"
 msgstr "Limba a fost schimbată"
 
-#: database.py:282 database.py:512 database.py:588 database.py:675
+#: database.py:282 database.py:500 database.py:576 database.py:663
 #, python-format
 msgid "%(el_name)s must have a name"
 msgstr "%(el_name)s trebuie să aibă un nume"
@@ -32,7 +32,7 @@ msgstr "%(el_name)s trebuie să aibă un nume"
 msgid "The user"
 msgstr "Utilizatorul"
 
-#: database.py:289 database.py:519 database.py:595 database.py:682
+#: database.py:289 database.py:507 database.py:583 database.py:670
 #, python-format
 msgid "%(el_name)s %(value)s allready exists"
 msgstr "%(el_name)s %(value)s există deja"
@@ -41,11 +41,11 @@ msgstr "%(el_name)s %(value)s există deja"
 msgid "User must have a password"
 msgstr "Utilizatorul trebuie să aibă o parolă"
 
-#: database.py:314 database.py:707 database.py:733
+#: database.py:314 database.py:695 database.py:721
 msgid "'Retired' users can't have products attached"
 msgstr "Utilizatorii scoși din uz nu pot fi responsabili de produse"
 
-#: database.py:317 database.py:710 database.py:736
+#: database.py:317 database.py:698 database.py:724
 msgid "User with pending registration can't have products attached"
 msgstr "Utilizatorii în curs de aprobare nu pot fi responsabili de produse"
 
@@ -97,93 +97,93 @@ msgstr ""
 "Un utilizator ce răspunde de produse nu poate cere aprobare pentru "
 "înregistrare"
 
-#: database.py:445
+#: database.py:433
 msgid "Admins don't need to request inventorying"
 msgstr "Administratorii nu trebuie să ceară inventariere"
 
-#: database.py:448
+#: database.py:436
 msgid "'Retired' users can't request inventorying"
 msgstr "Un utilizator scos din uz nu poate cere inventariere"
 
-#: database.py:451
+#: database.py:439
 msgid "User with pending registration can't request inventorying"
 msgstr "Un utilizator în curs de aprobare nu poate cere inventariere"
 
-#: database.py:454
+#: database.py:442
 msgid "User can allready check inventory"
 msgstr "Utilizatorul poate deja inventaria"
 
-#: database.py:457
+#: database.py:445
 msgid "Users without products can't request inventorying"
 msgstr ""
 "Un utilizator nu poate cere inventariere dacă nu răspunde de nici un "
 "produs"
 
-#: database.py:513 database.py:520
+#: database.py:501 database.py:508
 msgid "The category"
 msgstr "Categoria"
 
-#: database.py:532 database.py:542 database.py:764 database.py:780
+#: database.py:520 database.py:530 database.py:752 database.py:768
 msgid "Not in use category can't have products attached"
 msgstr "O categorie scoasă din uz nu poate avea produse atașate"
 
-#: database.py:589 database.py:596
+#: database.py:577 database.py:584
 msgid "The supplier"
 msgstr "Furnizorul"
 
-#: database.py:608 database.py:618 database.py:799 database.py:815
+#: database.py:596 database.py:606 database.py:787 database.py:803
 msgid "Not in use supplier can't have products attached"
 msgstr "Un furnizor scos din uz nu poate avea produse atașate"
 
-#: database.py:676 database.py:683
+#: database.py:664 database.py:671
 msgid "The product"
 msgstr "Produsul"
 
-#: database.py:691
+#: database.py:679
 msgid "Product must have a description"
 msgstr "Produsul trebuie să aibă o descriere"
 
-#: database.py:700
+#: database.py:688
 msgid "User can't be deleted or does not exist"
 msgstr "Utilizatorul nu poate fi șters sau nu există"
 
-#: database.py:704 database.py:730
+#: database.py:692 database.py:718
 msgid "User does not exist"
 msgstr "Utilizatorul nu există"
 
-#: database.py:757
+#: database.py:745
 msgid "Category can't be deleted or does not exist"
 msgstr "Categoria nu poate fi ștearsă sau nu există"
 
-#: database.py:761 database.py:777
+#: database.py:749 database.py:765
 msgid "Category does not exist"
 msgstr "Categoria nu există"
 
-#: database.py:792
+#: database.py:780
 msgid "Supplier can't be deleted or does not exist"
 msgstr "Furnizorul nu poate fi șters sau nu există"
 
-#: database.py:796 database.py:812
+#: database.py:784 database.py:800
 msgid "Supplier does not exist"
 msgstr "Furnizorul nu există"
 
-#: database.py:823
+#: database.py:811
 msgid "Product must have a measuring unit"
 msgstr "Produsul trebuie să aibă unitate de măsură"
 
-#: database.py:832 database.py:834
+#: database.py:820 database.py:822
 msgid "Minimum stock must be ≥ 0"
 msgstr "Stocul minim trebuie să fie ≥ 0"
 
-#: database.py:843 database.py:845
+#: database.py:831 database.py:833
 msgid "Order quantity must be ≥ 1"
 msgstr "Cantitatea de comandă trebui să fie ≥ 1"
 
-#: database.py:853
+#: database.py:841
 msgid "Can't order not in use products"
 msgstr "Nu se poate comanda un produs scos din uz"
 
-#: database.py:862
+#: database.py:850
 msgid "Can't 'retire' a product that needs to be ordered"
 msgstr "Nu se poate scoate din uz un produs ce trebuie comandat"
 
@@ -258,7 +258,7 @@ msgstr "Parola nouă"
 
 #: blueprints/auth/auth.py:168
 #: blueprints/auth/templates/auth/change_password.html:16
-#: templates/layout.html:43
+#: templates/layout.html:45
 msgid "Change password"
 msgstr "Schimbă parola"
 
@@ -354,7 +354,7 @@ msgid "Enter password"
 msgstr "Introdu parola"
 
 #: blueprints/auth/templates/auth/register.html:7
-#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:47
+#: blueprints/auth/templates/auth/register.html:13 templates/layout.html:49
 msgid "Register"
 msgstr "Înregistrare"
 
@@ -466,7 +466,7 @@ msgid "You have to select a new responsible first"
 msgstr "Trebuie să selectezi un responsabil mai întâi"
 
 #: blueprints/cat/templates/cat/categories.html:3
-#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:27
+#: blueprints/cat/templates/cat/categories.html:8 templates/layout.html:29
 msgid "Categories"
 msgstr "Categorii"
 
@@ -648,7 +648,7 @@ msgstr "Responsabil"
 #: blueprints/prod/templates/prod/products.html:37
 #: blueprints/prod/templates/prod/products_to_oder.html:23
 #: blueprints/sup/templates/sup/reassign_supplier.html:24
-#: templates/layout.html:35
+#: templates/layout.html:37
 msgid "Category"
 msgstr "Categorie"
 
@@ -657,7 +657,7 @@ msgstr "Categorie"
 #: blueprints/prod/templates/prod/products.html:44
 #: blueprints/prod/templates/prod/products_to_oder.html:24
 #: blueprints/sup/templates/sup/reassign_supplier.html:25
-#: templates/layout.html:36
+#: templates/layout.html:38
 msgid "Supplier"
 msgstr "Furnizor"
 
@@ -683,6 +683,64 @@ msgstr "Redistribui toate produsele"
 #: blueprints/sup/templates/sup/reassign_supplier.html:80
 msgid "This will reassign"
 msgstr "Se vor redistribui"
+
+#: blueprints/guide/templates/guide/guide.html:3
+#: blueprints/guide/templates/guide/guide.html:8 templates/layout.html:26
+msgid "Guide"
+msgstr "Ghid"
+
+#: blueprints/guide/templates/guide/guide.html:11
+msgid "Scope"
+msgstr "Scop"
+
+#: blueprints/guide/templates/guide/guide.html:12
+msgid ""
+"The scope of this page is to provide general guidelines, rules and extra "
+"informations."
+msgstr ""
+"Scopul paginii este de a prezenta instrucțiuni generale, reguli și "
+"informații suplimentare."
+
+#: blueprints/guide/templates/guide/guide.html:13
+msgid "Home usage"
+msgstr "Utilizare acasă"
+
+#: blueprints/guide/templates/guide/guide.html:14
+msgid "Provide home rules and guidelines."
+msgstr "Prezintă regulile și instrucțiunile casei."
+
+#: blueprints/guide/templates/guide/guide.html:15
+msgid "Business usage"
+msgstr "Utilizare business"
+
+#: blueprints/guide/templates/guide/guide.html:16
+msgid ""
+"Businesses can really make use of this page by providing company rules, "
+"guidelines and other business specific informations."
+msgstr ""
+"Companiile pot folosi cu adevărat această pagină prezentând regulile, "
+"instrucțiunile și alte informații suplimentare legate de domeniul de "
+"activitate."
+
+#: blueprints/guide/templates/guide/guide.html:18
+msgid "Rules/Guides"
+msgstr "Reguli/Ghiduri"
+
+#: blueprints/guide/templates/guide/guide.html:19
+msgid "Provide rules or guideline using tables, graphics..."
+msgstr "Prezintă reguli sau ghiduri folosind tabele, elemente grafice..."
+
+#: blueprints/guide/templates/guide/guide.html:20
+msgid "Screws torque table"
+msgstr "Cuplu de strângere șuruburi"
+
+#: blueprints/guide/templates/guide/guide.html:25
+msgid "Screw"
+msgstr "Șurub"
+
+#: blueprints/guide/templates/guide/guide.html:26
+msgid "Torque"
+msgstr "Cuplu"
 
 #: blueprints/inv/inv.py:46 blueprints/inv/inv.py:104
 msgid "Inventory has been submitted"
@@ -737,7 +795,7 @@ msgstr "Stoc min."
 
 #: blueprints/inv/templates/inv/inventory.html:30
 #: blueprints/prod/templates/prod/products_to_oder.html:3
-#: templates/layout.html:30
+#: templates/layout.html:32
 msgid "Order"
 msgstr "Comandă"
 
@@ -973,7 +1031,7 @@ msgid "Create new product"
 msgstr "Creează un produs nou"
 
 #: blueprints/prod/templates/prod/products.html:3
-#: blueprints/prod/templates/prod/products.html:8 templates/layout.html:29
+#: blueprints/prod/templates/prod/products.html:8 templates/layout.html:31
 msgid "Products"
 msgstr "Produse"
 
@@ -1113,7 +1171,7 @@ msgid "Reassign all products for supplier"
 msgstr "Redistribuie toate produsele pentru furnizor"
 
 #: blueprints/sup/templates/sup/suppliers.html:3
-#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:28
+#: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:30
 msgid "Suppliers"
 msgstr "Furnizori"
 
@@ -1246,15 +1304,15 @@ msgstr "Creează un utilizator nou"
 msgid "Schedule"
 msgstr "Program"
 
-#: templates/layout.html:32
+#: templates/layout.html:34
 msgid "New"
 msgstr "Creează"
 
-#: templates/layout.html:34
+#: templates/layout.html:36
 msgid "User"
 msgstr "Utilizator"
 
-#: templates/layout.html:37
+#: templates/layout.html:39
 msgid "Product"
 msgstr "Produs"
 

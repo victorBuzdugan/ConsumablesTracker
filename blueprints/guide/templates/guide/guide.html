@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block title %}{{ gettext("Guide") }}{% endblock %}
+
+{% block main %}
+<div class="card mx-auto mb-3" style="max-width: 40rem;">
+    <div class="card-header h5 py-2">
+        {{ gettext("Guide") }}
+    </div>
+    <div class="card-body">
+        <h5 class="card-title mb-3">{{ gettext("Scope") }}</h5>
+        <p class="card-text">{{ gettext("The scope of this page is to provide general guidelines, rules and extra informations.") }}</p>
+        <h6 class="card-subtitle text-body-secondary">{{ gettext("Home usage") }}</h6>
+        <p class="card-text">{{ gettext("Provide home rules and guidelines.") }}</p>
+        <h6 class="card-subtitle text-body-secondary">{{ gettext("Business usage") }}</h6>
+        <p class="card-text">{{ gettext("Businesses can really make use of this page by providing company rules, guidelines and other business specific informations.") }}</p>
+        <hr>
+        <h5 class="card-title mb-3">{{ gettext("Rules/Guides") }}</h5>
+        <p class="card-text">{{ gettext("Provide rules or guideline using tables, graphics...") }}</p>
+        <h6 class="card-subtitle text-body-secondary mb-1">{{ gettext("Screws torque table") }}</h6>
+        <div class="table-responsive mx-auto mb-3" style="max-width: 30rem;">
+            <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
+                <thead>
+                    <tr>
+                        <th class="px-3">{{ gettext("Screw") }}</th>
+                        <th class="px-3">{{ gettext("Torque") }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>M6</td>
+                        <td>14 Nm</td>
+                    </tr>
+                    <tr>
+                        <td>M8</td>
+                        <td>28 Nm</td>
+                    </tr>
+                    <tr>
+                        <td>M10</td>
+                        <td>50 Nm</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
