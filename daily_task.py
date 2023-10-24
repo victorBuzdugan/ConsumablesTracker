@@ -14,14 +14,14 @@ from helpers import CURR_DIR, DB_NAME, logger
 def main(db_name: str = DB_NAME) -> None:
     """Run tasks."""
     # daily tasks
-    db_reinit(db_name)
-    update_schedules(db_name)
     if date.today().day == 1:
         db_backup(db_name, "monthly")
     elif date.today().isoweekday() == 1:
         db_backup(db_name, "weekly")
     else:
         db_backup(db_name, "daily")
+    db_reinit(db_name)
+    update_schedules(db_name)
 
 def db_backup(db_name: str, task: str = "daily") -> None:
     """Backup and vacuum the database."""
@@ -116,8 +116,8 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
                 """, (schedule["type"], schedule["name"])
                 ).fetchone()[0]
             next_date = date.fromisoformat(schedule["next_date"])
-            sch_interval = (timedelta(days=schedule["update_interval"])
-                            * sch_count)
+            sch_interval = (
+                timedelta(days=schedule["update_interval"]) * sch_count)
             diff = math.ceil((base_date - next_date).days
                              / sch_interval.days)
             next_date += sch_interval * diff

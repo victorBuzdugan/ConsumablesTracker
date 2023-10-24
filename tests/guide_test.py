@@ -21,8 +21,8 @@ def test_guide_page_not_logged_in(client: FlaskClient):
         assert response.request.path == url_for("auth.login")
         assert 'type="submit" value="Log In"' in response.text
         assert "You have to be logged in..." in response.text
-        assert "Scope" not in response.text
-        assert "Rules/Guides" not in response.text
+        assert "M10" not in response.text
+        assert "50 Nm" not in response.text
 
 
 def test_guide_page_user_logged_in(client: FlaskClient, user_logged_in: User):
@@ -33,8 +33,8 @@ def test_guide_page_user_logged_in(client: FlaskClient, user_logged_in: User):
         assert not session["admin"]
         response = client.get(url_for("guide.guide"))
         assert response.status_code == 200
-        assert "Scope" in response.text
-        assert "Rules/Guides" in response.text
+        assert "M10" in response.text
+        assert "50 Nm" in response.text
 
 
 def test_guide_page_admin_logged_in(client: FlaskClient, admin_logged_in: User):
@@ -45,5 +45,5 @@ def test_guide_page_admin_logged_in(client: FlaskClient, admin_logged_in: User):
         assert session["admin"]
         response = client.get(url_for("guide.guide"))
         assert response.status_code == 200
-        assert "Scope" in response.text
-        assert "Rules/Guides" in response.text
+        assert "M10" in response.text
+        assert "50 Nm" in response.text
