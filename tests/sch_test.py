@@ -9,9 +9,9 @@ from freezegun import freeze_time
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
-from blueprints.sch import CLEANING_SCH, SAT_GROUP_SCH
+from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import (BaseSchedule, GroupSchedule, IndivSchedule,
-                                cleaning_schedule)
+                                cleaning_sch)
 from database import Schedule, User, dbSession
 
 pytestmark = pytest.mark.sch
@@ -228,13 +228,13 @@ def test_explicit_group_schedule_creation_3(caplog: LogCaptureFixture):
 def test_failed_group_schedule_creation_duplicate(caplog: LogCaptureFixture):
     """test_failed_group_schedule_creation_duplicate"""
     GroupSchedule(
-        name=SAT_GROUP_SCH["db_name"],
+        name=sat_sch_info.name_en,
         user_attr=User.sat_group.name,
         sch_day=6,
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
         start_date=date.today()).register()
-    assert f"Schedule '{SAT_GROUP_SCH['db_name']}' (register): allready exists"\
+    assert f"Schedule '{sat_sch_info.name_en}' (register): allready exists"\
         in caplog.messages
 
 
@@ -689,12 +689,12 @@ def test_explicit_individual_schedule_creation_2(caplog: LogCaptureFixture):
 def test_failed_indiv_schedule_creation_duplicate(caplog: LogCaptureFixture):
     """test_failed_individual_schedule_creation_duplicate"""
     IndivSchedule(
-        name=CLEANING_SCH["db_name"],
+        name=clean_sch_info.name_en,
         sch_day=1,
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
         start_date=date.today()).register()
-    assert f"Schedule '{CLEANING_SCH['db_name']}' (register): allready exists"\
+    assert f"Schedule '{clean_sch_info.name_en}' (register): allready exists"\
         in caplog.messages
 
 
@@ -834,8 +834,8 @@ def test_individual_schedule_unregister(caplog: LogCaptureFixture):
     ("name", "user_ids_order", "start_date",
      "err_msg"), (
         # name
-        (CLEANING_SCH["db_name"], [1, 2, 3, 4, 7], date.today(),
-         f"Schedule '{CLEANING_SCH['db_name']}' (register): allready exists"),
+        (clean_sch_info.name_en, [1, 2, 3, 4, 7], date.today(),
+         f"Schedule '{clean_sch_info.name_en}' (register): allready exists"),
         # user_ids_order
         ("test_sch", [1, 2, 3, 7], date.today(),
          "Schedule 'test_sch' (register): list of id's provided is invalid"),
@@ -887,27 +887,27 @@ def test_failed_individual_schedule_data(caplog: LogCaptureFixture):
         ("test_sch", 1,
          "Schedule 'test_sch' (add_user): is not registered"),
         # user_id
-        (CLEANING_SCH["db_name"], 5,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], None,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], "",
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], " ",
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], "a",
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], 22,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], 0,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], -6,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): invalid user_id"),
-        (CLEANING_SCH["db_name"], 1,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): user with id " +
+        (clean_sch_info.name_en, 5,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, None,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, "",
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, " ",
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, "a",
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, 22,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, 0,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, -6,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): invalid user_id"),
+        (clean_sch_info.name_en, 1,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): user with id " +
          "'1' is already scheduled"),
-        (CLEANING_SCH["db_name"], 3,
-         f"Schedule '{CLEANING_SCH['db_name']}' (add_user): user with id " +
+        (clean_sch_info.name_en, 3,
+         f"Schedule '{clean_sch_info.name_en}' (add_user): user with id " +
          "'3' is already scheduled"),
 ))
 def test_failed_individual_schedule_add_user(
@@ -930,12 +930,12 @@ def test_failed_individual_schedule_add_user(
         ("test_sch", 1,
          "Schedule 'test_sch' (remove_user): is not registered"),
         # user_id (tested thoroughly at failed add user)
-        (CLEANING_SCH["db_name"], "a",
-         f"Schedule '{CLEANING_SCH['db_name']}' (remove_user): " +
+        (clean_sch_info.name_en, "a",
+         f"Schedule '{clean_sch_info.name_en}' (remove_user): " +
          "invalid user_id"),
          # not in schedule
-        (CLEANING_SCH["db_name"], 5,
-         f"Schedule '{CLEANING_SCH['db_name']}' (remove_user): " +
+        (clean_sch_info.name_en, 5,
+         f"Schedule '{clean_sch_info.name_en}' (remove_user): " +
          "user with id '5' is not in the schedule"),
 ))
 def test_failed_individual_schedule_remove_user(
@@ -958,41 +958,41 @@ def test_failed_individual_schedule_remove_user(
         ("test_sch", 1, 1,
          "Schedule 'test_sch' (change_user_pos): is not registered"),
         # user_id (tested thoroughly at failed add user)
-        (CLEANING_SCH["db_name"], 6, 2,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 6, 2,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid user_id"),
         # new_pos
-        (CLEANING_SCH["db_name"], 1, None,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, None,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
-        (CLEANING_SCH["db_name"], 1, "",
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, "",
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
-        (CLEANING_SCH["db_name"], 1, " ",
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, " ",
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
-        (CLEANING_SCH["db_name"], 1, "a",
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, "a",
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
-        (CLEANING_SCH["db_name"], 1, 5,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, 5,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
-        (CLEANING_SCH["db_name"], 1, -2,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, -2,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "invalid new position"),
         # not in schedule
-        (CLEANING_SCH["db_name"], 5, 0,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 5, 0,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "user with id '5' is not in the schedule"),
         # already at position
-        (CLEANING_SCH["db_name"], 1, 0,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 1, 0,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "user with id '1' is already at position"),
-        (CLEANING_SCH["db_name"], 3, 2,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 3, 2,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "user with id '3' is already at position"),
-        (CLEANING_SCH["db_name"], 7, 4,
-         f"Schedule '{CLEANING_SCH['db_name']}' (change_user_pos): " +
+        (clean_sch_info.name_en, 7, 4,
+         f"Schedule '{clean_sch_info.name_en}' (change_user_pos): " +
          "user with id '7' is already at position"),
 ))
 def test_failed_individual_schedule_change_user_position(
@@ -1026,10 +1026,10 @@ def test_schedule_page_user_logged_in(
         response = client.get(url_for("sch.schedules"))
         assert response.status_code == 200
         assert "Schedules" in response.text
-        assert SAT_GROUP_SCH["name_for_test"] in response.text
+        assert sat_sch_info.name_en in response.text
         assert "Group 1" in response.text
         assert "Group 2" in response.text
-        assert CLEANING_SCH["name_for_test"] in response.text
+        assert clean_sch_info.name_en in response.text
         assert f'<span class="fw-bolder">{session["user_name"]}</span>' \
             in response.text
         assert url_for("users.edit_user", username=session["user_name"]) \
@@ -1057,12 +1057,12 @@ def test_schedule_page_user_logged_in(
                 in response.text
         # individual schedule dates
         # pylint: disable=protected-access
-        first_date = cleaning_schedule._first_date()
+        first_date = cleaning_sch._first_date()
         with dbSession() as db_session:
             this_user_date = db_session.scalar(
                 select(Schedule.next_date)
                 .filter_by(
-                    name=cleaning_schedule.name,
+                    name=cleaning_sch.name,
                     elem_id=user_logged_in.id))
         assert f"<b>{this_user_date.strftime('%d.%m.%Y')}</b>" \
             in response.text
@@ -1081,8 +1081,8 @@ def test_schedule_page_group_schedule_admin_logged_in(
         response = client.get(url_for("sch.schedules"))
         assert response.status_code == 200
         assert "Schedules" in response.text
-        assert SAT_GROUP_SCH["name_for_test"] in response.text
-        assert CLEANING_SCH["name_for_test"] in response.text
+        assert sat_sch_info.name_en in response.text
+        assert clean_sch_info.name_en in response.text
         assert "Group 1" in response.text
         assert "Group 2" in response.text
         assert f"<b>{date.today().strftime('%d.%m.%Y')}</b>" \
@@ -1096,7 +1096,7 @@ def test_schedule_page_group_schedule_admin_logged_in(
         assert url_for("users.edit_user", username=session["user_name"]) \
             in response.text
         # pylint: disable=protected-access
-        first_date = cleaning_schedule._first_date()
+        first_date = cleaning_sch._first_date()
         assert f"<b>{first_date.strftime('%d.%m.%Y')}</b>" \
             in response.text
 # endregion

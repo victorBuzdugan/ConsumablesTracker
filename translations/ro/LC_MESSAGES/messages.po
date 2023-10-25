@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  v1.91\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-10-24 15:37+0300\n"
+"POT-Creation-Date: 2023-10-25 17:11+0300\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -242,7 +242,7 @@ msgstr "Reintrodu parola"
 
 #: blueprints/auth/auth.py:112 blueprints/users/users.py:72
 msgid "Invalid email adress"
-msgstr ""
+msgstr "Adresă email invalidă"
 
 #: blueprints/auth/auth.py:119
 msgid "Request registration"
@@ -1066,27 +1066,27 @@ msgstr "Confirmă toate produsele comandate"
 msgid "Confirm that all products were ordered"
 msgstr "Confirmă că toate produsele au fost comandate"
 
-#: blueprints/sch/__init__.py:18
+#: blueprints/sch/__init__.py:46
 msgid "Saturday movie"
 msgstr "Filmul de sâmbătă"
 
-#: blueprints/sch/__init__.py:21
+#: blueprints/sch/__init__.py:48
 msgid "You're choosing the movie this saturday"
 msgstr "Sâmbăta asta alegi filmul"
 
-#: blueprints/sch/__init__.py:23
+#: blueprints/sch/__init__.py:50
 msgid "You're not choosing the movie this saturday"
 msgstr "Sâmbăta asta nu alegi filmul"
 
-#: blueprints/sch/__init__.py:26
+#: blueprints/sch/__init__.py:59
 msgid "Cleaning schedule"
 msgstr "Program curățenie"
 
-#: blueprints/sch/__init__.py:29
+#: blueprints/sch/__init__.py:61
 msgid "You're scheduled for cleaning this week"
 msgstr "Ești programat la curățenie săptămâna asta"
 
-#: blueprints/sch/__init__.py:31
+#: blueprints/sch/__init__.py:63
 msgid "You're not scheduled for cleaning this week"
 msgstr "Nu ești programat la curățenie săptămâna asta"
 

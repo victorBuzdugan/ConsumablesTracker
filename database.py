@@ -15,7 +15,7 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
-from blueprints.sch import SAT_GROUP_SCH, CLEANING_SCH
+from blueprints.sch import clean_sch_info, sat_sch_info
 from helpers import CURR_DIR, DB_NAME, logger
 
 func: Callable
@@ -255,7 +255,7 @@ class User(Base):
             if (user_sat_group_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=SAT_GROUP_SCH["db_name"],
+                        name=sat_sch_info.name_en,
                         elem_id=self.sat_group))):
                 return (user_sat_group_date.isocalendar().week ==
                         date.today().isocalendar().week)
@@ -268,7 +268,7 @@ class User(Base):
             if (user_cleaning_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=CLEANING_SCH["db_name"],
+                        name=clean_sch_info.name_en,
                         elem_id=self.id))):
                 return (user_cleaning_date.isocalendar().week ==
                         date.today().isocalendar().week)

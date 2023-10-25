@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
-from blueprints.sch import SAT_GROUP_SCH
+from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import IndivSchedule
 from daily_task import db_backup, db_reinit, main, update_schedules
 from database import Schedule, User, dbSession
@@ -299,9 +299,11 @@ def test_db_reinit(caplog: LogCaptureFixture):
     # test DON'T remember schedules dates
     with freeze_time(date.today() + timedelta(days=1)):
         update_schedules(TEST_DB_NAME, date.today())
-    assert f"Schedule '{SAT_GROUP_SCH['db_name']}' element '1' will be updated"\
+    assert f"Schedule '{sat_sch_info.name_en}' element '1' will be updated"\
         in caplog.messages
-    assert "1 schedule(s) updated" in caplog.messages
+    assert f"Schedule '{clean_sch_info.name_en}' element '1' will be updated"\
+        in caplog.messages
+    assert "2 schedule(s) updated" in caplog.messages
     assert "No need to update schedules" not in caplog.messages
     caplog.clear()
     with dbSession() as db_session:
@@ -311,9 +313,11 @@ def test_db_reinit(caplog: LogCaptureFixture):
     assert "Database reinitialised" in caplog.messages
     with freeze_time(date.today() + timedelta(days=1)):
         update_schedules(TEST_DB_NAME, date.today())
-    assert f"Schedule '{SAT_GROUP_SCH['db_name']}' element '1' will be updated"\
+    assert f"Schedule '{sat_sch_info.name_en}' element '1' will be updated"\
         in caplog.messages
-    assert "1 schedule(s) updated" in caplog.messages
+    assert f"Schedule '{clean_sch_info.name_en}' element '1' will be updated"\
+        in caplog.messages
+    assert "2 schedule(s) updated" in caplog.messages
     assert "No need to update schedules" not in caplog.messages
     with dbSession() as db_session:
         assert db_session.get(Schedule, sch_id).next_date \

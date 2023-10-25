@@ -8,9 +8,7 @@ from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine
 
 from app import app, babel
-from blueprints.sch import SAT_GROUP_SCH
-from blueprints.sch.sch import cleaning_schedule
-from blueprints.sch.sch import GroupSchedule
+from blueprints.sch.sch import cleaning_sch, saturday_sch
 from database import Base, Category, Product, Supplier, User, dbSession
 from helpers import DB_NAME, log_handler
 
@@ -664,20 +662,21 @@ def create_test_products():
 def create_test_group_schedule():
     """Mock into db a 2 group 1 week interval schedule."""
     print("\nCreate test group schedule")
-    GroupSchedule(
-        name=SAT_GROUP_SCH["db_name"],
-        user_attr=User.sat_group.name,
-        num_groups=2,
-        first_group=1,
-        sch_day=date.today().isocalendar()[2],
-        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()).register()
+    saturday_sch.sch_day = (date.today()
+                            .isocalendar()[2])
+    saturday_sch.sch_day_update = ((date.today() + timedelta(days=1))
+                                   .isocalendar()[2])
+    saturday_sch.switch_interval = timedelta(weeks=1)
+    saturday_sch.register()
 
 
 @pytest.fixture(scope="session")
 def create_test_individual_schedule():
     """Mock into db a 1 week interval individual schedule."""
     print("\nCreate test individual schedule")
-    cleaning_schedule.register()
+    cleaning_sch.sch_day = (date.today()
+                            .isocalendar()[2])
+    cleaning_sch.sch_day_update = ((date.today() + timedelta(days=1))
+                                   .isocalendar()[2])
+    cleaning_sch.register()
 # endregion

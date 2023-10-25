@@ -11,7 +11,7 @@ from werkzeug.security import check_password_hash
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH)
-from blueprints.sch.sch import cleaning_schedule
+from blueprints.sch.sch import cleaning_sch
 from database import User, dbSession
 
 pytestmark = pytest.mark.users
@@ -41,14 +41,14 @@ def test_approve_registration(
         assert "Review the schedules" in response.text
         response = client.get(url_for("sch.schedules"))
         assert unreg_user in response.text
-        assert f"Schedule '{cleaning_schedule.name}' added '{unreg_user}'" \
+        assert f"Schedule '{cleaning_sch.name}' added '{unreg_user}'" \
             in caplog.messages
         with dbSession() as db_session:
             assert not db_session.get(User, 5).reg_req
             # teardown
             db_session.get(User, 5).reg_req = True
             db_session.commit()
-            cleaning_schedule.remove_user(5)
+            cleaning_sch.remove_user(5)
 
 
 def test_failed_approve_registration_bad_username(
@@ -246,7 +246,7 @@ def test_new_user(
         assert "Review the schedules" in response.text
         response = client.get(url_for("sch.schedules"))
         assert name in response.text
-        assert f"Schedule '{cleaning_schedule.name}' added '{name}'" \
+        assert f"Schedule '{cleaning_sch.name}' added '{name}'" \
             in caplog.messages
         assert name in response.text
     with dbSession() as db_session:
@@ -263,7 +263,7 @@ def test_new_user(
         # teardown
         db_session.delete(user)
         db_session.commit()
-        cleaning_schedule.remove_user(user.id)
+        cleaning_sch.remove_user(user.id)
 
 
 @pytest.mark.parametrize(
@@ -570,8 +570,8 @@ def test_edit_user(
         db_session.refresh(user)
         user.reg_req = orig_reg_req
         db_session.commit()
-        cleaning_schedule.unregister()
-        cleaning_schedule.register()
+        cleaning_sch.unregister()
+        cleaning_sch.register()
 
 
 @pytest.mark.parametrize(
@@ -956,11 +956,11 @@ def test_edit_user_clean_order_choices(
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
-        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+        assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
         response = client.get(
             url_for("users.edit_user", username=name))
     if order is not None:
-        assert cleaning_schedule.name in response.text
+        assert cleaning_sch.name in response.text
         assert 'value="0">This week</option>' in response.text
         assert 'value="1">In 1 week</option>' in response.text
         assert 'value="2">In 2 weeks</option>' in response.text
@@ -968,7 +968,7 @@ def test_edit_user_clean_order_choices(
         assert 'value="4">In 4 weeks</option>' in response.text
         assert f'<option selected value="{order}">' in response.text
     else:
-        assert cleaning_schedule.name not in response.text
+        assert cleaning_sch.name not in response.text
         assert 'value="0">This week</option>' not in response.text
         assert 'value="1">In 1 week</option>' not in response.text
         assert 'value="2">In 2 weeks</option>' not in response.text
@@ -982,7 +982,7 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
-        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+        assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 
         with dbSession() as db_session:
             user = db_session.get(User, 1)
@@ -1011,7 +1011,7 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.request.path == url_for("main.index")
         assert "Schedule updated" in response.text
         assert "User updated" not in response.text
-        assert cleaning_schedule.current_order() == [2, 3, 1, 4, 7]
+        assert cleaning_sch.current_order() == [2, 3, 1, 4, 7]
 
         assert session["admin"]
         with dbSession() as db_session:
@@ -1041,7 +1041,7 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.request.path == url_for("main.index")
         assert "Schedule updated" in response.text
         assert "User updated" not in response.text
-        assert cleaning_schedule.current_order() == [2, 3, 1, 7, 4]
+        assert cleaning_sch.current_order() == [2, 3, 1, 7, 4]
 
         assert session["admin"]
         with dbSession() as db_session:
@@ -1071,10 +1071,10 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.request.path == url_for("main.index")
         assert "Schedule updated" in response.text
         assert "User updated" not in response.text
-        assert cleaning_schedule.current_order() == [7, 2, 3, 1, 4]
+        assert cleaning_sch.current_order() == [7, 2, 3, 1, 4]
         # teardown
-        cleaning_schedule.unregister()
-        cleaning_schedule.register()
+        cleaning_sch.unregister()
+        cleaning_sch.register()
 
 
 @pytest.mark.parametrize(
@@ -1093,7 +1093,7 @@ def test_failed_edit_user_clean_order(
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
-        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+        assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 
         with dbSession() as db_session:
             user = db_session.get(User, user_id)
@@ -1119,7 +1119,7 @@ def test_failed_edit_user_clean_order(
         assert "Schedule updated" not in response.text
         assert "User updated" not in response.text
         assert flash_err in response.text
-        assert cleaning_schedule.current_order() == [1, 2, 3, 4, 7]
+        assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 # endregion
 
 
@@ -1131,8 +1131,8 @@ def test_delete_user(
         user = User(name="new_user", password="Q!111111", reg_req=False)
         db_session.add(user)
         db_session.commit()
-        cleaning_schedule.add_user(user.id)
-        assert f"Schedule '{cleaning_schedule.name}' added '{user.name}'" \
+        cleaning_sch.add_user(user.id)
+        assert f"Schedule '{cleaning_sch.name}' added '{user.name}'" \
             in caplog.messages
     with client:
         client.get("/")
@@ -1159,7 +1159,7 @@ def test_delete_user(
             in unescape(response.text)
         response = client.get(url_for("sch.schedules"))
         assert user.name not in response.text
-        assert (f"Schedule '{cleaning_schedule.name}' removed user with id " +
+        assert (f"Schedule '{cleaning_sch.name}' removed user with id " +
                 f"'{user.id}'") in caplog.messages
     with dbSession() as db_session:
         assert not db_session.get(User, user.id)
@@ -1176,7 +1176,7 @@ def test_delete_user_admin_log_out(
             reg_req=False)
         db_session.add(user)
         db_session.commit()
-        cleaning_schedule.add_user(user.id)
+        cleaning_sch.add_user(user.id)
         assert user.id
     with client:
         client.get("/")
@@ -1202,7 +1202,7 @@ def test_delete_user_admin_log_out(
         assert response.history[1].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert (f"Schedule '{cleaning_schedule.name}' removed user with id " +
+        assert (f"Schedule '{cleaning_sch.name}' removed user with id " +
                 f"'{user.id}'") in caplog.messages
         assert "Succesfully logged out..." in response.text
 

@@ -7,7 +7,7 @@ from typing import Callable
 from flask import Blueprint, render_template, session, url_for
 from sqlalchemy import func, select
 
-from blueprints.sch import SAT_GROUP_SCH, CLEANING_SCH
+from blueprints.sch import clean_sch_info, sat_sch_info
 from database import Schedule, User, dbSession
 from helpers import logger, login_required
 
@@ -514,26 +514,26 @@ class IndivSchedule(BaseSchedule):
 
 
 # region: group schedules init
-sat_group_schedule = GroupSchedule(
-    name=SAT_GROUP_SCH["db_name"],
+saturday_sch = GroupSchedule(
+    name=sat_sch_info.name_en,
     user_attr=User.sat_group.name,
     num_groups=2,
     first_group=1,
-    sch_day=6,
-    sch_day_update=1,
-    switch_interval=timedelta(weeks=1),
+    sch_day=sat_sch_info.sch_day,
+    sch_day_update=sat_sch_info.sch_day_update,
+    switch_interval=timedelta(weeks=sat_sch_info.switch_interval),
     start_date=date.today())
-# sat_group_schedule.register()
+# saturday_sch.register()
 # endregion
 
 # region: individual schedules init
-cleaning_schedule = IndivSchedule(
-    name=CLEANING_SCH["db_name"],
-    sch_day=1,
-    sch_day_update=1,
-    switch_interval=timedelta(weeks=1),
+cleaning_sch = IndivSchedule(
+    name=clean_sch_info.name_en,
+    sch_day=clean_sch_info.sch_day,
+    sch_day_update=clean_sch_info.sch_day_update,
+    switch_interval=timedelta(weeks=clean_sch_info.switch_interval),
     start_date=date.today())
-# cleaning_schedule.register()
+# cleaning_sch.register()
 # endregion
 
 
@@ -546,11 +546,11 @@ def schedules():
     # schedule view registration
     group_schedules = []
     group_schedules.append(
-        [SAT_GROUP_SCH["name"], sat_group_schedule.data()])
+        [sat_sch_info.name, saturday_sch.data()])
 
     indiv_schedules = []
     indiv_schedules.append(
-        [CLEANING_SCH["name"], cleaning_schedule.data()])
+        [clean_sch_info.name, cleaning_sch.data()])
 
     return render_template("sch/schedules.html",
                            group_schedules=group_schedules,

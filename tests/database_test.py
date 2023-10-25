@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from sqlalchemy import func, insert, select
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from blueprints.sch import SAT_GROUP_SCH
+from blueprints.sch import clean_sch_info, sat_sch_info
 from database import Category, Product, Schedule, Supplier, User, dbSession
 
 func: Callable
@@ -210,13 +210,34 @@ def test_sat_group_this_week_property():
         schedule = db_session.scalar(
             select(Schedule)
             .filter_by(
-                name=SAT_GROUP_SCH["db_name"],
+                name=sat_sch_info.name_en,
                 elem_id=1))
         schedule.name = "renamed"
         db_session.commit()
         assert not db_session.get(User, 1).sat_group_this_week
         # teardown
-        schedule.name = SAT_GROUP_SCH["db_name"]
+        schedule.name = sat_sch_info.name_en
+        db_session.commit()
+
+
+def test_clean_this_week_property():
+    """test_clean_this_week_property"""
+    with dbSession() as db_session:
+        assert db_session.get(User, 1).clean_this_week
+        assert not db_session.get(User, 2).clean_this_week
+        assert not db_session.get(User, 3).clean_this_week
+        assert not db_session.get(User, 4).clean_this_week
+        # force false
+        schedule = db_session.scalar(
+            select(Schedule)
+            .filter_by(
+                name=clean_sch_info.name_en,
+                elem_id=1))
+        schedule.name = "renamed"
+        db_session.commit()
+        assert not db_session.get(User, 1).clean_this_week
+        # teardown
+        schedule.name = clean_sch_info.name_en
         db_session.commit()
 
 

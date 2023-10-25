@@ -14,8 +14,8 @@ from wtforms.validators import (Email, InputRequired, Length, NumberRange,
 
 from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
                                   USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
-from blueprints.sch import CLEANING_SCH, SAT_GROUP_SCH
-from blueprints.sch.sch import cleaning_schedule
+from blueprints.sch import clean_sch_info, sat_sch_info
+from blueprints.sch.sch import cleaning_sch
 from database import User, dbSession
 from helpers import admin_required, flash_errors, logger
 
@@ -77,7 +77,7 @@ class CreateUserForm(FlaskForm):
             "autocomplete": "off",
             })
     sat_group = SelectField(
-        label=SAT_GROUP_SCH["name"],
+        label=sat_sch_info.name,
         validators=[
             NumberRange(1, 2, gettext("Group number doesn't exist"))],
         choices=[(1, lazy_gettext("Group 1")), (2, lazy_gettext("Group 2"))],
@@ -125,7 +125,7 @@ class EditUserForm(CreateUserForm):
             "autocomplete": "new-password",
             })
     clean_order = SelectField(
-        label=CLEANING_SCH["name"],
+        label=clean_sch_info.name,
         validators=[Optional()],
         coerce=int,
         default=None,
@@ -171,7 +171,7 @@ def approve_reg(username):
             user.reg_req = False
             db_session.commit()
             logger.debug("%s has been approved", username)
-            cleaning_schedule.add_user(user.id)
+            cleaning_sch.add_user(user.id)
             flash(gettext("%(username)s has been approved",
                           username=username))
             flash(gettext("Review the schedules"), "warning")
@@ -235,7 +235,7 @@ def new_user():
                 db_session.add(user)
                 db_session.commit()
                 logger.debug("User '%s' created", user.name)
-                cleaning_schedule.add_user(user.id)
+                cleaning_sch.add_user(user.id)
                 flash(gettext("User '%(username)s' created",
                               username=user.name))
                 flash(gettext("Review the schedules"), "warning")
@@ -280,7 +280,7 @@ def edit_user(username):
                     db_session.delete(user)
                     db_session.commit()
                     logger.debug("User '%s' has been deleted", username)
-                    cleaning_schedule.remove_user(user.id)
+                    cleaning_sch.remove_user(user.id)
                     flash(gettext("User '%(username)s' has been deleted",
                                   username=user.name))
                     if user.id == session.get("user_id"):
@@ -298,10 +298,10 @@ def edit_user(username):
                 # cleaning schedule
                 if user.in_use and not user.reg_req:
                     try:
-                        curr_order = cleaning_schedule.current_order()\
+                        curr_order = cleaning_sch.current_order()\
                                                 .index(user.id)
                         if int(edit_user_form.clean_order.data) != curr_order:
-                            cleaning_schedule.change_user_pos(
+                            cleaning_sch.change_user_pos(
                                 user.id,
                                 edit_user_form.clean_order.data)
                             flash(gettext("Schedule updated"))
@@ -328,9 +328,9 @@ def edit_user(username):
                     if  user.in_use is not initial_in_use:
                         # add or remove from schedule
                         if user.in_use:
-                            cleaning_schedule.add_user(user.id)
+                            cleaning_sch.add_user(user.id)
                         else:
-                            cleaning_schedule.remove_user(user.id)
+                            cleaning_sch.remove_user(user.id)
                     if user.id == session.get("user_id"):
                         session["user_name"] = user.name
                         if not user.admin:
@@ -350,7 +350,7 @@ def edit_user(username):
             if user.in_use and not user.reg_req:
                 edit_user_form.clean_order.choices = clean_order_choices
                 edit_user_form.clean_order.data = \
-                    cleaning_schedule.current_order().index(user.id)
+                    cleaning_sch.current_order().index(user.id)
         else:
             flash(gettext("%(username)s does not exist!",
                           username=username), "error")

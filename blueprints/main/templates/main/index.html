@@ -27,16 +27,16 @@
             </li>
             <li class="list-group-item">
                 {% if user.sat_group_this_week and user.name != "Admin" %}
-                    <span class="text-warning">{{ sat_group_sch["positive"] }}</span>
+                    <span class="text-warning">{{ saturday_sch.positive }}</span>
                 {% else %}
-                    <span class="text-secondary">{{ sat_group_sch["negative"] }}</span>
+                    <span class="text-secondary">{{ saturday_sch.negative }}</span>
                 {% endif %}
             </li>
             <li class="list-group-item">
                 {% if user.clean_this_week %}
-                    <span class="text-warning">{{ cleaning_sch["positive"] }}</span>
+                    <span class="text-warning">{{ cleaning_sch.positive }}</span>
                 {% else %}
-                    <span class="text-secondary">{{ cleaning_sch["negative"] }}</span>
+                    <span class="text-secondary">{{ cleaning_sch.negative }}</span>
                 {% endif %}
             </li>
         </ul>

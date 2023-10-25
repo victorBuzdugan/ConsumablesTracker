@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-10-24 15:37+0300\n"
+"POT-Creation-Date: 2023-10-25 17:11+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1040,27 +1040,27 @@ msgstr ""
 msgid "Confirm that all products were ordered"
 msgstr ""
 
-#: blueprints/sch/__init__.py:18
+#: blueprints/sch/__init__.py:46
 msgid "Saturday movie"
 msgstr ""
 
-#: blueprints/sch/__init__.py:21
+#: blueprints/sch/__init__.py:48
 msgid "You're choosing the movie this saturday"
 msgstr ""
 
-#: blueprints/sch/__init__.py:23
+#: blueprints/sch/__init__.py:50
 msgid "You're not choosing the movie this saturday"
 msgstr ""
 
-#: blueprints/sch/__init__.py:26
+#: blueprints/sch/__init__.py:59
 msgid "Cleaning schedule"
 msgstr ""
 
-#: blueprints/sch/__init__.py:29
+#: blueprints/sch/__init__.py:61
 msgid "You're scheduled for cleaning this week"
 msgstr ""
 
-#: blueprints/sch/__init__.py:31
+#: blueprints/sch/__init__.py:63
 msgid "You're not scheduled for cleaning this week"
 msgstr ""
 
