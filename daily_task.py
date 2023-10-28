@@ -131,11 +131,24 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
                  update_date.isoformat(),
                  schedule["id"])
                  )
-            logger.debug("Schedule '%s' element '%d' will be updated",
-                         schedule["name"], schedule["elem_id"])
+            if schedule["type"] == "group":
+                logger.debug("Schedule '%s' group '%d' will be updated",
+                            schedule["name"], schedule["elem_id"])
+            else:
+                user_name = cur.execute("""
+                    SELECT name
+                    FROM users
+                    WHERE id = ?
+                    """,
+                    (schedule["elem_id"],)).fetchone()[0]
+                logger.debug("Schedule '%s' user '%s' will be updated",
+                            schedule["name"], user_name)
     if con.in_transaction:
-        logger.info("%d schedule(s) updated", con.total_changes)
         con.commit()
+        if con.total_changes == 1:
+            logger.info("%d schedule updated", con.total_changes)
+        else:
+            logger.info("%d schedules updated", con.total_changes)
     else:
         logger.info("No need to update schedules")
     con.close()

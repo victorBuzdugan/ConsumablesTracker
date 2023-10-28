@@ -2,6 +2,7 @@
 
 import pathlib
 from datetime import date, timedelta
+from os import path
 
 import pytest
 from flask.testing import FlaskClient
@@ -10,15 +11,34 @@ from sqlalchemy import URL, create_engine
 from app import app, babel
 from blueprints.sch.sch import cleaning_sch, saturday_sch
 from database import Base, Category, Product, Supplier, User, dbSession
-from helpers import DB_NAME, log_handler
+from helpers import CURR_DIR, DB_NAME, log_handler
 
 TEST_DB_NAME = "." + DB_NAME
+
+PROD_DB = path.join(CURR_DIR, TEST_DB_NAME)
+BACKUP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_backup")
+if date.today().day == 1:   # pragma: no cover
+    BACKUP_DB = BACKUP_DB + "_monthly.db"
+    TASK = "monthly"
+elif date.today().isoweekday() == 1: # pragma: no cover
+    BACKUP_DB = BACKUP_DB + "_weekly.db"
+    TASK = "weekly"
+else:   # pragma: no cover
+    BACKUP_DB = BACKUP_DB + "_daily.db"
+    TASK = "daily"
+ORIG_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
+TEMP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
 @pytest.fixture(scope="session")
 def create_test_db():
     """Configure dbSession to a test database. """
     # run with pytest -s
     print("\nCreate test db")
+    pathlib.Path.unlink(log_handler.baseFilename, missing_ok=True)
+    pathlib.Path.unlink(PROD_DB, missing_ok=True)
+    pathlib.Path.unlink(BACKUP_DB, missing_ok=True)
+    pathlib.Path.unlink(ORIG_DB, missing_ok=True)
+    pathlib.Path.unlink(TEMP_DB, missing_ok=True)
     db_url = URL.create(
         drivername="sqlite",
         database=TEST_DB_NAME)
@@ -44,7 +64,10 @@ def fixture_client() -> FlaskClient:
     # teardown
     # delete log file and test database
     pathlib.Path.unlink(log_handler.baseFilename, missing_ok=True)
-    pathlib.Path.unlink(TEST_DB_NAME, missing_ok=True)
+    pathlib.Path.unlink(PROD_DB, missing_ok=True)
+    pathlib.Path.unlink(BACKUP_DB, missing_ok=True)
+    pathlib.Path.unlink(ORIG_DB, missing_ok=True)
+    pathlib.Path.unlink(TEMP_DB, missing_ok=True)
 
 
 # region: users fixtures
