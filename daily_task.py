@@ -6,9 +6,17 @@ Note: use only modules from the standard library
 import math
 import sqlite3
 from datetime import date, timedelta
-from os import path
+from email.message import EmailMessage
+from os import getenv, path
+from smtplib import SMTP, SMTPException
+
+from dotenv import load_dotenv
 
 from helpers import CURR_DIR, DB_NAME, logger
+
+load_dotenv()
+EMAIL_ACCOUNT = "consumablestracker@gmail.com"
+EMAIL_PASSWORD = getenv("EMAIL_PASSW")
 
 
 def main(db_name: str = DB_NAME) -> None:
@@ -22,9 +30,14 @@ def main(db_name: str = DB_NAME) -> None:
         db_backup(db_name, "daily")
     db_reinit(db_name)
     update_schedules(db_name)
+    send_users_notif(db_name)
 
 def db_backup(db_name: str, task: str = "daily") -> None:
-    """Backup and vacuum the database."""
+    """Backup and vacuum the database.
+    
+    :param db_name: database that needs to be backed up
+    :param task: type of backup (daily, weekly, monthly)
+    """
     # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
     orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
@@ -69,7 +82,10 @@ def db_backup(db_name: str, task: str = "daily") -> None:
 
 
 def db_reinit(db_name: str) -> None:
-    """Reinitialise the database from original if it exists."""
+    """Reinitialise the database from original if it exists.
+    
+    :param db_name: name of the database that needs to be reinitialised
+    """
     # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
     orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
@@ -94,7 +110,8 @@ def db_reinit(db_name: str) -> None:
 
 def update_schedules(db_name: str, base_date: date = date.today()) -> None:
     """Check update_date in schedules and update if necessary.
-    
+
+    :param db_name: name of the database
     :param base_date: date to check against the update date; used for testing
     """
     prod_db = path.join(CURR_DIR, db_name)
@@ -152,6 +169,49 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
     else:
         logger.info("No need to update schedules")
     con.close()
+
+
+def send_users_notif(db_name: str) -> None:
+    """Check users status and, if required, send a notification email.
+
+    :param db_name: name of the database
+    """
+    prod_db = path.join(CURR_DIR, db_name)
+    con = sqlite3.connect(prod_db)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    if notif_users := cur.execute("""
+                                  SELECT name, email
+                                  FROM users
+                                  WHERE email != ''
+                                    AND in_use = True
+                                    AND done_inv = False
+                                    AND reg_req = False
+                                  """).fetchall():
+        try:
+            with SMTP(host="smtp.gmail.com", port=587) as server:
+                server.starttls()
+                server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
+                for user in notif_users:
+                    msg = EmailMessage()
+                    msg["From"] = EMAIL_ACCOUNT
+                    msg["To"] = user["email"]
+                    msg["Subject"] = "ConsumablesTracker - Reminder"
+                    msg.set_content(f"Hi {user['name']},\n" +
+                                    "Don't forget to check the inventory!")
+                    msg.add_alternative(f"""
+                        <html>
+                        <body>
+                            <p>Hi <b>{user["name"]}</b>,</p>
+                            <p>Don't forget to <b>check the inventory</b>!</p>
+                        </body>
+                        </html>""",
+                        subtype='html')
+                    server.send_message(msg)
+        except SMTPException as e:
+            print(e)
+            logger.warning(str(e))
+
 
 if __name__== "__main__":   # pragma: no cover
     main()
