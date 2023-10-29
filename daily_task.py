@@ -11,7 +11,9 @@ from os import getenv, path
 from smtplib import SMTP, SMTPException
 
 from dotenv import load_dotenv
+from sqlalchemy import select
 
+from database import Product, User, dbSession
 from helpers import CURR_DIR, DB_NAME, logger
 
 load_dotenv()
@@ -31,6 +33,7 @@ def main(db_name: str = DB_NAME) -> None:
     db_reinit(db_name)
     update_schedules(db_name)
     send_users_notif(db_name)
+    send_admins_notif()
 
 def db_backup(db_name: str, task: str = "daily") -> None:
     """Backup and vacuum the database.
@@ -208,9 +211,76 @@ def send_users_notif(db_name: str) -> None:
                         </html>""",
                         subtype='html')
                     server.send_message(msg)
+                    logger.debug("Sent user email notification to '%s'",
+                                 user["name"])
         except SMTPException as e:
-            print(e)
             logger.warning(str(e))
+    else:
+        logger.debug("No user notification need to be sent")
+
+
+def send_admins_notif() -> None:
+    """Check app status and, if required, send a notification email to admins.
+
+    :param db_name: name of the database
+    """
+    with dbSession() as db_session:
+        notif_admins = db_session.scalars(
+            select(User)
+            .filter_by(admin=True, in_use=True)
+            .filter(User.email != "")
+        ).all()
+    if notif_admins:
+        notifications = []
+        with dbSession() as db_session:
+            if db_session.scalar(select(User).filter_by(done_inv=False)):
+                notifications.append(
+                    "there are users that have to check the inventory")
+            if db_session.scalar(select(User).filter_by(reg_req=True)):
+                notifications.append(
+                    "there are users that need registration approval")
+            if db_session.scalar(select(User).filter_by(req_inv=True)):
+                notifications.append(
+                    "there are users that requested inventorying")
+            if db_session.scalar(select(Product).filter_by(to_order=True)):
+                notifications.append(
+                    "there are products that need to be ordered")
+        if notifications:
+            try:
+                with SMTP(host="smtp.gmail.com", port=587) as server:
+                    server.starttls()
+                    server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
+                    for admin in notif_admins:
+                        msg = EmailMessage()
+                        msg["From"] = EMAIL_ACCOUNT
+                        msg["To"] = admin.email
+                        msg["Subject"] = "ConsumablesTracker - Notifications"
+                        msg.set_content(f"Hi {admin.name},\n" +
+                                        "These are the daily notifications:\n" +
+                                        "- " +
+                                        "\n- ".join(notifications))
+                        msg.add_alternative(f"""
+                            <html>
+                            <body>
+                                <p>Hi <b>{admin.name}</b>,</p>
+                                <p>These are the <b>daily notifications</b>:</p>
+                                <ul>
+                                    <li>{"</li> <li>".join(notifications)}</li>
+                                </ul>
+                            </body>
+                            </html>""",
+                            subtype='html')
+                        server.send_message(msg)
+                        logger.debug("Sent admin email notification to '%s'",
+                                 admin.name)
+            except SMTPException as e:
+                print(e)
+                logger.warning(str(e))
+        else:
+            logger.debug("No admin notification need to be sent")
+    else:
+        logger.debug("No eligible admin found to send admin notification")
+
 
 
 if __name__== "__main__":   # pragma: no cover
