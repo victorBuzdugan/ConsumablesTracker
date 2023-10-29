@@ -180,7 +180,6 @@ class GroupSchedule(BaseSchedule):
             ...
         ]
         """
-        # pylint: disable=singleton-comparison
         if not self._is_registered():
             self.register()
         data = []
@@ -190,10 +189,8 @@ class GroupSchedule(BaseSchedule):
                 # index [0] - names
                 group_names = db_session.scalars(
                     select(User.name)
-                    .filter(
-                        getattr(User, self.user_attr)==group,
-                        User.in_use==True,
-                        User.reg_req==False)
+                    .filter_by(in_use=True, reg_req=False)
+                    .filter(getattr(User, self.user_attr)==group)
                     .order_by(func.lower(User.name))).all()
                 group_data.append(group_names)
                 # index [1] - dates
