@@ -17,17 +17,19 @@ from blueprints.sup.sup import sup_bp
 from blueprints.users.users import users_bp
 from helpers import logger
 
+LANGUAGES = ("ro", "en")
 
 def get_locale() -> Literal["ro", "en"]:
     """Set the language the page will be displayed."""
     if language := session.get("language"):
         return language
     # try to guess the language from the user accept header browser
-    language = request.accept_languages.best_match(["ro", "en"])
-    if not language:
+    if language := request.accept_languages.best_match(LANGUAGES):
+        logger.info("Got locale language '%s'", language)
+    else:
+        logger.warning("Could not get locale language")
         language = "en"
     session["language"] = language
-    logger.info("Got locale language '%s'", language)
     return language
 
 app = Flask(__name__)
@@ -55,9 +57,14 @@ app.register_blueprint(sch_bp)
 
 
 @app.route("/language/<language>")
-def set_language(language: str = 'en'):
+def set_language(language: str = "en"):
     """Change app display language."""
-    session["language"] = language
+    if language in LANGUAGES:
+        session["language"] = language
+    else:
+        session["language"] = "en"
     logger.info("Language changed to '%s'", language)
     flash(gettext("Language changed"))
-    return redirect(request.referrer)
+    if request.referrer:
+        return redirect(request.referrer)
+    return redirect("/")
