@@ -1,0 +1,11 @@
+<html>
+<body>
+    <p>Hi <b>{{ username }}</b>,</p>
+    <p>These are the <b>daily notifications</b>:</p>
+    <ul style="list-style-type: circle;">
+    {% for notification in notifications %}
+        <li style="margin: 5px 0;">{{ notification }}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

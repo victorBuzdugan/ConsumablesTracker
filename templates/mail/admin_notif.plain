@@ -1,0 +1,4 @@
+Hi {{ username }},
+These are the daily notifications:
+{% for notification in notifications %}- {{ notification }}
+{% endfor %}

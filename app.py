@@ -5,6 +5,7 @@ from typing import Literal
 
 from flask import Flask, flash, redirect, request, session
 from flask_babel import Babel, gettext
+from flask_mail import Mail
 
 from blueprints.auth.auth import auth_bp
 from blueprints.cat.cat import cat_bp
@@ -37,6 +38,8 @@ app = Flask(__name__)
 app.config.from_prefixed_env()
 
 babel = Babel(app, locale_selector=get_locale)
+
+mail = Mail(app)
 
 
 @app.context_processor

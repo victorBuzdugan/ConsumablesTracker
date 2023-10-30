@@ -2,17 +2,19 @@
 Daily tasks.
 Note: use only modules from the standard library
 """
+# pylint: disable=broad-exception-caught
 
 import math
 import sqlite3
 from datetime import date, timedelta
-from email.message import EmailMessage
 from os import getenv, path
-from smtplib import SMTP, SMTPException
 
 from dotenv import load_dotenv
+from flask import render_template
+from flask_mail import Message
 from sqlalchemy import select
 
+from app import app, mail
 from database import Product, User, dbSession
 from helpers import CURR_DIR, DB_NAME, logger
 
@@ -32,7 +34,7 @@ def main(db_name: str = DB_NAME) -> None:
         db_backup(db_name, "daily")
     db_reinit(db_name)
     update_schedules(db_name)
-    send_users_notif(db_name)
+    send_users_notif()
     send_admins_notif()
 
 def db_backup(db_name: str, task: str = "daily") -> None:
@@ -41,7 +43,6 @@ def db_backup(db_name: str, task: str = "daily") -> None:
     :param db_name: database that needs to be backed up
     :param task: type of backup (daily, weekly, monthly)
     """
-    # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
     orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
     backup_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_backup")
@@ -89,7 +90,6 @@ def db_reinit(db_name: str) -> None:
     
     :param db_name: name of the database that needs to be reinitialised
     """
-    # pylint: disable=broad-exception-caught
     prod_db = path.join(CURR_DIR, db_name)
     orig_db = path.join(CURR_DIR, path.splitext(db_name)[0] + "_orig.db")
     if path.isfile(orig_db):
@@ -174,113 +174,79 @@ def update_schedules(db_name: str, base_date: date = date.today()) -> None:
     con.close()
 
 
-def send_users_notif(db_name: str) -> None:
-    """Check users status and, if required, send a notification email.
-
-    :param db_name: name of the database
-    """
-    prod_db = path.join(CURR_DIR, db_name)
-    con = sqlite3.connect(prod_db)
-    con.row_factory = sqlite3.Row
-    cur = con.cursor()
-    if notif_users := cur.execute("""
-                                  SELECT name, email
-                                  FROM users
-                                  WHERE email != ''
-                                    AND in_use = True
-                                    AND done_inv = False
-                                    AND reg_req = False
-                                  """).fetchall():
+def send_users_notif() -> None:
+    """Check users status and, if required, send a notification email."""
+    with dbSession() as db_session:
+        eligible_users = db_session.scalars(
+            select(User)
+            .filter_by(in_use=True, done_inv=False, reg_req=False)
+            .filter(User.email != "")
+        ).all()
+    if eligible_users:
         try:
-            with SMTP(host="smtp.gmail.com", port=587) as server:
-                server.starttls()
-                server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
-                for user in notif_users:
-                    msg = EmailMessage()
-                    msg["From"] = EMAIL_ACCOUNT
-                    msg["To"] = user["email"]
-                    msg["Subject"] = "ConsumablesTracker - Reminder"
-                    msg.set_content(f"Hi {user['name']},\n" +
-                                    "Don't forget to check the inventory!")
-                    msg.add_alternative(f"""
-                        <html>
-                        <body>
-                            <p>Hi <b>{user["name"]}</b>,</p>
-                            <p>Don't forget to <b>check the inventory</b>!</p>
-                        </body>
-                        </html>""",
-                        subtype='html')
-                    server.send_message(msg)
+            with app.app_context(), mail.connect() as conn:
+                for user in eligible_users:
+                    msg = Message(
+                            subject="ConsumablesTracker - Reminder",
+                            recipients=[user.email])
+                    msg.body = render_template("mail/user_notif.plain",
+                                                   username=user.name)
+                    msg.html = render_template("mail/user_notif.html",
+                                                   username=user.name)
+                    conn.send(msg)
                     logger.debug("Sent user email notification to '%s'",
-                                 user["name"])
-        except SMTPException as e:
-            logger.warning(str(e))
+                                 user.name)
+        except Exception as err:
+            logger.warning(str(err))
     else:
-        logger.debug("No user notification need to be sent")
+        logger.debug("No eligible user found to send notification")
 
 
 def send_admins_notif() -> None:
-    """Check app status and, if required, send a notification email to admins.
-
-    :param db_name: name of the database
-    """
+    """Check status and, if required, send a notification email to admins."""
     with dbSession() as db_session:
-        notif_admins = db_session.scalars(
+        eligible_admins = db_session.scalars(
             select(User)
             .filter_by(admin=True, in_use=True)
             .filter(User.email != "")
         ).all()
-    if notif_admins:
+    if eligible_admins:
         notifications = []
         with dbSession() as db_session:
-            if db_session.scalar(select(User).filter_by(done_inv=False)):
-                notifications.append(
-                    "there are users that have to check the inventory")
             if db_session.scalar(select(User).filter_by(reg_req=True)):
                 notifications.append(
                     "there are users that need registration approval")
             if db_session.scalar(select(User).filter_by(req_inv=True)):
                 notifications.append(
                     "there are users that requested inventorying")
+            if db_session.scalar(select(User).filter_by(done_inv=False)):
+                notifications.append(
+                    "there are users that have to check the inventory")
             if db_session.scalar(select(Product).filter_by(to_order=True)):
                 notifications.append(
                     "there are products that need to be ordered")
         if notifications:
             try:
-                with SMTP(host="smtp.gmail.com", port=587) as server:
-                    server.starttls()
-                    server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
-                    for admin in notif_admins:
-                        msg = EmailMessage()
-                        msg["From"] = EMAIL_ACCOUNT
-                        msg["To"] = admin.email
-                        msg["Subject"] = "ConsumablesTracker - Notifications"
-                        msg.set_content(f"Hi {admin.name},\n" +
-                                        "These are the daily notifications:\n" +
-                                        "- " +
-                                        "\n- ".join(notifications))
-                        msg.add_alternative(f"""
-                            <html>
-                            <body>
-                                <p>Hi <b>{admin.name}</b>,</p>
-                                <p>These are the <b>daily notifications</b>:</p>
-                                <ul>
-                                    <li>{"</li> <li>".join(notifications)}</li>
-                                </ul>
-                            </body>
-                            </html>""",
-                            subtype='html')
-                        server.send_message(msg)
+                with app.app_context(), mail.connect() as conn:
+                    for admin in eligible_admins:
+                        msg = Message(
+                            subject="ConsumablesTracker - Notifications",
+                            recipients=[admin.email])
+                        msg.body = render_template("mail/admin_notif.plain",
+                                                   username=admin.name,
+                                                   notifications=notifications)
+                        msg.html = render_template("mail/admin_notif.html",
+                                                   username=admin.name,
+                                                   notifications=notifications)
+                        conn.send(msg)
                         logger.debug("Sent admin email notification to '%s'",
                                  admin.name)
-            except SMTPException as e:
-                print(e)
-                logger.warning(str(e))
+            except Exception as err:
+                logger.warning(str(err))
         else:
-            logger.debug("No admin notification need to be sent")
+            logger.debug("No admin notifications need to be sent")
     else:
-        logger.debug("No eligible admin found to send admin notification")
-
+        logger.debug("No eligible admin found to send notification")
 
 
 if __name__== "__main__":   # pragma: no cover
