@@ -13,8 +13,7 @@ from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import IndivSchedule
 from daily_task import db_backup, db_reinit, main, update_schedules
 from database import Schedule, User, dbSession
-from tests.conftest import (BACKUP_DB, ORIG_DB, PROD_DB, TASK, TEMP_DB,
-                            TEST_DB_NAME)
+from tests.conftest import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
 
 pytestmark = pytest.mark.daily
 
@@ -25,7 +24,7 @@ def test_main(caplog: LogCaptureFixture):
     assert path.isfile(PROD_DB)
     assert not path.isfile(BACKUP_DB)
     assert not path.isfile(ORIG_DB)
-    main(TEST_DB_NAME)
+    main()
     assert path.isfile(PROD_DB)
     assert path.isfile(BACKUP_DB)
     assert not path.isfile(ORIG_DB)
@@ -53,7 +52,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
     assert date.today() == date(2023, 4, 2)
     assert date.today().isoweekday() == 7
 
-    main(TEST_DB_NAME)
+    main()
     assert path.isfile(backup_db_daily)
     assert not path.isfile(backup_db_weekly)
     assert not path.isfile(backup_db_monthly)
@@ -66,7 +65,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
     with freeze_time("2023-04-03"):
         assert date.today().isoweekday() == 1
         record_daily_time = path.getmtime(backup_db_daily)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) == record_daily_time
         assert path.isfile(backup_db_weekly)
         assert not path.isfile(backup_db_monthly)
@@ -80,7 +79,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
         assert date.today().isoweekday() == 7
         record_daily_time = path.getmtime(backup_db_daily)
         record_weekly_time = path.getmtime(backup_db_weekly)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) > record_daily_time
         assert path.getmtime(backup_db_weekly) == record_weekly_time
         assert not path.isfile(backup_db_monthly)
@@ -94,7 +93,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
         assert date.today().isoweekday() == 1
         record_daily_time = path.getmtime(backup_db_daily)
         record_weekly_time = path.getmtime(backup_db_weekly)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) == record_daily_time
         assert path.getmtime(backup_db_weekly) > record_weekly_time
         assert not path.isfile(backup_db_monthly)
@@ -108,7 +107,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
         assert date.today().isoweekday() == 1
         record_daily_time = path.getmtime(backup_db_daily)
         record_weekly_time = path.getmtime(backup_db_weekly)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) == record_daily_time
         assert path.getmtime(backup_db_weekly) == record_weekly_time
         assert path.isfile(backup_db_monthly)
@@ -123,7 +122,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
         record_daily_time = path.getmtime(backup_db_daily)
         record_weekly_time = path.getmtime(backup_db_weekly)
         record_monthly_time = path.getmtime(backup_db_monthly)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) > record_daily_time
         assert path.getmtime(backup_db_weekly) == record_weekly_time
         assert path.getmtime(backup_db_monthly) == record_monthly_time
@@ -138,7 +137,7 @@ def test_main_timeline(caplog: LogCaptureFixture):
         record_daily_time = path.getmtime(backup_db_daily)
         record_weekly_time = path.getmtime(backup_db_weekly)
         record_monthly_time = path.getmtime(backup_db_monthly)
-        main(TEST_DB_NAME)
+        main()
         assert path.getmtime(backup_db_daily) == record_daily_time
         assert path.getmtime(backup_db_weekly) == record_weekly_time
         assert path.getmtime(backup_db_monthly) > record_monthly_time
@@ -160,13 +159,13 @@ def test_main_timeline(caplog: LogCaptureFixture):
 def test_db_backup_update_file(caplog: LogCaptureFixture):
     """test_db_backup_update_file"""
     assert not path.isfile(BACKUP_DB)
-    db_backup(TEST_DB_NAME, TASK)
+    db_backup()
     assert path.isfile(BACKUP_DB)
     assert "Starting first-time backup" in caplog.messages
     assert "Database backed up" in caplog.messages
     caplog.clear()
     first_backup_time = path.getmtime(BACKUP_DB)
-    db_backup(TEST_DB_NAME, TASK)
+    db_backup()
     assert "Starting first-time backup" not in caplog.messages
     assert "Database backed up" in caplog.messages
     assert path.getmtime(BACKUP_DB) > first_backup_time
@@ -177,7 +176,7 @@ def test_db_backup_update_file(caplog: LogCaptureFixture):
 def test_db_backup_not_needed(caplog: LogCaptureFixture):
     """test_db_backup_not_needed"""
     copyfile(PROD_DB, ORIG_DB)
-    db_backup(TEST_DB_NAME)
+    db_backup()
     assert "No need to backup database as it will be reinitialised" \
         in caplog.messages
     remove(ORIG_DB)
@@ -186,81 +185,11 @@ def test_db_backup_not_needed(caplog: LogCaptureFixture):
 def test_failed_db_backup(caplog: LogCaptureFixture):
     """test_failed_db_backup"""
     rename(PROD_DB, TEMP_DB)
-    db_backup(TEST_DB_NAME)
+    db_backup()
     assert "Database could not be backed up" in caplog.messages
     assert "Database could not be vacuumed" in caplog.messages
     # teardown
     rename(TEMP_DB, PROD_DB)
-
-
-def test_db_backup_task(caplog: LogCaptureFixture):
-    """Test database backup task argument."""
-    assert not path.isfile(BACKUP_DB)
-    backup_file = BACKUP_DB.rsplit("_", 1)[0]
-    backup_db_daily = backup_file + "_daily.db"
-    backup_db_weekly = backup_file + "_weekly.db"
-    backup_db_monthly = backup_file + "_monthly.db"
-
-    db_backup(TEST_DB_NAME, "daily")
-    assert path.isfile(backup_db_daily)
-    assert not path.isfile(backup_db_weekly)
-    assert not path.isfile(backup_db_monthly)
-    assert "Starting first-time backup" in caplog.messages
-    assert "Database backed up" in caplog.messages
-    assert "Weekly backup" not in caplog.messages
-    assert "Monthly backup" not in caplog.messages
-    # teardown
-    caplog.clear()
-    remove(backup_db_daily)
-
-    db_backup(TEST_DB_NAME, "weekly")
-    assert not path.isfile(backup_db_daily)
-    assert path.isfile(backup_db_weekly)
-    assert not path.isfile(backup_db_monthly)
-    assert "Starting first-time backup" in caplog.messages
-    assert "Database backed up" in caplog.messages
-    assert "Weekly backup" in caplog.messages
-    assert "Monthly backup" not in caplog.messages
-    # teardown
-    caplog.clear()
-    remove(backup_db_weekly)
-
-    db_backup(TEST_DB_NAME, "monthly")
-    assert not path.isfile(backup_db_daily)
-    assert not path.isfile(backup_db_weekly)
-    assert path.isfile(backup_db_monthly)
-    assert "Starting first-time backup" in caplog.messages
-    assert "Database backed up" in caplog.messages
-    assert "Weekly backup" not in caplog.messages
-    assert "Monthly backup" in caplog.messages
-    # teardown
-    caplog.clear()
-    remove(backup_db_monthly)
-
-
-@pytest.mark.parametrize("task", (
-    "",
-    " ",
-    None,
-    2,
-    "some random text",
-    True,
-))
-def test_db_backup_task_daily_fallback(task, caplog: LogCaptureFixture):
-    """Test database backup task argument fallback to `daily`."""
-    backup_file = BACKUP_DB.rsplit("_", 1)[0]
-    backup_db_daily = backup_file + "_daily.db"
-    assert not path.isfile(backup_db_daily)
-    db_backup(TEST_DB_NAME, task)
-    assert "Starting first-time backup" in caplog.messages
-    assert "Database backed up" in caplog.messages
-    assert "Weekly backup" not in caplog.messages
-    assert "Monthly backup" not in caplog.messages
-    assert f"Backup task argument '{task}' invalid" in caplog.messages
-    assert path.isfile(backup_db_daily)
-    # teardown
-    caplog.clear()
-    remove(backup_db_daily)
 # endregion
 
 
@@ -276,7 +205,7 @@ def test_db_reinit(caplog: LogCaptureFixture):
         db_session.delete(user)
         db_session.commit()
         assert not db_session.get(User, user_id)
-    db_reinit(TEST_DB_NAME)
+    db_reinit()
     with dbSession() as db_session:
         assert db_session.get(User, user_id)
         assert db_session.get(Schedule, sch_id).next_date == date.today()
@@ -284,7 +213,7 @@ def test_db_reinit(caplog: LogCaptureFixture):
     caplog.clear()
     # test DON'T remember schedules dates
     with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
     assert f"Schedule '{sat_sch_info.name_en}' group '1' will be updated"\
         in caplog.messages
     assert f"Schedule '{clean_sch_info.name_en}' user 'user1' will be updated"\
@@ -295,10 +224,10 @@ def test_db_reinit(caplog: LogCaptureFixture):
     with dbSession() as db_session:
         assert db_session.get(Schedule, sch_id).next_date \
             == date.today() + timedelta(weeks=2)
-    db_reinit(TEST_DB_NAME)
+    db_reinit()
     assert "Database reinitialised" in caplog.messages
     with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
     assert f"Schedule '{sat_sch_info.name_en}' group '1' will be updated"\
         in caplog.messages
     assert f"Schedule '{clean_sch_info.name_en}' user 'user1' will be updated"\
@@ -317,7 +246,7 @@ def test_failed_db_reinit(caplog: LogCaptureFixture):
     """test_failed_db_reinit"""
     copyfile(PROD_DB, ORIG_DB)
     rename(PROD_DB, TEMP_DB)
-    db_reinit(TEST_DB_NAME)
+    db_reinit()
     assert "Database could not be reinitialised" in caplog.messages
     # teardown
     rename(TEMP_DB, PROD_DB)
@@ -352,11 +281,11 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
-    update_schedules(TEST_DB_NAME, date.today())
+    update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
             not in caplog.messages
@@ -365,7 +294,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=2)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
             in caplog.messages
@@ -374,7 +303,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=15)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
             not in caplog.messages
@@ -383,7 +312,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=16)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
             not in caplog.messages
@@ -392,7 +321,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
     with freeze_time(date(2023, 10, 9)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
             in caplog.messages
@@ -443,11 +372,11 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
-    update_schedules(TEST_DB_NAME, date.today())
+    update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     with freeze_time(date.today() + timedelta(days=2)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -457,7 +386,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -467,7 +396,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=9)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -477,7 +406,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
     with freeze_time(date.today() + timedelta(days=10)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -487,7 +416,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
     with freeze_time(date(2023, 10, 6)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 5
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -529,13 +458,13 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
     test_sch.register(start_date=date(2023, 7, 31))
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
-    update_schedules(TEST_DB_NAME, date.today())
+    update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
     with freeze_time(date.today() + timedelta(days=2)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -553,7 +482,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
     with freeze_time(date.today() + timedelta(days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -571,7 +500,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
 
     with freeze_time(date.today() + timedelta(weeks=1, days=2)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -589,7 +518,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
 
     with freeze_time(date.today() + timedelta(weeks=1, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -607,7 +536,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
 
     with freeze_time(date.today() + timedelta(weeks=2, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -625,7 +554,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [4, 7, 1, 2, 3]
 
     with freeze_time(date.today() + timedelta(weeks=4, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -643,7 +572,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
     with freeze_time(date.today() + timedelta(weeks=8, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -685,13 +614,13 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
     test_sch.register()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
-    update_schedules(TEST_DB_NAME, date.today())
+    update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
     with freeze_time(date.today() + timedelta(weeks=0, days=2)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -709,7 +638,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
 
     with freeze_time(date.today() + timedelta(weeks=0, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -727,7 +656,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
 
     with freeze_time(date.today() + timedelta(weeks=1, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -745,7 +674,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
 
     with freeze_time(date.today() + timedelta(weeks=2, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -763,7 +692,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
 
     with freeze_time(date.today() + timedelta(weeks=3, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
@@ -781,7 +710,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
 
     with freeze_time(date.today() + timedelta(weeks=6, days=3)):
-        update_schedules(TEST_DB_NAME, date.today())
+        update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \

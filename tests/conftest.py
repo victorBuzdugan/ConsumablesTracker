@@ -10,22 +10,14 @@ from sqlalchemy import URL, create_engine
 
 from app import app, babel
 from blueprints.sch.sch import cleaning_sch, saturday_sch
+from daily_task import db_backup_name
 from database import Base, Category, Product, Supplier, User, dbSession
 from helpers import CURR_DIR, DB_NAME, log_handler
 
 TEST_DB_NAME = "." + DB_NAME
 
 PROD_DB = path.join(CURR_DIR, TEST_DB_NAME)
-BACKUP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_backup")
-if date.today().day == 1:   # pragma: no cover
-    BACKUP_DB = BACKUP_DB + "_monthly.db"
-    TASK = "monthly"
-elif date.today().isoweekday() == 1: # pragma: no cover
-    BACKUP_DB = BACKUP_DB + "_weekly.db"
-    TASK = "weekly"
-else:   # pragma: no cover
-    BACKUP_DB = BACKUP_DB + "_daily.db"
-    TASK = "daily"
+BACKUP_DB = db_backup_name(PROD_DB)
 ORIG_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
 TEMP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
@@ -41,7 +33,7 @@ def create_test_db():
     pathlib.Path.unlink(TEMP_DB, missing_ok=True)
     db_url = URL.create(
         drivername="sqlite",
-        database=TEST_DB_NAME)
+        database=path.join(CURR_DIR, TEST_DB_NAME))
     test_engine = create_engine(
         url=db_url,
         echo=False,
