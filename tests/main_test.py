@@ -200,6 +200,26 @@ def test_index_admin_logged_in_user_dashboard(
         assert 'Limba a fost schimbată' not in response.text
         assert "Panou de bord utilizator" not in response.text
         assert "Statistici" not in response.text
+        # force referer
+        response = client.get(url_for("set_language", language="ro"),
+                              headers={"Referer": url_for("cat.categories")},
+                              follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("cat.categories")
+        assert session["language"] == "ro"
+        assert "Limba a fost schimbată" in response.text
+        # test language None
+        response = client.get(url_for("set_language", language="None"),
+                              headers={"Referer": url_for("sup.suppliers")},
+                              follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("sup.suppliers")
+        assert session["language"] == "en"
+        assert 'Language changed' in response.text
         babel.init_app(app=app, locale_selector=lambda: "en")
 
 

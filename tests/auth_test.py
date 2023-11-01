@@ -6,6 +6,7 @@ from os import getenv
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
+from pytest import LogCaptureFixture
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
@@ -136,32 +137,72 @@ def test_successful_registration(client: FlaskClient):
 
 
 # region: login and logout methods
-def test_login_landing_page(client: FlaskClient):
+def test_login_landing_page(client: FlaskClient, caplog: LogCaptureFixture):
     """test_login_landing_page"""
     with client:
         client.get("/")
         babel.init_app(app=app, locale_selector=get_locale)
-        response = client.get(url_for("auth.login"))
+        # test get locale 'en'
+        response = client.get(url_for("auth.login"),
+                              headers={"Accept-Language": "en-GB,en;q=0.9"})
         assert response.status_code == 200
+        assert "Got locale language 'en'" in caplog.messages
+        caplog.clear()
         assert 'type="submit" value="Log In"' in response.text
-        client.get(url_for("set_language", language="ro"))
+        response = client.get(url_for("set_language", language="ro"),
+                              headers={"Referer": url_for("auth.login")},
+                              follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
         assert session["language"] == "ro"
-        response = client.get(url_for("auth.login"))
+        assert "Language changed to 'ro'" in caplog.messages
+        caplog.clear()
         assert 'Language changed' not in response.text
         assert 'Username' not in response.text
         assert 'Password' not in response.text
         assert "Limba a fost schimbată" in response.text
         assert "Nume" in response.text
         assert "Parolă" in response.text
-        client.get(url_for("set_language", language="en"))
+        response = client.get(url_for("set_language", language="en"),
+                              headers={"Referer": url_for("auth.login")},
+                              follow_redirects=True)
+        assert len(response.history) == 1
+        assert response.history[0].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
         assert session["language"] == "en"
-        response = client.get(url_for("auth.login"))
+        assert "Language changed to 'en'" in caplog.messages
+        caplog.clear()
         assert "Language changed" in response.text
         assert "Username" in response.text
         assert "Password" in response.text
         assert "Limba a fost schimbată" not in response.text
         assert "Nume" not in response.text
         assert "Parolă" not in response.text
+        # test language None and no referer
+        client.get(url_for("auth.register"))
+        response = client.get(url_for("set_language", language="None"),
+                              follow_redirects=True)
+        assert len(response.history) == 2
+        assert response.history[0].status_code == 302
+        assert response.history[1].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == url_for("auth.login")
+        assert session["language"] == "en"
+        assert "Language changed to 'en'" in caplog.messages
+        babel.init_app(app=app, locale_selector=lambda: "en")
+
+
+def test_could_not__get_locale(client: FlaskClient, caplog: LogCaptureFixture):
+    """test_could_not__get_locale"""
+    with client.session_transaction() as ssession:
+        ssession.clear()
+    with client:
+        babel.init_app(app=app, locale_selector=get_locale)
+        client.get("/")
+        assert "Could not get locale language" in caplog.messages
         babel.init_app(app=app, locale_selector=lambda: "en")
 
 

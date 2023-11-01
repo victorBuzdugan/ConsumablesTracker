@@ -65,6 +65,7 @@ def set_language(language: str = "en"):
     if language in LANGUAGES:
         session["language"] = language
     else:
+        language = "en"
         session["language"] = "en"
     logger.info("Language changed to '%s'", language)
     flash(gettext("Language changed"))
