@@ -15,6 +15,9 @@ The app is available in english and romanian, but can also be translated to othe
 ## Schedules
 The app includes a group schedule that allows the users to be split in two or more groups and flexible time interval between groups. Also includes an individual schedule where users are rotated on a flexible time interval.
 
+## Email notifications
+Send email notifications to users and app status notifications to admins.
+
 # Live demo
 
 ## Website
@@ -240,7 +243,7 @@ The app has every feature tested with `pytest`. The tests are provided in the re
 ## Daily tasks
 Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
 
-The app provides a file (`daily_task.py`) that includes tasks like daily database backup, daily database reinitialization or schedules update.
+The app provides a file (`daily_task.py`) that includes tasks like daily database backup, daily database reinitialization, schedules update or user and admin email notifications.
 
 ### Backup function
 Makes backups of the database, overwriting the previous backup if it exists. The function also [vacuums](https://www.sqlite.org/lang_vacuum.html) the working database file. The function doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
@@ -255,6 +258,9 @@ Reintializes the database to a preset state (as used for the [demo website](http
 
 ### Update schedules function
 Checks in the database for schedules that need to be updated by comparing the `Update date` of the schedule with the current date.
+
+### Email notification
+Send a user email notification to each eligible user and a admin email notification to each eligible admin with app status (requests, products to order...).
 
 ## Logging
 The app has a logger configured to write to a file some important events from the app. The log file (`logger.log`) is a time rotating file resetting after 30 days and keeping 1 file as backup, practically having almost 2 months of log records.

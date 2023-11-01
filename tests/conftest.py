@@ -8,7 +8,7 @@ import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine
 
-from app import app, babel
+from app import app, babel, mail
 from blueprints.sch.sch import cleaning_sch, saturday_sch
 from daily_task import db_backup_name
 from database import Base, Category, Product, Supplier, User, dbSession
@@ -20,6 +20,8 @@ PROD_DB = path.join(CURR_DIR, TEST_DB_NAME)
 BACKUP_DB = db_backup_name(PROD_DB)
 ORIG_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
 TEMP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
+
+mail.state.suppress = True
 
 @pytest.fixture(scope="session")
 def create_test_db():
@@ -72,34 +74,41 @@ def create_test_users():
     users.append(User(
         name="user1",
         password="Q!111111",
+        email="consumablestracker+user1@gmail.com",
         admin=True,
         reg_req=False))
     users.append(User(
         name="user2",
         password="Q!222222",
+        email="consumablestracker+user2@gmail.com",
         admin=True,
         reg_req=False,
         sat_group=2))
     users.append(User(
         name="user3",
         password="Q!333333",
+        email="consumablestracker+user3@gmail.com",
         reg_req=False))
     users.append(User(
         name="user4",
         password="Q!444444",
+        email="consumablestracker+user4@gmail.com",
         reg_req=False,
         sat_group=2))
     users.append(User(
         name="user5",
-        password="Q!555555"))
+        password="Q!555555",
+        email="consumablestracker+user5@gmail.com"))
     users.append(User(
         name="user6",
         password="Q!666666",
+        email="consumablestracker+user6@gmail.com",
         reg_req=False,
         in_use=False))
     users.append(User(
         name="user7",
         password="Q!777777",
+        email="",
         reg_req=False))
     with dbSession() as db_session:
         db_session.add_all(users[1:])

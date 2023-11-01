@@ -708,10 +708,11 @@ def test_failed_edit_user_name_duplicate(
                 "csrf_token": g.csrf_token,
                 "name": new_name,
                 "password": "",
-                "details": "",
+                "details": user.details,
+                "email": user.email,
                 "admin": "on",
                 "in_use": "on",
-                "sat_group": "2",
+                "sat_group": user.sat_group,
                 "submit": True,
             }
             response = client.post(
@@ -763,8 +764,8 @@ def test_failed_edit_user_db_validators(
                 "csrf_token": g.csrf_token,
                 "name": user.name,
                 "password": "",
-                "details": "",
-                "email": "",
+                "details": user.details,
+                "email": user.email,
                 "check_inv": new_check_inv,
                 "admin": new_admin,
                 "in_use": new_in_use,
@@ -832,24 +833,26 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
-        username = session.get("user_name")
-        response = client.get(url_for("users.edit_user", username=username))
+        response = client.get(
+            url_for("users.edit_user", username=admin_logged_in.name))
         data = {
                 "csrf_token": g.csrf_token,
-                "name": username,
-                "details": "",
+                "name": admin_logged_in.name,
+                "details": admin_logged_in.details,
+                "email": admin_logged_in.email,
                 "admin": "",
                 "in_use": "on",
                 "submit": True,
             }
-        response = client.post(url_for("users.edit_user", username=username),
-                               data=data, follow_redirects=True)
+        response = client.post(
+            url_for("users.edit_user", username=admin_logged_in.name),
+            data=data, follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert "User updated" not in response.text
-        assert username in response.text
+        assert admin_logged_in.name in response.text
         assert "You are the last admin!" in response.text
     with dbSession() as db_session:
         assert db_session.get(User, 1).admin
@@ -868,7 +871,8 @@ def test_edit_user_change_admin_name(
         data = {
                 "csrf_token": g.csrf_token,
                 "name": new_name,
-                "details": "",
+                "details": admin_logged_in.details,
+                "email": admin_logged_in.email,
                 "admin": "on",
                 "in_use": "on",
                 "submit": True,
@@ -887,7 +891,8 @@ def test_edit_user_change_admin_name(
         data = {
                 "csrf_token": g.csrf_token,
                 "name": old_name,
-                "details": "",
+                "details": admin_logged_in.details,
+                "email": admin_logged_in.email,
                 "admin": "on",
                 "in_use": "on",
                 "submit": True,
@@ -915,7 +920,8 @@ def test_edit_user_change_admin_logged_in_admin_status(
         data = {
                 "csrf_token": g.csrf_token,
                 "name": username,
-                "details": "",
+                "details": admin_logged_in.details,
+                "email": admin_logged_in.email,
                 "admin": "",
                 "in_use": "on",
                 "submit": True,

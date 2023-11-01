@@ -9,10 +9,12 @@ from freezegun import freeze_time
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
+from app import mail
 from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import IndivSchedule
-from daily_task import db_backup, db_reinit, main, update_schedules
-from database import Schedule, User, dbSession
+from daily_task import (db_backup, db_reinit, main, send_admins_notif,
+                        send_users_notif, update_schedules)
+from database import Product, Schedule, User, dbSession
 from tests.conftest import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
 
 pytestmark = pytest.mark.daily
@@ -33,6 +35,9 @@ def test_main(caplog: LogCaptureFixture):
     assert "Production database vacuumed" in caplog.messages
     assert "This app doesn't need database reinit" in caplog.messages
     assert "No need to update schedules" in caplog.messages
+    assert "No eligible user found to send notification" in caplog.messages
+    assert "Sent admin email notification to 'user1'" in caplog.messages
+    assert "Sent admin email notification to 'user2'" in caplog.messages
     # teardown
     remove(BACKUP_DB)
 
@@ -735,4 +740,300 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         for schedule in schedules:
             db_session.delete(schedule)
         db_session.commit()
+# endregion
+
+
+# region: email notifications
+def test_send_user_notifications_email(caplog: LogCaptureFixture):
+    """test_send_user_notifications_email"""
+    with mail.record_messages() as outbox:
+        send_users_notif()
+        assert len(outbox) == 0
+        assert "No eligible user found to send notification" in caplog.messages
+        caplog.clear()
+    with dbSession() as db_session:
+        user1 = db_session.get(User, 1)
+        user4 = db_session.get(User, 4)
+        user1.done_inv = False
+        user4.done_inv = False
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_users_notif()
+            assert len(outbox) == 2
+            assert outbox[0].subject == "ConsumablesTracker - Reminder"
+            assert 'ConsumablesTracker' in outbox[0].sender
+            assert user1.email in outbox[0].recipients
+            assert user1.email in outbox[0].send_to
+            assert "Don't forget to check the inventory!" in outbox[0].body
+            assert f"Hi <b>{user1.name}</b>" in outbox[0].html
+            assert "Don't forget to <b>check the inventory</b>!" \
+                in outbox[0].html
+            assert outbox[1].subject == "ConsumablesTracker - Reminder"
+            assert 'ConsumablesTracker' in outbox[1].sender
+            assert user4.email in outbox[1].recipients
+            assert user4.email in outbox[1].send_to
+            assert "Don't forget to check the inventory!" in outbox[1].body
+            assert f"Hi <b>{user4.name}</b>" in outbox[1].html
+            assert "Don't forget to <b>check the inventory</b>!" \
+                in outbox[1].html
+        assert "No eligible user found to send notification" \
+            not in caplog.messages
+        assert f"Sent user email notification to '{user1.name}'" \
+            in caplog.messages
+        assert f"Sent user email notification to '{user4.name}'" \
+            in caplog.messages
+        caplog.clear()
+        user4_email = user4.email
+        user4.email = ""
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_users_notif()
+            assert len(outbox) == 1
+            assert user1.email in outbox[0].send_to
+        assert "No eligible user found to send notification" \
+            not in caplog.messages
+        assert f"Sent user email notification to '{user1.name}'" \
+            in caplog.messages
+        assert f"Sent user email notification to '{user4.name}'" \
+            not in caplog.messages
+        # teardown
+        user1.done_inv = True
+        user4.done_inv = True
+        user4.email = user4_email
+        db_session.commit()
+
+
+def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
+    """test_failed_send_user_notifications_email"""
+    with dbSession() as db_session:
+        user1 = db_session.get(User, 1)
+        user1.done_inv = False
+        db_session.commit()
+        mail_username = mail.state.username
+        mail.state.suppress = False
+        mail.state.username = "wrong_username"
+        with mail.record_messages() as outbox:
+            send_users_notif()
+            assert len(outbox) == 0
+        assert "No eligible user found to send notification" \
+            not in caplog.messages
+        assert f"Sent user email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert "Failed email SMTP authentication" in caplog.messages
+        caplog.clear()
+        mail.state.username = mail_username
+        user1_email = user1.email
+        user1.email = "wrong_email"
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_users_notif()
+            assert len(outbox) == 0
+        assert "No eligible user found to send notification" \
+            not in caplog.messages
+        assert f"Sent user email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert "not a valid RFC 5321 address" in caplog.text
+        # teardown
+        user1.done_inv = True
+        user1.email = user1_email
+        db_session.commit()
+        mail.state.suppress = True
+
+
+def test_send_admin_notifications_email(caplog: LogCaptureFixture):
+    """test_send_admin_notifications_email"""
+    with dbSession() as db_session:
+        user1 = db_session.get(User, 1)
+        user2 = db_session.get(User, 2)
+        user3 = db_session.get(User, 3)
+        user4 = db_session.get(User, 4)
+        user5 = db_session.get(User, 5)
+        product = db_session.get(Product, 1)
+        # No eligible admin found to send notification
+        user1_email = user1.email
+        user2_email = user2.email
+        user1.email = ""
+        user2.email = ""
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 0
+        assert "No eligible admin found to send notification" \
+            in caplog.messages
+        assert "No admin notifications need to be sent" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user2.name}'" \
+            not in caplog.messages
+        caplog.clear()
+        user1.email = user1_email
+        # No admin notifications need to be sent
+        user5.reg_req = False
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+        assert "No eligible admin found to send notification" \
+            not in caplog.messages
+        assert "No admin notifications need to be sent" \
+            in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user2.name}'" \
+            not in caplog.messages
+        caplog.clear()
+        user5.reg_req = True
+        db_session.commit()
+        # there are users that need registration approval
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 1
+            assert outbox[0].subject == "ConsumablesTracker - Notifications"
+            assert 'ConsumablesTracker' in outbox[0].sender
+            assert user1.email in outbox[0].recipients
+            assert user1.email in outbox[0].send_to
+            assert "there are users that need registration approval" \
+                in outbox[0].body
+            assert "there are users that requested inventorying" \
+                not in outbox[0].body
+            assert "there are users that have to check the inventory" \
+                not in outbox[0].body
+            assert "there are products that need to be ordered" \
+                not in outbox[0].body
+            assert f"Hi <b>{user1.name}</b>" in outbox[0].html
+            assert "These are the <b>daily notifications</b>:" \
+                in outbox[0].html
+            assert "there are users that need registration approval</li>" \
+                in outbox[0].html
+        assert "No eligible admin found to send notification" \
+            not in caplog.messages
+        assert "No admin notifications need to be sent" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            in caplog.messages
+        assert f"Sent admin email notification to '{user2.name}'" \
+            not in caplog.messages
+        caplog.clear()
+        # there are users that requested inventorying
+        user2.email = user2_email
+        user3.req_inv = True
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 2
+            assert user1.email in outbox[0].send_to
+            assert "there are users that need registration approval" \
+                in outbox[0].body
+            assert "there are users that requested inventorying" \
+                in outbox[0].body
+            assert "there are users that have to check the inventory" \
+                not in outbox[0].body
+            assert "there are products that need to be ordered" \
+                not in outbox[0].body
+            assert outbox[1].subject == "ConsumablesTracker - Notifications"
+            assert 'ConsumablesTracker' in outbox[1].sender
+            assert user2.email in outbox[1].recipients
+            assert user2.email in outbox[1].send_to
+            assert "there are users that need registration approval" \
+                in outbox[1].body
+            assert "there are users that requested inventorying" \
+                in outbox[1].body
+            assert f"Hi <b>{user2.name}</b>" in outbox[1].html
+            assert "These are the <b>daily notifications</b>:" \
+                in outbox[1].html
+            assert "there are users that need registration approval</li>" \
+                in outbox[1].html
+            assert "there are users that requested inventorying</li>" \
+                in outbox[1].html
+            assert "there are users that have to check the inventory" \
+                not in outbox[1].body
+            assert "there are products that need to be ordered" \
+                not in outbox[1].body
+        assert "No eligible admin found to send notification" \
+            not in caplog.messages
+        assert "No admin notifications need to be sent" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            in caplog.messages
+        assert f"Sent admin email notification to '{user2.name}'" \
+            in caplog.messages
+        # there are users that have to check the inventory
+        user4.done_inv = False
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 2
+            assert user1.email in outbox[0].send_to
+            assert "there are users that need registration approval" \
+                in outbox[0].body
+            assert "there are users that requested inventorying" \
+                in outbox[0].body
+            assert "there are users that have to check the inventory" \
+                in outbox[0].body
+            assert "there are products that need to be ordered" \
+                not in outbox[0].body
+            assert user2.email in outbox[1].send_to
+            assert "there are users that have to check the inventory" \
+                in outbox[1].body
+        # there are products that need to be ordered
+        product.to_order = True
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 2
+            assert user1.email in outbox[0].send_to
+            assert "there are users that need registration approval" \
+                in outbox[0].body
+            assert "there are users that requested inventorying" \
+                in outbox[0].body
+            assert "there are users that have to check the inventory" \
+                in outbox[0].body
+            assert "there are products that need to be ordered" \
+                in outbox[0].body
+            assert user2.email in outbox[1].send_to
+            assert "there are products that need to be ordered" \
+                in outbox[1].body
+        # teardown
+        user3.req_inv = False
+        user4.done_inv = True
+        product.to_order = False
+        db_session.commit()
+
+
+def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
+    """test_failed_send_admin_notifications_email"""
+    with dbSession() as db_session:
+        user1 = db_session.get(User, 1)
+        mail_username = mail.state.username
+        mail.state.suppress = False
+        mail.state.username = "wrong_username"
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 0
+        assert "No eligible admin found to send notification" \
+            not in caplog.messages
+        assert "No admin notifications need to be sent" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert "Failed email SMTP authentication" in caplog.messages
+        caplog.clear()
+        mail.state.username = mail_username
+        user1_email = user1.email
+        user1.email = "wrong_email"
+        db_session.commit()
+        with mail.record_messages() as outbox:
+            send_admins_notif()
+            assert len(outbox) == 0
+        assert "No eligible admin found to send notification" \
+            not in caplog.messages
+        assert "No admin notifications need to be sent" \
+            not in caplog.messages
+        assert f"Sent admin email notification to '{user1.name}'" \
+            not in caplog.messages
+        assert "not a valid RFC 5321 address" in caplog.text
+        # teardown
+        user1.email = user1_email
+        db_session.commit()
+        mail.state.suppress = True
 # endregion

@@ -5,6 +5,7 @@ import math
 import sqlite3
 from datetime import date, timedelta
 from os import path
+from smtplib import SMTPAuthenticationError, SMTPException
 from typing import Callable
 
 from flask import render_template
@@ -155,7 +156,9 @@ def send_users_notif() -> None:
                     conn.send(msg)
                     logger.debug("Sent user email notification to '%s'",
                                  user.name)
-        except Exception as err:
+        except SMTPAuthenticationError:
+            logger.warning("Failed email SMTP authentication")
+        except SMTPException as err:
             logger.warning(str(err))
     else:
         logger.debug("No eligible user found to send notification")
@@ -200,7 +203,9 @@ def send_admins_notif() -> None:
                         conn.send(msg)
                         logger.debug("Sent admin email notification to '%s'",
                                  admin.name)
-            except Exception as err:
+            except SMTPAuthenticationError:
+                logger.warning("Failed email SMTP authentication")
+            except SMTPException as err:
                 logger.warning(str(err))
         else:
             logger.debug("No admin notifications need to be sent")
