@@ -35,9 +35,17 @@ def test_main(caplog: LogCaptureFixture):
     assert "Production database vacuumed" in caplog.messages
     assert "This app doesn't need database reinit" in caplog.messages
     assert "No need to update schedules" in caplog.messages
-    assert "No eligible user found to send notification" in caplog.messages
-    assert "Sent admin email notification to 'user1'" in caplog.messages
-    assert "Sent admin email notification to 'user2'" in caplog.messages
+    if date.today().isocalendar().weekday in {6, 7}:
+        assert "No eligible user found to send notification" \
+            not in caplog.messages
+        assert "Sent admin email notification to 'user1'" \
+            not in caplog.messages
+        assert "Sent admin email notification to 'user2'" \
+            not in caplog.messages
+        assert "No user notifications will be sent (weekend)" \
+            in caplog.messages
+        assert "No admin notifications will be sent (weekend)" \
+            in caplog.messages
     # teardown
     remove(BACKUP_DB)
 
@@ -65,6 +73,10 @@ def test_main_timeline(caplog: LogCaptureFixture):
     assert "Database backed up" in caplog.messages
     assert "Weekly backup" not in caplog.messages
     assert "Monthly backup" not in caplog.messages
+    assert "No user notifications will be sent (weekend)" \
+        in caplog.messages
+    assert "No admin notifications will be sent (weekend)" \
+        in caplog.messages
     caplog.clear()
 
     with freeze_time("2023-04-03"):
@@ -78,6 +90,12 @@ def test_main_timeline(caplog: LogCaptureFixture):
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" in caplog.messages
         assert "Monthly backup" not in caplog.messages
+        assert "No eligible user found to send notification" \
+            in caplog.messages
+        assert "Sent admin email notification to 'user1'" \
+            in caplog.messages
+        assert "Sent admin email notification to 'user2'" \
+            in caplog.messages
         caplog.clear()
 
     with freeze_time("2023-04-09"):
@@ -744,8 +762,10 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
 
 
 # region: email notifications
+@freeze_time("2023-11-03")
 def test_send_user_notifications_email(caplog: LogCaptureFixture):
     """test_send_user_notifications_email"""
+    assert date.today().isocalendar().weekday not in {6, 7}
     with mail.record_messages() as outbox:
         send_users_notif()
         assert len(outbox) == 0
@@ -796,15 +816,27 @@ def test_send_user_notifications_email(caplog: LogCaptureFixture):
             in caplog.messages
         assert f"Sent user email notification to '{user4.name}'" \
             not in caplog.messages
+        caplog.clear()
         # teardown
         user1.done_inv = True
         user4.done_inv = True
         user4.email = user4_email
         db_session.commit()
+    with freeze_time("2023-11-04"):
+        send_users_notif()
+        assert "No user notifications will be sent (weekend)" \
+            in caplog.messages
+        caplog.clear()
+    with freeze_time("2023-11-05"):
+        send_users_notif()
+        assert "No user notifications will be sent (weekend)" \
+            in caplog.messages
 
 
+@freeze_time("2023-11-03")
 def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
     """test_failed_send_user_notifications_email"""
+    assert date.today().isocalendar().weekday not in {6, 7}
     with dbSession() as db_session:
         user1 = db_session.get(User, 1)
         user1.done_inv = False
@@ -840,8 +872,10 @@ def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
         mail.state.suppress = True
 
 
+@freeze_time("2023-11-03")
 def test_send_admin_notifications_email(caplog: LogCaptureFixture):
     """test_send_admin_notifications_email"""
+    assert date.today().isocalendar().weekday not in {6, 7}
     with dbSession() as db_session:
         user1 = db_session.get(User, 1)
         user2 = db_session.get(User, 2)
@@ -998,10 +1032,21 @@ def test_send_admin_notifications_email(caplog: LogCaptureFixture):
         user4.done_inv = True
         product.to_order = False
         db_session.commit()
+    with freeze_time("2023-11-04"):
+        send_admins_notif()
+        assert "No admin notifications will be sent (weekend)" \
+            in caplog.messages
+        caplog.clear()
+    with freeze_time("2023-11-05"):
+        send_admins_notif()
+        assert "No admin notifications will be sent (weekend)" \
+            in caplog.messages
 
 
+@freeze_time("2023-11-03")
 def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
     """test_failed_send_admin_notifications_email"""
+    assert date.today().isocalendar().weekday not in {6, 7}
     with dbSession() as db_session:
         user1 = db_session.get(User, 1)
         mail_username = mail.state.username

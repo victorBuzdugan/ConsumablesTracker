@@ -136,6 +136,9 @@ def update_schedules() -> None:
 
 def send_users_notif() -> None:
     """Check users status and, if required, send a notification email."""
+    if date.today().isocalendar().weekday in {6, 7}:
+        logger.debug("No user notifications will be sent (weekend)")
+        return
     with dbSession() as db_session:
         eligible_users = db_session.scalars(
             select(User)
@@ -166,6 +169,9 @@ def send_users_notif() -> None:
 
 def send_admins_notif() -> None:
     """Check status and, if required, send a notification email to admins."""
+    if date.today().isocalendar().weekday in {6, 7}:
+        logger.debug("No admin notifications will be sent (weekend)")
+        return
     with dbSession() as db_session:
         eligible_admins = db_session.scalars(
             select(User)
