@@ -1,7 +1,7 @@
 """Daily task tests."""
 
 from datetime import date, timedelta
-from os import path, remove, rename
+from os import environ, getenv, path, remove, rename
 from shutil import copyfile
 
 import pytest
@@ -13,8 +13,9 @@ from app import mail
 from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import IndivSchedule
 from daily_task import (db_backup, db_reinit, main, send_admins_notif,
-                        send_users_notif, update_schedules)
+                        send_log, send_users_notif, update_schedules)
 from database import Product, Schedule, User, dbSession
+from helpers import logger
 from tests.conftest import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
 
 pytestmark = pytest.mark.daily
@@ -35,17 +36,7 @@ def test_main(caplog: LogCaptureFixture):
     assert "Production database vacuumed" in caplog.messages
     assert "This app doesn't need database reinit" in caplog.messages
     assert "No need to update schedules" in caplog.messages
-    if date.today().isocalendar().weekday in {6, 7}:
-        assert "No eligible user found to send notification" \
-            not in caplog.messages
-        assert "Sent admin email notification to 'user1'" \
-            not in caplog.messages
-        assert "Sent admin email notification to 'user2'" \
-            not in caplog.messages
-        assert "No user notifications will be sent (weekend)" \
-            in caplog.messages
-        assert "No admin notifications will be sent (weekend)" \
-            in caplog.messages
+    assert "No recipient or no log file to send" in caplog.messages
     # teardown
     remove(BACKUP_DB)
 
@@ -1081,4 +1072,70 @@ def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
         user1.email = user1_email
         db_session.commit()
         mail.state.suppress = True
+# endregion
+
+
+# region: send log
+def test_send_log(caplog: LogCaptureFixture):
+    """test_send_log"""
+    log_file = logger.handlers[0].baseFilename
+    assert not path.isfile(log_file)
+    send_log()
+    assert "No recipient or no log file to send" in caplog.messages
+    assert "Sent log file to" not in caplog.text
+    caplog.clear()
+    # write a log message
+    with open(file=log_file, mode="w", encoding="UTF-8") as file:
+        file.write("Some log message")
+    assert path.isfile(log_file)
+    recipient = getenv("ADMIN_EMAIL")
+    assert recipient
+    with mail.record_messages() as outbox:
+        send_log()
+        assert len(outbox) == 1
+        assert "ConsumablesTracker - LogFile - " in outbox[0].subject
+        assert 'ConsumablesTracker' in outbox[0].sender
+        assert recipient in outbox[0].recipients
+        assert recipient in outbox[0].send_to
+        assert "Log file attached" in outbox[0].body
+        assert "<p>Log file attached.</p>" in outbox[0].html
+        assert "No recipient or no log file to send" not in caplog.messages
+        assert "Sent log file to" in caplog.text
+        caplog.clear()
+    environ["ADMIN_EMAIL"] = ""
+    assert path.isfile(log_file)
+    assert not getenv("ADMIN_EMAIL")
+    send_log()
+    assert "No recipient or no log file to send" in caplog.messages
+    assert "Sent log file to" not in caplog.text
+    # teardown
+    environ["ADMIN_EMAIL"] = recipient
+
+
+def test_failed_send_log(caplog: LogCaptureFixture):
+    """test_failed_send_log"""
+    log_file = logger.handlers[0].baseFilename
+    # write a log message
+    with open(file=log_file, mode="w", encoding="UTF-8") as file:
+        file.write("Some log message")
+    assert path.isfile(log_file)
+    recipient = getenv("ADMIN_EMAIL")
+    assert recipient
+    mail_username = mail.state.username
+    mail.state.suppress = False
+    mail.state.username = "wrong_username"
+    with mail.record_messages() as outbox:
+        send_log()
+        assert len(outbox) == 0
+    assert "Failed email SMTP authentication" in caplog.messages
+    mail.state.username = mail_username
+    caplog.clear()
+    environ["ADMIN_EMAIL"] = "wrong_email"
+    with mail.record_messages() as outbox:
+        send_log()
+        assert len(outbox) == 0
+    assert "not a valid RFC 5321 address" in caplog.text
+    # teardown
+    environ["ADMIN_EMAIL"] = recipient
+    mail.state.suppress = True
 # endregion

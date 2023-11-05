@@ -4,7 +4,7 @@
 import math
 import sqlite3
 from datetime import date, timedelta
-from os import path
+from os import getenv, path
 from smtplib import SMTPAuthenticationError, SMTPException
 from typing import Callable
 
@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 
 from app import app, mail
 from database import Product, Schedule, User, dbSession
-from helpers import logger
+from helpers import DB_NAME, logger
 
 func: Callable
 
@@ -26,6 +26,7 @@ def main() -> None:
     update_schedules()
     send_users_notif()
     send_admins_notif()
+    send_log()
 
 
 def db_backup_name(prod_db: str) -> str:
@@ -217,6 +218,33 @@ def send_admins_notif() -> None:
             logger.debug("No admin notifications need to be sent")
     else:
         logger.debug("No eligible admin found to send notification")
+
+
+def send_log() -> None:
+    """Send log file."""
+    recipient = getenv("ADMIN_EMAIL")
+    log_file = logger.handlers[0].baseFilename
+    if recipient and path.isfile(log_file):
+        try:
+            with app.app_context(), mail.connect() as conn:
+                msg = Message(recipients=[recipient])
+                msg.subject = ("ConsumablesTracker - LogFile - " +
+                               DB_NAME.rstrip('.db'))
+                msg.body = "Log file attached."
+                msg.html = "<p>Log file attached.</p>"
+                with app.open_resource(log_file) as log:
+                    msg.attach(
+                        filename="logger.log",
+                        content_type="text/plain",
+                        data=log.read())
+                conn.send(msg)
+                logger.debug("Sent log file to '%s'", recipient)
+        except SMTPAuthenticationError:
+            logger.warning("Failed email SMTP authentication")
+        except SMTPException as err:
+            logger.warning(str(err))
+    else:
+        logger.warning("No recipient or no log file to send")
 
 
 if __name__== "__main__":   # pragma: no cover
