@@ -1086,7 +1086,7 @@ def test_send_log(caplog: LogCaptureFixture):
     caplog.clear()
     # write a log message
     with open(file=log_file, mode="w", encoding="UTF-8") as file:
-        file.write("Some log message")
+        file.write(f"{date.today().strftime('%d.%m')} Some log message")
     assert path.isfile(log_file)
     recipient = getenv("ADMIN_EMAIL")
     assert recipient
@@ -1117,7 +1117,7 @@ def test_failed_send_log(caplog: LogCaptureFixture):
     log_file = logger.handlers[0].baseFilename
     # write a log message
     with open(file=log_file, mode="w", encoding="UTF-8") as file:
-        file.write("Some log message")
+        file.write(f"{date.today().strftime('%d.%m')} Some log message")
     assert path.isfile(log_file)
     recipient = getenv("ADMIN_EMAIL")
     assert recipient

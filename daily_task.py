@@ -4,7 +4,7 @@
 import math
 import sqlite3
 from datetime import date, timedelta
-from os import getenv, path
+from os import getenv, path, remove
 from smtplib import SMTPAuthenticationError, SMTPException
 from typing import Callable
 
@@ -224,7 +224,16 @@ def send_log() -> None:
     """Send log file."""
     recipient = getenv("ADMIN_EMAIL")
     log_file = logger.handlers[0].baseFilename
+    daily_log = path.splitext(log_file)[0] + "_daily.log"
     if recipient and path.isfile(log_file):
+        # filter records from yesterday to today
+        yesterday = date.today() - timedelta(days=1)
+        with open(file=log_file, mode="r", encoding="UTF-8") as log:
+            with open(file=daily_log, mode="w", encoding="UTF-8") as temp_log:
+                for record in log:
+                    if (record.startswith(yesterday.strftime("%d.%m")) or
+                            record.startswith(date.today().strftime("%d.%m"))):
+                        temp_log.write(record)
         try:
             with app.app_context(), mail.connect() as conn:
                 msg = Message(recipients=[recipient])
@@ -232,9 +241,9 @@ def send_log() -> None:
                                DB_NAME.rstrip('.db'))
                 msg.body = "Log file attached."
                 msg.html = "<p>Log file attached.</p>"
-                with app.open_resource(log_file) as log:
+                with app.open_resource(daily_log) as log:
                     msg.attach(
-                        filename="logger.log",
+                        filename="daily_log.log",
                         content_type="text/plain",
                         data=log.read())
                 conn.send(msg)
@@ -243,6 +252,8 @@ def send_log() -> None:
             logger.warning("Failed email SMTP authentication")
         except SMTPException as err:
             logger.warning(str(err))
+        finally:
+            remove(daily_log)
     else:
         logger.warning("No recipient or no log file to send")
 

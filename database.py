@@ -982,7 +982,5 @@ def create_hidden_admin(target, connection, **kw):
             db_session.commit()
 
 
-logger.debug("Database init")
-
 Base.metadata.create_all(bind=engine)
 # endregion
