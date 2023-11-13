@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 from datetime import date
-from os import getenv, path
+from os import path
 from typing import Callable, List, Optional
 
 from dotenv import load_dotenv
 from flask_babel import gettext
 from sqlalchemy import (URL, ForeignKey, Index, UniqueConstraint,
-                        create_engine, event, func, select)
+                        create_engine, func, select)
 from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
                             declared_attr, mapped_column, relationship,
                             sessionmaker, synonym, validates)
 from werkzeug.security import generate_password_hash
 
 from blueprints.sch import clean_sch_info, sat_sch_info
-from helpers import CURR_DIR, DB_NAME, logger
+from helpers import CURR_DIR, DB_NAME
 
 func: Callable
 
@@ -964,23 +964,25 @@ class Schedule(Base):
 
 
 # region: database init
-@event.listens_for(Base.metadata, "after_create")
-def create_hidden_admin(target, connection, **kw):
-    """Create a hidden admin user after db creation."""
-    # pylint: disable=unused-argument
-    with dbSession() as db_session:
-        if not db_session.get(User, 0):
-            admin = User(
-                name="Admin",
-                password=getenv('ADMIN_PASSW'),
-                admin=True,
-                in_use=False,
-                reg_req=False,
-                details="Hidden admin")
-            admin.id = 0
-            db_session.add(admin)
-            db_session.commit()
+# Optional creation of hidden admin (replace password)
+# from sqlalchemy import event
+# @event.listens_for(Base.metadata, "after_create")
+# def create_hidden_admin(target, connection, **kw):
+#     """Create a hidden admin user after db creation."""
+#     # pylint: disable=unused-argument
+#     with dbSession() as db_session:
+#         if not db_session.get(User, 0):
+#             admin = User(
+#                 name="Admin",
+#                 password="HIDDEN_ADMIN_PASSWORD",
+#                 admin=True,
+#                 in_use=False,
+#                 reg_req=False,
+#                 details="Hidden admin")
+#             admin.id = 0
+#             db_session.add(admin)
+#             db_session.commit()
 
-
-Base.metadata.create_all(bind=engine)
+# Database creation (uncomment on first run)
+# Base.metadata.create_all(bind=engine)
 # endregion
