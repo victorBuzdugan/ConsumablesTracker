@@ -1,19 +1,21 @@
 """Authentification blueprint tests."""
 
 from html import unescape
-from os import getenv
 
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
+from hypothesis import assume, example, given, settings
+from hypothesis import strategies as st
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from app import app, babel, get_locale
-from blueprints.auth.auth import (PASSW_MIN_LENGTH, USER_MAX_LENGTH,
-                                  USER_MIN_LENGTH)
+from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX,
+                                  USER_MAX_LENGTH, USER_MIN_LENGTH)
 from database import User, dbSession
+from tests import ValidUser, test_users
 
 pytestmark = pytest.mark.auth
 
@@ -40,53 +42,16 @@ def test_clear_session_if_user_logged_in(
         assert not session.get("user_id")
 
 
-@pytest.mark.parametrize(
-    ("name", "password", "confirm", "email", "flash_message"), (
-        ("", "a", "a", "",
-            "Username is required!"),
-        ("aa", "a", "a", "",
-            f"Username must be between {USER_MIN_LENGTH} and " +
-            f"{USER_MAX_LENGTH} characters!"),
-        ("aaaaaaaaaaaaaaaa", "a", "a", "",
-            f"Username must be between {USER_MIN_LENGTH} and " +
-            f"{USER_MAX_LENGTH} characters!"),
-        ("aaa", "", "a", "",
-            "Password is required!"),
-        ("aaa", "aaaaaaa", "a", "",
-            f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
-        ("aaa", "aaaaaaaa", "", "",
-            "Password is required!"),
-        ("aaa", "aaaaaaaa", "aaaaaaa", "",
-            f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
-        ("aaa", "aaaaaaaa", "aaaaaaa", "",
-            "Passwords don't match!"),
-        ("aaa", "aaaaaaaa", "aaaaaaaa", "",
-            "Check password rules!"),
-        ("aaa", "#1aaaaaa", "#1aaaaaa", "",
-            "Check password rules!"),
-        ("aaa", "#Aaaaaaa", "#Aaaaaaa", "",
-            "Check password rules!"),
-        ("aaa", "1Aaaaaaa", "1Aaaaaaa", "",
-            "Check password rules!"),
-        ("user5", "P@ssw0rd", "P@ssw0rd", "",
-            "The user user5 allready exists"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd",
-            "plainaddress", "Invalid email adress"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "#@%^%#$@#$@#.com",
-            "Invalid email adress"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "@example.com",
-            "Invalid email adress"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "Joe Smith <joe@smith.com>",
-            "Invalid email adress"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@example@example.com",
-            "Invalid email adress"),
-        ("__testt_userr_", "P@ssw0rd", "P@ssw0rd", "email@-example.com",
-            "Invalid email adress"),
-    ))
-def test_failed_registration(
+# region: failed registration
+def _test_failed_registration(
         client: FlaskClient,
-        name, password, confirm, email, flash_message):
-    """test_failed_registration"""
+        flash_message,
+        name=ValidUser.name,
+        password=ValidUser.password,
+        confirm=ValidUser.password,
+        email=ValidUser.email
+    ):
+    """Common logic for testing failed registration."""
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
@@ -99,22 +64,200 @@ def test_failed_registration(
         response = client.post("/auth/register", data=data)
     assert response.status_code == 200
     assert flash_message in unescape(response.text)
+    assert "Registration request sent. Please contact an admin." \
+            not in response.text
 
 
-def test_successful_registration(client: FlaskClient):
-    """test_successful_registration"""
-    user = User(
-        name="__testt_userr_",
-        password="P@ssw0rd"
-    )
+@settings(max_examples=20)
+@given(name=st.text(min_size=1, max_size=USER_MIN_LENGTH - 1))
+@example(name="")
+def test_failed_registration_short_name(client: FlaskClient, name):
+    """test_failed_registration_short_name"""
+    if not name:
+        flash_message = "Username is required!"
+    else:
+        flash_message = (f"Username must be between {USER_MIN_LENGTH} and " +
+                         f"{USER_MAX_LENGTH} characters!")
+    _test_failed_registration(client=client,
+                              name=name,
+                              flash_message=flash_message)
+
+
+@settings(max_examples=20)
+@given(name=st.text(min_size=USER_MAX_LENGTH + 1))
+def test_failed_registration_long_name(client: FlaskClient, name):
+    """test_failed_registration_long_name"""
+    flash_message = (f"Username must be between {USER_MIN_LENGTH} and " +
+                     f"{USER_MAX_LENGTH} characters!")
+    _test_failed_registration(client=client,
+                              name=name,
+                              flash_message=flash_message)
+
+
+@settings(max_examples=20)
+@given(password=st.text(min_size=1, max_size=PASSW_MIN_LENGTH - 1))
+@example(password="")
+def test_failed_registration_short_password(client: FlaskClient, password):
+    """test_failed_registration_short_password"""
+    if not password:
+        flash_message = "Password is required!"
+    else:
+        flash_message = (f"Password should have at least {PASSW_MIN_LENGTH} " +
+                         "characters!")
+    _test_failed_registration(client=client,
+                              password=password,
+                              flash_message=flash_message)
+
+
+@settings(max_examples=20)
+@given(confirm=st.text(min_size=1, max_size=PASSW_MIN_LENGTH - 1))
+@example(confirm="")
+def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
+    """test_failed_registration_short_confirmation"""
+    if not confirm:
+        flash_message = "Password is required!"
+    else:
+        flash_message = (f"Password should have at least {PASSW_MIN_LENGTH} " +
+                         "characters!")
+    _test_failed_registration(client=client,
+                              confirm=confirm,
+                              flash_message=flash_message)
+
+
+@settings(max_examples=20)
+@given(password=st.text(min_size=8), confirm=st.text(min_size=8))
+def test_failed_registration_confirmation_not_matching(
+        client: FlaskClient, password, confirm):
+    """test_failed_registration_confirmation_not_matching"""
+    assume(password != confirm)
+    flash_message = "Passwords don't match!"
+    _test_failed_registration(client=client,
+                              password=password,
+                              confirm=confirm,
+                              flash_message=flash_message)
+
+
+def _test_failed_registration_password_rules(
+        client: FlaskClient, password):
+    """Common logic for testing password characters rules."""
+    flash_message = "Check password rules!"
+    _test_failed_registration(client=client,
+                              password=password,
+                              confirm=password,
+                              flash_message=flash_message)
+
+
+@given(password=st.from_regex(r"[A-Z]+[!@#$%^&*_=+]+[^\d]{6,}",
+                              fullmatch=True))
+def test_failed_registration_no_digit_in_password(
+        client: FlaskClient, password):
+    """test_failed_registration_no_digit_in_password"""
+    _test_failed_registration_password_rules(client=client,
+                                             password=password)
+
+
+@given(password=st.from_regex(r"[A-Z]+[0-9]+[^!@#$%^&*_=+]{6,}",
+                              fullmatch=True))
+def test_failed_registration_no_special_character_in_password(
+        client: FlaskClient, password):
+    """test_failed_registration_no_special_character_in_password"""
+    _test_failed_registration_password_rules(client=client,
+                                             password=password)
+
+
+@given(password=st.from_regex(r"[0-9]+[!@#$%^&*_=+]+[^A-Z]{6,}",
+                              fullmatch=True))
+def test_failed_registration_no_big_letter_in_password(
+        client: FlaskClient, password):
+    """test_failed_registration_no_big_letter_in_password"""
+    _test_failed_registration_password_rules(client=client,
+                                             password=password)
+
+
+@given(name=st.sampled_from([user["name"] for user in test_users]))
+def test_failed_registration_existing_username(
+        client: FlaskClient, name):
+    """test_failed_registration_existing_username"""
+    flash_message = f"The user {name} allready exists"
+    _test_failed_registration(client=client,
+                              name=name,
+                              flash_message=flash_message)
+
+
+@settings(max_examples=100)
+@given(valid_email=st.emails(), st_random = st.randoms())
+def test_failed_registration_invalid_email(
+        client: FlaskClient, valid_email, st_random):
+    """test_failed_registration_invalid_email"""
+    invalid_chars = " @()[]:;\"\\,"
+    def remove_local(email: str) -> str:
+        """Remove the local part from email"""
+        return "@" + email.split("@")[1]
+    def remove_at_symbol(email: str) -> str:
+        """Remove the @ symbol from email"""
+        return email.replace("@", "")
+    def remove_domain(email: str) -> str:
+        """Remove the domain part from email"""
+        return email.split("@")[0] + "@"
+    def remove_top_level_domain(email: str) -> str:
+        """Remove the top level domain (.com) from the email"""
+        return email.rsplit(".")[0]
+    def add_invalid_char_local(email: str) -> str:
+        """Add an invalid character to the local part"""
+        return (email.split("@")[0] +
+                st_random.choice(invalid_chars) +
+                "@" +
+                email.split("@")[1])
+    def add_invalid_char_domain(email: str) -> str:
+        """Add an invalid character to the domain part"""
+        return (email.split("@")[0] +
+                "@" +
+                st_random.choice(invalid_chars) +
+                email.split("@")[1])
+    def exceed_local_max_length(email: str) -> str:
+        """Add chars in order to exceed 64 octets local part limit"""
+        return "x" * 65 + "@" + email.split("@")[1]
+    def exceed_domain_max_length(email: str) -> str:
+        """Add chars in order to exceed 255 octets domain part limit"""
+        return (email.split("@")[0] + "@" +
+                "x" * 256 +
+                "." + email.rsplit(".")[1])
+    flash_message = "Invalid email adress"
+    invalidate_email = st_random.choice([remove_local,
+                                      remove_at_symbol,
+                                      remove_domain,
+                                      remove_top_level_domain,
+                                      add_invalid_char_local,
+                                      add_invalid_char_domain,
+                                      exceed_local_max_length,
+                                      exceed_domain_max_length])
+    _test_failed_registration(client=client,
+                              email=invalidate_email(valid_email),
+                              flash_message=flash_message)
+# endregion
+
+
+@settings(max_examples=5, deadline=500)
+@given(name = st.text(min_size=USER_MIN_LENGTH, max_size=USER_MAX_LENGTH),
+       password = st.from_regex(PASSW_REGEX),
+       email = st.emails())
+@example(name=ValidUser.name,
+         password=ValidUser.password,
+         email=ValidUser.email)
+@example(name=ValidUser.name,
+         password=ValidUser.password,
+         email="")
+def test_registration(client: FlaskClient, name, password, email):
+    """Test successful registration"""
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
         data = {
             "csrf_token": g.csrf_token,
-            "name": user.name,
-            "password": user.password,
-            "confirm": user.password}
+            "name": name,
+            "password": password,
+            "confirm": password,
+            "email": email}
         response = client.post(
             "/auth/register", data=data, follow_redirects=True)
         assert len(response.history) == 1
@@ -126,8 +269,9 @@ def test_successful_registration(client: FlaskClient):
 
     with dbSession() as db_session:
         db_user = db_session.scalar(
-            select(User).filter_by(name=user.name))
-        assert check_password_hash(db_user.password, user.password)
+            select(User).filter_by(name=name))
+        assert check_password_hash(db_user.password, password)
+        assert db_user.email == email
         assert db_user.reg_req
 
         db_session.delete(db_user)
@@ -206,26 +350,8 @@ def test_could_not__get_locale(client: FlaskClient, caplog: LogCaptureFixture):
         babel.init_app(app=app, locale_selector=lambda: "en")
 
 
-@pytest.mark.parametrize(("name", "password", "flash_message"), (
-    ("", "",
-        "Username is required!"),
-    ("a", "",
-        "Password is required!"),
-    ("a", "a",
-        "Wrong username or password!"),
-    ("a", "password",
-        "Wrong username or password!"),
-    ("user5", "a",
-        "Wrong username or password!"),
-    ("user6", "Q!666666",
-        "This user is not in use anymore!"),
-    ("user5", "Q!555555",
-        "Your registration is pending. Contact an admin."),
-))
-def test_failed_login(
-        client: FlaskClient,
-        name, password, flash_message):
-    """test_failed_login"""
+def _test_failed_login(client: FlaskClient, name, password, flash_message):
+    """Common logic for failed login"""
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
@@ -242,30 +368,59 @@ def test_failed_login(
     assert flash_message in response.text
 
 
-@pytest.mark.parametrize(("name", "password"), (
-    ("Admin", getenv('ADMIN_PASSW')),
-    ("user1", "Q!111111"),
-    ("user2", "Q!222222"),
-    ("user3", "Q!333333"),
-    ("user4", "Q!444444"),
-))
-def test_succesfull_login_and_logout(client: FlaskClient, name, password):
-    """test_succesfull_login_and_logout"""
-    with dbSession() as db_session:
-        test_user = db_session.scalar(
-                select(User).filter_by(name=name))
+@settings(max_examples=10)
+@given(name=st.text())
+@example(name="")
+def test_failed_login_username(client: FlaskClient, name):
+    """Failed login bad username or no username"""
+    if not name:
+        flash_message = "Username is required!"
+    else:
+        flash_message = "Wrong username or password!"
+    assume(name not in [user["name"] for user in test_users])
+    _test_failed_login(client=client,
+                       name=name,
+                       password=test_users[0]["password"],
+                       flash_message=flash_message)
+
+
+def test_failed_login_password(client: FlaskClient):
+    """Failed login bad password or no password"""
+    for user in test_users:
+        password = user["password"]
+        if user == test_users[0]:
+            password = ""
+            flash_message = "Password is required!"
+        elif not user["in_use"]:
+            flash_message = "This user is not in use anymore!"
+        elif user["reg_req"]:
+            flash_message = "Your registration is pending. Contact an admin."
+        else:
+            password = "bad_password"
+            flash_message = "Wrong username or password!"
+        _test_failed_login(client=client,
+                        name=user["name"],
+                        password=password,
+                        flash_message=flash_message)
+
+
+@given(user=st.sampled_from(test_users))
+def test_login_and_logout(client: FlaskClient, user):
+    """Login and then logout"""
+    if user["reg_req"] or not user["in_use"]:
+        return
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
         data = {
             "csrf_token": g.csrf_token,
-            "name": test_user.name,
-            "password": password}
+            "name": user["name"],
+            "password": user["password"]}
         response = client.post("/auth/login", data=data, follow_redirects=True)
-        assert session["user_id"] == test_user.id
-        assert session["admin"] == test_user.admin
-        assert session["user_name"] == name
-        assert f"Welcome {name}" in response.text
+        assert session["user_id"] == test_users.index(user)
+        assert session["admin"] == user["admin"]
+        assert session["user_name"] == user["name"]
+        assert f"Welcome {user['name']}" in response.text
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
@@ -281,21 +436,23 @@ def test_succesfull_login_and_logout(client: FlaskClient, name, password):
         assert response.request.path == url_for("auth.login")
 
 
-@pytest.mark.parametrize(("csrf", "flash_message"),(
-        (None, "The CSRF token is missing"),
-        ("", "The CSRF token is missing"),
-        (" ", "The CSRF token is invalid"),
-        ("some_random_text", "The CSRF token is invalid"),
-))
-def test_failed_login_csrf(client: FlaskClient, csrf, flash_message):
-    """test_failed_login_csrf"""
+@settings(max_examples=10)
+@given(csrf=st.text(min_size=1))
+@example(None)
+@example("")
+def test_failed_login_wrong_csrf(client: FlaskClient, csrf):
+    """Failed login because missing or wrong csrf"""
+    if csrf is None or csrf == "":
+        flash_message = "The CSRF token is missing"
+    else:
+        flash_message = "The CSRF token is invalid"
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
         data = {
             "csrf_token": csrf,
-            "name": "user4",
-            "password": "P@ssw0rd"}
+            "name": "doesnt_matter",
+            "password": "doesnt_matter"}
         response = client.post(url_for("auth.login"), data=data,
                                follow_redirects=True)
         assert response.request.path == url_for("auth.login")
@@ -358,31 +515,54 @@ def test_change_password_landing_page_if_admin_logged_in(
 
 
 @pytest.mark.parametrize(
-    ("old_password", "password", "confirm",
-     "flash_message"), (
-        ("", "P@ssw0rdd", "P@ssw0rdd",
-        "Password is required!"),
-        ("P@ssw0r", "P@ssw0rdd", "P@ssw0rdd",
-        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
-        ("P@ssw0rd", "", "P@ssw0rdd",
-        "Password is required!"),
-        ("P@ssw0rd", "P@ssw0r", "P@ssw0rdd",
-        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
-        ("P@ssw0rd", "aaaaaaaa", "aaaaaaaa",
-         "Check password rules!"),
-        ("P@ssw0rd", "#1aaaaaa", "#1aaaaaa",
-         "Check password rules!"),
-        ("P@ssw0rd", "#Aaaaaaa", "#Aaaaaaa",
-         "Check password rules!"),
-        ("P@ssw0rd", "1Aaaaaaa", "1Aaaaaaa",
-         "Check password rules!"),
-        ("P@ssw0rd", "P@ssw0rdd", "",
+    ("old_password", "password", "confirm", "flash_message"), (
+        ("",
+         ValidUser.password,
+         ValidUser.password,
          "Password is required!"),
-        ("P@ssw0rd", "P@ssw0rdd", "P@ssw0r",
-        f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
-        ("P@ssw0rd", "P@ssw0rdd", "P@ssw0rddd",
+        (ValidUser.password[:PASSW_MIN_LENGTH-1],
+         ValidUser.password,
+         ValidUser.password,
+         f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        (test_users[4]["password"],
+         "",
+         ValidUser.password,
+         "Password is required!"),
+        (test_users[4]["password"],
+         ValidUser.password[:PASSW_MIN_LENGTH-1],
+         ValidUser.password,
+         f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        (test_users[4]["password"],
+         "aaaaaaaa",
+         "aaaaaaaa",
+         "Check password rules!"),
+        (test_users[4]["password"],
+         "#1aaaaaa",
+         "#1aaaaaa",
+         "Check password rules!"),
+        (test_users[4]["password"],
+         "#Aaaaaaa",
+         "#Aaaaaaa",
+         "Check password rules!"),
+        (test_users[4]["password"],
+         "1Aaaaaaa",
+         "1Aaaaaaa",
+         "Check password rules!"),
+        (test_users[4]["password"],
+         ValidUser.password,
+         "",
+         "Password is required!"),
+        (test_users[4]["password"],
+         ValidUser.password,
+         ValidUser.password[:PASSW_MIN_LENGTH-1],
+         f"Password should have at least {PASSW_MIN_LENGTH} characters!"),
+        (test_users[4]["password"],
+         ValidUser.password,
+         ValidUser.password + "x",
          "Passwords don't match!"),
-        ("P@ssw0rdd", "P@ssw0rdd", "P@ssw0rdd",
+        (test_users[4]["password"] + "x",
+         ValidUser.password,
+         ValidUser.password,
          "Wrong old password!"),
 ))
 def test_failed_change_password(
@@ -405,10 +585,10 @@ def test_failed_change_password(
         assert not check_password_hash(user_logged_in.password, password)
 
 
-def test_successful_change_password(client: FlaskClient, user_logged_in: User):
+def test_change_password(client: FlaskClient, user_logged_in: User):
     """test_successful_change_password"""
-    old_password = "Q!444444"
-    new_password = "Q!4444444"
+    old_password = test_users[user_logged_in.id]["password"]
+    new_password = ValidUser.password
     with client:
         client.get("/")
         client.get(url_for("auth.change_password"))
