@@ -16,7 +16,7 @@ from daily_task import (db_backup, db_reinit, main, send_admins_notif,
                         send_log, send_users_notif, update_schedules)
 from database import Product, Schedule, User, dbSession
 from helpers import logger
-from tests.conftest import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
+from tests import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
 
 pytestmark = pytest.mark.daily
 
