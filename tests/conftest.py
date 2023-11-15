@@ -13,7 +13,7 @@ from blueprints.sch.sch import cleaning_sch, saturday_sch
 from database import Base, Category, Product, Supplier, User, dbSession
 from helpers import CURR_DIR, log_handler
 from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
-                   test_users)
+                   test_categories, test_users)
 
 mail.state.suppress = True
 
@@ -40,7 +40,7 @@ def create_test_db():
     Base.metadata.create_all(bind=test_engine)
 
 
-@pytest.fixture(scope="session", name="client")
+@pytest.fixture(scope="session", name="client", autouse=True)
 def fixture_client() -> FlaskClient:
     """Yield a flask test client."""
     print("\nYield client")
@@ -103,13 +103,13 @@ def admin_logged_in(client: FlaskClient) -> User:
 def hidden_admin_logged_in(client: FlaskClient):
     """Log in admin Admin."""
     with dbSession() as db_session:
-        test_admin = db_session.get(User, 0)
-    # 'log in' test admin
+        hidden_admin = db_session.get(User, 0)
+    # 'log in' hidden admin
     with client.session_transaction() as session:
-        session["user_id"] = test_admin.id
-        session["admin"] = test_admin.admin
-        session["user_name"] = test_admin.name
-    yield test_admin
+        session["user_id"] = hidden_admin.id
+        session["admin"] = hidden_admin.admin
+        session["user_name"] = hidden_admin.name
+    yield hidden_admin
     client.get("/auth/logout")
 # endregion
 
@@ -119,19 +119,10 @@ def hidden_admin_logged_in(client: FlaskClient):
 def create_test_categories():
     """Insert into db a set of test categories."""
     print("\nCreate test categories")
-    categories = []
-    categories.append(Category(name="Household",
-                               description="Household consumables"))
-    categories.append(Category(name="Personal",
-                               description="Personal consumables"))
-    categories.append(Category(name="Electronics"))
-    categories.append(Category(name="Kids"))
-    categories.append(Category(name="Health"))
-    categories.append(Category(name="Groceries"))
-    categories.append(Category(name="Pets"))
-    categories.append(Category(name="Others", in_use=False))
     with dbSession() as db_session:
-        db_session.add_all(categories)
+        for category_dict in test_categories:
+            category = Category(**category_dict)
+            db_session.add(category)
         db_session.commit()
 # endregion
 

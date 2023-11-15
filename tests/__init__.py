@@ -21,6 +21,12 @@ class ValidUser:
     password: str = "P@ssw0rd"
     email: str = "email@example.com"
 
+@dataclass(frozen=True)
+class ValidCategory:
+    """Valid category data."""
+    name: str = "valid_name"
+    in_use: str = "on"
+
 
 test_users: tuple[dict[str, str|bool|int]] = (
     {"name": "Admin",
@@ -111,4 +117,34 @@ test_users: tuple[dict[str, str|bool|int]] = (
     "email": "",
     "sat_group": 1
     },
-    )
+)
+
+
+test_categories: tuple[dict[str, str|bool]] = (
+    {"name": "Household",
+     "in_use": True,
+     "description": "Household consumables"},
+    {"name": "Personal",
+     "in_use": True,
+     "description": "Personal consumables"},
+    {"name": "Electronics",
+     "in_use": True,
+     "description": ""},
+    {"name": "Kids",
+     "in_use": True,
+     "description": ""},
+    {"name": "Health",
+     "in_use": True,
+     "description": ""},
+    {"name": "Groceries",
+     "in_use": True,
+     "description": ""},
+    {"name": "Pets",
+     "in_use": True,
+     "description": ""},
+    {"name": "Others",
+     "in_use": False,
+     "description": ""},
+)
+
+test_categories_with_products = test_categories[:6]

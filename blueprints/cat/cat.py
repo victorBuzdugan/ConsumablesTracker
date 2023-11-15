@@ -15,6 +15,8 @@ from wtforms.validators import InputRequired, Length
 from database import Category, Product, Supplier, User, dbSession
 from helpers import admin_required, flash_errors, logger
 
+CAT_MIN_LENGTH = 3
+
 func: Callable
 
 cat_bp = Blueprint(
@@ -37,9 +39,9 @@ class CreateCatForm(FlaskForm):
         validators=[
             InputRequired(gettext("Category name is required")),
             Length(
-                min=3,
+                min=CAT_MIN_LENGTH,
                 message=gettext("Category name must have at least " +
-                                "3 characters"))],
+                                f"{CAT_MIN_LENGTH} characters"))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -172,18 +174,16 @@ def edit_category(category):
             else:
                 try:
                     cat.name = edit_cat_form.name.data
-                except ValueError as error:
-                    flash(str(error), "error")
-                cat.description = edit_cat_form.description.data
-                try:
+                    cat.description = edit_cat_form.description.data
                     cat.in_use = edit_cat_form.in_use.data
                 except ValueError as error:
-                    flash(str(error), "warning")
-                if db_session.is_modified(cat, include_collections=False):
-                    logger.debug("Category updated")
-                    flash(gettext("Category updated"))
-                    db_session.commit()
-                return redirect(session["last_url"])
+                    flash(str(error), "error")
+                else:
+                    if db_session.is_modified(cat, include_collections=False):
+                        logger.debug("Category updated")
+                        flash(gettext("Category updated"))
+                        db_session.commit()
+                        return redirect(session["last_url"])
     elif edit_cat_form.errors:
         logger.warning("Category edit error(s)")
         flash_errors(edit_cat_form.errors)
