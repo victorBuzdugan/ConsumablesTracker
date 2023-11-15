@@ -237,7 +237,7 @@ def test_failed_registration_invalid_email(
 # endregion
 
 
-@settings(max_examples=5, deadline=500)
+@settings(max_examples=8, deadline=500)
 @given(name = st.text(min_size=USER_MIN_LENGTH, max_size=USER_MAX_LENGTH),
        password = st.from_regex(PASSW_REGEX),
        email = st.emails())
@@ -247,8 +247,13 @@ def test_failed_registration_invalid_email(
 @example(name=ValidUser.name,
          password=ValidUser.password,
          email="")
+@example(name=ValidUser.name + " ",
+         password=ValidUser.password,
+         email="")
 def test_registration(client: FlaskClient, name, password, email):
     """Test successful registration"""
+    name = name.strip()
+    assume(USER_MIN_LENGTH <= len(name) <= USER_MAX_LENGTH)
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
