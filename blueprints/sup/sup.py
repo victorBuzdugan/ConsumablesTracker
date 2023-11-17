@@ -151,7 +151,7 @@ def edit_supplier(supplier):
     edit_sup_form: EditSupForm = EditSupForm()
 
     if edit_sup_form.validate_on_submit():
-        with dbSession().no_autoflush as db_session:
+        with dbSession() as db_session:
             sup = db_session.scalar(
                 select(Supplier)
                 .filter_by(name=escape(supplier)))
@@ -173,18 +173,16 @@ def edit_supplier(supplier):
             else:
                 try:
                     sup.name = edit_sup_form.name.data
-                except ValueError as error:
-                    flash(str(error), "error")
-                sup.details = edit_sup_form.details.data
-                try:
+                    sup.details = edit_sup_form.details.data
                     sup.in_use = edit_sup_form.in_use.data
                 except ValueError as error:
-                    flash(str(error), "warning")
-                if db_session.is_modified(sup, include_collections=False):
-                    logger.debug("Supplier updated")
-                    flash(gettext("Supplier updated"))
-                    db_session.commit()
-                return redirect(session["last_url"])
+                    flash(str(error), "error")
+                else:
+                    if db_session.is_modified(sup, include_collections=False):
+                        logger.debug("Supplier updated")
+                        flash(gettext("Supplier updated"))
+                        db_session.commit()
+                        return redirect(session["last_url"])
     elif edit_sup_form.errors:
         logger.warning("Supplier editing error(s)")
         flash_errors(edit_sup_form.errors)

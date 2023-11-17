@@ -151,7 +151,7 @@ def edit_category(category):
     edit_cat_form: EditCatForm = EditCatForm()
 
     if edit_cat_form.validate_on_submit():
-        with dbSession().no_autoflush as db_session:
+        with dbSession() as db_session:
             cat = db_session.scalar(
                 select(Category)
                 .filter_by(name=escape(category)))

@@ -327,7 +327,7 @@ def edit_product(product):
         (supplier.id, supplier.name) for supplier in suppliers]
 
     if edit_prod_form.validate_on_submit():
-        with dbSession().no_autoflush as db_session:
+        with dbSession() as db_session:
             prod = db_session.scalar(
                 select(Product)
                 .filter_by(name=escape(product)))
@@ -341,32 +341,24 @@ def edit_product(product):
             else:
                 try:
                     prod.name = edit_prod_form.name.data
-                except ValueError as error:
-                    flash(str(error), "error")
-                prod.description = edit_prod_form.description.data
-                prod.responsable = db_session.get(
-                    User, edit_prod_form.responsable_id.data)
-                prod.category = db_session.get(
-                    Category, edit_prod_form.category_id.data)
-                prod.supplier = db_session.get(
-                    Supplier, edit_prod_form.supplier_id.data)
-                prod.meas_unit = edit_prod_form.meas_unit.data
-                prod.min_stock = edit_prod_form.min_stock.data
-                prod.ord_qty = edit_prod_form.ord_qty.data
-                try:
+                    prod.description = edit_prod_form.description.data
+                    prod.responsable_id = edit_prod_form.responsable_id.data
+                    prod.category_id = edit_prod_form.category_id.data
+                    prod.supplier_id = edit_prod_form.supplier_id.data
+                    prod.meas_unit = edit_prod_form.meas_unit.data
+                    prod.min_stock = edit_prod_form.min_stock.data
+                    prod.ord_qty = edit_prod_form.ord_qty.data
                     prod.to_order = edit_prod_form.to_order.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                prod.critical = edit_prod_form.critical.data
-                try:
+                    prod.critical = edit_prod_form.critical.data
                     prod.in_use = edit_prod_form.in_use.data
                 except ValueError as error:
-                    flash(str(error), "warning")
-                if db_session.is_modified(prod, include_collections=False):
-                    logger.debug("Product updated")
-                    flash(gettext("Product updated"))
-                    db_session.commit()
-                return redirect(session["last_url"])
+                    flash(str(error), "error")
+                else:
+                    if db_session.is_modified(prod, include_collections=False):
+                        logger.debug("Product updated")
+                        flash(gettext("Product updated"))
+                        db_session.commit()
+                        return redirect(session["last_url"])
 
     elif edit_prod_form.errors:
         logger.warning("Product editing error(s)")

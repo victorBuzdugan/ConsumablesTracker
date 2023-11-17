@@ -502,6 +502,10 @@ def test_edit_user(
         orig_admin = user.admin
         orig_reg_req = user.reg_req
         orig_sat_group = user.sat_group
+        if user.id in cleaning_sch.current_order():
+            orig_clean_order = str(cleaning_sch.current_order().index(user.id))
+        else:
+            orig_clean_order = ""
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -527,6 +531,7 @@ def test_edit_user(
                 "admin": new_admin,
                 "in_use": new_in_use,
                 "sat_group": new_sat_group,
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
             response = client.post(
@@ -653,6 +658,10 @@ def test_failed_edit_user_form_validators(
         orig_admin = user.admin
         orig_in_use = user.in_use
         orig_sat_group = user.sat_group
+        if user.id in cleaning_sch.current_order():
+            orig_clean_order = str(cleaning_sch.current_order().index(user.id))
+        else:
+            orig_clean_order = ""
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -670,6 +679,7 @@ def test_failed_edit_user_form_validators(
                 "admin": new_admin,
                 "in_use": "on",
                 "sat_group": new_sat_group,
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
             response = client.post(
@@ -697,6 +707,10 @@ def test_failed_edit_user_name_duplicate(
         user = db_session.get(User, 2)
         orig_name = user.name
         new_name = db_session.get(User, 0).name
+        if user.id in cleaning_sch.current_order():
+            orig_clean_order = str(cleaning_sch.current_order().index(user.id))
+        else:
+            orig_clean_order = ""
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -714,16 +728,15 @@ def test_failed_edit_user_name_duplicate(
                 "admin": "on",
                 "in_use": "on",
                 "sat_group": user.sat_group,
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
             response = client.post(
                 url_for("users.edit_user", username=orig_name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert response.request.path == url_for("sch.schedules")
             assert "User updated" not in response.text
             assert orig_name in response.text
             assert f"The user {new_name} allready exists" in response.text
@@ -754,6 +767,10 @@ def test_failed_edit_user_db_validators(
         orig_done_inv = user.done_inv
         orig_admin = user.admin
         orig_in_use = user.in_use
+        if user.id in cleaning_sch.current_order():
+            orig_clean_order = str(cleaning_sch.current_order().index(user.id))
+        else:
+            orig_clean_order = ""
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -770,16 +787,16 @@ def test_failed_edit_user_db_validators(
                 "check_inv": new_check_inv,
                 "admin": new_admin,
                 "in_use": new_in_use,
+                "sat_group": user.sat_group,
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
             response = client.post(
                 url_for("users.edit_user", username=user.name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert response.request.path == url_for("main.index")
             assert "User updated" not in response.text
             assert user.name in response.text
             assert flash_message in unescape(response.text)
@@ -830,33 +847,40 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):
     with dbSession() as db_session:
         db_session.get(User, 2).admin = False
         db_session.commit()
-    with client:
-        client.get("/")
-        assert session["user_name"] == admin_logged_in.name
-        assert session["admin"]
-        response = client.get(
-            url_for("users.edit_user", username=admin_logged_in.name))
-        data = {
-                "csrf_token": g.csrf_token,
-                "name": admin_logged_in.name,
-                "details": admin_logged_in.details,
-                "email": admin_logged_in.email,
-                "admin": "",
-                "in_use": "on",
-                "submit": True,
-            }
-        response = client.post(
-            url_for("users.edit_user", username=admin_logged_in.name),
-            data=data, follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("main.index")
-        assert "User updated" not in response.text
-        assert admin_logged_in.name in response.text
-        assert "You are the last admin!" in response.text
-    with dbSession() as db_session:
-        assert db_session.get(User, 1).admin
+        user = db_session.get(User, admin_logged_in.id)
+        if user.id in cleaning_sch.current_order():
+            orig_clean_order = str(cleaning_sch.current_order().index(user.id))
+        else:
+            orig_clean_order = ""
+        with client:
+            client.get("/")
+            assert session["user_name"] == admin_logged_in.name
+            assert session["admin"]
+            response = client.get(
+                url_for("users.edit_user", username=admin_logged_in.name))
+            data = {
+                    "csrf_token": g.csrf_token,
+                    "name": admin_logged_in.name,
+                    "password": "",
+                    "details": admin_logged_in.details,
+                    "email": admin_logged_in.email,
+                    "check_inv": "",
+                    "admin": "",
+                    "in_use": "on",
+                    "sat_group": user.sat_group,
+                    "clean_order": orig_clean_order,
+                    "submit": True,
+                }
+            response = client.post(
+                url_for("users.edit_user", username=admin_logged_in.name),
+                data=data, follow_redirects=True)
+            assert len(response.history) == 0
+            assert response.status_code == 200
+            assert "User updated" not in response.text
+            assert admin_logged_in.name in response.text
+            assert "You are the last admin!" in response.text
+        db_session.refresh(user)
+        assert user.admin
         db_session.get(User, 2).admin = True
         db_session.commit()
 
@@ -864,18 +888,27 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):
 def test_edit_user_change_admin_name(
         client: FlaskClient, admin_logged_in: User):
     """test_edit_user_change_admin_name"""
+    old_name = admin_logged_in.name
     new_name = "new_name"
+    if admin_logged_in.id in cleaning_sch.current_order():
+        orig_clean_order = str(
+            cleaning_sch.current_order().index(admin_logged_in.id))
+    else:
+        orig_clean_order = ""
     with client:
         client.get("/")
-        old_name = admin_logged_in.name
         client.get(url_for("users.edit_user", username=old_name))
         data = {
                 "csrf_token": g.csrf_token,
                 "name": new_name,
+                "password": "",
                 "details": admin_logged_in.details,
                 "email": admin_logged_in.email,
+                "check_inv": "",
                 "admin": "on",
                 "in_use": "on",
+                "sat_group": str(admin_logged_in.sat_group),
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
         response = client.post(
@@ -892,10 +925,14 @@ def test_edit_user_change_admin_name(
         data = {
                 "csrf_token": g.csrf_token,
                 "name": old_name,
+                "password": "",
                 "details": admin_logged_in.details,
                 "email": admin_logged_in.email,
+                "check_inv": "",
                 "admin": "on",
                 "in_use": "on",
+                "sat_group": str(admin_logged_in.sat_group),
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
         response = client.post(
@@ -914,17 +951,26 @@ def test_edit_user_change_admin_name(
 def test_edit_user_change_admin_logged_in_admin_status(
         client: FlaskClient, admin_logged_in: User):
     """test_edit_user_change_admin_logged_in_admin_status"""
+    username = admin_logged_in.name
+    if admin_logged_in.id in cleaning_sch.current_order():
+        orig_clean_order = str(
+            cleaning_sch.current_order().index(admin_logged_in.id))
+    else:
+        orig_clean_order = ""
     with client:
         client.get("/")
-        username = admin_logged_in.name
         client.get(url_for("users.edit_user", username=username))
         data = {
                 "csrf_token": g.csrf_token,
                 "name": username,
+                "password": "",
                 "details": admin_logged_in.details,
                 "email": admin_logged_in.email,
+                "check_inv": "",
                 "admin": "",
                 "in_use": "on",
+                "sat_group": str(admin_logged_in.sat_group),
+                "clean_order": orig_clean_order,
                 "submit": True,
             }
         response = client.post(
@@ -1125,7 +1171,7 @@ def test_failed_edit_user_clean_order(
             follow_redirects=True)
         assert "Schedule updated" not in response.text
         assert "User updated" not in response.text
-        assert flash_err in response.text
+        assert flash_err in unescape(response.text)
         assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 # endregion
 

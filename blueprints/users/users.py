@@ -266,7 +266,7 @@ def edit_user(username):
     edit_user_form.clean_order.choices = clean_order_choices
 
     if edit_user_form.validate_on_submit():
-        with dbSession().no_autoflush as db_session:
+        with dbSession() as db_session:
             user = db_session.scalar(
                 select(User)
                 .filter_by(name=escape(username)))
@@ -286,56 +286,51 @@ def edit_user(username):
                         return redirect(url_for("auth.logout"))
                     return redirect(session["last_url"])
             else:
+                initial_in_use = user.in_use
+                schedule_updated_flag = False
                 try:
                     user.name = edit_user_form.name.data
-                except ValueError as error:
-                    flash(str(error), "error")
-                if edit_user_form.password.data:
-                    user.password = edit_user_form.password.data
-                user.email = edit_user_form.email.data
-                user.sat_group = edit_user_form.sat_group.data
-                # cleaning schedule
-                if user.in_use and not user.reg_req:
-                    try:
-                        curr_order = cleaning_sch.current_order()\
+                    if edit_user_form.password.data:
+                        user.password = edit_user_form.password.data
+                    user.email = edit_user_form.email.data
+                    user.sat_group = edit_user_form.sat_group.data
+                    # cleaning schedule
+                    if user.in_use and not user.reg_req:
+                        curr_pos = cleaning_sch.current_order()\
                                                 .index(user.id)
-                        if int(edit_user_form.clean_order.data) != curr_order:
+                        if int(edit_user_form.clean_order.data) != curr_pos:
                             cleaning_sch.change_user_pos(
                                 user.id,
                                 edit_user_form.clean_order.data)
                             flash(gettext("Schedule updated"))
-                    except (ValueError, TypeError):
-                        flash("Not a valid choice.")
-                user.details = edit_user_form.details.data
-                try:
+                            schedule_updated_flag = True
+                    user.details = edit_user_form.details.data
                     user.admin = edit_user_form.admin.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                try:
                     user.done_inv = not edit_user_form.check_inv.data
-                except ValueError as error:
-                    flash(str(error), "warning")
-                try:
-                    initial_in_use = user.in_use
                     user.in_use = edit_user_form.in_use.data
+                except TypeError:
+                    flash("Not a valid choice", "error")
                 except ValueError as error:
-                    flash(str(error), "warning")
-                if db_session.is_modified(user, include_collections=False):
-                    logger.debug("User updated")
-                    flash(gettext("User updated"))
-                    db_session.commit()
-                    if  user.in_use is not initial_in_use:
-                        # add or remove from schedule
-                        if user.in_use:
-                            cleaning_sch.add_user(user.id)
-                        else:
-                            cleaning_sch.remove_user(user.id)
-                    if user.id == session.get("user_id"):
-                        session["user_name"] = user.name
-                        if not user.admin:
-                            session["admin"] = False
-                            return redirect(url_for("main.index"))
-                return redirect(session["last_url"])
+                    flash(str(error), "error")
+                else:
+                    if db_session.is_modified(user, include_collections=False):
+                        logger.debug("User updated")
+                        flash(gettext("User updated"))
+                        db_session.commit()
+                        if  user.in_use is not initial_in_use:
+                            # add or remove from schedule
+                            if user.in_use:
+                                cleaning_sch.add_user(user.id)
+                            else:
+                                cleaning_sch.remove_user(user.id)
+                        if user.id == session.get("user_id"):
+                            session["user_name"] = user.name
+                            if not user.admin:
+                                session["admin"] = False
+                                return redirect(url_for("main.index"))
+                        return redirect(session["last_url"])
+                    if schedule_updated_flag:
+                        return redirect(session["last_url"])
     elif edit_user_form.errors:
         logger.warning("User editing error(s)")
         flash_errors(edit_user_form.errors)

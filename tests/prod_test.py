@@ -373,6 +373,82 @@ def test_edit_product(
 
 
 @pytest.mark.parametrize(
+    ("attr", "value"), (
+        ("done_inv", False),
+        ("req_inv", True),
+))
+def test_edit_product_last_responsible_product(
+        client: FlaskClient, admin_logged_in: User, attr: str, value: bool):
+    """test_edit_product_last_responsible_product."""
+    def formify_bool(value: bool) -> str:
+        """Transform bool to form campatible ("on"/"")"""
+        if value:
+            return "on"
+        return ""
+    def change_responsible_data(
+            csrf: str, product: Product, new_resp_id: int) -> dict:
+        """Build change product responsible data for form posting."""
+        return {
+            "csrf_token": csrf,
+            "name": product.name,
+            "description": product.description,
+            "responsable_id": new_resp_id,
+            "category_id": product.category_id,
+            "supplier_id": product.supplier_id,
+            "meas_unit": product.meas_unit,
+            "min_stock": str(product.min_stock),
+            "ord_qty": str(product.ord_qty),
+            "critical": formify_bool(product.critical),
+            "to_order": formify_bool(product.to_order),
+            "in_use": formify_bool(product.in_use),
+            "submit": True,
+        }
+    with dbSession() as db_session:
+        user = db_session.get(User, 4)
+        initial_total_products = user.all_products
+        setattr(user, attr, value)
+        db_session.commit()
+        db_session.refresh(user)
+        assert getattr(user, attr) is value
+        products = db_session.scalars(
+            select(Product)
+            .filter_by(responsable_id=user.id)).all()
+        with client:
+            client.get("/")
+            for product in products:
+                client.get(url_for("prod.edit_product", product=product.name))
+                data = change_responsible_data(
+                    g.csrf_token, product, admin_logged_in.id)
+                response = client.post(
+                    url_for("prod.edit_product", product=product.name),
+                    data=data,
+                    follow_redirects=True)
+                assert "Product updated" in response.text
+                db_session.refresh(product)
+                assert product.responsable_id == admin_logged_in.id
+            db_session.refresh(user)
+            assert not user.all_products
+            assert getattr(user, attr) is not value
+            # teardown
+            for product in products:
+                client.get(url_for("prod.edit_product", product=product.name))
+                data = change_responsible_data(
+                    g.csrf_token, product, user.id)
+                response = client.post(
+                    url_for("prod.edit_product", product=product.name),
+                    data=data,
+                    follow_redirects=True)
+                assert "Product updated" in response.text
+                db_session.refresh(product)
+                assert product.responsable_id == user.id
+            db_session.refresh(user)
+            assert user.all_products == initial_total_products
+
+
+
+
+
+@pytest.mark.parametrize(
     ("prod_id", "new_name", "new_description",
      "new_responsable_id", "new_category_id", "new_supplier_id",
      "new_meas_unit", "new_min_stock", "new_ord_qty",
@@ -603,11 +679,8 @@ def test_failed_edit_product_name_duplicate(
                 url_for("prod.edit_product", product=orig_name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.products",
-                                                           ordered_by="code")
             assert "Product updated" not in response.text
             assert orig_name in response.text
             assert f"The product {new_name} allready exists" in response.text
@@ -649,11 +722,8 @@ def test_failed_edit_product_to_order_in_use_validator(
                 url_for("prod.edit_product", product=prod.name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.products",
-                                                           ordered_by="code")
             assert "Product updated" not in response.text
             assert prod.name in response.text
             assert "Can't order not in use products" \
@@ -689,11 +759,8 @@ def test_failed_edit_product_to_order_in_use_validator(
                 url_for("prod.edit_product", product=prod.name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert quote(response.request.path) == url_for("prod.products",
-                                                           ordered_by="code")
             assert "Product updated" not in response.text
             assert prod.name in response.text
             assert "Can't 'retire' a product that needs to be ordered" \

@@ -259,10 +259,8 @@ def test_failed_edit_supplier_name_duplicate(
                 url_for("sup.edit_supplier", supplier=orig_name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert response.request.path == url_for("sup.suppliers")
             assert "Supplier updated" not in response.text
             assert orig_name in response.text
             assert f"The supplier {new_name} allready exists" in response.text
@@ -294,10 +292,8 @@ def test_failed_edit_supplier_in_use(
                 url_for("sup.edit_supplier", supplier=sup.name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
+            assert len(response.history) == 0
             assert response.status_code == 200
-            assert response.request.path == url_for("sup.suppliers")
             assert "Supplier updated" not in response.text
             assert sup.name in response.text
             assert "Not in use supplier can't have products attached" \
