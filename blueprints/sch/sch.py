@@ -454,11 +454,24 @@ class IndivSchedule(BaseSchedule):
             logger.warning("Schedule '%s' (remove_user): invalid user_id '%s'",
                            self.name, user_id)
             return
+        # if the schedule first_date is incorrect try to update the schedule
+        first_date = self._get_first_date()
+        this_monday = date.fromisocalendar(
+            year=date.today().year,
+            week=date.today().isocalendar()[1],
+            day=1)
+        if first_date < this_monday:
+            # update the schedule
+            diff = 0
+            while first_date < this_monday:
+                first_date += self.switch_interval
+                diff += 1
+            for _ in range(diff):
+                users_order.append(users_order.pop(0))
 
         # remove the user
         users_order.pop(users_order.index(user_id))
         # register the new order
-        first_date = self._get_first_date()
         self.unregister()
         self._modify(
             user_ids_order=users_order,
