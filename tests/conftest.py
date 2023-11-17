@@ -11,7 +11,7 @@ from sqlalchemy import URL, create_engine
 from app import app, babel, mail
 from blueprints.sch.sch import cleaning_sch, saturday_sch
 from database import Base, Category, Product, Supplier, User, dbSession
-from helpers import CURR_DIR, log_handler
+from helpers import Constants, log_handler
 from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
                    test_categories, test_users)
 
@@ -29,7 +29,7 @@ def create_test_db():
     pathlib.Path.unlink(TEMP_DB, missing_ok=True)
     db_url = URL.create(
         drivername="sqlite",
-        database=path.join(CURR_DIR, TEST_DB_NAME))
+        database=path.join(Constants.Basic.current_dir, TEST_DB_NAME))
     test_engine = create_engine(
         url=db_url,
         echo=False,

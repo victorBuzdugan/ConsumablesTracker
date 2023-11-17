@@ -12,12 +12,11 @@ from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
 from wtforms.validators import (Email, InputRequired, Length, NumberRange,
                                 Optional, Regexp)
 
-from blueprints.auth.auth import (PASSW_MIN_LENGTH, PASSW_REGEX, PASSW_SYMB,
-                                  USER_MAX_LENGTH, USER_MIN_LENGTH, msg)
+from blueprints.auth.auth import msg
 from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import cleaning_sch
 from database import User, dbSession
-from helpers import admin_required, flash_errors, logger
+from helpers import Constants, admin_required, flash_errors, logger
 
 func: Callable
 
@@ -41,8 +40,8 @@ class CreateUserForm(FlaskForm):
         validators=[
             InputRequired(msg["usr_req"]),
             Length(
-                min=USER_MIN_LENGTH,
-                max=USER_MAX_LENGTH,
+                min=Constants.User.Name.min_length,
+                max=Constants.User.Name.max_length,
                 message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
@@ -54,12 +53,12 @@ class CreateUserForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=PASSW_MIN_LENGTH,
+                min=Constants.User.Password.min_length,
                 message=msg["psw_len"]),
-            Regexp(PASSW_REGEX, message=(
+            Regexp(Constants.User.Password.regex, message=(
                 gettext("Password must have 1 big letter, " +
                 "1 number, 1 special char (%(passw_symb)s)!",
-                passw_symb=PASSW_SYMB)))],
+                passw_symb=Constants.User.Password.symbols)))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -113,12 +112,12 @@ class EditUserForm(CreateUserForm):
         validators=[
             Optional(),
             Length(
-                min=PASSW_MIN_LENGTH,
+                min=Constants.User.Password.min_length,
                 message=msg["psw_len"]),
-            Regexp(PASSW_REGEX, message=(
+            Regexp(Constants.User.Password.regex, message=(
                 gettext("Password must have 1 big letter, " +
                 "1 number, 1 special char (%(passw_symb)s)!",
-                passw_symb=PASSW_SYMB)))],
+                passw_symb=Constants.User.Password.symbols)))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),

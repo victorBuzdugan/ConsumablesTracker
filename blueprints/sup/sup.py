@@ -13,7 +13,7 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
 from wtforms.validators import InputRequired, Length
 
 from database import Category, Product, Supplier, User, dbSession
-from helpers import admin_required, flash_errors, logger
+from helpers import Constants, admin_required, flash_errors, logger
 
 func: Callable
 
@@ -37,9 +37,10 @@ class CreateSupForm(FlaskForm):
         validators=[
             InputRequired(gettext("Supplier name is required")),
             Length(
-                min=3,
-                message=gettext(
-                    "Supplier name must have at least 3 characters"))],
+                min=Constants.Supplier.Name.min_length,
+                message=gettext("Supplier name must have at least " +
+                                f"{Constants.Supplier.Name.min_length} " +
+                                "characters"))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),

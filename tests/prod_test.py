@@ -9,6 +9,7 @@ from flask.testing import FlaskClient
 from sqlalchemy import select
 
 from database import Category, Product, Supplier, User, dbSession
+from helpers import Constants
 
 pytestmark = pytest.mark.prod
 
@@ -163,18 +164,32 @@ def test_new_product(
         ("", "some description", 1, 1, 1,
          "pc", 0, 1, "Product name is required"),
         ("pr", "some description", 1, 1, 1,
-         "pc", 0, 1, "Product name must be between 3 and 15 characters"),
+         "pc", 0, 1, ("Product name must be between " +
+                      f"{Constants.Product.Name.min_length} and " +
+                      f"{Constants.Product.Name.max_length} " +
+                      "characters")),
         ("prod_prod_prod_p", "some description", 1, 1, 1,
-         "pc", 0, 1, "Product name must be between 3 and 15 characters"),
+         "pc", 0, 1, ("Product name must be between " +
+                      f"{Constants.Product.Name.min_length} and " +
+                      f"{Constants.Product.Name.max_length} " +
+                      "characters")),
         ("AA Batteries", "some description", 1, 1, 1,
          "pc", 0, 1, "The product AA Batteries allready exists"),
         ("new_product", "", 1, 1, 1,
          "pc", 0, 1, "Product description is required"),
         ("new_product", "de", 1, 1, 1,
-         "pc", 0, 1, "Product description must be between 3 and 50 characters"),
+         "pc", 0, 1, ("Product description must be between " +
+                      f"{Constants.Product.Description.min_length} " +
+                      "and " +
+                      f"{Constants.Product.Description.max_length} " +
+                      "characters")),
         ("new_product",
          "desc-desc-desc-desc-desc-desc-desc-desc-desc-desc-desc", 1, 1, 1,
-         "pc", 0, 1, "Product description must be between 3 and 50 characters"),
+         "pc", 0, 1, ("Product description must be between " +
+                      f"{Constants.Product.Description.min_length} " +
+                      "and " +
+                      f"{Constants.Product.Description.max_length} " +
+                      "characters")),
         ("new_product", "some description", None, 1, 1,
          "pc", 0, 1, "Not a valid choice"),
         ("new_product", "some description", "", 1, 1,
@@ -206,15 +221,18 @@ def test_new_product(
         ("new_product", "some description", 1, 1, 1,
         "pc", "", 1, "Minimum stock is required"),
         ("new_product", "some description", 1, 1, 1,
-        "pc", -1, 1, "Minimum stock must be at least 0"),
+        "pc", -1, 1, ("Minimum stock must be at least " +
+                      f"{Constants.Product.MinStock.min_value}")),
         ("new_product", "some description", 1, 1, 1,
         "pc", "a", 1, "Not a valid integer value"),
         ("new_product", "some description", 1, 1, 1,
         "pc", 0, "", "Order quantity is required"),
         ("new_product", "some description", 1, 1, 1,
-        "pc", 0, 0, "Order quantity must be at least 1"),
+        "pc", 0, 0, ("Order quantity must be at least " +
+                     f"{Constants.Product.OrdQty.min_value}")),
         ("new_product", "some description", 1, 1, 1,
-        "pc", 0, -1, "Order quantity must be at least 1"),
+        "pc", 0, -1, ("Order quantity must be at least " +
+                      f"{Constants.Product.OrdQty.min_value}")),
         ("new_product", "some description", 1, 1, 1,
         "pc", 0, "a", "Not a valid integer value"),
 ))
@@ -367,11 +385,17 @@ def test_edit_product(
         ("4", "pr", "new description",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product name must be between 3 and 15 characters"),
+         ("Product name must be between " +
+          f"{Constants.Product.Name.min_length} and " +
+          f"{Constants.Product.Name.max_length} " +
+          "characters")),
         ("5", "prod_prod_prod_p", "new description",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product name must be between 3 and 15 characters"),
+         ("Product name must be between " +
+          f"{Constants.Product.Name.min_length} and " +
+          f"{Constants.Product.Name.max_length} " +
+          "characters")),
         # description
         ("6", "new_product", "",
          1, 1, 1,
@@ -380,12 +404,16 @@ def test_edit_product(
         ("3", "new_product", "de",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product description must be between 3 and 50 characters"),
+         ("Product description must be between " +
+          f"{Constants.Product.Description.min_length} and " +
+          f"{Constants.Product.Description.max_length} characters")),
         ("7", "new_product",
          "desc-desc-desc-desc-desc-desc-desc-desc-desc-desc-desc",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product description must be between 3 and 50 characters"),
+         ("Product description must be between " +
+          f"{Constants.Product.Description.min_length} and " +
+          f"{Constants.Product.Description.max_length} characters")),
         # responsible
         ("8", "new_product", "new description",
          None, 1, 1,
@@ -465,7 +493,8 @@ def test_edit_product(
         ("25", "new_product", "new description",
          1, 1, 1,
          "new_meas_unit", -1, 100,
-         "Minimum stock must be at least 0"),
+         ("Minimum stock must be at least " +
+          f"{Constants.Product.MinStock.min_value}")),
         ("26", "new_product", "new description",
          1, 1, 1,
          "new_meas_unit", "a", 100,
@@ -478,11 +507,13 @@ def test_edit_product(
         ("28", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, 0,
-        "Order quantity must be at least 1"),
+        ("Order quantity must be at least " +
+         f"{Constants.Product.OrdQty.min_value}")),
         ("29", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, -1,
-        "Order quantity must be at least 1"),
+        ("Order quantity must be at least " +
+         f"{Constants.Product.OrdQty.min_value}")),
         ("30", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, "a",

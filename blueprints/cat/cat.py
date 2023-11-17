@@ -13,9 +13,7 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
 from wtforms.validators import InputRequired, Length
 
 from database import Category, Product, Supplier, User, dbSession
-from helpers import admin_required, flash_errors, logger
-
-CAT_MIN_LENGTH = 3
+from helpers import Constants, admin_required, flash_errors, logger
 
 func: Callable
 
@@ -39,9 +37,10 @@ class CreateCatForm(FlaskForm):
         validators=[
             InputRequired(gettext("Category name is required")),
             Length(
-                min=CAT_MIN_LENGTH,
+                min=Constants.Category.Name.min_length,
                 message=gettext("Category name must have at least " +
-                                f"{CAT_MIN_LENGTH} characters"))],
+                                f"{Constants.Category.Name.min_length} " +
+                                "characters"))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),

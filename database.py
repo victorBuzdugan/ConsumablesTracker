@@ -16,7 +16,7 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
 from werkzeug.security import generate_password_hash
 
 from blueprints.sch import clean_sch_info, sat_sch_info
-from helpers import CURR_DIR, DB_NAME
+from helpers import Constants
 
 func: Callable
 
@@ -24,7 +24,7 @@ load_dotenv()
 
 DB_URL = URL.create(
     drivername="sqlite",
-    database=path.join(CURR_DIR, DB_NAME))
+    database=path.join(Constants.Basic.current_dir, Constants.Basic.db_name))
 # factory for creating new database connections objects
 engine = create_engine(url=DB_URL, echo=False)
 
@@ -817,9 +817,13 @@ class Product(Base):
         # pylint: disable=unused-argument
         try:
             if not value >= 0:
-                raise ValueError(gettext("Minimum stock must be ≥ 0"))
+                raise ValueError(
+                    gettext("Minimum stock must be ≥ " +
+                            f"{Constants.Product.MinStock.min_value}"))
         except TypeError as err:
-            raise ValueError(gettext("Minimum stock must be ≥ 0")) from err
+            raise ValueError(
+                gettext("Minimum stock must be ≥ " +
+                        f"{Constants.Product.MinStock.min_value}")) from err
         return value
 
     @validates("ord_qty")
@@ -828,9 +832,13 @@ class Product(Base):
         # pylint: disable=unused-argument
         try:
             if not value >= 1:
-                raise ValueError(gettext("Order quantity must be ≥ 1"))
+                raise ValueError(
+                    gettext("Order quantity must be ≥ " +
+                            f"{Constants.Product.OrdQty.min_value}"))
         except TypeError as err:
-            raise ValueError(gettext("Order quantity must be ≥ 1")) from err
+            raise ValueError(
+                gettext("Order quantity must be ≥ " +
+                        f"{Constants.Product.OrdQty.min_value}")) from err
         return value
 
     @validates("to_order")

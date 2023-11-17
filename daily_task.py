@@ -14,7 +14,7 @@ from sqlalchemy import func, select
 
 from app import app, mail
 from database import Product, Schedule, User, dbSession
-from helpers import DB_NAME, logger
+from helpers import Constants, logger
 
 func: Callable
 
@@ -238,7 +238,7 @@ def send_log() -> None:
             with app.app_context(), mail.connect() as conn:
                 msg = Message(recipients=[recipient])
                 msg.subject = ("ConsumablesTracker - LogFile - " +
-                               DB_NAME.rstrip('.db'))
+                               Constants.Basic.db_name.rstrip('.db'))
                 msg.body = "Log file attached."
                 msg.html = "<p>Log file attached.</p>"
                 with app.open_resource(daily_log) as log:

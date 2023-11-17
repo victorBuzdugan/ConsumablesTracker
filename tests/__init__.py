@@ -5,14 +5,16 @@ from os import getenv, path
 
 from daily_task import db_backup_name
 from database import User
-from helpers import CURR_DIR, DB_NAME
+from helpers import Constants
 
-TEST_DB_NAME = "." + DB_NAME
+TEST_DB_NAME = "." + Constants.Basic.db_name
 
-PROD_DB = path.join(CURR_DIR, TEST_DB_NAME)
+PROD_DB = path.join(Constants.Basic.current_dir, TEST_DB_NAME)
 BACKUP_DB = db_backup_name(PROD_DB)
-ORIG_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_orig.db")
-TEMP_DB = path.join(CURR_DIR, path.splitext(TEST_DB_NAME)[0] + "_temp.db")
+ORIG_DB = path.join(Constants.Basic.current_dir,
+                    path.splitext(TEST_DB_NAME)[0] + "_orig.db")
+TEMP_DB = path.join(Constants.Basic.current_dir,
+                    path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
 @dataclass(frozen=True)
 class ValidUser:
