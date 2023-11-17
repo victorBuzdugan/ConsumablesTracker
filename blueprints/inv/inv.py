@@ -49,7 +49,7 @@ def inventory():
         logger.warning("Inventory submitting error(s)")
         flash_errors(inv_form.errors)
     elif user.done_inv:
-        logger.warning("Inventory check not required")
+        logger.info("Inventory check not required")
         flash(gettext("Inventory check not required"), "info")
 
     with dbSession() as db_session:
@@ -107,7 +107,7 @@ def inventory_user(username):
         logger.warning("Inventory check page for user '%s' error(s)", username)
         flash_errors(inv_form.errors)
     elif user.done_inv:
-        logger.debug("Inventory check not required for user '%s' error(s)",
+        logger.info("Inventory check not required for user '%s' error(s)",
                      username)
         flash(gettext("Inventory check not required"), "info")
 
