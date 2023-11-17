@@ -1,5 +1,6 @@
 """Daily task tests."""
 
+import pathlib
 from datetime import date, timedelta
 from os import environ, getenv, path, remove, rename
 from shutil import copyfile
@@ -22,11 +23,13 @@ pytestmark = pytest.mark.daily
 
 
 # region: main
+@pytest.mark.mail
 def test_main(caplog: LogCaptureFixture):
     """test_main"""
     assert path.isfile(PROD_DB)
     assert not path.isfile(BACKUP_DB)
     assert not path.isfile(ORIG_DB)
+    pathlib.Path.unlink(logger.handlers[0].baseFilename, missing_ok=True)
     main()
     assert path.isfile(PROD_DB)
     assert path.isfile(BACKUP_DB)
@@ -41,6 +44,7 @@ def test_main(caplog: LogCaptureFixture):
     remove(BACKUP_DB)
 
 
+@pytest.mark.mail
 @freeze_time("2023-04-02")
 def test_main_timeline(caplog: LogCaptureFixture):
     """Test db_backup in time."""
@@ -753,6 +757,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
 
 
 # region: email notifications
+@pytest.mark.mail
 @freeze_time("2023-11-03")
 def test_send_user_notifications_email(caplog: LogCaptureFixture):
     """test_send_user_notifications_email"""
@@ -824,6 +829,7 @@ def test_send_user_notifications_email(caplog: LogCaptureFixture):
             in caplog.messages
 
 
+@pytest.mark.mail
 @freeze_time("2023-11-03")
 def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
     """test_failed_send_user_notifications_email"""
@@ -863,6 +869,7 @@ def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
         mail.state.suppress = True
 
 
+@pytest.mark.mail
 @freeze_time("2023-11-03")
 def test_send_admin_notifications_email(caplog: LogCaptureFixture):
     """test_send_admin_notifications_email"""
@@ -1034,6 +1041,7 @@ def test_send_admin_notifications_email(caplog: LogCaptureFixture):
             in caplog.messages
 
 
+@pytest.mark.mail
 @freeze_time("2023-11-03")
 def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
     """test_failed_send_admin_notifications_email"""
@@ -1076,9 +1084,11 @@ def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
 
 
 # region: send log
+@pytest.mark.mail
 def test_send_log(caplog: LogCaptureFixture):
     """test_send_log"""
     log_file = logger.handlers[0].baseFilename
+    pathlib.Path.unlink(log_file, missing_ok=True)
     assert not path.isfile(log_file)
     send_log()
     assert "No recipient or no log file to send" in caplog.messages
@@ -1112,6 +1122,7 @@ def test_send_log(caplog: LogCaptureFixture):
     environ["ADMIN_EMAIL"] = recipient
 
 
+@pytest.mark.mail
 def test_failed_send_log(caplog: LogCaptureFixture):
     """test_failed_send_log"""
     log_file = logger.handlers[0].baseFilename

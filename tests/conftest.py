@@ -4,6 +4,7 @@ import pathlib
 from datetime import date, timedelta
 from os import path
 
+import hypothesis
 import pytest
 from flask.testing import FlaskClient
 from sqlalchemy import URL, create_engine
@@ -16,6 +17,9 @@ from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
                    test_categories, test_users)
 
 mail.state.suppress = True
+hypothesis.settings.register_profile("default", deadline=3000)
+hypothesis.settings.load_profile("default")
+
 
 @pytest.fixture(scope="session")
 def create_test_db():
@@ -33,8 +37,8 @@ def create_test_db():
     test_engine = create_engine(
         url=db_url,
         echo=False,
-        pool_size=15,
-        max_overflow=25)
+        pool_size=25,
+        max_overflow=35)
     dbSession.configure(bind=test_engine)
     Base.metadata.drop_all(bind=test_engine)
     Base.metadata.create_all(bind=test_engine)

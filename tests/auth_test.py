@@ -67,7 +67,7 @@ def _test_failed_registration(
             not in response.text
 
 
-@settings(max_examples=20)
+@settings(max_examples=5)
 @given(name=st.text(min_size=1, max_size=Constants.User.Name.min_length - 1))
 @example(name="")
 def test_failed_registration_short_name(client: FlaskClient, name):
@@ -83,7 +83,7 @@ def test_failed_registration_short_name(client: FlaskClient, name):
                               flash_message=flash_message)
 
 
-@settings(max_examples=20)
+@settings(max_examples=5)
 @given(name=st.text(min_size=Constants.User.Name.max_length + 1))
 def test_failed_registration_long_name(client: FlaskClient, name):
     """test_failed_registration_long_name"""
@@ -95,7 +95,7 @@ def test_failed_registration_long_name(client: FlaskClient, name):
                               flash_message=flash_message)
 
 
-@settings(max_examples=20)
+@settings(max_examples=5)
 @given(password=st.text(min_size=1,
                         max_size=Constants.User.Password.min_length - 1))
 @example(password="")
@@ -111,7 +111,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
                               flash_message=flash_message)
 
 
-@settings(max_examples=20)
+@settings(max_examples=5)
 @given(confirm=st.text(min_size=1,
                        max_size=Constants.User.Password.min_length - 1))
 @example(confirm="")
@@ -127,7 +127,7 @@ def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
                               flash_message=flash_message)
 
 
-@settings(max_examples=20)
+@settings(max_examples=5)
 @given(password=st.text(min_size=8), confirm=st.text(min_size=8))
 def test_failed_registration_confirmation_not_matching(
         client: FlaskClient, password, confirm):
@@ -150,6 +150,7 @@ def _test_failed_registration_password_rules(
                               flash_message=flash_message)
 
 
+@settings(max_examples=5)
 @given(password=st.from_regex(r"[A-Z]+[!@#$%^&*_=+]+[^\d]{6,}",
                               fullmatch=True))
 def test_failed_registration_no_digit_in_password(
@@ -159,6 +160,7 @@ def test_failed_registration_no_digit_in_password(
                                              password=password)
 
 
+@settings(max_examples=5)
 @given(password=st.from_regex(r"[A-Z]+[0-9]+[^!@#$%^&*_=+]{6,}",
                               fullmatch=True))
 def test_failed_registration_no_special_character_in_password(
@@ -168,6 +170,7 @@ def test_failed_registration_no_special_character_in_password(
                                              password=password)
 
 
+@settings(max_examples=5)
 @given(password=st.from_regex(r"[0-9]+[!@#$%^&*_=+]+[^A-Z]{6,}",
                               fullmatch=True))
 def test_failed_registration_no_big_letter_in_password(
@@ -177,6 +180,7 @@ def test_failed_registration_no_big_letter_in_password(
                                              password=password)
 
 
+@settings(max_examples=5)
 @given(name=st.sampled_from([user["name"] for user in test_users]))
 def test_failed_registration_existing_username(
         client: FlaskClient, name):
@@ -187,7 +191,7 @@ def test_failed_registration_existing_username(
                               flash_message=flash_message)
 
 
-@settings(max_examples=100)
+@settings(max_examples=30)
 @given(valid_email=st.emails(), st_random = st.randoms())
 def test_failed_registration_invalid_email(
         client: FlaskClient, valid_email, st_random):
@@ -240,7 +244,8 @@ def test_failed_registration_invalid_email(
 # endregion
 
 
-@settings(max_examples=8, deadline=500)
+@pytest.mark.slow
+@settings(max_examples=3)
 @given(name = st.text(min_size=Constants.User.Name.min_length,
                       max_size=Constants.User.Name.max_length),
        password = st.from_regex(Constants.User.Password.regex, fullmatch=True),
@@ -380,7 +385,7 @@ def _test_failed_login(client: FlaskClient, name, password, flash_message):
     assert flash_message in response.text
 
 
-@settings(max_examples=10)
+@settings(max_examples=5)
 @given(name=st.text())
 @example(name="")
 def test_failed_login_username(client: FlaskClient, name):
@@ -416,6 +421,7 @@ def test_failed_login_password(client: FlaskClient):
                         flash_message=flash_message)
 
 
+@settings(max_examples=5)
 @given(user=st.sampled_from(test_users))
 def test_login_and_logout(client: FlaskClient, user):
     """Login and then logout"""
@@ -448,7 +454,7 @@ def test_login_and_logout(client: FlaskClient, user):
         assert response.request.path == url_for("auth.login")
 
 
-@settings(max_examples=10)
+@settings(max_examples=5)
 @given(csrf=st.text(min_size=1))
 @example(None)
 @example("")

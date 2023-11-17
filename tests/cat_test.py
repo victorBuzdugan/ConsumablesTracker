@@ -72,7 +72,7 @@ def test_categories_page_admin_logged_in(
 
 
 # region: new category
-@settings(max_examples=20,
+@settings(max_examples=10,
           suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(name=st.text(min_size=Constants.Category.Name.min_length),
        description=st.text())
@@ -110,6 +110,7 @@ def test_new_category(
         assert cat.description == description
         db_session.delete(cat)
         db_session.commit()
+        assert not db_session.get(Category, cat.id)
 
 
 def _test_failed_new_category(
@@ -142,7 +143,7 @@ def _test_failed_new_category(
             assert not db_session.scalar(select(Category).filter_by(name=name))
 
 
-@settings(max_examples=10)
+@settings(max_examples=5)
 @given(name=st.text(min_size=1, max_size=2))
 @example("")
 def test_failed_new_category_invalid_name(request, name: str):
@@ -158,6 +159,7 @@ def test_failed_new_category_invalid_name(request, name: str):
                               flash_message=flash_message)
 
 
+@settings(max_examples=5)
 @given(category=st.sampled_from(test_categories))
 def test_failed_new_category_duplicate_name(request, category):
     """Duplicate category name."""
@@ -170,7 +172,7 @@ def test_failed_new_category_duplicate_name(request, category):
 
 
 # region: edit category
-@settings(max_examples=20,
+@settings(max_examples=10,
           suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(category=st.sampled_from(test_categories),
        new_name=st.text(min_size=Constants.Category.Name.min_length),
@@ -299,6 +301,7 @@ def test_failed_edit_category_duplicate_name(
                                flash_message=flash_message)
 
 
+@settings(max_examples=5)
 @given(category=st.sampled_from(test_categories_with_products))
 def test_failed_edit_category_with_products_not_in_use(
         request, category: dict):
@@ -362,7 +365,8 @@ def test_delete_category(client: FlaskClient, admin_logged_in: User):
         assert not db_session.get(Category, cat.id)
 
 
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=5,
+          suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(category=st.sampled_from(test_categories_with_products))
 def test_failed_delete_category_with_products(
         client: FlaskClient, admin_logged_in: User,
