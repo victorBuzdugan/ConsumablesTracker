@@ -238,7 +238,7 @@ It's automatically created when database initialises, with the password provided
 
 # Extra features
 ## Unit testing
-The app has every feature tested with `pytest`. The tests are provided in the repo. The target coverage of test is 100%.
+The app has every feature tested with `pytest` including property-testing with `hypothesis`. The tests are provided in the repo. The target coverage of test is 100%.
 
 ## Daily tasks
 Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
