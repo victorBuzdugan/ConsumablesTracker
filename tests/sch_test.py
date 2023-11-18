@@ -830,6 +830,52 @@ def test_individual_schedule_unregister(caplog: LogCaptureFixture):
         assert f"Schedule '{sch_name}' deleted" in caplog.text
 
 
+def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
+    """Test auto update schedule date on remove_user or change_pos"""
+    # register a schedule in the past to force auto update
+    with freeze_time(date.today() - timedelta(weeks=2)):
+        indiv_schedule = IndivSchedule(
+            name="test_sch",
+            sch_day=date.today().isocalendar()[2],
+            sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
+            switch_interval=timedelta(weeks=1),
+            start_date=date.today())
+        indiv_schedule.register()
+    assert f"Schedule '{indiv_schedule.name}' registered" in caplog.text
+    caplog.clear()
+    assert indiv_schedule.current_order() == [1, 2, 3, 4, 7]
+    with dbSession() as db_session:
+        db_session.get(User, 5).reg_req = False
+        db_session.commit()
+    indiv_schedule.add_user(5)
+    assert f"Schedule '{indiv_schedule.name}' added 'user5'" in caplog.text
+    caplog.clear()
+    assert indiv_schedule.current_order() == [1, 2, 3, 4, 7, 5]
+    # advance 1 week - force 1 update - test remove_user
+    with freeze_time(date.today() - timedelta(weeks=1)):
+        with dbSession() as db_session:
+            db_session.get(User, 5).reg_req = True
+            db_session.commit()
+        indiv_schedule.remove_user(5)
+    assert (f"Schedule '{indiv_schedule.name}' (modify): " +
+            "next date auto-updated") in caplog.text
+    assert f"Schedule '{indiv_schedule.name}' removed user with id '5'" \
+        in caplog.text
+    caplog.clear()
+    assert indiv_schedule.current_order() == [2, 3, 4, 7, 1]
+    # advance to today - force 1 update - test change_user_pos
+    indiv_schedule.change_user_pos(3, 3)
+    assert (f"Schedule '{indiv_schedule.name}' (modify): " +
+            "next date auto-updated") in caplog.text
+    assert (f"Schedule '{indiv_schedule.name}' changed user with id '3' " +
+            "position to '3'") in caplog.text
+    caplog.clear()
+    assert indiv_schedule.current_order() == [4, 7, 3, 1, 2]
+    # teardown
+    indiv_schedule.unregister()
+    assert f"Schedule '{indiv_schedule.name}' deleted" in caplog.text
+
+
 @pytest.mark.parametrize(
     ("name", "user_ids_order", "start_date",
      "err_msg"), (
@@ -842,10 +888,6 @@ def test_individual_schedule_unregister(caplog: LogCaptureFixture):
         ("test_sch", [1, 2, 3, 4, 5], date.today(),
          "Schedule 'test_sch' (register): list of id's provided is invalid"),
         # start_date
-        ("test_sch", [1, 2, 3, 4, 7], date.today() - timedelta(weeks=1),
-         "Schedule 'test_sch' (register): start date " +
-         f"'{(date.today() - timedelta(weeks=1)).isoformat()}' " +
-         "provided is invalid"),
         ("test_sch", [1, 2, 3, 4, 7], date.today() + timedelta(days=1),
          "Schedule 'test_sch' (register): start date " +
          f"'{(date.today() + timedelta(days=1)).isoformat()}' " +

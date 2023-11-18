@@ -305,22 +305,29 @@ class IndivSchedule(BaseSchedule):
         else:
             user_ids_order = db_user_ids
 
-        # if provided validate start date is this week and on the correct day
         if start_date:
-            this_monday = date.fromisocalendar(
-                year=date.today().year,
-                week=date.today().isocalendar()[1],
-                day=1)
-            if start_date >= this_monday and \
-                    start_date.isoweekday() == self.sch_day:
-                next_date = start_date
-            else:
+            # validate start date is on the correct day
+            if start_date.isoweekday() != self.sch_day:
                 logger.error("Schedule '%s' (%s): start date '%s' " +
                              "provided is invalid",
                              self.name,
                              operation,
                              start_date.isoformat())
                 return False
+            next_date = start_date
+            # if update_date is not in the future update the schedule
+            update_date = self._update_date(start_date)
+            if update_date <= date.today():
+                diff = 0
+                while update_date <= date.today():
+                    next_date += self.switch_interval
+                    update_date += self.switch_interval
+                    diff += 1
+                for _ in range(diff):
+                    user_ids_order.append(user_ids_order.pop(0))
+                logger.warning("Schedule '%s' (%s): next date auto-updated",
+                               self.name,
+                               operation)
         else:
             next_date = self._first_date()
 
@@ -454,24 +461,11 @@ class IndivSchedule(BaseSchedule):
             logger.warning("Schedule '%s' (remove_user): invalid user_id '%s'",
                            self.name, user_id)
             return
-        # if the schedule first_date is incorrect try to update the schedule
-        first_date = self._get_first_date()
-        this_monday = date.fromisocalendar(
-            year=date.today().year,
-            week=date.today().isocalendar()[1],
-            day=1)
-        if first_date < this_monday:
-            # update the schedule
-            diff = 0
-            while first_date < this_monday:
-                first_date += self.switch_interval
-                diff += 1
-            for _ in range(diff):
-                users_order.append(users_order.pop(0))
 
         # remove the user
         users_order.pop(users_order.index(user_id))
         # register the new order
+        first_date = self._get_first_date()
         self.unregister()
         self._modify(
             user_ids_order=users_order,
