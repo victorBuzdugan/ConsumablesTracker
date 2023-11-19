@@ -430,7 +430,7 @@ def test_landing_page_from_category_edit(
 
 
 def test_reassign_category(client: FlaskClient, admin_logged_in: User):
-    """Testing Electronics that has all products responsable_id to user1"""
+    """Testing Electronics that has all products responsible_id to user1"""
     category = test_categories[2]
     assert category["name"] == "Electronics"
     responsible = test_users[1]
@@ -449,7 +449,7 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
             select(Product)
             .filter_by(category=cat)).all()
         for product in products:
-            assert product.responsable == resp
+            assert product.responsible == resp
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -461,7 +461,7 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
             assert cat.name in response.text
             data = {
                 "csrf_token": g.csrf_token,
-                "responsable_id": str(new_resp.id),
+                "responsible_id": str(new_resp.id),
                 "submit": True,
                 }
             response = client.post(
@@ -473,14 +473,14 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) == \
                 url_for("cat.reassign_category", category=cat.name)
-            assert "Category responsable updated" in response.text
+            assert "Category responsible updated" in response.text
             assert "You have to select a new responsible first" \
                 not in response.text
         # check and teardown
         for product in products:
             db_session.refresh(product)
-            assert product.responsable == new_resp
-            product.responsable = resp
+            assert product.responsible == new_resp
+            product.responsible = resp
         db_session.commit()
 
 
@@ -508,7 +508,7 @@ def test_failed_reassign_category(
             select(Product)
             .filter_by(category=cat)).all()
         for product in products:
-            assert product.responsable == resp
+            assert product.responsible == resp
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -516,14 +516,14 @@ def test_failed_reassign_category(
             client.get(url_for("cat.reassign_category", category=cat.name))
             data = {
                 "csrf_token": g.csrf_token,
-                "responsable_id": str(new_resp_id),
+                "responsible_id": str(new_resp_id),
                 "submit": True,
                 }
             response = client.post(
                 url_for("cat.reassign_category", category=cat.name),
                 data=data,
                 follow_redirects=True)
-            assert "Category responsable updated" not in response.text
+            assert "Category responsible updated" not in response.text
             if new_resp_id == 0:
                 assert "You have to select a new responsible first" \
                     in response.text
@@ -532,7 +532,7 @@ def test_failed_reassign_category(
         # database check
         for product in products:
             db_session.refresh(product)
-            assert product.responsable == resp
+            assert product.responsible == resp
 
 
 def test_failed_reassign_category_bad_name(

@@ -170,7 +170,7 @@ def test_user_in_use_products_property():
         assert user.all_products == len(user.products)
         product = db_session.scalar(
             select(Product).
-            filter_by(in_use=True, responsable_id = user.id))
+            filter_by(in_use=True, responsible_id = user.id))
         product.in_use = False
         db_session.commit()
         db_session.refresh(user)
@@ -188,13 +188,13 @@ def test_user_all_products_property():
         all_products = user.all_products
         product = db_session.scalar(
             select(Product).
-            filter_by(responsable_id = user.id))
-        product.responsable_id = 2
+            filter_by(responsible_id = user.id))
+        product.responsible_id = 2
         db_session.commit()
         db_session.refresh(user)
         assert user.all_products == all_products - 1
         db_session.refresh(product)
-        product.responsable_id = user.id
+        product.responsible_id = user.id
         db_session.commit()
         assert user.all_products == all_products
 
@@ -266,7 +266,7 @@ def test_validate_user_products(user_id, err_message):
         user = db_session.get(User, user_id)
         with pytest.raises(ValueError, match=err_message):
             user.products.append(product)
-        assert db_session.get(Product, 1).responsable == product.responsable
+        assert db_session.get(Product, 1).responsible == product.responsible
 
 
 def test_validate_admin():
@@ -782,7 +782,7 @@ def test_product_creation():
         product = Product(
             name="product11",
             description="Some description1",
-            responsable=user,
+            responsible=user,
             category=category,
             supplier=supplier,
             meas_unit="measunit",
@@ -795,7 +795,7 @@ def test_product_creation():
         db_session.refresh(product)
         assert product.name == product.name
         assert product.description == product.description
-        assert product.responsable.name == user.name
+        assert product.responsible.name == user.name
         assert product.category.name == category.name
         assert product.supplier.name == supplier.name
         assert product.meas_unit == product.meas_unit
@@ -921,7 +921,7 @@ def test_failed_product_creation(
             Product(
                 name=name,
                 description=description,
-                responsable=user,
+                responsible=user,
                 category=category,
                 supplier=supplier,
                 meas_unit=meas_unit,
@@ -940,7 +940,7 @@ def test_bulk_product_insertion():
         values = [
             {"name": f"product{no}",
                 "description": f"Some description{no}",
-                "responsable_id": 1,
+                "responsible_id": 1,
                 "category_id": 1,
                 "supplier_id": 1,
                 "meas_unit": "measunit",
@@ -954,7 +954,7 @@ def test_bulk_product_insertion():
         assert len(products) == 3
         for product in products:
             assert product.description == f"Some description{product.id}"
-            assert product.responsable.name == user.name
+            assert product.responsible.name == user.name
             assert product.category.name == category.name
             assert product.supplier.name == supplier.name
             assert product.meas_unit == values[0].get("meas_unit")
@@ -968,21 +968,21 @@ def test_bulk_product_insertion():
         db_session.commit()
 
 
-def test_product_change_responsable():
-    """test_product_change_responsable"""
+def test_product_change_responsible():
+    """test_product_change_responsible"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        old_user = product.responsable
+        old_user = product.responsible
         assert old_user.id == 2
         new_user = db_session.get(User, 1)
-        product.responsable = new_user
+        product.responsible = new_user
         db_session.commit()
         db_session.refresh(product)
-        assert product.responsable == db_session.get(User, new_user.id)
-        product.responsable = db_session.get(User, old_user.id)
+        assert product.responsible == db_session.get(User, new_user.id)
+        product.responsible = db_session.get(User, old_user.id)
         db_session.commit()
         db_session.refresh(product)
-        assert product.responsable == db_session.get(User, old_user.id)
+        assert product.responsible == db_session.get(User, old_user.id)
 
 
 def test_product_change_category():
@@ -1026,90 +1026,90 @@ def test_product_change_supplier():
     (6, "'Retired' users can't have products attached"),
     (8, "User does not exist")
     ))
-def test_validate_product_responsable_id(user_id, err_message):
-    """test_validate_product_responsable_id"""
+def test_validate_product_responsible_id(user_id, err_message):
+    """test_validate_product_responsible_id"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
         with pytest.raises(ValueError, match=err_message):
-            product.responsable_id = user_id
+            product.responsible_id = user_id
         db_session.refresh(product)
-        assert product.responsable_id == product.responsable_id
+        assert product.responsible_id == product.responsible_id
 
 
-def test_validate_product_responsable_id_last_product():
-    """test_validate_product_responsable_id_last_product"""
+def test_validate_product_responsible_id_last_product():
+    """test_validate_product_responsible_id_last_product"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        orig_resp_id = product.responsable_id
+        orig_resp_id = product.responsible_id
         user = db_session.get(User, 5)
         user.reg_req = False
         db_session.commit()
 
-        product.responsable_id = user.id
+        product.responsible_id = user.id
         db_session.commit()
         assert user.all_products == 1
         assert user.done_inv
         assert not user.req_inv
-        assert product.responsable_id == user.id
+        assert product.responsible_id == user.id
         user.done_inv = False
         db_session.commit()
-        product.responsable_id = orig_resp_id
+        product.responsible_id = orig_resp_id
         db_session.refresh(user)
         assert user.done_inv
 
-        product.responsable_id = user.id
+        product.responsible_id = user.id
         db_session.commit()
         assert user.all_products == 1
         assert user.done_inv
         assert not user.req_inv
-        assert product.responsable_id == user.id
+        assert product.responsible_id == user.id
         user.req_inv = True
         db_session.commit()
-        product.responsable_id = orig_resp_id
+        product.responsible_id = orig_resp_id
         db_session.refresh(user)
         assert not user.req_inv
 
         # teardown
-        product.responsable_id = orig_resp_id
+        product.responsible_id = orig_resp_id
         user.reg_req = True
         db_session.commit()
 
 
-def test_validate_product_responsable_last_product():
-    """test_validate_product_responsable_last_product"""
+def test_validate_product_responsible_last_product():
+    """test_validate_product_responsible_last_product"""
     with dbSession() as db_session:
         product = db_session.get(Product, 1)
-        orig_resp = product.responsable
+        orig_resp = product.responsible
         user = db_session.get(User, 5)
         user.reg_req = False
         db_session.commit()
 
-        product.responsable = user
+        product.responsible = user
         db_session.commit()
         assert user.all_products == 1
         assert user.done_inv
         assert not user.req_inv
-        assert product.responsable == user
+        assert product.responsible == user
         user.done_inv = False
         db_session.commit()
-        product.responsable = orig_resp
+        product.responsible = orig_resp
         db_session.refresh(user)
         assert user.done_inv
 
-        product.responsable = user
+        product.responsible = user
         db_session.commit()
         assert user.all_products == 1
         assert user.done_inv
         assert not user.req_inv
-        assert product.responsable == user
+        assert product.responsible == user
         user.req_inv = True
         db_session.commit()
-        product.responsable = orig_resp
+        product.responsible = orig_resp
         db_session.refresh(user)
         assert not user.req_inv
 
         # teardown
-        product.responsable = orig_resp
+        product.responsible = orig_resp
         user.reg_req = True
         db_session.commit()
 

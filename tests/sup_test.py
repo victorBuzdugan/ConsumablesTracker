@@ -422,7 +422,7 @@ def test_landing_page_from_supplier_edit(
 
 def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
     """For testing create a new supplier
-    that has all products responsable_id to 1 - user1"""
+    that has all products responsible_id to 1 - user1"""
     resp_id = 1
     new_resp_id = 2
     with dbSession() as db_session:
@@ -433,7 +433,7 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             new_product = Product(
                 name=f"new_product_{ind}",
                 description="Some description",
-                responsable=db_session.get(User, resp_id),
+                responsible=db_session.get(User, resp_id),
                 category=db_session.get(Category, resp_id),
                 supplier=new_sup,
                 meas_unit="pc",
@@ -446,7 +446,7 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             select(Product)
             .filter_by(supplier_id=new_sup.id)).all()
         for product in products:
-            assert product.responsable_id == resp_id
+            assert product.responsible_id == resp_id
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -458,7 +458,7 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert new_sup.name in response.text
             data = {
                 "csrf_token": g.csrf_token,
-                "responsable_id": str(new_resp_id),
+                "responsible_id": str(new_resp_id),
                 "submit": True,
                 }
             response = client.post(
@@ -470,13 +470,13 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=new_sup.name)
-            assert "Supplier responsable updated" in response.text
+            assert "Supplier responsible updated" in response.text
             assert "You have to select a new responsible first" \
                 not in response.text
         # check and teardown
         for product in products:
             db_session.refresh(product)
-            assert product.responsable_id == new_resp_id
+            assert product.responsible_id == new_resp_id
             db_session.delete(product)
         db_session.delete(new_sup)
         db_session.commit()
@@ -499,7 +499,7 @@ def test_failed_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert sup.name in response.text
             data = {
                 "csrf_token": g.csrf_token,
-                "responsable_id": str(new_resp_id),
+                "responsible_id": str(new_resp_id),
                 "submit": True,
                 }
             response = client.post(
@@ -511,7 +511,7 @@ def test_failed_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=sup.name)
-            assert "Supplier responsable updated" not in response.text
+            assert "Supplier responsible updated" not in response.text
             assert "You have to select a new responsible first" in response.text
 
 
@@ -533,7 +533,7 @@ def test_failed_reassign_supplier_bad_choice(
             assert sup.name in response.text
             data = {
                 "csrf_token": g.csrf_token,
-                "responsable_id": str(new_resp_id),
+                "responsible_id": str(new_resp_id),
                 "submit": True,
                 }
             response = client.post(
@@ -542,7 +542,7 @@ def test_failed_reassign_supplier_bad_choice(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Supplier responsable updated" not in response.text
+            assert "Supplier responsible updated" not in response.text
             assert "Not a valid choice." in response.text
 
 

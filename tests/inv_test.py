@@ -46,7 +46,7 @@ def test_inv_user_logged_in_no_check_inventory(
         with dbSession() as db_session:
             product =  db_session.scalar(
                 select(Product)\
-                .filter_by(responsable_id=user_logged_in.id, in_use=True))
+                .filter_by(responsible_id=user_logged_in.id, in_use=True))
             assert f"{product.name}" in response.text
             assert f"{product.description}" in response.text
             assert f"{product.min_stock} {product.meas_unit}" in response.text
@@ -55,7 +55,7 @@ def test_inv_user_logged_in_no_check_inventory(
             product_crit =  db_session.scalar(
                 select(Product)\
                 .filter_by(
-                    responsable_id=user_logged_in.id,
+                    responsible_id=user_logged_in.id,
                     in_use=True,
                     critical=True))
             assert f"{product_crit.name}" in response.text
@@ -92,7 +92,7 @@ def test_inv_admin_logged_in_no_check_inventory(
         with dbSession() as db_session:
             product =  db_session.scalar(
                 select(Product)\
-                .filter_by(responsable_id=admin_logged_in.id, in_use=True))
+                .filter_by(responsible_id=admin_logged_in.id, in_use=True))
             assert f"{product.name}" in response.text
             assert f"{product.description}" in response.text
             assert f"{product.min_stock} {product.meas_unit}" in response.text
@@ -100,7 +100,7 @@ def test_inv_admin_logged_in_no_check_inventory(
             product_crit =  db_session.scalar(
                 select(Product)\
                 .filter_by(
-                    responsable_id=admin_logged_in.id,
+                    responsible_id=admin_logged_in.id,
                     in_use=True,
                     critical=True))
             assert f"{product_crit.name}" in response.text
@@ -118,7 +118,7 @@ def test_inv_admin_logged_in_no_check_inventory(
             db_session.commit()
 
             products_len = db_session.scalar(select(func.count(Product.id)).
-                filter_by(responsable_id=session.get("user_id"), in_use=True))
+                filter_by(responsible_id=session.get("user_id"), in_use=True))
             product.in_use = False
             db_session.commit()
             response = client.get(url_for("inv.inventory"))
@@ -126,7 +126,7 @@ def test_inv_admin_logged_in_no_check_inventory(
                 not in response.text
             assert db_session.scalar(select(func.count(Product.id)).
                 filter_by(
-                    responsable_id=admin_logged_in.id,
+                    responsible_id=admin_logged_in.id,
                     in_use=True)) == products_len - 1
             product.in_use = True
             db_session.commit()
@@ -151,7 +151,7 @@ def test_inv_user_logged_in_yes_check_inventory(
         with dbSession() as db_session:
             product =  db_session.scalar(
                 select(Product)
-                .filter_by(responsable_id=user_logged_in.id, in_use=True))
+                .filter_by(responsible_id=user_logged_in.id, in_use=True))
             assert f"{product.name}" in response.text
             assert f"{product.description}" in response.text
             assert f"{product.min_stock} {product.meas_unit}" in response.text
@@ -159,7 +159,7 @@ def test_inv_user_logged_in_yes_check_inventory(
             product_crit =  db_session.scalar(
                 select(Product)
                 .filter_by(
-                    responsable_id=user_logged_in.id,
+                    responsible_id=user_logged_in.id,
                     in_use=True,
                     critical=True))
             assert f"{product_crit.name}" in response.text
@@ -343,10 +343,10 @@ def test_oth_user_admin_logged_in_no_check_inventory(
     with dbSession() as db_session:
         product =  db_session.scalar(
             select(Product)
-            .filter_by(responsable_id=oth_user.id, in_use=True))
+            .filter_by(responsible_id=oth_user.id, in_use=True))
         product_crit =  db_session.scalar(
             select(Product)
-            .filter_by(responsable_id=oth_user.id, in_use=True, critical=True))
+            .filter_by(responsible_id=oth_user.id, in_use=True, critical=True))
     assert f"{product.name}" in response.text
     assert f"{product.description}" in response.text
     assert f"{product.min_stock} {product.meas_unit}" in response.text
@@ -430,7 +430,7 @@ def test_oth_user_admin_logged_in_yes_check_inventory(
         db_session.commit()
         product =  db_session.scalar(
             select(Product)
-            .filter_by(responsable_id=oth_user.id, in_use=True))
+            .filter_by(responsible_id=oth_user.id, in_use=True))
     with client:
         client.get("/")
         response = client.get(

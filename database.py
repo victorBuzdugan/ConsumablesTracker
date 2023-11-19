@@ -210,7 +210,7 @@ class User(Base):
     name: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str] = mapped_column(repr=False)
     products: Mapped[List["Product"]] = relationship(
-        default_factory=list, back_populates="responsable", repr=False)
+        default_factory=list, back_populates="responsible", repr=False)
     admin: Mapped[bool] = mapped_column(default=False)
     in_use: Mapped[bool] = mapped_column(default=True)
     done_inv: Mapped[bool] = mapped_column(default=True)
@@ -233,7 +233,7 @@ class User(Base):
         with dbSession() as db_session:
             return db_session.scalar(
                 select(func.count(Product.id))
-                .filter_by(responsable_id=self.id, in_use=True))
+                .filter_by(responsible_id=self.id, in_use=True))
 
     @property
     def all_products(self) -> int:
@@ -241,7 +241,7 @@ class User(Base):
         with dbSession() as db_session:
             return db_session.scalar(
                 select(func.count(Product.id))
-                .filter_by(responsable_id=self.id))
+                .filter_by(responsible_id=self.id))
 
     @property
     def check_inv(self) -> bool:
@@ -613,8 +613,8 @@ class Product(Base):
     :param id: product id
     :param name: product short name / number / code
     :param description: produc description, extra info
-    :param responsable_id: user id responsable for inventorying the product
-    :param responsable: `User` class object for responsable
+    :param responsible_id: user id responsible for inventorying the product
+    :param responsible: `User` class object for responsible
     :param category_id: category id of this product
     :param category: `Category` class object of this product
     :param supplier_id: supplier id of this product
@@ -623,7 +623,7 @@ class Product(Base):
     :param min_stock: minimum stock
     :param ord_qty: order quantity
     :param to_order: product needs to be ordered
-    If `responsable` sees that shelf quantity is less than `min_stock` checks
+    If `responsible` sees that shelf quantity is less than `min_stock` checks
     in the app triggering `to_order = True`. The admin will see that
     he needs to order `ord_qty` of this product.
     :param critical: product is a critical product
@@ -631,8 +631,8 @@ class Product(Base):
     """
     name: Mapped[str] = mapped_column(unique=True)
     description: Mapped[str]
-    responsable_id = mapped_column(ForeignKey("users.id"), nullable=False)
-    responsable: Mapped[User] = relationship(back_populates="products",
+    responsible_id = mapped_column(ForeignKey("users.id"), nullable=False)
+    responsible: Mapped[User] = relationship(back_populates="products",
                                              repr=False)
     category_id = mapped_column(ForeignKey("categories.id"), nullable=False)
     category: Mapped[Category] = relationship(back_populates="products",
@@ -679,8 +679,8 @@ class Product(Base):
             raise ValueError(gettext("Product must have a description"))
         return value.strip()
 
-    @validates("responsable_id")
-    def validate_responsable_id(self, key: str, user_id: int) -> Optional[int]:
+    @validates("responsible_id")
+    def validate_responsible_id(self, key: str, user_id: int) -> Optional[int]:
         """Check for empty, not existing, not in use and last product."""
         # pylint: disable=unused-argument
         if not user_id:
@@ -697,17 +697,17 @@ class Product(Base):
                 raise ValueError(
                     gettext("User with pending registration can't " +
                             "have products attached"))
-            if self.responsable_id:
-                prev_user = db_session.get(User, self.responsable_id)
-                # if it's the last product of previous responsable
+            if self.responsible_id:
+                prev_user = db_session.get(User, self.responsible_id)
+                # if it's the last product of previous responsible
                 if prev_user.in_use_products == 1:
                     prev_user.done_inv = True
                     prev_user.req_inv = False
                     db_session.commit()
         return user_id
 
-    @validates("responsable")
-    def validate_responsable(self,
+    @validates("responsible")
+    def validate_responsible(self,
                              key: User,
                              user: Optional[User]
                              ) -> Optional[User]:
@@ -724,9 +724,9 @@ class Product(Base):
                 gettext("User with pending registration can't " +
                         "have products attached"))
         with dbSession() as db_session:
-            if self.responsable:
-                prev_user = self.responsable
-                # if it's the last product of previous responsable
+            if self.responsible:
+                prev_user = self.responsible
+                # if it's the last product of previous responsible
                 if prev_user.in_use_products == 1:
                     prev_user.done_inv = True
                     prev_user.req_inv = False
@@ -818,12 +818,12 @@ class Product(Base):
         try:
             if not value >= 0:
                 raise ValueError(
-                    gettext("Minimum stock must be ≥ " +
-                            f"{Constants.Product.MinStock.min_value}"))
+                    gettext("Minimum stock must be ≥ %(value)s",
+                            value=Constants.Product.MinStock.min_value))
         except TypeError as err:
             raise ValueError(
-                gettext("Minimum stock must be ≥ " +
-                        f"{Constants.Product.MinStock.min_value}")) from err
+                gettext("Minimum stock must be ≥ %(value)s",
+                        value=Constants.Product.MinStock.min_value)) from err
         return value
 
     @validates("ord_qty")
@@ -833,12 +833,12 @@ class Product(Base):
         try:
             if not value >= 1:
                 raise ValueError(
-                    gettext("Order quantity must be ≥ " +
-                            f"{Constants.Product.OrdQty.min_value}"))
+                    gettext("Order quantity must be ≥ %(value)s",
+                            value=Constants.Product.OrdQty.min_value))
         except TypeError as err:
             raise ValueError(
-                gettext("Order quantity must be ≥ " +
-                        f"{Constants.Product.OrdQty.min_value}")) from err
+                gettext("Order quantity must be ≥ %(value)s",
+                        value=Constants.Product.OrdQty.min_value)) from err
         return value
 
     @validates("to_order")

@@ -107,7 +107,7 @@
                 <li class="list-group-item">{{ gettext("User requested") }} <a class="link-warning link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('users.approve_check_inv', username=form.name.data) }}">{{ gettext("inventory check") }}</a></li>
             {% endif %}
             <li class="list-group-item">
-                {{ gettext("User is responsible for") }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='responsable') }}">{{ form.all_products.data }} {{ ngettext("product", "products", form.all_products.data) }}</a>, {{ ngettext("and", "of which", form.all_products.data) }} <span class="text-secondary">{{ form.in_use_products.data }} {{ ngettext("is in use", "are in use", form.in_use_products.data) }}</span>
+                {{ gettext("User is responsible for") }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='responsible') }}">{{ form.all_products.data }} {{ ngettext("product", "products", form.all_products.data) }}</a>, {{ ngettext("and", "of which", form.all_products.data) }} <span class="text-secondary">{{ form.in_use_products.data }} {{ ngettext("is in use", "are in use", form.in_use_products.data) }}</span>
             </li>
         </ul>
 

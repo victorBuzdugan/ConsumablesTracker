@@ -20,7 +20,7 @@
                         <tr>
                             <th class="px-1">{{ gettext("Code") }}</th>
                             <th class="px-1">{{ gettext("Description") }}</th>
-                            <th class="px-1">{{ gettext("Responsable") }}</th>
+                            <th class="px-1">{{ gettext("Responsible") }}</th>
                             <th class="px-1">{{ gettext("Category") }}</th>
                             <th class="px-1">{{ gettext("Supplier") }}</th>
                             <th>{{ gettext("Min stock") }} / {{ gettext("Order qty") }}</th>
@@ -44,7 +44,7 @@
                                 </span>
                             </td>
                             <td>{{ product.description }}</td>
-                            <td>{{ product.responsable.name }}</td>
+                            <td>{{ product.responsible.name }}</td>
                             <td>{{ product.category.name }}</td>
                             <td>{{ product.supplier.name }}</td>
                             <td>{{ product.min_stock }} / {{ product.ord_qty }} {{ product.meas_unit }}</td>
@@ -61,8 +61,8 @@
             {{ form.csrf_token }}
             <div class="mx-auto m-1" style="max-width: 25rem;">
                 <div class="form-floating">
-                    {{ form.responsable_id }}
-                    {{ form.responsable_id.label }}
+                    {{ form.responsible_id }}
+                    {{ form.responsible_id.label }}
                 </div>
             </div>
         </div>

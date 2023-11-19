@@ -69,11 +69,11 @@ def test_products_page_admin_logged_in(
             db_session.get(Product, 43).in_use = False
             db_session.commit()
         response = client.get(
-            url_for("prod.products", ordered_by="responsable"),
+            url_for("prod.products", ordered_by="responsible"),
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert '<span class="text-secondary">Responsable</span>' \
+        assert '<span class="text-secondary">Responsible</span>' \
             in response.text
         response = client.get(
             url_for("prod.products", ordered_by="category"),
@@ -101,7 +101,7 @@ def test_products_page_admin_logged_in(
 
 # region: new product
 @pytest.mark.parametrize(
-    ("name", "description", "responsable_id", "category_id", "supplier_id",
+    ("name", "description", "responsible_id", "category_id", "supplier_id",
      "meas_unit", "min_stock", "ord_qty", "critical"), (
         ("new", "some description", 1, 1, 1,
          "pc", 0, 1, ""),
@@ -112,7 +112,7 @@ def test_products_page_admin_logged_in(
 ))
 def test_new_product(
         client: FlaskClient, admin_logged_in: User,
-        name, description, responsable_id, category_id, supplier_id,
+        name, description, responsible_id, category_id, supplier_id,
         meas_unit, min_stock, ord_qty, critical):
     """test_new_product"""
     with client:
@@ -125,7 +125,7 @@ def test_new_product(
             "csrf_token": g.csrf_token,
             "name": name,
             "description": description,
-            "responsable_id": responsable_id,
+            "responsible_id": responsible_id,
             "category_id": category_id,
             "supplier_id": supplier_id,
             "meas_unit": meas_unit,
@@ -145,7 +145,7 @@ def test_new_product(
     with dbSession() as db_session:
         prod = db_session.scalar(select(Product).filter_by(name=name))
         assert prod.description == description
-        assert prod.responsable == db_session.get(User, responsable_id)
+        assert prod.responsible == db_session.get(User, responsible_id)
         assert prod.category == db_session.get(Category, category_id)
         assert prod.supplier == db_session.get(Supplier, supplier_id)
         assert prod.meas_unit == meas_unit
@@ -159,7 +159,7 @@ def test_new_product(
 
 
 @pytest.mark.parametrize(
-    ("name", "description", "responsable_id", "category_id", "supplier_id",
+    ("name", "description", "responsible_id", "category_id", "supplier_id",
      "meas_unit", "min_stock", "ord_qty", "flash_message"), (
         ("", "some description", 1, 1, 1,
          "pc", 0, 1, "Product name is required"),
@@ -238,7 +238,7 @@ def test_new_product(
 ))
 def test_failed_new_product(
         client: FlaskClient, admin_logged_in: User,
-        name, description, responsable_id, category_id, supplier_id,
+        name, description, responsible_id, category_id, supplier_id,
         meas_unit, min_stock, ord_qty, flash_message):
     """test_failed_new_product"""
     with client:
@@ -251,7 +251,7 @@ def test_failed_new_product(
             "csrf_token": g.csrf_token,
             "name": name,
             "description": description,
-            "responsable_id": responsable_id,
+            "responsible_id": responsible_id,
             "category_id": category_id,
             "supplier_id": supplier_id,
             "meas_unit": meas_unit,
@@ -275,7 +275,7 @@ def test_failed_new_product(
 # region: edit product
 @pytest.mark.parametrize(
     ("prod_id", "new_name", "new_description",
-     "new_responsable_id", "new_category_id", "new_supplier_id",
+     "new_responsible_id", "new_category_id", "new_supplier_id",
      "new_meas_unit", "new_min_stock", "new_ord_qty",
      "new_critical", "new_to_order", "new_in_use"), (
         ("1", "new name", "new description",
@@ -306,14 +306,14 @@ def test_failed_new_product(
 def test_edit_product(
         client: FlaskClient, admin_logged_in: User,
         prod_id, new_name, new_description,
-        new_responsable_id, new_category_id, new_supplier_id,
+        new_responsible_id, new_category_id, new_supplier_id,
         new_meas_unit, new_min_stock, new_ord_qty,
         new_critical, new_to_order, new_in_use):
     """test_edit_product"""
     with dbSession() as db_session:
         prod = db_session.get(Product, prod_id)
         orig_prod = {key: value for key, value in prod.__dict__.items()
-            if key in {"name", "description", "responsable_id", "category_id",
+            if key in {"name", "description", "responsible_id", "category_id",
                        "supplier_id", "meas_unit", "min_stock", "ord_qty",
                        "critical", "to_order", "in_use"}}
         with client:
@@ -330,7 +330,7 @@ def test_edit_product(
                 "csrf_token": g.csrf_token,
                 "name": new_name,
                 "description": new_description,
-                "responsable_id": new_responsable_id,
+                "responsible_id": new_responsible_id,
                 "category_id": new_category_id,
                 "supplier_id": new_supplier_id,
                 "meas_unit": new_meas_unit,
@@ -356,7 +356,7 @@ def test_edit_product(
         db_session.refresh(prod)
         assert prod.name == new_name
         assert prod.description == new_description
-        assert prod.responsable_id == new_responsable_id
+        assert prod.responsible_id == new_responsible_id
         assert prod.category_id == new_category_id
         assert prod.supplier_id == new_supplier_id
         assert prod.meas_unit == new_meas_unit
@@ -392,7 +392,7 @@ def test_edit_product_last_responsible_product(
             "csrf_token": csrf,
             "name": product.name,
             "description": product.description,
-            "responsable_id": new_resp_id,
+            "responsible_id": new_resp_id,
             "category_id": product.category_id,
             "supplier_id": product.supplier_id,
             "meas_unit": product.meas_unit,
@@ -412,7 +412,7 @@ def test_edit_product_last_responsible_product(
         assert getattr(user, attr) is value
         products = db_session.scalars(
             select(Product)
-            .filter_by(responsable_id=user.id)).all()
+            .filter_by(responsible_id=user.id)).all()
         with client:
             client.get("/")
             for product in products:
@@ -425,7 +425,7 @@ def test_edit_product_last_responsible_product(
                     follow_redirects=True)
                 assert "Product updated" in response.text
                 db_session.refresh(product)
-                assert product.responsable_id == admin_logged_in.id
+                assert product.responsible_id == admin_logged_in.id
             db_session.refresh(user)
             assert not user.all_products
             assert getattr(user, attr) is not value
@@ -440,7 +440,7 @@ def test_edit_product_last_responsible_product(
                     follow_redirects=True)
                 assert "Product updated" in response.text
                 db_session.refresh(product)
-                assert product.responsable_id == user.id
+                assert product.responsible_id == user.id
             db_session.refresh(user)
             assert user.all_products == initial_total_products
 
@@ -450,7 +450,7 @@ def test_edit_product_last_responsible_product(
 
 @pytest.mark.parametrize(
     ("prod_id", "new_name", "new_description",
-     "new_responsable_id", "new_category_id", "new_supplier_id",
+     "new_responsible_id", "new_category_id", "new_supplier_id",
      "new_meas_unit", "new_min_stock", "new_ord_qty",
      "flash_message"), (
         # name
@@ -598,14 +598,14 @@ def test_edit_product_last_responsible_product(
 def test_failed_edit_product_form_validators(
         client: FlaskClient, admin_logged_in: User,
         prod_id, new_name, new_description,
-        new_responsable_id, new_category_id, new_supplier_id,
+        new_responsible_id, new_category_id, new_supplier_id,
         new_meas_unit, new_min_stock, new_ord_qty,
         flash_message):
     """test_failed_edit_product_form_validators"""
     with dbSession() as db_session:
         prod = db_session.get(Product, prod_id)
         orig_prod = {key: value for key, value in prod.__dict__.items()
-            if key in {"name", "description", "responsable_id", "category_id",
+            if key in {"name", "description", "responsible_id", "category_id",
                        "supplier_id", "meas_unit", "min_stock", "ord_qty",
                        "critical", "to_order", "in_use"}}
         with client:
@@ -621,7 +621,7 @@ def test_failed_edit_product_form_validators(
                 "csrf_token": g.csrf_token,
                 "name": new_name,
                 "description": new_description,
-                "responsable_id": new_responsable_id,
+                "responsible_id": new_responsible_id,
                 "category_id": new_category_id,
                 "supplier_id": new_supplier_id,
                 "meas_unit": new_meas_unit,
@@ -664,7 +664,7 @@ def test_failed_edit_product_name_duplicate(
                 "csrf_token": g.csrf_token,
                 "name": new_name,
                 "description": prod.description,
-                "responsable_id": prod.responsable_id,
+                "responsible_id": prod.responsible_id,
                 "category_id": prod.category_id,
                 "supplier_id": prod.supplier_id,
                 "meas_unit": prod.meas_unit,
@@ -707,7 +707,7 @@ def test_failed_edit_product_to_order_in_use_validator(
                 "csrf_token": g.csrf_token,
                 "name": prod.name,
                 "description": prod.description,
-                "responsable_id": prod.responsable_id,
+                "responsible_id": prod.responsible_id,
                 "category_id": prod.category_id,
                 "supplier_id": prod.supplier_id,
                 "meas_unit": prod.meas_unit,
@@ -744,7 +744,7 @@ def test_failed_edit_product_to_order_in_use_validator(
                 "csrf_token": g.csrf_token,
                 "name": prod.name,
                 "description": prod.description,
-                "responsable_id": prod.responsable_id,
+                "responsible_id": prod.responsible_id,
                 "category_id": prod.category_id,
                 "supplier_id": prod.supplier_id,
                 "meas_unit": prod.meas_unit,
@@ -798,7 +798,7 @@ def test_delete_product(
         prod = Product(
             name="new_product",
             description="some description",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pc",
@@ -817,7 +817,7 @@ def test_delete_product(
             "csrf_token": g.csrf_token,
             "name": prod.name,
             "description": prod.description,
-            "responsable_id": prod.responsable_id,
+            "responsible_id": prod.responsible_id,
             "category_id": prod.category_id,
             "supplier_id": prod.supplier_id,
             "meas_unit": prod.meas_unit,

@@ -38,9 +38,9 @@ class CreateCatForm(FlaskForm):
             InputRequired(gettext("Category name is required")),
             Length(
                 min=Constants.Category.Name.min_length,
-                message=gettext("Category name must have at least " +
-                                f"{Constants.Category.Name.min_length} " +
-                                "characters"))],
+                message=gettext("Category name must have at least %(m)s " +
+                                "characters",
+                                m=Constants.Category.Name.min_length))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -86,8 +86,8 @@ class ReassignCatForm(FlaskForm):
     reassign = SubmitField(
         label=lazy_gettext("Reassign all products"),
         render_kw={"class": "btn btn-warning"})
-    responsable_id = SelectField(
-        label=lazy_gettext("New responsable"),
+    responsible_id = SelectField(
+        label=lazy_gettext("New responsible"),
         coerce=int,
         render_kw={
                 "class": "form-select",
@@ -213,13 +213,13 @@ def reassign_category(category):
             .filter_by(in_use=True, reg_req=False)
             .order_by(func.lower(User.name))
             ).all()
-    reassign_cat_form.responsable_id.choices = [
+    reassign_cat_form.responsible_id.choices = [
         (0, gettext("Select a new responsible"))]
-    reassign_cat_form.responsable_id.choices.extend(
+    reassign_cat_form.responsible_id.choices.extend(
         [(user.id, user.name) for user in users])
 
     if reassign_cat_form.validate_on_submit():
-        if reassign_cat_form.responsable_id.data:
+        if reassign_cat_form.responsible_id.data:
             with dbSession() as db_session:
                 cat = db_session.scalar(
                     select(Category)
@@ -229,11 +229,11 @@ def reassign_category(category):
                     .filter_by(category_id=cat.id)
                     ).all()
                 for product in products:
-                    product.responsable_id = (reassign_cat_form
-                                              .responsable_id.data)
+                    product.responsible_id = (reassign_cat_form
+                                              .responsible_id.data)
                 db_session.commit()
-                logger.debug("Category '%s' responsable updated", cat.name)
-                flash(gettext("Category responsable updated"))
+                logger.debug("Category '%s' responsible updated", cat.name)
+                flash(gettext("Category responsible updated"))
         else:
             flash(gettext("You have to select a new responsible first"),
                   "error")
@@ -253,11 +253,11 @@ def reassign_category(category):
                 .filter_by(name=cat.name)
                 .options(
                     defer(Product.to_order, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
-                .order_by(func.lower(Product.responsable_id),
+                .order_by(func.lower(Product.responsible_id),
                           func.lower(Product.name))
             ).unique().all()
         else:

@@ -172,7 +172,7 @@ Selecting Products from the main menu will open the products page.
 
 This displays a list off all products along with details about each one.
 
-You can sort the list by Code(default), Responsable, Category or Supplier by clicking on the corresponding table header.
+You can sort the list by Code(default), Responsible, Category or Supplier by clicking on the corresponding table header.
 
 Clicking on a product name opens the edit page for that product.
 
@@ -199,7 +199,7 @@ To create a new category or supplier you must provide a unique name. Providing a
 
 ### New product
 In the new product form all fields are mandatory.
-Provide a product code, a description, select the responsable, category and supplier for this product, enter a minimum stock, an order quantity and a measuring unit.
+Provide a product code, a description, select the responsible, category and supplier for this product, enter a minimum stock, an order quantity and a measuring unit.
 
 Users will check when inventorying if, on the 'shelf', there are less than the value you enter in `minimum stock`. If there are less then they will mark the product as 'to order'. In the orders page you will see the `order quantity` you provided here. If, on the 'shelf', there are a number of this product less than `minimum stock` then we need to order `order quantity`.
 
@@ -216,7 +216,7 @@ The concept of `in use` is similar to delete. They both make the element unusabl
 If you are sure that you won't need this element in the (at least) near future (or the pages are filled with strikethrough items) then delete the item
 (it's not really that complicated to recreate it in the future). If you are not sure then 'retire' the element by off flipping the in use switch.
 
-All elements (except products) cannot be deleted or retired if they still have products (also retired products) attached to them. If you could delete (or retire) a user then all the product would remain orphan by not having a responsable for inventorying them. In order to delete (or retire) an element you must first reassign all the attached products.
+All elements (except products) cannot be deleted or retired if they still have products (also retired products) attached to them. If you could delete (or retire) a user then all the product would remain orphan by not having a responsible for inventorying them. In order to delete (or retire) an element you must first reassign all the attached products.
 
 ### Edit user
 Along with with all the fields presented in [create new user](https://github.com/victorBuzdugan/ConsumablesTracker#new-user) you can switch the inventory check to release inventory for this user as explained in the [inventory check start](https://github.com/victorBuzdugan/ConsumablesTracker#inventory-check-start) and change the user's order in the individual schedule.

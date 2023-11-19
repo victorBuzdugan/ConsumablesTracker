@@ -33,7 +33,7 @@ def inventory():
         with dbSession() as db_session:
             products = db_session.scalars(
                 select(Product)
-                .filter_by(responsable_id=user.id, in_use=True)
+                .filter_by(responsible_id=user.id, in_use=True)
                 ).all()
             for product in products:
                 if str(product.id) in request.form:
@@ -55,7 +55,7 @@ def inventory():
     with dbSession() as db_session:
         products = db_session.scalars(
             select(Product)
-            .filter_by(responsable_id=user.id, in_use=True)
+            .filter_by(responsible_id=user.id, in_use=True)
             .order_by(Product.category_id, Product.name)
             ).all()
 
@@ -91,7 +91,7 @@ def inventory_user(username):
         with dbSession() as db_session:
             products = db_session.scalars(
                 select(Product)
-                .filter_by(responsable_id=user.id, in_use=True)
+                .filter_by(responsible_id=user.id, in_use=True)
                 ).all()
             for product in products:
                 if str(product.id) in request.form:
@@ -114,7 +114,7 @@ def inventory_user(username):
     with dbSession() as db_session:
         products = db_session.scalars(
             select(Product)
-            .filter_by(responsable_id=user.id, in_use=True)
+            .filter_by(responsible_id=user.id, in_use=True)
             .order_by(Product.category_id, Product.name)
             ).all()
 

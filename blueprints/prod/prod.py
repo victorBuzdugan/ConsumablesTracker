@@ -41,9 +41,9 @@ class CreateProdForm(FlaskForm):
                 min=Constants.Product.Name.min_length,
                 max=Constants.Product.Name.max_length,
                 message=gettext("Product name must be between " +
-                                f"{Constants.Product.Name.min_length} and " +
-                                f"{Constants.Product.Name.max_length} " +
-                                "characters"))],
+                                "%(m)s and %(M)s characters",
+                                m=Constants.Product.Name.min_length,
+                                M=Constants.Product.Name.max_length))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Code"),
@@ -57,18 +57,17 @@ class CreateProdForm(FlaskForm):
                 min=Constants.Product.Description.min_length,
                 max=Constants.Product.Description.max_length,
                 message=gettext("Product description must be between " +
-                                f"{Constants.Product.Description.min_length} " +
-                                "and " +
-                                f"{Constants.Product.Description.max_length} " +
-                                "characters"))],
+                                "%(m)s and %(M)s characters",
+                                m=Constants.Product.Description.min_length,
+                                M=Constants.Product.Description.max_length))],
         render_kw={
                 "class": "form-control",
                 "placeholder": lazy_gettext("Description"),
                 "style": "height: 5rem",
                 "autocomplete": "off",
                 })
-    responsable_id = SelectField(
-        label=lazy_gettext("Responsable"),
+    responsible_id = SelectField(
+        label=lazy_gettext("Responsible"),
         coerce=int,
         render_kw={
                 "class": "form-select",
@@ -99,8 +98,8 @@ class CreateProdForm(FlaskForm):
             InputRequired(gettext("Minimum stock is required")),
             NumberRange(
                 min=Constants.Product.MinStock.min_value,
-                message=gettext("Minimum stock must be at least " +
-                                f"{Constants.Product.MinStock.min_value}"))],
+                message=gettext("Minimum stock must be at least %(value)s",
+                                value=Constants.Product.MinStock.min_value))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Minimum stock"),
@@ -112,8 +111,8 @@ class CreateProdForm(FlaskForm):
             InputRequired(gettext("Order quantity is required")),
             NumberRange(
                 min=Constants.Product.OrdQty.min_value,
-                message=gettext("Order quantity must be at least " +
-                                f"{Constants.Product.OrdQty.min_value}"))],
+                message=gettext("Order quantity must be at least %(value)s",
+                                value=Constants.Product.OrdQty.min_value))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Order quantity"),
@@ -170,19 +169,19 @@ def products(ordered_by):
                 select(Product)
                 .options(
                     defer(Product.to_order, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
                 .order_by(func.lower(Product.name))
             ).unique().all()
-        elif ordered_by == "responsable":
+        elif ordered_by == "responsible":
             prods = db_session.scalars(
                 select(Product)
-                .join(Product.responsable)
+                .join(Product.responsible)
                 .options(
                     defer(Product.to_order, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
@@ -194,7 +193,7 @@ def products(ordered_by):
                 .join(Product.category)
                 .options(
                     defer(Product.to_order, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
@@ -206,7 +205,7 @@ def products(ordered_by):
                 .join(Product.supplier)
                 .options(
                     defer(Product.to_order, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
@@ -258,7 +257,7 @@ def new_product():
             .filter_by(in_use=True)
             .order_by(func.lower(Supplier.name))
             ).all()
-    new_prod_form.responsable_id.choices = [
+    new_prod_form.responsible_id.choices = [
         (user.id, user.name) for user in users]
     new_prod_form.category_id.choices = [
         (category.id, category.name) for category in categories]
@@ -271,8 +270,8 @@ def new_product():
                 new_prod = Product(
                     name=new_prod_form.name.data,
                     description=new_prod_form.description.data,
-                    responsable=db_session.get(
-                        User, new_prod_form.responsable_id.data),
+                    responsible=db_session.get(
+                        User, new_prod_form.responsible_id.data),
                     category=db_session.get(
                         Category, new_prod_form.category_id.data),
                     supplier=db_session.get(
@@ -319,7 +318,7 @@ def edit_product(product):
             .filter_by(in_use=True)
             .order_by(func.lower(Supplier.name))
             ).all()
-    edit_prod_form.responsable_id.choices = [
+    edit_prod_form.responsible_id.choices = [
         (user.id, user.name) for user in users]
     edit_prod_form.category_id.choices = [
         (category.id, category.name) for category in categories]
@@ -342,7 +341,7 @@ def edit_product(product):
                 try:
                     prod.name = edit_prod_form.name.data
                     prod.description = edit_prod_form.description.data
-                    prod.responsable_id = edit_prod_form.responsable_id.data
+                    prod.responsible_id = edit_prod_form.responsible_id.data
                     prod.category_id = edit_prod_form.category_id.data
                     prod.supplier_id = edit_prod_form.supplier_id.data
                     prod.meas_unit = edit_prod_form.meas_unit.data
@@ -369,7 +368,7 @@ def edit_product(product):
                 select(Product)
                 .filter_by(name=escape(product)))):
             edit_prod_form = EditProdForm(obj=prod)
-            edit_prod_form.responsable_id.choices = [
+            edit_prod_form.responsible_id.choices = [
                 (user.id, user.name) for user in users]
             edit_prod_form.category_id.choices = [
                 (category.id, category.name) for category in categories]
@@ -395,7 +394,7 @@ def products_to_order():
                 .join(Product.supplier)
                 .options(
                     defer(Product.min_stock, raiseload=True),
-                    joinedload(Product.responsable).load_only(User.name),
+                    joinedload(Product.responsible).load_only(User.name),
                     joinedload(Product.category).load_only(Category.name),
                     joinedload(Product.supplier).load_only(Supplier.name),
                     raiseload("*"))
@@ -421,7 +420,7 @@ def products_to_order():
             .join(Product.supplier)
             .options(
                 defer(Product.min_stock, raiseload=True),
-                joinedload(Product.responsable).load_only(User.name),
+                joinedload(Product.responsible).load_only(User.name),
                 joinedload(Product.category).load_only(Category.name),
                 joinedload(Product.supplier).load_only(Supplier.name),
                 raiseload("*"))

@@ -157,7 +157,7 @@ def create_test_products():
         db_session.add(Product(
             name="Toilet paper",
             description="Toilet paper 3-Ply",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 3),
             meas_unit="roll",
@@ -168,7 +168,7 @@ def create_test_products():
         db_session.add(Product(
             name="Paper towels",
             description="Kitchen paper towels",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="roll",
@@ -179,7 +179,7 @@ def create_test_products():
         db_session.add(Product(
             name="Trash bag small",
             description="Trash bag 35l",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bag",
@@ -190,7 +190,7 @@ def create_test_products():
         db_session.add(Product(
             name="Trash bag large",
             description="Trash bag 70l",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bag",
@@ -201,7 +201,7 @@ def create_test_products():
         db_session.add(Product(
             name="Glass cleaner",
             description="Glass cleaner",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 1),
             meas_unit="bottle",
@@ -212,7 +212,7 @@ def create_test_products():
         db_session.add(Product(
             name="Bathroom cleaner",
             description="Bathroom cleaner",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 1),
             meas_unit="bottle",
@@ -223,7 +223,7 @@ def create_test_products():
         db_session.add(Product(
             name="Wood cleaner",
             description="Pronto wood cleaner",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 1),
             meas_unit="spray",
@@ -234,7 +234,7 @@ def create_test_products():
         db_session.add(Product(
             name="Kitchen cleaner",
             description="Kitchen cleaner",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 1),
             meas_unit="spray",
@@ -245,7 +245,7 @@ def create_test_products():
         db_session.add(Product(
             name="Kitchen sponge",
             description="Kitchen scrub sponge",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pc",
@@ -256,7 +256,7 @@ def create_test_products():
         db_session.add(Product(
             name="Cleaning Cloth",
             description="Microfiber Cleaning Cloth",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 3),
             meas_unit="pc",
@@ -267,7 +267,7 @@ def create_test_products():
         db_session.add(Product(
             name="AA Batteries",
             description="Ultra AA Batteries",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 3),
             supplier=db_session.get(Supplier, 2),
             meas_unit="pc",
@@ -278,7 +278,7 @@ def create_test_products():
         db_session.add(Product(
             name="AAA Batteries",
             description="Ultra AAA Batteries",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 3),
             supplier=db_session.get(Supplier, 2),
             meas_unit="pc",
@@ -289,7 +289,7 @@ def create_test_products():
         db_session.add(Product(
             name="Laundry Detergent",
             description="Powder Laundry Detergent",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bag",
@@ -300,7 +300,7 @@ def create_test_products():
         db_session.add(Product(
             name="Matches",
             description="Matches",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="box",
@@ -311,7 +311,7 @@ def create_test_products():
         db_session.add(Product(
             name="Facial tissues",
             description="Facial tissues",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 2),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pack",
@@ -322,7 +322,7 @@ def create_test_products():
         db_session.add(Product(
             name="Personal wipes",
             description="Personal cleansing wipes",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 2),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pack",
@@ -333,7 +333,7 @@ def create_test_products():
         db_session.add(Product(
             name="Eyeglass wipes",
             description="Eyeglass wipes",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 2),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pack",
@@ -344,7 +344,7 @@ def create_test_products():
         db_session.add(Product(
             name="Photo printer cartridge",
             description="Photo printer ink cartridge",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 3),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pc",
@@ -355,7 +355,7 @@ def create_test_products():
         db_session.add(Product(
             name="Photo printer paper",
             description="Photo printer paper",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 3),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pc",
@@ -366,7 +366,7 @@ def create_test_products():
         db_session.add(Product(
             name="Drawing paper",
             description="Drawing paper",
-            responsable=db_session.get(User, 4),
+            responsible=db_session.get(User, 4),
             category=db_session.get(Category, 4),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pc",
@@ -377,7 +377,7 @@ def create_test_products():
         db_session.add(Product(
             name="Drawing crayons",
             description="Drawing crayons",
-            responsable=db_session.get(User, 4),
+            responsible=db_session.get(User, 4),
             category=db_session.get(Category, 4),
             supplier=db_session.get(Supplier, 1),
             meas_unit="pc",
@@ -388,7 +388,7 @@ def create_test_products():
         db_session.add(Product(
             name="Car cleaner",
             description="Car plastics cleaner",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 4),
             meas_unit="spray",
@@ -399,7 +399,7 @@ def create_test_products():
         db_session.add(Product(
             name="Face cream",
             description="Face cream",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 2),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pc",
@@ -410,7 +410,7 @@ def create_test_products():
         db_session.add(Product(
             name="Toothpaste",
             description="Toothpaste",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 2),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pc",
@@ -421,7 +421,7 @@ def create_test_products():
         db_session.add(Product(
             name="Vitamins",
             description="Multi-vitamins",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 5),
             supplier=db_session.get(Supplier, 3),
             meas_unit="pc",
@@ -432,7 +432,7 @@ def create_test_products():
         db_session.add(Product(
             name="Bandages",
             description="Mixed bandages",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 5),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pack",
@@ -443,7 +443,7 @@ def create_test_products():
         db_session.add(Product(
             name="Cat food",
             description="Cat food",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 7),
             supplier=db_session.get(Supplier, 2),
             meas_unit="bag",
@@ -454,7 +454,7 @@ def create_test_products():
         db_session.add(Product(
             name="Cat litter",
             description="Cat litter",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 7),
             supplier=db_session.get(Supplier, 2),
             meas_unit="bag",
@@ -465,7 +465,7 @@ def create_test_products():
         db_session.add(Product(
             name="Playdough",
             description="Playdough",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 4),
             supplier=db_session.get(Supplier, 2),
             meas_unit="set",
@@ -476,7 +476,7 @@ def create_test_products():
         db_session.add(Product(
             name="Bread",
             description="Sliced bread",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="pc",
@@ -487,7 +487,7 @@ def create_test_products():
         db_session.add(Product(
             name="Oranges",
             description="Oranges",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bag",
@@ -498,7 +498,7 @@ def create_test_products():
         db_session.add(Product(
             name="Bananas",
             description="Bananas",
-            responsable=db_session.get(User, 3),
+            responsible=db_session.get(User, 3),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pc",
@@ -509,7 +509,7 @@ def create_test_products():
         db_session.add(Product(
             name="Milk",
             description="Milk",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="bottle",
@@ -520,7 +520,7 @@ def create_test_products():
         db_session.add(Product(
             name="Cereals",
             description="Cereals",
-            responsable=db_session.get(User, 4),
+            responsible=db_session.get(User, 4),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="bag",
@@ -531,7 +531,7 @@ def create_test_products():
         db_session.add(Product(
             name="Chocolate",
             description="Chocolate",
-            responsable=db_session.get(User, 4),
+            responsible=db_session.get(User, 4),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="pc",
@@ -542,7 +542,7 @@ def create_test_products():
         db_session.add(Product(
             name="Eggs",
             description="Eggs",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pc",
@@ -553,7 +553,7 @@ def create_test_products():
         db_session.add(Product(
             name="Pasta",
             description="Pasta",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="pack",
@@ -564,7 +564,7 @@ def create_test_products():
         db_session.add(Product(
             name="Coffee",
             description="Coffee",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bag",
@@ -575,7 +575,7 @@ def create_test_products():
         db_session.add(Product(
             name="Cheese",
             description="Cheese",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="pc",
@@ -586,7 +586,7 @@ def create_test_products():
         db_session.add(Product(
             name="Mustard",
             description="Mustard",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="bottle",
@@ -597,7 +597,7 @@ def create_test_products():
         db_session.add(Product(
             name="Ketchup",
             description="Ketchup",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 3),
             meas_unit="bottle",
@@ -608,7 +608,7 @@ def create_test_products():
         db_session.add(Product(
             name="Sunflower oil",
             description="Sunflower oil",
-            responsable=db_session.get(User, 2),
+            responsible=db_session.get(User, 2),
             category=db_session.get(Category, 6),
             supplier=db_session.get(Supplier, 4),
             meas_unit="bottle",
@@ -619,7 +619,7 @@ def create_test_products():
         db_session.add(Product(
             name="Other",
             description="Other",
-            responsable=db_session.get(User, 1),
+            responsible=db_session.get(User, 1),
             category=db_session.get(Category, 3),
             supplier=db_session.get(Supplier, 2),
             meas_unit="pc",
