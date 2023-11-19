@@ -40,8 +40,14 @@ class InvalidUser:
 @dataclass(frozen=True)
 class ValidCategory:
     """Valid category data."""
-    name: str = "valid_name"
+    name: str = "x" * Constants.Category.Name.min_length
+    description: str = ""
     in_use: str = "on"
+
+@dataclass(frozen=True)
+class InvalidCategory:
+    """Invalid category data."""
+    short_name: str = "x" * (Constants.Category.Name.min_length - 1)
 
 
 test_users: tuple[dict[str, str|bool|int]] = (
@@ -151,32 +157,61 @@ test_users: tuple[dict[str, str|bool|int]] = (
     },
 )
 
-
 test_categories: tuple[dict[str, str|bool]] = (
-    {"name": "Household",
-     "in_use": True,
-     "description": "Household consumables"},
-    {"name": "Personal",
-     "in_use": True,
-     "description": "Personal consumables"},
-    {"name": "Electronics",
-     "in_use": True,
-     "description": ""},
-    {"name": "Kids",
-     "in_use": True,
-     "description": ""},
-    {"name": "Health",
-     "in_use": True,
-     "description": ""},
-    {"name": "Groceries",
-     "in_use": True,
-     "description": ""},
-    {"name": "Pets",
-     "in_use": True,
-     "description": ""},
-    {"name": "Others",
-     "in_use": False,
-     "description": ""},
+    {
+        "details": "Normal in use category",
+        "id": 1,
+        "name": "Household",
+        "in_use": True,
+        "description": "Household consumables",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 2,
+        "name": "Personal",
+        "in_use": True,
+        "description": "Personal consumables",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 3,
+        "name": "Electronics",
+        "in_use": True,
+        "description": "",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 4,
+        "name": "Kids",
+        "in_use": True,
+        "description": "",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 5,
+        "name": "Health",
+        "in_use": True,
+        "description": "",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 6,
+        "name": "Groceries",
+        "in_use": True,
+        "description": "",
+        "has_products": True},
+    {
+        "details": "Normal in use category",
+        "id": 7,
+        "name": "Pets",
+        "in_use": True,
+        "description": "",
+        "has_products": True},
+    {
+        "details": "Retired category",
+        "id": 8,
+        "name": "Others",
+        "in_use": False,
+        "description": "",
+        "has_products": False},
 )
-
-test_categories_with_products = test_categories[:6]
