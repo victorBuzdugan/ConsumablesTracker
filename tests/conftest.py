@@ -67,10 +67,14 @@ def fixture_client() -> FlaskClient:
 def create_test_users():
     """Insert into db a set of test users."""
     print("\nCreate test users")
+    valid_ordered_attrs = ("reg_req", "admin", "in_use", "done_inv", "req_inv",
+                           "details", "email", "sat_group", "id")
     with dbSession() as db_session:
-        for pos, user_dict in enumerate(test_users):
-            user = User(**user_dict)
-            user.id = pos
+        for user_dict in test_users:
+            user = User(name=user_dict["name"],
+                        password=user_dict["password"])
+            for attr in valid_ordered_attrs:
+                setattr(user, attr, user_dict[attr])
             db_session.add(user)
         db_session.commit()
 

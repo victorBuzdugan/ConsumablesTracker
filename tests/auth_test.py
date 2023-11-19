@@ -14,7 +14,7 @@ from werkzeug.security import check_password_hash
 from app import app, babel, get_locale
 from database import User, dbSession
 from helpers import Constants
-from tests import ValidUser, test_users
+from tests import InvalidUser, ValidUser, test_users
 
 pytestmark = pytest.mark.auth
 
@@ -70,6 +70,7 @@ def _test_failed_registration(
 @settings(max_examples=5)
 @given(name=st.text(min_size=1, max_size=Constants.User.Name.min_length - 1))
 @example(name="")
+@example(name=InvalidUser.short_name)
 def test_failed_registration_short_name(client: FlaskClient, name):
     """test_failed_registration_short_name"""
     if not name:
@@ -85,6 +86,7 @@ def test_failed_registration_short_name(client: FlaskClient, name):
 
 @settings(max_examples=5)
 @given(name=st.text(min_size=Constants.User.Name.max_length + 1))
+@example(name=InvalidUser.long_name)
 def test_failed_registration_long_name(client: FlaskClient, name):
     """test_failed_registration_long_name"""
     flash_message = ("Username must be between " +
@@ -99,6 +101,7 @@ def test_failed_registration_long_name(client: FlaskClient, name):
 @given(password=st.text(min_size=1,
                         max_size=Constants.User.Password.min_length - 1))
 @example(password="")
+@example(password=InvalidUser.short_password)
 def test_failed_registration_short_password(client: FlaskClient, password):
     """test_failed_registration_short_password"""
     if not password:
@@ -153,6 +156,7 @@ def _test_failed_registration_password_rules(
 @settings(max_examples=5)
 @given(password=st.from_regex(r"[A-Z]+[!@#$%^&*_=+]+[^\d]{6,}",
                               fullmatch=True))
+@example(password=InvalidUser.no_number_password)
 def test_failed_registration_no_digit_in_password(
         client: FlaskClient, password):
     """test_failed_registration_no_digit_in_password"""
@@ -163,6 +167,7 @@ def test_failed_registration_no_digit_in_password(
 @settings(max_examples=5)
 @given(password=st.from_regex(r"[A-Z]+[0-9]+[^!@#$%^&*_=+]{6,}",
                               fullmatch=True))
+@example(password=InvalidUser.no_special_char_password)
 def test_failed_registration_no_special_character_in_password(
         client: FlaskClient, password):
     """test_failed_registration_no_special_character_in_password"""
@@ -173,6 +178,7 @@ def test_failed_registration_no_special_character_in_password(
 @settings(max_examples=5)
 @given(password=st.from_regex(r"[0-9]+[!@#$%^&*_=+]+[^A-Z]{6,}",
                               fullmatch=True))
+@example(password=InvalidUser.no_uppercase_password)
 def test_failed_registration_no_big_letter_in_password(
         client: FlaskClient, password):
     """test_failed_registration_no_big_letter_in_password"""
@@ -266,6 +272,7 @@ def test_registration(
     raw_password = repr(password)
     assume(Constants.User.Name.min_length <= len(name))
     assume(Constants.User.Name.max_length >= len(name))
+    assume(name not in [user["name"] for user in test_users])
     with client:
         client.get("/")
         client.get(url_for("auth.register"))
@@ -394,10 +401,9 @@ def test_failed_login_username(client: FlaskClient, name):
         flash_message = "Username is required!"
     else:
         flash_message = "Wrong username or password!"
-    assume(name not in [user["name"] for user in test_users])
     _test_failed_login(client=client,
                        name=name,
-                       password=test_users[0]["password"],
+                       password=ValidUser.password,
                        flash_message=flash_message)
 
 
@@ -435,7 +441,7 @@ def test_login_and_logout(client: FlaskClient, user):
             "name": user["name"],
             "password": user["password"]}
         response = client.post("/auth/login", data=data, follow_redirects=True)
-        assert session["user_id"] == test_users.index(user)
+        assert session["user_id"] == user["id"]
         assert session["admin"] == user["admin"]
         assert session["user_name"] == user["name"]
         assert f"Welcome {user['name']}" in response.text
@@ -534,59 +540,84 @@ def test_change_password_landing_page_if_admin_logged_in(
 
 
 @pytest.mark.parametrize(
-    ("old_password", "password", "confirm", "flash_message"), (
-        ("",
-         ValidUser.password,
-         ValidUser.password,
-         "Password is required!"),
-        (ValidUser.password[:Constants.User.Password.min_length-1],
-         ValidUser.password,
-         ValidUser.password,
-         ("Password should have at least " +
-          f"{Constants.User.Password.min_length} characters!")),
-        (test_users[4]["password"],
-         "",
-         ValidUser.password,
-         "Password is required!"),
-        (test_users[4]["password"],
-         ValidUser.password[:Constants.User.Password.min_length-1],
-         ValidUser.password,
-         ("Password should have at least " +
-          f"{Constants.User.Password.min_length} characters!")),
-        (test_users[4]["password"],
-         "aaaaaaaa",
-         "aaaaaaaa",
-         "Check password rules!"),
-        (test_users[4]["password"],
-         "#1aaaaaa",
-         "#1aaaaaa",
-         "Check password rules!"),
-        (test_users[4]["password"],
-         "#Aaaaaaa",
-         "#Aaaaaaa",
-         "Check password rules!"),
-        (test_users[4]["password"],
-         "1Aaaaaaa",
-         "1Aaaaaaa",
-         "Check password rules!"),
-        (test_users[4]["password"],
-         ValidUser.password,
-         "",
-         "Password is required!"),
-        (test_users[4]["password"],
-         ValidUser.password,
-         ValidUser.password[:Constants.User.Password.min_length-1],
-         ("Password should have at least " +
-          f"{Constants.User.Password.min_length} characters!")),
-        (test_users[4]["password"],
-         ValidUser.password,
-         ValidUser.password + "x",
-         "Passwords don't match!"),
-        (test_users[4]["password"] + "x",
-         ValidUser.password,
-         ValidUser.password,
-         "Wrong old password!"),
-))
+    ("old_password", "password", "confirm", "flash_message"),
+    [pytest.param(
+        "",
+        ValidUser.password,
+        ValidUser.password,
+        "Password is required!",
+        id="Missing old password"),
+    pytest.param(
+        InvalidUser.short_password,
+        ValidUser.password,
+        ValidUser.password,
+        ("Password should have at least " +
+         f"{Constants.User.Password.min_length} characters!"),
+        id="Short old password"),
+    pytest.param(
+        ValidUser.password,
+        "",
+        ValidUser.password,
+        "Password is required!",
+        id="Missing new password"),
+    pytest.param(
+        ValidUser.password,
+        InvalidUser.short_password,
+        ValidUser.password,
+        ("Password should have at least " +
+         f"{Constants.User.Password.min_length} characters!"),
+        id="Short new password"),
+    pytest.param(
+        ValidUser.password,
+        InvalidUser.only_lowercase_password,
+        InvalidUser.only_lowercase_password,
+        "Check password rules!",
+        id="Only lowercase new password"),
+    pytest.param(
+        ValidUser.password,
+        InvalidUser.no_uppercase_password,
+        InvalidUser.no_uppercase_password,
+        "Check password rules!",
+        id="No uppercase char in new password"),
+    pytest.param(
+        ValidUser.password,
+        InvalidUser.no_number_password,
+        InvalidUser.no_number_password,
+        "Check password rules!",
+        id="No number in new password"),
+    pytest.param(
+        ValidUser.password,
+        InvalidUser.no_special_char_password,
+        InvalidUser.no_special_char_password,
+        "Check password rules!",
+        id="No special char in new password"),
+    pytest.param(
+        ValidUser.password,
+        ValidUser.password,
+        "",
+        "Password is required!",
+        id="Missing confirmation password"),
+    pytest.param(
+        ValidUser.password,
+        ValidUser.password,
+        InvalidUser.short_password,
+        ("Password should have at least " +
+         f"{Constants.User.Password.min_length} characters!"),
+        id="Short confirmation password"),
+    pytest.param(
+        ValidUser.password,
+        ValidUser.password,
+        ValidUser.password + "x",
+        "Passwords don't match!",
+        id="Confirmation not mathcing new password"),
+    pytest.param(
+        ValidUser.password,
+        ValidUser.password,
+        ValidUser.password,
+        "Wrong old password!",
+        id="Wrong old password"),
+    ]
+)
 def test_failed_change_password(
         client: FlaskClient, user_logged_in: User,
         old_password, password, confirm, flash_message):
