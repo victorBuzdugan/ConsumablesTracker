@@ -13,8 +13,9 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
                      SubmitField)
 from wtforms.validators import InputRequired, Length, NumberRange
 
+from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
-from helpers import Constants, admin_required, flash_errors, logger
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -38,12 +39,12 @@ class CreateProdForm(FlaskForm):
         validators=[
             InputRequired(gettext("Product name is required")),
             Length(
-                min=Constants.Product.Name.min_length,
-                max=Constants.Product.Name.max_length,
+                min=Constant.Product.Name.min_length,
+                max=Constant.Product.Name.max_length,
                 message=gettext("Product name must be between " +
                                 "%(m)s and %(M)s characters",
-                                m=Constants.Product.Name.min_length,
-                                M=Constants.Product.Name.max_length))],
+                                m=Constant.Product.Name.min_length,
+                                M=Constant.Product.Name.max_length))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Code"),
@@ -54,12 +55,12 @@ class CreateProdForm(FlaskForm):
         validators=[
             InputRequired(gettext("Product description is required")),
             Length(
-                min=Constants.Product.Description.min_length,
-                max=Constants.Product.Description.max_length,
+                min=Constant.Product.Description.min_length,
+                max=Constant.Product.Description.max_length,
                 message=gettext("Product description must be between " +
                                 "%(m)s and %(M)s characters",
-                                m=Constants.Product.Description.min_length,
-                                M=Constants.Product.Description.max_length))],
+                                m=Constant.Product.Description.min_length,
+                                M=Constant.Product.Description.max_length))],
         render_kw={
                 "class": "form-control",
                 "placeholder": lazy_gettext("Description"),
@@ -97,9 +98,9 @@ class CreateProdForm(FlaskForm):
         validators=[
             InputRequired(gettext("Minimum stock is required")),
             NumberRange(
-                min=Constants.Product.MinStock.min_value,
+                min=Constant.Product.MinStock.min_value,
                 message=gettext("Minimum stock must be at least %(value)s",
-                                value=Constants.Product.MinStock.min_value))],
+                                value=Constant.Product.MinStock.min_value))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Minimum stock"),
@@ -110,9 +111,9 @@ class CreateProdForm(FlaskForm):
         validators=[
             InputRequired(gettext("Order quantity is required")),
             NumberRange(
-                min=Constants.Product.OrdQty.min_value,
+                min=Constant.Product.OrdQty.min_value,
                 message=gettext("Order quantity must be at least %(value)s",
-                                value=Constants.Product.OrdQty.min_value))],
+                                value=Constant.Product.OrdQty.min_value))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Order quantity"),

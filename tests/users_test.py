@@ -10,8 +10,8 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from blueprints.sch.sch import cleaning_sch
+from constants import Constant
 from database import User, dbSession
-from helpers import Constants
 
 pytestmark = pytest.mark.users
 
@@ -271,28 +271,28 @@ def test_new_user(
         ("", "Q!111111", "", "1",
          "Username is required!"),
         ("us", "Q!111111", "", "1",
-         f"Username must be between {Constants.User.Name.min_length} and " +
-         f"{Constants.User.Name.max_length} characters!"),
+         f"Username must be between {Constant.User.Name.min_length} and " +
+         f"{Constant.User.Name.max_length} characters!"),
         ("useruseruseruser", "Q!111111", "", "1",
-         f"Username must be between {Constants.User.Name.min_length} and " +
-         f"{Constants.User.Name.max_length} characters!"),
+         f"Username must be between {Constant.User.Name.min_length} and " +
+         f"{Constant.User.Name.max_length} characters!"),
         ("new_user", "", "", "1",
          "Password is required!"),
         ("new_user", "Q!1", "", "1",
          ("Password should have at least " +
-          f"{Constants.User.Password.min_length} characters!")),
+          f"{Constant.User.Password.min_length} characters!")),
         ("new_user", "aaaaaaaa", "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("new_user", "#1aaaaaa", "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("new_user", "#Aaaaaaa", "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("new_user", "1Aaaaaaa", "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("user1", "Q!111111", "", "1",
          "The user user1 allready exists"),
         ("Admin", "Q!111111", "", "1",
@@ -589,33 +589,33 @@ def test_edit_user(
          "Username is required!"),
         ("3", "us", "", "", "",
          "", "1",
-         f"Username must be between {Constants.User.Name.min_length} and " +
-         f"{Constants.User.Name.max_length} characters!"),
+         f"Username must be between {Constant.User.Name.min_length} and " +
+         f"{Constant.User.Name.max_length} characters!"),
         ("2", "useruseruseruser", "", "", "on",
          "", "1",
-         f"Username must be between {Constants.User.Name.min_length} and " +
-         f"{Constants.User.Name.max_length} characters!"),
+         f"Username must be between {Constant.User.Name.min_length} and " +
+         f"{Constant.User.Name.max_length} characters!"),
         ("2", "new_user", "Q!1", "", "on",
          "", "1",
          ("Password should have at least " +
-          f"{Constants.User.Password.min_length} characters!")),
+          f"{Constant.User.Password.min_length} characters!")),
         # password
         ("3", "new_user", "aaaaaaaa", "", "",
          "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("4", "new_user", "#1aaaaaa", "", "",
          "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("3", "new_user", "#Aaaaaaa", "", "",
          "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         ("1", "new_user", "1Aaaaaaa", "", "on",
          "", "1",
          "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constants.User.Password.symbols})!"),
+         f"{Constant.User.Password.symbols})!"),
         # email
         ("1", "new_user", "Q!111112", "", "on",
          "plainaddress", "1",

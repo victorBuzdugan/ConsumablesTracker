@@ -10,10 +10,9 @@ from hypothesis import HealthCheck, assume, example, given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 
+from constants import Constant
 from database import Category, Product, User, dbSession
-from helpers import Constants
-from tests import (InvalidCategory, ValidCategory, test_categories,
-                   test_users)
+from tests import InvalidCategory, ValidCategory, test_categories, test_users
 
 pytestmark = pytest.mark.cat
 
@@ -74,7 +73,7 @@ def test_categories_page_admin_logged_in(
 # region: new category
 @settings(max_examples=10,
           suppress_health_check=[HealthCheck.function_scoped_fixture])
-@given(name=st.text(min_size=Constants.Category.Name.min_length),
+@given(name=st.text(min_size=Constant.Category.Name.min_length),
        description=st.text())
 @example(name=ValidCategory.name,
          description=ValidCategory.description)
@@ -152,7 +151,7 @@ def test_failed_new_category_invalid_name(request, name: str):
     name = name.strip()
     if name:
         flash_message = ("Category name must have at least " +
-                         f"{Constants.Category.Name.min_length} characters")
+                         f"{Constant.Category.Name.min_length} characters")
     else:
         flash_message = "Category name is required"
     _test_failed_new_category(request=request,
@@ -176,7 +175,7 @@ def test_failed_new_category_duplicate_name(request, category):
 @settings(max_examples=10,
           suppress_health_check=[HealthCheck.function_scoped_fixture])
 @given(category=st.sampled_from(test_categories),
-       new_name=st.text(min_size=Constants.Category.Name.min_length),
+       new_name=st.text(min_size=Constant.Category.Name.min_length),
        new_description=st.text())
 @example(category=test_categories[0],
        new_name=ValidCategory.name,
@@ -186,7 +185,7 @@ def test_edit_category(
         category: dict, new_name: str, new_description: str):
     """test_edit_category"""
     new_name = new_name.strip()
-    assume(len(new_name) >= Constants.Category.Name.min_length)
+    assume(len(new_name) >= Constant.Category.Name.min_length)
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
@@ -278,7 +277,7 @@ def test_failed_edit_category_invalid_name(
     new_name = new_name.strip()
     if new_name:
         flash_message = ("Category name must have at least " +
-                         f"{Constants.Category.Name.min_length} characters")
+                         f"{Constant.Category.Name.min_length} characters")
     else:
         flash_message = "Category name is required"
     _test_failed_edit_category(request=request,

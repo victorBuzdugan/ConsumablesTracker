@@ -12,8 +12,8 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from app import app, babel, get_locale
+from constants import Constant
 from database import User, dbSession
-from helpers import Constants
 from tests import InvalidUser, ValidUser, test_users
 
 pytestmark = pytest.mark.auth
@@ -68,7 +68,7 @@ def _test_failed_registration(
 
 
 @settings(max_examples=5)
-@given(name=st.text(min_size=1, max_size=Constants.User.Name.min_length - 1))
+@given(name=st.text(min_size=1, max_size=Constant.User.Name.min_length - 1))
 @example(name="")
 @example(name=InvalidUser.short_name)
 def test_failed_registration_short_name(client: FlaskClient, name):
@@ -77,21 +77,21 @@ def test_failed_registration_short_name(client: FlaskClient, name):
         flash_message = "Username is required!"
     else:
         flash_message = ("Username must be between " +
-                         f"{Constants.User.Name.min_length} and " +
-                         f"{Constants.User.Name.max_length} characters!")
+                         f"{Constant.User.Name.min_length} and " +
+                         f"{Constant.User.Name.max_length} characters!")
     _test_failed_registration(client=client,
                               name=name,
                               flash_message=flash_message)
 
 
 @settings(max_examples=5)
-@given(name=st.text(min_size=Constants.User.Name.max_length + 1))
+@given(name=st.text(min_size=Constant.User.Name.max_length + 1))
 @example(name=InvalidUser.long_name)
 def test_failed_registration_long_name(client: FlaskClient, name):
     """test_failed_registration_long_name"""
     flash_message = ("Username must be between " +
-                     f"{Constants.User.Name.min_length} and " +
-                     f"{Constants.User.Name.max_length} characters!")
+                     f"{Constant.User.Name.min_length} and " +
+                     f"{Constant.User.Name.max_length} characters!")
     _test_failed_registration(client=client,
                               name=name,
                               flash_message=flash_message)
@@ -99,7 +99,7 @@ def test_failed_registration_long_name(client: FlaskClient, name):
 
 @settings(max_examples=5)
 @given(password=st.text(min_size=1,
-                        max_size=Constants.User.Password.min_length - 1))
+                        max_size=Constant.User.Password.min_length - 1))
 @example(password="")
 @example(password=InvalidUser.short_password)
 def test_failed_registration_short_password(client: FlaskClient, password):
@@ -108,7 +108,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
         flash_message = "Password is required!"
     else:
         flash_message = ("Password should have at least " +
-                         f"{Constants.User.Password.min_length} characters!")
+                         f"{Constant.User.Password.min_length} characters!")
     _test_failed_registration(client=client,
                               password=password,
                               flash_message=flash_message)
@@ -116,7 +116,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
 
 @settings(max_examples=5)
 @given(confirm=st.text(min_size=1,
-                       max_size=Constants.User.Password.min_length - 1))
+                       max_size=Constant.User.Password.min_length - 1))
 @example(confirm="")
 def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
     """test_failed_registration_short_confirmation"""
@@ -124,7 +124,7 @@ def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
         flash_message = "Password is required!"
     else:
         flash_message = ("Password should have at least " +
-                         f"{Constants.User.Password.min_length} characters!")
+                         f"{Constant.User.Password.min_length} characters!")
     _test_failed_registration(client=client,
                               confirm=confirm,
                               flash_message=flash_message)
@@ -252,9 +252,9 @@ def test_failed_registration_invalid_email(
 
 @pytest.mark.slow
 @settings(max_examples=3)
-@given(name = st.text(min_size=Constants.User.Name.min_length,
-                      max_size=Constants.User.Name.max_length),
-       password = st.from_regex(Constants.User.Password.regex, fullmatch=True),
+@given(name = st.text(min_size=Constant.User.Name.min_length,
+                      max_size=Constant.User.Name.max_length),
+       password = st.from_regex(Constant.User.Password.regex, fullmatch=True),
        email = st.emails())
 @example(name=ValidUser.name,
          password=ValidUser.password,
@@ -270,8 +270,8 @@ def test_registration(
     """Test successful registration"""
     name = name.strip()
     raw_password = repr(password)
-    assume(Constants.User.Name.min_length <= len(name))
-    assume(Constants.User.Name.max_length >= len(name))
+    assume(Constant.User.Name.min_length <= len(name))
+    assume(Constant.User.Name.max_length >= len(name))
     assume(name not in [user["name"] for user in test_users])
     with client:
         client.get("/")
@@ -552,7 +552,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         ValidUser.password,
         ("Password should have at least " +
-         f"{Constants.User.Password.min_length} characters!"),
+         f"{Constant.User.Password.min_length} characters!"),
         id="Short old password"),
     pytest.param(
         ValidUser.password,
@@ -565,7 +565,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         InvalidUser.short_password,
         ValidUser.password,
         ("Password should have at least " +
-         f"{Constants.User.Password.min_length} characters!"),
+         f"{Constant.User.Password.min_length} characters!"),
         id="Short new password"),
     pytest.param(
         ValidUser.password,
@@ -602,7 +602,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         InvalidUser.short_password,
         ("Password should have at least " +
-         f"{Constants.User.Password.min_length} characters!"),
+         f"{Constant.User.Password.min_length} characters!"),
         id="Short confirmation password"),
     pytest.param(
         ValidUser.password,

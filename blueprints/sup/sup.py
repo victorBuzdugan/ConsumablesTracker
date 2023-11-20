@@ -12,8 +12,9 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
                      SubmitField, TextAreaField)
 from wtforms.validators import InputRequired, Length
 
+from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
-from helpers import Constants, admin_required, flash_errors, logger
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -37,10 +38,10 @@ class CreateSupForm(FlaskForm):
         validators=[
             InputRequired(gettext("Supplier name is required")),
             Length(
-                min=Constants.Supplier.Name.min_length,
+                min=Constant.Supplier.Name.min_length,
                 message=gettext("Supplier name must have at least %(value)s " +
                                 "characters",
-                                value=Constants.Supplier.Name.min_length))],
+                                value=Constant.Supplier.Name.min_length))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),

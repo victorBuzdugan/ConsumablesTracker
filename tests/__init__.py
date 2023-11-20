@@ -3,51 +3,50 @@
 from dataclasses import dataclass
 from os import getenv, path
 
+from constants import Constant
 from daily_task import db_backup_name
-from database import User
-from helpers import Constants
 
-TEST_DB_NAME = "." + Constants.Basic.db_name
+TEST_DB_NAME = "." + Constant.Basic.db_name
 
-PROD_DB = path.join(Constants.Basic.current_dir, TEST_DB_NAME)
+PROD_DB = path.join(Constant.Basic.current_dir, TEST_DB_NAME)
 BACKUP_DB = db_backup_name(PROD_DB)
-ORIG_DB = path.join(Constants.Basic.current_dir,
+ORIG_DB = path.join(Constant.Basic.current_dir,
                     path.splitext(TEST_DB_NAME)[0] + "_orig.db")
-TEMP_DB = path.join(Constants.Basic.current_dir,
+TEMP_DB = path.join(Constant.Basic.current_dir,
                     path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
 @dataclass(frozen=True)
 class ValidUser:
     """Valid user data."""
-    name: str = "x" * Constants.User.Name.min_length
+    name: str = "x" * Constant.User.Name.min_length
     password: str = "P@ssw0rd"
     email: str = "email@example.com"
 
 @dataclass(frozen=True)
 class InvalidUser:
     """Invalid user data."""
-    short_name: str = "x" * (Constants.User.Name.min_length - 1)
-    long_name: str = "x" * (Constants.User.Name.max_length + 1)
-    short_password: str = "x" * (Constants.User.Password.min_length - 1)
-    only_lowercase_password: str = "x" * Constants.User.Password.min_length
+    short_name: str = "x" * (Constant.User.Name.min_length - 1)
+    long_name: str = "x" * (Constant.User.Name.max_length + 1)
+    short_password: str = "x" * (Constant.User.Password.min_length - 1)
+    only_lowercase_password: str = "x" * Constant.User.Password.min_length
     no_special_char_password: str = ("X1" +
-                                     "x" * Constants.User.Password.min_length)
+                                     "x" * Constant.User.Password.min_length)
     no_uppercase_password: str = ("#1" +
-                                  "x" * Constants.User.Password.min_length)
+                                  "x" * Constant.User.Password.min_length)
     no_number_password: str = ("#X" +
-                               "x" * Constants.User.Password.min_length)
+                               "x" * Constant.User.Password.min_length)
 
 @dataclass(frozen=True)
 class ValidCategory:
     """Valid category data."""
-    name: str = "x" * Constants.Category.Name.min_length
+    name: str = "x" * Constant.Category.Name.min_length
     description: str = ""
     in_use: str = "on"
 
 @dataclass(frozen=True)
 class InvalidCategory:
     """Invalid category data."""
-    short_name: str = "x" * (Constants.Category.Name.min_length - 1)
+    short_name: str = "x" * (Constant.Category.Name.min_length - 1)
 
 
 test_users: tuple[dict[str, str|bool|int]] = (

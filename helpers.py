@@ -1,7 +1,6 @@
 """Helpers module."""
 
 import logging
-import re
 from datetime import datetime
 from functools import wraps
 from logging.handlers import TimedRotatingFileHandler
@@ -11,58 +10,14 @@ from zoneinfo import ZoneInfo
 from flask import flash, redirect, session, url_for
 from flask_babel import gettext
 
-
-class Constants:
-    """App constants."""
-    class Basic:
-        """Basic constants"""
-        current_dir = path.dirname(path.realpath(__file__))
-        db_name = "inventory.db"
-    class User:
-        """User related constants"""
-        class Name:
-            """User name constants"""
-            min_length = 3
-            max_length = 15
-        class Password:
-            """Password constants"""
-            min_length = 8
-            regex = re.compile(r"(?=.*\d)(?=.*[A-Z])(?=.*[!@#$%^&*_=+]).{8,}")
-            symbols = "!@#$%^&*_=+"
-    class Category:
-        """Category related constants"""
-        class Name:
-            """Category name constants"""
-            min_length = 3
-    class Supplier:
-        """Supplier related constants"""
-        class Name:
-            """Supplier name constants"""
-            min_length = 3
-    class Product:
-        """Product related constants"""
-        class Name:
-            """Product name constants"""
-            min_length = 3
-            max_length = 15
-        class Description:
-            """Product description constants"""
-            min_length = 3
-            max_length = 50
-        class MinStock:
-            """Product minimum stock constants"""
-            min_value = 0
-        class OrdQty:
-            """Product order quantity constants"""
-            min_value = 1
-
+from constants import Constant
 
 # region: logging configuration
 log_formatter = logging.Formatter(
     fmt='%(tztime)s %(levelname)-8s %(user)-10s: %(message)s')
 
 log_handler = TimedRotatingFileHandler(
-    filename=path.join(Constants.Basic.current_dir, 'logger.log'),
+    filename=path.join(Constant.Basic.current_dir, 'logger.log'),
     encoding='UTF-8',
     when="D",
     interval=30,

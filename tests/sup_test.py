@@ -8,8 +8,8 @@ from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 
+from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
-from helpers import Constants
 
 pytestmark = pytest.mark.sup
 
@@ -99,7 +99,7 @@ def test_new_supplier(
 @pytest.mark.parametrize(("name", "flash_message"), (
     ("", "Supplier name is required"),
     ("su", ("Supplier name must have at least " +
-            f"{Constants.Supplier.Name.min_length} characters")),
+            f"{Constant.Supplier.Name.min_length} characters")),
     ("Amazon", "The supplier Amazon allready exists"),
 ))
 def test_failed_new_supplier(
@@ -191,9 +191,9 @@ def test_edit_supplier(
     ("1", "", "on", "Supplier name is required"),
     ("4", "", "on", "Supplier name is required"),
     ("3", "ca", "on", ("Supplier name must have at least " +
-                       f"{Constants.Supplier.Name.min_length} characters")),
+                       f"{Constant.Supplier.Name.min_length} characters")),
     ("5", "ca", "", ("Supplier name must have at least " +
-                     f"{Constants.Supplier.Name.min_length} characters")),
+                     f"{Constant.Supplier.Name.min_length} characters")),
 ))
 def test_failed_edit_supplier_form_validators(
         client: FlaskClient, admin_logged_in,

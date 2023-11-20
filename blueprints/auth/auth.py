@@ -10,18 +10,19 @@ from wtforms import EmailField, PasswordField, StringField, SubmitField
 from wtforms.validators import (Email, EqualTo, InputRequired, Length,
                                 Optional, Regexp)
 
+from constants import Constant
 from database import User, dbSession
-from helpers import Constants, flash_errors, logger, login_required
+from helpers import flash_errors, logger, login_required
 
 msg = {
     "usr_req": lazy_gettext("Username is required!"),
     "usr_len": lazy_gettext(
         "Username must be between %(m)i and %(M)i characters!",
-        m=Constants.User.Name.min_length, M=Constants.User.Name.max_length),
+        m=Constant.User.Name.min_length, M=Constant.User.Name.max_length),
     "psw_req": lazy_gettext("Password is required!"),
     "psw_len": lazy_gettext(
         "Password should have at least %(pmin)i characters!",
-        pmin=Constants.User.Password.min_length),
+        pmin=Constant.User.Password.min_length),
     "psw_rules": lazy_gettext("Check password rules!"),
     "psw_eq": lazy_gettext("Passwords don't match!"),
 }
@@ -63,8 +64,8 @@ class RegisterForm(FlaskForm):
         validators=[
             InputRequired(msg["usr_req"]),
             Length(
-                min=Constants.User.Name.min_length,
-                max=Constants.User.Name.max_length,
+                min=Constant.User.Name.min_length,
+                max=Constant.User.Name.max_length,
                 message=msg["usr_len"])],
         render_kw={
             "class": "form-control",
@@ -76,10 +77,10 @@ class RegisterForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=Constants.User.Password.min_length,
+                min=Constant.User.Password.min_length,
                 message=msg["psw_len"]),
             Regexp(
-                Constants.User.Password.regex,
+                Constant.User.Password.regex,
                 message=msg["psw_rules"])],
         render_kw={
             "class": "form-control",
@@ -91,7 +92,7 @@ class RegisterForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=Constants.User.Password.min_length,
+                min=Constant.User.Password.min_length,
                 message=msg["psw_len"]),
             EqualTo("password", msg["psw_eq"])],
         render_kw={
@@ -124,7 +125,7 @@ class ChgPasswForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=Constants.User.Password.min_length,
+                min=Constant.User.Password.min_length,
                 message=msg["psw_len"])],
         render_kw={
             "class": "form-control",
@@ -136,10 +137,10 @@ class ChgPasswForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=Constants.User.Password.min_length,
+                min=Constant.User.Password.min_length,
                 message=msg["psw_len"]),
             Regexp(
-                Constants.User.Password.regex,
+                Constant.User.Password.regex,
                 message=msg["psw_rules"])],
         render_kw={
             "class": "form-control",
@@ -151,7 +152,7 @@ class ChgPasswForm(FlaskForm):
         validators=[
             InputRequired(msg["psw_req"]),
             Length(
-                min=Constants.User.Password.min_length,
+                min=Constant.User.Password.min_length,
                 message=msg["psw_len"]),
             EqualTo("password", msg["psw_eq"])],
         render_kw={

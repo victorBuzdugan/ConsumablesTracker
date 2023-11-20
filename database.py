@@ -16,7 +16,7 @@ from sqlalchemy.orm import (DeclarativeBase, Mapped, MappedAsDataclass,
 from werkzeug.security import generate_password_hash
 
 from blueprints.sch import clean_sch_info, sat_sch_info
-from helpers import Constants
+from constants import Constant
 
 func: Callable
 
@@ -24,7 +24,7 @@ load_dotenv()
 
 DB_URL = URL.create(
     drivername="sqlite",
-    database=path.join(Constants.Basic.current_dir, Constants.Basic.db_name))
+    database=path.join(Constant.Basic.current_dir, Constant.Basic.db_name))
 # factory for creating new database connections objects
 engine = create_engine(url=DB_URL, echo=False)
 
@@ -819,11 +819,11 @@ class Product(Base):
             if not value >= 0:
                 raise ValueError(
                     gettext("Minimum stock must be ≥ %(value)s",
-                            value=Constants.Product.MinStock.min_value))
+                            value=Constant.Product.MinStock.min_value))
         except TypeError as err:
             raise ValueError(
                 gettext("Minimum stock must be ≥ %(value)s",
-                        value=Constants.Product.MinStock.min_value)) from err
+                        value=Constant.Product.MinStock.min_value)) from err
         return value
 
     @validates("ord_qty")
@@ -834,11 +834,11 @@ class Product(Base):
             if not value >= 1:
                 raise ValueError(
                     gettext("Order quantity must be ≥ %(value)s",
-                            value=Constants.Product.OrdQty.min_value))
+                            value=Constant.Product.OrdQty.min_value))
         except TypeError as err:
             raise ValueError(
                 gettext("Order quantity must be ≥ %(value)s",
-                        value=Constants.Product.OrdQty.min_value)) from err
+                        value=Constant.Product.OrdQty.min_value)) from err
         return value
 
     @validates("to_order")

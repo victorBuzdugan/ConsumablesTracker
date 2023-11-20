@@ -12,8 +12,9 @@ from wtforms import (BooleanField, IntegerField, SelectField, StringField,
                      SubmitField, TextAreaField)
 from wtforms.validators import InputRequired, Length
 
+from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
-from helpers import Constants, admin_required, flash_errors, logger
+from helpers import admin_required, flash_errors, logger
 
 func: Callable
 
@@ -37,10 +38,10 @@ class CreateCatForm(FlaskForm):
         validators=[
             InputRequired(gettext("Category name is required")),
             Length(
-                min=Constants.Category.Name.min_length,
+                min=Constant.Category.Name.min_length,
                 message=gettext("Category name must have at least %(m)s " +
                                 "characters",
-                                m=Constants.Category.Name.min_length))],
+                                m=Constant.Category.Name.min_length))],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
