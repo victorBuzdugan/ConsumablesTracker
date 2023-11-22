@@ -834,22 +834,22 @@ def test_change_product_name():
     "meas_unit", "min_stock", "ord_qty", "error_msg"), (
         # # name
         ("", "description", 1, 1, 1, "measunit", 1, 2,
-            "The product must have a name"),
+            str(Message.Product.Name.Req())),
         (" ", "description", 1, 1, 1, "measunit", 1, 2,
-            "The product must have a name"),
+            str(Message.Product.Name.Req())),
         (None, "description", 1, 1, 1, "measunit", 1, 2,
-            "The product must have a name"),
+            str(Message.Product.Name.Req())),
         ("Toilet paper", "description", 1, 1, 1, "measunit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
         ("   Toilet paper   ", "description", 1, 1, 1, "measunit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
         # # description
         ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2,
-            "Product must have a description"),
+            str(Message.Product.Description.Req())),
         ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2,
-            "Product must have a description"),
+            str(Message.Product.Description.Req())),
         ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2,
-            "Product must have a description"),
+            str(Message.Product.Description.Req())),
         # # responsible
         ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
             str(Message.User.NotExists(""))),
@@ -881,11 +881,11 @@ def test_change_product_name():
             "Supplier does not exist"),
         # # meas unit
         ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
-            "Product must have a measuring unit"),
+            str(Message.Product.MeasUnit.Req())),
         ("__test__producttt__", "description", 1, 1, 1, " ", 1, 2,
-            "Product must have a measuring unit"),
+            str(Message.Product.MeasUnit.Req())),
         ("__test__producttt__", "description", 1, 1, 1, None, 1, 2,
-            "Product must have a measuring unit"),
+            str(Message.Product.MeasUnit.Req())),
         # # min stock
         ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
             "Minimum stock must be ≥ 0"),

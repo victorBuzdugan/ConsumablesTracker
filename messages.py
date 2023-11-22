@@ -35,7 +35,7 @@ class Msg:
         return {"message": self.message(*args, **kwargs),
                 "category": self.category}
 
-    def __call__(self, *args, **kwargs) -> str:
+    def __call__(self, *args, **kwargs) -> LazyString:
         return self.message(*args, **kwargs)
 
 
@@ -412,7 +412,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "The product must have a name")
+                    "Product name is required")
             )
             Exists = Msg(
                 tested=False,
@@ -420,13 +420,31 @@ class Message:
                 message=lambda name: lazy_gettext(
                     "The product %(name)s allready exists", name=name)
             )
+            LenLimit = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Product name must be between %(min)s and %(max)s " +
+                    "characters",
+                    min=Constant.Product.Name.min_length,
+                    max=Constant.Product.Name.max_length)
+            )
         class Description:
             """Product description messages"""
             Req = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product must have a description")
+                    "Product description is required")
+            )
+            LenLimit = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Product description must be between %(min)s and %(max)s " +
+                    "characters",
+                    min=Constant.Product.Description.min_length,
+                    max=Constant.Product.Description.max_length)
             )
         class Responsible:
             """Product responsible messages"""
@@ -458,10 +476,16 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product must have a measuring unit")
+                    "Product measuring unit is required")
             )
         class MinStock:
             """Product min_stock attr messages"""
+            Req = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Product minimum stock is required")
+            )
             Invalid = Msg(
                 tested=False,
                 category=Color.RED.value,
@@ -471,6 +495,12 @@ class Message:
             )
         class OrdQty:
             """Product ord_qty attr messages"""
+            Req = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Product order quantity is required")
+            )
             Invalid = Msg(
                 tested=False,
                 category=Color.RED.value,
@@ -494,6 +524,59 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Can't 'retire' a product that needs to be ordered")
             )
+        NotExists = Msg(
+            tested=False,
+            category=Color.RED.value,
+            message=lambda name: lazy_gettext(
+                 "Product %(name)s does not exist",
+                 name=name)
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Product '%(name)s' created",
+                name=name)
+        )
+        Deleted = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Product '%(name)s' has been deleted",
+                name=name)
+        )
+        Updated = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                 "Product updated")
+        )
+        Ordered = Msg(
+            description="Could be one or more products",
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                 "Products ordered")
+        )
+        AllOrdered = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                 "All products ordered")
+        )
+        NoOrder = Msg(
+            tested=False,
+            category=Color.YELLOW.value,
+            message=lambda : lazy_gettext(
+                "There are no products that need to be ordered")
+        )
+        NoSort = Msg(
+            tested=False,
+            category=Color.YELLOW.value,
+            message=lambda attribute: lazy_gettext(
+                "Cannot sort products by %(attribute)s",
+                attribute=attribute)
+        )
     class UI:
         """Interface messages"""
         class Basic:
@@ -538,4 +621,5 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Inventory check not required")
             )
+
 pass

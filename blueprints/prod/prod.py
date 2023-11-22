@@ -4,7 +4,7 @@ from typing import Callable
 
 from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
-from flask_babel import gettext, lazy_gettext
+from flask_babel import lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
@@ -16,6 +16,7 @@ from wtforms.validators import InputRequired, Length, NumberRange
 from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
 from helpers import admin_required, flash_errors, logger
+from messages import Message
 
 func: Callable
 
@@ -37,14 +38,11 @@ class CreateProdForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Code"),
         validators=[
-            InputRequired(gettext("Product name is required")),
+            InputRequired(Message.Product.Name.Req()),
             Length(
                 min=Constant.Product.Name.min_length,
                 max=Constant.Product.Name.max_length,
-                message=gettext("Product name must be between " +
-                                "%(m)s and %(M)s characters",
-                                m=Constant.Product.Name.min_length,
-                                M=Constant.Product.Name.max_length))],
+                message=Message.Product.Name.LenLimit())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Code"),
@@ -53,14 +51,11 @@ class CreateProdForm(FlaskForm):
     description = StringField(
         label=lazy_gettext("Description"),
         validators=[
-            InputRequired(gettext("Product description is required")),
+            InputRequired(Message.Product.Description.Req()),
             Length(
                 min=Constant.Product.Description.min_length,
                 max=Constant.Product.Description.max_length,
-                message=gettext("Product description must be between " +
-                                "%(m)s and %(M)s characters",
-                                m=Constant.Product.Description.min_length,
-                                M=Constant.Product.Description.max_length))],
+                message=Message.Product.Description.LenLimit())],
         render_kw={
                 "class": "form-control",
                 "placeholder": lazy_gettext("Description"),
@@ -87,7 +82,7 @@ class CreateProdForm(FlaskForm):
                 })
     meas_unit = StringField(
         label=lazy_gettext("Measuring unit"),
-        validators=[InputRequired(gettext("Measuring unit is required"))],
+        validators=[InputRequired(Message.Product.MeasUnit.Req())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Measuring unit"),
@@ -96,11 +91,10 @@ class CreateProdForm(FlaskForm):
     min_stock = IntegerField(
         label=lazy_gettext("Minimum stock"),
         validators=[
-            InputRequired(gettext("Minimum stock is required")),
+            InputRequired(Message.Product.MinStock.Req()),
             NumberRange(
                 min=Constant.Product.MinStock.min_value,
-                message=gettext("Minimum stock must be at least %(value)s",
-                                value=Constant.Product.MinStock.min_value))],
+                message=Message.Product.MinStock.Invalid())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Minimum stock"),
@@ -109,11 +103,10 @@ class CreateProdForm(FlaskForm):
     ord_qty = IntegerField(
         label=lazy_gettext("Order quantity"),
         validators=[
-            InputRequired(gettext("Order quantity is required")),
+            InputRequired(Message.Product.OrdQty.Req()),
             NumberRange(
                 min=Constant.Product.OrdQty.min_value,
-                message=gettext("Order quantity must be at least %(value)s",
-                                value=Constant.Product.OrdQty.min_value))],
+                message=Message.Product.OrdQty.Invalid())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Order quantity"),
@@ -214,8 +207,7 @@ def products(ordered_by):
             ).unique().all()
         else:
             logger.warning("Products sorting error(s)")
-            flash(gettext("Cannot sort products by %(ordered_by)s",
-                          ordered_by=ordered_by), "warning")
+            flash(**Message.Product.NoSort.flash(ordered_by))
             return redirect(url_for(".products", ordered_by="code"))
         stats = {
                 "all_products": db_session.scalar(
@@ -284,8 +276,7 @@ def new_product():
                 db_session.add(new_prod)
                 db_session.commit()
                 logger.debug("Product '%s' created", new_prod.name)
-                flash(gettext("Product '%(new_prod_name)s' created",
-                              new_prod_name=new_prod.name))
+                flash(**Message.Product.Created.flash(new_prod.name))
                 return redirect(url_for(".products", ordered_by="code"))
             except ValueError as error:
                 logger.warning("Product creation error(s)")
@@ -335,8 +326,7 @@ def edit_product(product):
                 db_session.delete(prod)
                 db_session.commit()
                 logger.debug("Product '%s' has been deleted", prod.name)
-                flash(gettext("Product '%(prod_name)s' has been deleted",
-                              prod_name=prod.name))
+                flash(**Message.Product.Deleted.flash(prod.name))
                 return redirect(session["last_url"])
             else:
                 try:
@@ -356,7 +346,7 @@ def edit_product(product):
                 else:
                     if db_session.is_modified(prod, include_collections=False):
                         logger.debug("Product updated")
-                        flash(gettext("Product updated"))
+                        flash(**Message.Product.Updated.flash())
                         db_session.commit()
                         return redirect(session["last_url"])
 
@@ -376,8 +366,7 @@ def edit_product(product):
             edit_prod_form.supplier_id.choices = [
                 (supplier.id, supplier.name) for supplier in suppliers]
         else:
-            flash(gettext("%(product)s does not exist!",
-                          product=product), "error")
+            flash(**Message.Product.NotExists.flash(product))
             return redirect(url_for(".products", ordered_by="code"))
 
     return render_template("prod/edit_product.html", form=edit_prod_form)
@@ -409,7 +398,7 @@ def products_to_order():
                     product.to_order = True
             db_session.commit()
         logger.debug("Product(s) ordered")
-        flash(gettext("Products updated"))
+        flash(**Message.Product.Ordered.flash())
         session["last_url"] = url_for("main.index")
     elif prod_to_order_form.errors:
         logger.warning("Product order error(s)")
@@ -436,8 +425,7 @@ def products_to_order():
             form=prod_to_order_form)
     else:
         logger.debug("There are no products that need to be ordered")
-        flash(gettext("There are no products that need to be ordered"),
-              "warning")
+        flash(**Message.Product.NoOrder.flash())
         return redirect(session["last_url"])
 
 
@@ -452,5 +440,5 @@ def all_products_ordered():
             product.to_order = False
         db_session.commit()
     logger.debug("All products ordered")
-    flash(gettext("All products ordered"))
+    flash(**Message.Product.AllOrdered.flash())
     return redirect(url_for("main.index"))

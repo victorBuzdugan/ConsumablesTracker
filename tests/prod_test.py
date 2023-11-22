@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
+from messages import Message
 
 pytestmark = pytest.mark.prod
 
@@ -217,22 +218,19 @@ def test_new_product(
         ("new_product", "some description", 1, 1, 5,
         "pc", 0, 1, "Not a valid choice"),
         ("new_product", "some description", 1, 1, 1,
-        "", 0, 1, "Measuring unit is required"),
+        "", 0, 1, str(Message.Product.MeasUnit.Req())),
         ("new_product", "some description", 1, 1, 1,
-        "pc", "", 1, "Minimum stock is required"),
+        "pc", "", 1, str(Message.Product.MinStock.Req())),
         ("new_product", "some description", 1, 1, 1,
-        "pc", -1, 1, ("Minimum stock must be at least " +
-                      f"{Constant.Product.MinStock.min_value}")),
+        "pc", -1, 1, str(Message.Product.MinStock.Invalid())),
         ("new_product", "some description", 1, 1, 1,
         "pc", "a", 1, "Not a valid integer value"),
         ("new_product", "some description", 1, 1, 1,
-        "pc", 0, "", "Order quantity is required"),
+        "pc", 0, "", str(Message.Product.OrdQty.Req())),
         ("new_product", "some description", 1, 1, 1,
-        "pc", 0, 0, ("Order quantity must be at least " +
-                     f"{Constant.Product.OrdQty.min_value}")),
+        "pc", 0, 0, str(Message.Product.OrdQty.Invalid())),
         ("new_product", "some description", 1, 1, 1,
-        "pc", 0, -1, ("Order quantity must be at least " +
-                      f"{Constant.Product.OrdQty.min_value}")),
+        "pc", 0, -1, str(Message.Product.OrdQty.Invalid())),
         ("new_product", "some description", 1, 1, 1,
         "pc", 0, "a", "Not a valid integer value"),
 ))
@@ -560,17 +558,16 @@ def test_edit_product_last_responsible_product(
         ("23", "new_product", "new description",
          1, 1, 1,
          "", 100, 100,
-         "Measuring unit is required"),
+         str(Message.Product.MeasUnit.Req())),
         # min_stock
         ("24", "new_product", "new description",
          1, 1, 1,
          "new_meas_unit", "", 100,
-         "Minimum stock is required"),
+         str(Message.Product.MinStock.Req())),
         ("25", "new_product", "new description",
          1, 1, 1,
          "new_meas_unit", -1, 100,
-         ("Minimum stock must be at least " +
-          f"{Constant.Product.MinStock.min_value}")),
+         str(Message.Product.MinStock.Invalid())),
         ("26", "new_product", "new description",
          1, 1, 1,
          "new_meas_unit", "a", 100,
@@ -579,17 +576,15 @@ def test_edit_product_last_responsible_product(
         ("27", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, "",
-        "Order quantity is required"),
+        str(Message.Product.OrdQty.Req())),
         ("28", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, 0,
-        ("Order quantity must be at least " +
-         f"{Constant.Product.OrdQty.min_value}")),
+        str(Message.Product.OrdQty.Invalid())),
         ("29", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, -1,
-        ("Order quantity must be at least " +
-         f"{Constant.Product.OrdQty.min_value}")),
+        str(Message.Product.OrdQty.Invalid())),
         ("30", "new_product", "new description",
         1, 1, 1,
         "new_meas_unit", 100, "a",
@@ -786,7 +781,8 @@ def test_failed_edit_product_bad_name(
         assert response.status_code == 200
         assert response.request.path == url_for("prod.products",
                                                 ordered_by="code")
-        assert "not_existing_product does not exist!" in response.text
+        assert str(Message.Product.NotExists("not_existing_product")) \
+            in response.text
 # endregion
 
 
@@ -887,7 +883,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
                 response = client.post(
                     url_for("prod.products_to_order"), data=data)
                 assert "Products to order" in response.text
-                assert "Products updated" in response.text
+                assert str(Message.Product.Ordered()) in response.text
                 for product in products:
                     assert product.name in response.text
             assert len(products) == 1
@@ -906,7 +902,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
             assert response.request.path == url_for("main.index")
             assert "Products to order" not in response.text
             assert "Admin dashboard" in response.text
-            assert "Products updated" in response.text
+            assert str(Message.Product.Ordered()) in response.text
             assert "There are no products that need to be ordered" \
                 in response.text
 
