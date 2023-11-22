@@ -8,7 +8,6 @@ from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 
-from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
 from messages import Message
 
@@ -29,7 +28,7 @@ def test_products_page_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
 
 
 def test_products_page_admin_logged_in(
@@ -43,7 +42,7 @@ def test_products_page_admin_logged_in(
             url_for("prod.products", ordered_by="code"), follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "You have to be an admin..." not in response.text
+        assert str(Message.UI.Auth.AdminReq()) not in response.text
         assert "Products" in response.text
         assert "Strikethrough products are no longer in use" in response.text
         assert "AAA Batteries" in response.text
@@ -96,7 +95,7 @@ def test_products_page_admin_logged_in(
         assert response.status_code == 200
         assert quote(response.request.path) == url_for("prod.products",
                                                        ordered_by="code")
-        assert "Cannot sort products by not_existing" in response.text
+        assert str(Message.Product.NoSort("not_existing")) in response.text
 # endregion
 
 
@@ -141,7 +140,7 @@ def test_new_product(
         assert response.status_code == 200
         assert response.request.path == url_for("prod.products",
                                                 ordered_by="code")
-        assert f"Product '{name}' created" in unescape(response.text)
+        assert str(Message.Product.Created(name)) in unescape(response.text)
         assert name in response.text
     with dbSession() as db_session:
         prod = db_session.scalar(select(Product).filter_by(name=name))
@@ -163,34 +162,20 @@ def test_new_product(
     ("name", "description", "responsible_id", "category_id", "supplier_id",
      "meas_unit", "min_stock", "ord_qty", "flash_message"), (
         ("", "some description", 1, 1, 1,
-         "pc", 0, 1, "Product name is required"),
+         "pc", 0, 1, str(Message.Product.Name.Req())),
         ("pr", "some description", 1, 1, 1,
-         "pc", 0, 1, ("Product name must be between " +
-                      f"{Constant.Product.Name.min_length} and " +
-                      f"{Constant.Product.Name.max_length} " +
-                      "characters")),
+         "pc", 0, 1, str(Message.Product.Name.LenLimit())),
         ("prod_prod_prod_p", "some description", 1, 1, 1,
-         "pc", 0, 1, ("Product name must be between " +
-                      f"{Constant.Product.Name.min_length} and " +
-                      f"{Constant.Product.Name.max_length} " +
-                      "characters")),
+         "pc", 0, 1, str(Message.Product.Name.LenLimit())),
         ("AA Batteries", "some description", 1, 1, 1,
-         "pc", 0, 1, "The product AA Batteries allready exists"),
+         "pc", 0, 1, str(Message.Product.Name.Exists("AA Batteries"))),
         ("new_product", "", 1, 1, 1,
-         "pc", 0, 1, "Product description is required"),
+         "pc", 0, 1, str(Message.Product.Description.Req())),
         ("new_product", "de", 1, 1, 1,
-         "pc", 0, 1, ("Product description must be between " +
-                      f"{Constant.Product.Description.min_length} " +
-                      "and " +
-                      f"{Constant.Product.Description.max_length} " +
-                      "characters")),
+         "pc", 0, 1, str(Message.Product.Description.LenLimit())),
         ("new_product",
          "desc-desc-desc-desc-desc-desc-desc-desc-desc-desc-desc", 1, 1, 1,
-         "pc", 0, 1, ("Product description must be between " +
-                      f"{Constant.Product.Description.min_length} " +
-                      "and " +
-                      f"{Constant.Product.Description.max_length} " +
-                      "characters")),
+         "pc", 0, 1, str(Message.Product.Description.LenLimit())),
         ("new_product", "some description", None, 1, 1,
          "pc", 0, 1, "Not a valid choice"),
         ("new_product", "some description", "", 1, 1,
@@ -262,7 +247,7 @@ def test_failed_new_product(
         assert len(response.history) == 0
         assert response.status_code == 200
         assert "Create product" in response.text
-        assert f"Product '{name}' created" not in unescape(response.text)
+        assert str(Message.Product.Created(name)) not in unescape(response.text)
         assert flash_message in unescape(response.text)
     with dbSession() as db_session:
         if name != "AA Batteries":
@@ -348,7 +333,7 @@ def test_edit_product(
             assert response.status_code == 200
             assert quote(response.request.path) == url_for("prod.products",
                                                            ordered_by="code")
-            assert "Product updated" in response.text
+            assert str(Message.Product.Updated()) in response.text
             assert new_name in response.text
             assert new_description in response.text
         db_session.refresh(prod)
@@ -421,7 +406,7 @@ def test_edit_product_last_responsible_product(
                     url_for("prod.edit_product", product=product.name),
                     data=data,
                     follow_redirects=True)
-                assert "Product updated" in response.text
+                assert str(Message.Product.Updated()) in response.text
                 db_session.refresh(product)
                 assert product.responsible_id == admin_logged_in.id
             db_session.refresh(user)
@@ -436,7 +421,7 @@ def test_edit_product_last_responsible_product(
                     url_for("prod.edit_product", product=product.name),
                     data=data,
                     follow_redirects=True)
-                assert "Product updated" in response.text
+                assert str(Message.Product.Updated()) in response.text
                 db_session.refresh(product)
                 assert product.responsible_id == user.id
             db_session.refresh(user)
@@ -455,39 +440,29 @@ def test_edit_product_last_responsible_product(
         ("2", "", "new description",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product name is required"),
+         str(Message.Product.Name.Req())),
         ("4", "pr", "new description",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         ("Product name must be between " +
-          f"{Constant.Product.Name.min_length} and " +
-          f"{Constant.Product.Name.max_length} " +
-          "characters")),
+         str(Message.Product.Name.LenLimit())),
         ("5", "prod_prod_prod_p", "new description",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         ("Product name must be between " +
-          f"{Constant.Product.Name.min_length} and " +
-          f"{Constant.Product.Name.max_length} " +
-          "characters")),
+         str(Message.Product.Name.LenLimit())),
         # description
         ("6", "new_product", "",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         "Product description is required"),
+         str(Message.Product.Description.Req())),
         ("3", "new_product", "de",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         ("Product description must be between " +
-          f"{Constant.Product.Description.min_length} and " +
-          f"{Constant.Product.Description.max_length} characters")),
+         str(Message.Product.Description.LenLimit())),
         ("7", "new_product",
          "desc-desc-desc-desc-desc-desc-desc-desc-desc-desc-desc",
          1, 1, 1,
          "new_meas_unit", 100, 100,
-         ("Product description must be between " +
-          f"{Constant.Product.Description.min_length} and " +
-          f"{Constant.Product.Description.max_length} characters")),
+         str(Message.Product.Description.LenLimit())),
         # responsible
         ("8", "new_product", "new description",
          None, 1, 1,
@@ -632,7 +607,7 @@ def test_failed_edit_product_form_validators(
                 data=data, follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Product updated" not in response.text
+            assert str(Message.Product.Updated()) not in response.text
             assert orig_prod["name"] in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(prod)
@@ -676,9 +651,9 @@ def test_failed_edit_product_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Product updated" not in response.text
+            assert str(Message.Product.Updated()) not in response.text
             assert orig_name in response.text
-            assert f"The product {new_name} allready exists" in response.text
+            assert str(Message.Product.Name.Exists(new_name)) in response.text
         db_session.refresh(prod)
         assert prod.name != new_name
 
@@ -719,9 +694,9 @@ def test_failed_edit_product_to_order_in_use_validator(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Product updated" not in response.text
+            assert str(Message.Product.Updated()) not in response.text
             assert prod.name in response.text
-            assert "Can't order not in use products" \
+            assert str(Message.Product.ToOrder.Retired()) \
                 in unescape(response.text)
         db_session.refresh(prod)
         assert not prod.to_order
@@ -756,9 +731,9 @@ def test_failed_edit_product_to_order_in_use_validator(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Product updated" not in response.text
+            assert str(Message.Product.Updated()) not in response.text
             assert prod.name in response.text
-            assert "Can't 'retire' a product that needs to be ordered" \
+            assert str(Message.Product.InUse.ToOrder()) \
                 in unescape(response.text)
         db_session.refresh(prod)
         assert prod.in_use
@@ -832,7 +807,7 @@ def test_delete_product(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"Product '{prod.name}' has been deleted" \
+        assert str(Message.Product.Deleted(prod.name)) \
             in unescape(response.text)
     with dbSession() as db_session:
         assert not db_session.get(Product, prod.id)
@@ -854,7 +829,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert "Admin dashboard" in response.text
-        assert "There are no products that need to be ordered" in response.text
+        assert str(Message.Product.NoOrder()) in response.text
         with dbSession() as db_session:
             products = [db_session.get(Product, id)
                         for id in range(1, numb_products + 1)]
@@ -903,8 +878,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
             assert "Products to order" not in response.text
             assert "Admin dashboard" in response.text
             assert str(Message.Product.Ordered()) in response.text
-            assert "There are no products that need to be ordered" \
-                in response.text
+            assert str(Message.Product.NoOrder()) in response.text
 
 
 def test_order_page_all_ordered(client: FlaskClient, admin_logged_in: User):
@@ -938,7 +912,7 @@ def test_order_page_all_ordered(client: FlaskClient, admin_logged_in: User):
             assert response.history[0].status_code == 302
             assert response.status_code == 200
             assert response.request.path == url_for("main.index")
-            assert "All products ordered" in response.text
+            assert str(Message.Product.AllOrdered()) in response.text
             for product in products:
                 db_session.refresh(product)
                 assert not product.to_order
@@ -949,7 +923,7 @@ def test_order_page_all_ordered(client: FlaskClient, admin_logged_in: User):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert "Admin dashboard" in response.text
-        assert "There are no products that need to be ordered" in response.text
+        assert str(Message.Product.NoOrder()) in response.text
 
 
 def test_order_page_no_csrf(client: FlaskClient, admin_logged_in: User):

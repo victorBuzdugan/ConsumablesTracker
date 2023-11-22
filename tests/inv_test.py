@@ -26,7 +26,7 @@ def test_inv_user_not_logged_in(client: FlaskClient):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be logged in..." in response.text
+        assert str(Message.UI.Auth.LoginReq()) in response.text
         assert 'type="submit" value="Log In"' in response.text
 
 
@@ -37,7 +37,7 @@ def test_inv_user_logged_in_no_check_inventory(
         client.get("/")
         response = client.get(url_for("inv.inventory"))
         assert "checked" not in response.text
-        assert "Inventory check not required" in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
         assert 'Inventory check' in response.text
         assert 'href="/product/edit/' not in response.text
         assert f'<span class="text-secondary">{user_logged_in.name}</span>' \
@@ -83,8 +83,8 @@ def test_inv_admin_logged_in_no_check_inventory(
         response = client.get("/")
         response = client.get(url_for("inv.inventory"))
         assert "checked" not in response.text
-        assert "Inventory check not required" in response.text
-        assert 'Inventory check' in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
+        assert "Inventory check" in response.text
         assert 'href="/product/edit/' in response.text
         assert f'<span class="text-secondary">{admin_logged_in.name}</span>' \
             in response.text
@@ -144,7 +144,7 @@ def test_inv_user_logged_in_yes_check_inventory(
             db_session.commit()
         response = client.get(url_for("inv.inventory"))
         assert "checked" not in response.text
-        assert "Inventory check not required" not in response.text
+        assert str(Message.UI.Inv.NotReq()) not in response.text
         assert 'href="/product/edit/' not in response.text
         assert 'value="Inventory check not required" disabled' \
             not in response.text
@@ -186,14 +186,14 @@ def test_send_inventory_yes_check_inventory(
     with client:
         client.get("/")
         response = client.get(url_for("inv.inventory"))
-        assert "Inventory check not required" in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
         # trigger inventory check
         with dbSession() as db_session:
             db_session.get(User, user_logged_in.id).done_inv = False
             db_session.commit()
 
         response = client.get(url_for("inv.inventory"))
-        assert "Inventory check not required" not in response.text
+        assert str(Message.UI.Inv.NotReq()) not in response.text
         assert 'value="Submit inventory"' in response.text
 
         # 22 is not assigned to this user
@@ -209,7 +209,7 @@ def test_send_inventory_yes_check_inventory(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == "/"
-        assert "Inventory has been submitted" in response.text
+        assert str(Message.UI.Inv.Submitted()) in response.text
 
         # check to_order status in database and teardown
         with dbSession() as db_session:
@@ -228,14 +228,14 @@ def test_send_inventory_yes_check_inventory_no_csrf(
     with client:
         client.get("/")
         response = client.get(url_for("inv.inventory"))
-        assert "Inventory check not required" in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
         # trigger inventory check
         with dbSession() as db_session:
             db_session.get(User, user_logged_in.id).done_inv = False
             db_session.commit()
 
         response = client.get(url_for("inv.inventory"))
-        assert "Inventory check not required" not in response.text
+        assert str(Message.UI.Inv.NotReq()) not in response.text
         assert 'value="Submit inventory"' in response.text
 
         data = {
@@ -261,7 +261,7 @@ def test_send_inventory_no_check_inventory(client: FlaskClient, user_logged_in):
     with client:
         client.get("/")
         response = client.get(url_for("inv.inventory"))
-        assert "Inventory check not required" in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
         assert 'value="Submit inventory"' not in response.text
 
         data = {
@@ -272,7 +272,7 @@ def test_send_inventory_no_check_inventory(client: FlaskClient, user_logged_in):
             url_for("inv.inventory"), data=data, follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "Inventory check not required" in response.text
+        assert str(Message.UI.Inv.NotReq()) in response.text
 
         # check to_order status in database and teardown
         with dbSession() as db_session:
@@ -294,7 +294,7 @@ def test_oth_user_not_logged_in(client: FlaskClient):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
         assert 'type="submit" value="Log In"' in response.text
 
 
@@ -313,7 +313,7 @@ def test_oth_user_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
         assert 'type="submit" value="Log In"' in response.text
 
 
@@ -335,7 +335,7 @@ def test_oth_user_admin_logged_in_no_check_inventory(
         assert session.get("admin")
     assert len(response.history) == 0
     assert response.status_code == 200
-    assert "You have to be an admin..." not in response.text
+    assert str(Message.UI.Auth.AdminReq()) not in response.text
     assert 'type="submit" value="Log In"' not in response.text
     assert "Inventory check" in response.text
     assert f'<span class="text-secondary">{oth_user.name}</span>' \
@@ -377,8 +377,8 @@ def test_oth_user_admin_logged_in_no_check_inventory(
 @pytest.mark.parametrize(
     ("oth_user", "flash_message"), (
     ("nonexistent", str(Message.User.NotExists("nonexistent"))),
-    ("user5", "User user5 awaits registration aproval"),
-    ("user6", "User user6 is not in use anymore")
+    ("user5", str(Message.User.RegPending("user5"))),
+    ("user6", str(Message.User.Retired("user6")))
 ))
 def test_oth_user_admin_logged_in_special_users(
         client: FlaskClient, admin_logged_in: User,
@@ -421,7 +421,7 @@ def test_oth_user_admin_logged_in_yes_check_inventory(
         in response.text
     assert "checked" not in response.text
     assert "disabled" in response.text
-    assert "Inventory check not required" in response.text
+    assert str(Message.UI.Inv.NotReq()) in response.text
     assert 'value="Inventory check not required" disabled' in response.text
     assert 'value="Submit inventory"' not in response.text
     assert "Critical products are highlighted in red" not in response.text
@@ -442,7 +442,7 @@ def test_oth_user_admin_logged_in_yes_check_inventory(
         in response.text
     assert "checked" not in response.text
     assert "disabled" not in response.text
-    assert "Inventory check not required" not in response.text
+    assert str(Message.UI.Inv.NotReq()) not in response.text
     assert 'value="Inventory check not required" disabled' not in response.text
     assert 'value="Submit inventory"' in response.text
     assert "Critical products are highlighted in red" in response.text
@@ -471,8 +471,8 @@ def test_oth_user_send_inventory_yes_check_inventory(
         assert session.get("admin")
         response = client.get(
             f"{url_for('inv.inventory_user', username=oth_user.name)}")
-    assert "Inventory check not required" not in response.text
-    assert 'Inventory check' in response.text
+    assert str(Message.UI.Inv.NotReq()) not in response.text
+    assert "Inventory check" in response.text
     assert f'<span class="text-secondary">{oth_user.name}</span>' \
         in response.text
     assert 'value="Submit inventory"' in response.text
@@ -495,7 +495,7 @@ def test_oth_user_send_inventory_yes_check_inventory(
     assert response.history[0].status_code == 302
     assert response.status_code == 200
     assert response.request.path == "/"
-    assert "Inventory has been submitted" in response.text
+    assert str(Message.UI.Inv.Submitted()) in response.text
 
     # check to_order status in database and teardown
     with dbSession() as db_session:
@@ -523,7 +523,7 @@ def test_oth_user_send_inventory_yes_check_inventory_no_csrf(
         assert session["admin"]
         response = client.get(
             f"{url_for('inv.inventory_user', username=oth_user.name)}")
-    assert "Inventory check not required" not in response.text
+    assert str(Message.UI.Inv.NotReq()) not in response.text
     assert 'Inventory check' in response.text
     assert f'<span class="text-secondary">{oth_user.name}</span>' \
         in response.text
@@ -565,7 +565,7 @@ def test_inventory_request_not_logged_in(client: FlaskClient):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be logged in..." in response.text
+        assert str(Message.UI.Auth.LoginReq()) in response.text
         assert 'type="submit" value="Log In"' in response.text
 
 
@@ -601,7 +601,7 @@ def test_inventory_request_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "Inventory check request sent" in response.text
+        assert str(Message.User.ReqInv.Sent()) in response.text
         assert "You requested a inventory check" in response.text
         with dbSession() as db_session:
             assert db_session.get(User, user_logged_in.id).req_inv

@@ -92,8 +92,8 @@ def test_change_password():
     ("", "password", 1, str(Message.User.Name.Req())),
     (" ", "password", 1, str(Message.User.Name.Req())),
     (None, "password", 1, str(Message.User.Name.Req())),
-    ("Admin", "password", 1, "The user Admin allready exists"),
-    ("user1", "password", 1, "The user user1 allready exists"),
+    ("Admin", "password", 1, str(Message.User.Name.Exists("Admin"))),
+    ("user1", "password", 1, str(Message.User.Name.Exists("user1"))),
     # password
     ("test_user", "", 1, str(Message.User.Password.Req())),
     ("test_user", None, 1, str(Message.User.Password.Req())),
@@ -247,7 +247,7 @@ def test_failed_delete_user_with_products_attached():
     with dbSession() as db_session:
         user = db_session.get(User, 1)
         with pytest.raises(ValueError,
-                           match="User can't be deleted or does not exist"):
+                           match=str(Message.Product.Responsible.Delete())):
             db_session.delete(user)
             db_session.commit()
     with dbSession() as db_session:
@@ -257,8 +257,8 @@ def test_failed_delete_user_with_products_attached():
 #region: validators
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
-    (5, "User with pending registration can't have products attached"),
-    (6, "'Retired' users can't have products attached"),
+    (5, str(Message.User.Products.PendReg())),
+    (6, str(Message.User.Products.Retired())),
     ))
 def test_validate_user_products(user_id, err_message):
     """test_validate_user_products"""
@@ -277,7 +277,7 @@ def test_validate_admin():
         assert user.reg_req
         with pytest.raises(
                 ValueError,
-                match="User with pending registration can't be admin"):
+                match=str(Message.User.Admin.PendReg())):
             user.admin = True
         assert not user.admin
 
@@ -292,7 +292,8 @@ def test_validate_last_admin():
             .filter_by(admin=True, in_use=True)) == 1
         user = db_session.get(User, 2)
         assert user.admin
-        with pytest.raises(ValueError, match="You are the last admin!"):
+        with pytest.raises(ValueError,
+                           match=str(Message.User.Admin.LastAdmin())):
             user.admin = False
         assert user.admin
         db_session.get(User, 1).admin = True
@@ -306,8 +307,7 @@ def test_validate_user_in_use():
         assert user.in_use
         with pytest.raises(
                 ValueError,
-                match="Can't 'retire' a user if he is still " +
-                    "responsible for products"):
+                match=str(Message.User.InUse.StillProd())):
             user.in_use = False
         assert user.in_use
 
@@ -346,8 +346,8 @@ def test_validate_in_use():
 
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
-    (5, "User with pending registration can't check inventory"),
-    (6, "'Retired' user can't check inventory"),
+    (5, str(Message.User.DoneInv.PendReg())),
+    (6, str(Message.User.DoneInv.Retired())),
     ))
 def test_validate_done_inv(user_id, err_message):
     """test_validate_done_inv"""
@@ -365,7 +365,7 @@ def test_validate_done_inv_no_prod():
         user.reg_req = False
         with pytest.raises(
                 ValueError,
-                match="User without products attached can't check inventory"):
+                match=str(Message.User.DoneInv.NoProd())):
             user.done_inv = False
         assert user.done_inv
 
@@ -386,9 +386,9 @@ def test_validate_ok_done_inv():
 
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
-    (1, "Admin users can't request registration"),
-    (3, "Users with products attached can't request registration"),
-    (6, "'Retired' users can't request registration"),
+    (1, str(Message.User.RegReq.Admin())),
+    (3, str(Message.User.RegReq.NoProd())),
+    (6, str(Message.User.RegReq.Retired())),
     ))
 def test_validate_reg_req(user_id, err_message):
     """test_validate_reg_req"""
@@ -408,8 +408,7 @@ def test_validate_reg_req_req_inv():
         user.req_inv = True
         with pytest.raises(
                 ValueError,
-                match="User that requested inventory can't " +
-                    "request registration"):
+                match=str(Message.User.RegReq.ReqInv())):
             user.reg_req = True
         assert not user.reg_req
 
@@ -422,16 +421,16 @@ def test_validate_reg_req_done_inv():
         user.done_inv = False
         with pytest.raises(
                 ValueError,
-                match="User that checks inventory can't request registration"):
+                match=str(Message.User.RegReq.CheckInv())):
             user.reg_req = True
         assert not user.reg_req
 
 
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
-    (1, "Admins don't need to request inventorying"),
-    (6, "'Retired' users can't request inventorying"),
-    (5, "User with pending registration can't request inventorying"),
+    (1, str(Message.User.ReqInv.Admin())),
+    (6, str(Message.User.ReqInv.Retired())),
+    (5, str(Message.User.ReqInv.PendReg())),
     ))
 def test_validate_req_inv(user_id, err_message):
     """test_validate_req_inv"""
@@ -450,7 +449,7 @@ def test_validate_req_inv_check_inv():
         assert not user.req_inv
         user.done_inv = False
         with pytest.raises(ValueError,
-                           match="User can allready check inventory"):
+                           match=str(Message.User.ReqInv.CheckInv())):
             user.req_inv = True
         assert not user.req_inv
 
@@ -464,7 +463,7 @@ def test_validate_req_inv_prod():
         assert not user.all_products
         with pytest.raises(
                 ValueError,
-                match="Users without products can't request inventorying"):
+                match=str(Message.User.ReqInv.NoProd())):
             user.req_inv = True
         assert not user.req_inv
 
@@ -475,7 +474,7 @@ def test_admin_request_inventory():
         user = db_session.get(User, 1)
         assert user.admin
         with pytest.raises(ValueError,
-                           match="Admins don't need to request inventorying"):
+                           match=str(Message.User.ReqInv.Admin())):
             user.req_inv = True
         assert not user.req_inv
 # endregion
@@ -525,8 +524,8 @@ def test_change_category_name():
     ("", str(Message.Category.Name.Req())),
     (" ", str(Message.Category.Name.Req())),
     (None, str(Message.Category.Name.Req())),
-    ("Household", "The category (.)* allready exists"),
-    ("Groceries", "The category (.)* allready exists"),
+    ("Household", str(Message.Category.Name.Exists("Household"))),
+    ("Groceries", str(Message.Category.Name.Exists("Groceries"))),
 ))
 def test_failed_category_creation(name, error_msg):
     """test_failed_category_creation"""
@@ -559,7 +558,7 @@ def test_failed_delete_category_with_products_attached():
         category = db_session.get(Category, cat_id)
         with pytest.raises(
                 ValueError,
-                match="Category can't be deleted or does not exist"):
+                match=str(Message.Product.Category.Delete())):
             db_session.delete(category)
             db_session.commit()
     with dbSession() as db_session:
@@ -611,7 +610,7 @@ def test_validate_category_products():
         assert not category.in_use
         with pytest.raises(
                 ValueError,
-                match="Not in use category can't have products attached"):
+                match=str(Message.Category.Products.Retired())):
             category.products.append(product)
         db_session.refresh(product)
         assert product.category.id == old_cat_id
@@ -624,7 +623,7 @@ def test_validate_category_not_in_use():
         assert category.in_use
         with pytest.raises(
                 ValueError,
-                match="Not in use category can't have products attached"):
+                match=str(Message.Category.Products.Retired())):
             category.in_use = False
         assert category.in_use
 # endregion
@@ -670,8 +669,8 @@ def test_change_supplier_name():
     ("", str(Message.Supplier.Name.Req())),
     (" ", str(Message.Supplier.Name.Req())),
     (None, str(Message.Supplier.Name.Req())),
-    ("Amazon", "The supplier (.)* allready exists"),
-    ("Carrefour", "The supplier (.)* allready exists"),
+    ("Amazon", str(Message.Supplier.Name.Exists("Amazon"))),
+    ("Carrefour", str(Message.Supplier.Name.Exists("Carrefour"))),
 ))
 def test_failed_supplier_creation(name, error_msg):
     """test_failed_supplier_creation"""
@@ -704,7 +703,7 @@ def test_delete_supplier_with_products_attached():
         supplier = db_session.get(Supplier, sup_id)
         with pytest.raises(
                 ValueError,
-                match="Supplier can't be deleted or does not exist"):
+                match=str(Message.Product.Supplier.Delete())):
             db_session.delete(supplier)
             db_session.commit()
     with dbSession() as db_session:
@@ -755,7 +754,7 @@ def test_validate_supplier_products():
         supplier = db_session.get(Supplier, 5)
         with pytest.raises(
                 ValueError,
-                match="Not in use supplier can't have products attached"):
+                match=str(Message.Supplier.Products.Retired())):
             supplier.products.append(product)
         assert db_session.get(Product, 1).supplier == product.supplier
 
@@ -767,7 +766,7 @@ def test_validate_supplier_not_in_use():
         assert supplier.in_use
         with pytest.raises(
                 ValueError,
-                match="Not in use supplier can't have products attached"):
+                match=str(Message.Supplier.Products.Retired())):
             supplier.in_use = False
         assert supplier.in_use
 # endregion
@@ -856,9 +855,9 @@ def test_change_product_name():
         ("__test__producttt__", "description", None, 1, 1, "measunit", 1, 2,
             str(Message.User.NotExists(None))),
         ("__test__producttt__", "description", 5, 1, 1, "measunit", 1, 2,
-            "User with pending registration can't have products attached"),
+            str(Message.User.Products.PendReg())),
         ("__test__producttt__", "description", 6, 1, 1, "measunit", 1, 2,
-            "'Retired' users can't have products attached"),
+            str(Message.User.Products.Retired())),
         ("__test__producttt__", "description", 8, 1, 1, "measunit", 1, 2,
             str(Message.User.NotExists(""))),
         # category
@@ -867,18 +866,18 @@ def test_change_product_name():
         ("__test__producttt__", "description", 1, None, 1, "measunit", 1, 2,
             str(Message.Category.NotExists(""))),
         ("__test__producttt__", "description", 1, 8, 1, "measunit", 1, 2,
-            "Not in use category can't have products attached"),
+            str(Message.Category.Products.Retired())),
         ("__test__producttt__", "description", 1, 9, 1, "measunit", 1, 2,
             str(Message.Category.NotExists(""))),
         # # supplier
         ("__test__producttt__", "description", 1, 1, "", "measunit", 1, 2,
-            "Supplier does not exist"),
+            str(Message.Supplier.NotExists(""))),
         ("__test__producttt__", "description", 1, 1, None, "measunit", 1, 2,
-            "Supplier does not exist"),
+            str(Message.Supplier.NotExists(""))),
         ("__test__producttt__", "description", 1, 1, 5, "measunit", 1, 2,
-            "Not in use supplier can't have products attached"),
+            str(Message.Supplier.Products.Retired())),
         ("__test__producttt__", "description", 1, 1, 6, "measunit", 1, 2,
-            "Supplier does not exist"),
+            str(Message.Supplier.NotExists(""))),
         # # meas unit
         ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
             str(Message.Product.MeasUnit.Req())),
@@ -888,24 +887,24 @@ def test_change_product_name():
             str(Message.Product.MeasUnit.Req())),
         # # min stock
         ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
-            "Minimum stock must be ≥ 0"),
+            str(Message.Product.MinStock.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", None, 2,
-            "Minimum stock must be ≥ 0"),
+            str(Message.Product.MinStock.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", "0", 2,
-            "Minimum stock must be ≥ 0"),
+            str(Message.Product.MinStock.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", -3, 2,
-            "Minimum stock must be ≥ 0"),
+            str(Message.Product.MinStock.Invalid())),
         # # ord quantity
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "",
-            "Order quantity must be ≥ 1"),
+            str(Message.Product.OrdQty.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, None,
-            "Order quantity must be ≥ 1"),
+            str(Message.Product.OrdQty.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "1",
-            "Order quantity must be ≥ 1"),
+            str(Message.Product.OrdQty.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, 0,
-            "Order quantity must be ≥ 1"),
+            str(Message.Product.OrdQty.Invalid())),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, -3,
-            "Order quantity must be ≥ 1"),
+            str(Message.Product.OrdQty.Invalid())),
 ))
 def test_failed_product_creation(
         name, description, user, category, supplier,
@@ -1023,9 +1022,9 @@ def test_product_change_supplier():
 #region: validators
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
-    (5, "User with pending registration can't have products attached"),
-    (6, "'Retired' users can't have products attached"),
-    (8, "User does not exist")
+    (5, str(Message.User.Products.PendReg())),
+    (6, str(Message.User.Products.Retired())),
+    (8, str(Message.User.NotExists("")))
     ))
 def test_validate_product_responsible_id(user_id, err_message):
     """test_validate_product_responsible_id"""
@@ -1117,9 +1116,9 @@ def test_validate_product_responsible_last_product():
 
 @pytest.mark.parametrize(
     ("category_id", "err_message"), (
-    (8, "Not in use category can't have products attached"),
+    (8, str(Message.Category.Products.Retired())),
     # intentionally string message test
-    (9, "Category does not exist")
+    (9, str(Message.Category.NotExists("")))
     ))
 def test_validate_product_category_id(category_id, err_message):
     """test_validate_product_category_id"""
@@ -1133,8 +1132,8 @@ def test_validate_product_category_id(category_id, err_message):
 
 @pytest.mark.parametrize(
     ("supplier_id", "err_message"), (
-    (5, "Not in use supplier can't have products attached"),
-    (6, "Supplier does not exist")
+    (5, str(Message.Supplier.Products.Retired())),
+    (6, str(Message.Supplier.NotExists("")))
     ))
 def test_validate_product_supplier_id(supplier_id, err_message):
     """test_validate_product_supplier_id"""
@@ -1150,7 +1149,7 @@ def test_validate_to_order():
     """test_validate_to_order"""
     with dbSession() as db_session:
         with pytest.raises(ValueError,
-                           match="Can't order not in use products"):
+                           match=str(Message.Product.ToOrder.Retired())):
             db_session.get(Product, 43).to_order = True
         assert not db_session.get(Product, 43).to_order
 
@@ -1162,7 +1161,7 @@ def test_validate_product_in_use():
         product.to_order = True
         with pytest.raises(
                 ValueError,
-                match="Can't 'retire' a product that needs to be ordered"):
+                match=str(Message.Product.InUse.ToOrder())):
             product.in_use = False
         db_session.refresh(product)
         assert product.in_use

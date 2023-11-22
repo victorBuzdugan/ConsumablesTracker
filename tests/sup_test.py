@@ -8,7 +8,6 @@ from flask import g, session, url_for
 from flask.testing import FlaskClient
 from sqlalchemy import select
 
-from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
 from messages import Message
 
@@ -28,7 +27,7 @@ def test_suppliers_page_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
 
 
 def test_suppliers_page_admin_logged_in(
@@ -41,7 +40,7 @@ def test_suppliers_page_admin_logged_in(
         response = client.get(url_for("sup.suppliers"), follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "You have to be an admin..." not in response.text
+        assert str(Message.UI.Auth.AdminReq()) not in response.text
         assert "Suppliers" in response.text
         assert "Strikethrough suppliers are no longer in use" in response.text
         assert "Amazon" in response.text
@@ -87,7 +86,7 @@ def test_new_supplier(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sup.suppliers")
-        assert f"Supplier '{name}' created" in unescape(response.text)
+        assert str(Message.Supplier.Created(name)) in unescape(response.text)
         assert name in response.text
     with dbSession() as db_session:
         sup = db_session.scalar(select(Supplier).filter_by(name=name))
@@ -98,10 +97,9 @@ def test_new_supplier(
 
 
 @pytest.mark.parametrize(("name", "flash_message"), (
-    ("", "Supplier name is required"),
-    ("su", ("Supplier name must have at least " +
-            f"{Constant.Supplier.Name.min_length} characters")),
-    ("Amazon", "The supplier Amazon allready exists"),
+    ("", str(Message.Supplier.Name.Req())),
+    ("su", str(Message.Supplier.Name.LenLimit())),
+    ("Amazon", str(Message.Supplier.Name.Exists("Amazon"))),
 ))
 def test_failed_new_supplier(
         client: FlaskClient, admin_logged_in: User,
@@ -124,7 +122,8 @@ def test_failed_new_supplier(
         assert response.status_code == 200
         assert "Create supplier" in response.text
         assert flash_message in unescape(response.text)
-        assert f"Supplier '{name}' created" not in unescape(response.text)
+        assert str(Message.Supplier.Created(name)) \
+            not in unescape(response.text)
     with dbSession() as db_session:
         if name != "Amazon":
             assert not db_session.scalar(select(Supplier).filter_by(name=name))
@@ -173,7 +172,7 @@ def test_edit_supplier(
             assert response.history[0].status_code == 302
             assert response.status_code == 200
             assert quote(response.request.path) == url_for("sup.suppliers")
-            assert "Supplier updated" in response.text
+            assert str(Message.Supplier.Updated()) in response.text
             assert new_name in response.text
             assert new_details in response.text
 
@@ -189,12 +188,10 @@ def test_edit_supplier(
 
 
 @pytest.mark.parametrize(("sup_id", "new_name", "new_in_use", "flash_msg"), (
-    ("1", "", "on", "Supplier name is required"),
-    ("4", "", "on", "Supplier name is required"),
-    ("3", "ca", "on", ("Supplier name must have at least " +
-                       f"{Constant.Supplier.Name.min_length} characters")),
-    ("5", "ca", "", ("Supplier name must have at least " +
-                     f"{Constant.Supplier.Name.min_length} characters")),
+    ("1", "", "on", str(Message.Supplier.Name.Req())),
+    ("4", "", "on", str(Message.Supplier.Name.Req())),
+    ("3", "ca", "on", str(Message.Supplier.Name.LenLimit())),
+    ("5", "ca", "", str(Message.Supplier.Name.LenLimit())),
 ))
 def test_failed_edit_supplier_form_validators(
         client: FlaskClient, admin_logged_in,
@@ -225,7 +222,7 @@ def test_failed_edit_supplier_form_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Supplier updated" not in response.text
+            assert str(Message.Supplier.Updated()) not in response.text
             assert orig_name in response.text
             assert flash_msg in unescape(response.text)
         db_session.refresh(sup)
@@ -262,9 +259,9 @@ def test_failed_edit_supplier_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Supplier updated" not in response.text
+            assert str(Message.Supplier.Updated()) not in response.text
             assert orig_name in response.text
-            assert f"The supplier {new_name} allready exists" in response.text
+            assert str(Message.Supplier.Name.Exists(new_name)) in response.text
         db_session.refresh(sup)
         assert sup.name != new_name
 
@@ -295,9 +292,9 @@ def test_failed_edit_supplier_in_use(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Supplier updated" not in response.text
+            assert str(Message.Supplier.Updated()) not in response.text
             assert sup.name in response.text
-            assert "Not in use supplier can't have products attached" \
+            assert str(Message.Supplier.Products.Retired()) \
                 in unescape(response.text)
         db_session.refresh(sup)
         assert sup.in_use
@@ -349,7 +346,7 @@ def test_delete_supplier(client: FlaskClient, admin_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"Supplier '{sup.name}' has been deleted" \
+        assert str(Message.Supplier.Deleted(sup.name)) \
             in unescape(response.text)
     with dbSession() as db_session:
         assert not db_session.get(Supplier, sup.id)
@@ -384,8 +381,7 @@ def test_failed_delete_category(
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "Can't delete supplier! There are still products attached!" \
-            in unescape(response.text)
+        assert str(Message.Supplier.NoDelete()) in unescape(response.text)
     with dbSession() as db_session:
         assert db_session.get(Supplier, sup.id)
 # endregion
@@ -472,8 +468,8 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=new_sup.name)
-            assert "Supplier responsible updated" in response.text
-            assert "You have to select a new responsible first" \
+            assert str(Message.Supplier.Responsible.Updated()) in response.text
+            assert str(Message.Supplier.Responsible.Invalid()) \
                 not in response.text
         # check and teardown
         for product in products:
@@ -513,8 +509,9 @@ def test_failed_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=sup.name)
-            assert "Supplier responsible updated" not in response.text
-            assert "You have to select a new responsible first" in response.text
+            assert str(Message.Supplier.Responsible.Updated()) \
+                not in response.text
+            assert str(Message.Supplier.Responsible.Invalid()) in response.text
 
 
 def test_failed_reassign_supplier_bad_choice(
@@ -544,7 +541,8 @@ def test_failed_reassign_supplier_bad_choice(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "Supplier responsible updated" not in response.text
+            assert str(Message.Supplier.Responsible.Updated()) \
+                not in response.text
             assert "Not a valid choice." in response.text
 
 

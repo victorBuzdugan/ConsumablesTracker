@@ -30,7 +30,7 @@ def test_categories_page_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
 
 
 def test_categories_page_admin_logged_in(
@@ -42,7 +42,7 @@ def test_categories_page_admin_logged_in(
         response = client.get(url_for("cat.categories"), follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "You have to be an admin..." not in response.text
+        assert str(Message.UI.Auth.AdminReq()) not in response.text
         assert "Categories" in response.text
         assert "Strikethrough categories are no longer in use" \
             in response.text
@@ -137,7 +137,8 @@ def _test_failed_new_category(
         assert response.status_code == 200
         assert "Create category" in response.text
         assert flash_message in unescape(response.text)
-        assert f"Category '{name}' created" not in unescape(response.text)
+        assert str(Message.Category.Created(name)) \
+            not in unescape(response.text)
     if check_db:
         with dbSession() as db_session:
             assert not db_session.scalar(select(Category).filter_by(name=name))
@@ -255,7 +256,7 @@ def _test_failed_edit_category(
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "Category updated" not in response.text
+        assert str(Message.Category.Updated()) not in response.text
         assert category["name"] in response.text
         assert flash_message in unescape(response.text)
     with dbSession() as db_session:
@@ -277,10 +278,9 @@ def test_failed_edit_category_invalid_name(
     """Invalid or no name"""
     new_name = new_name.strip()
     if new_name:
-        flash_message = ("Category name must have at least " +
-                         f"{Constant.Category.Name.min_length} characters")
+        flash_message = str(Message.Category.Name.LenLimit())
     else:
-        flash_message = "Category name is required"
+        flash_message = str(Message.Category.Name.Req())
     _test_failed_edit_category(request=request,
                                category=category,
                                new_name=new_name,
@@ -294,7 +294,7 @@ def test_failed_edit_category_duplicate_name(
         request, category: dict, name: str):
     """Duplicate name"""
     assume(category["name"] != name)
-    flash_message = f"The category {name} allready exists"
+    flash_message = str(Message.Category.Name.Exists(name))
     _test_failed_edit_category(request=request,
                                category=category,
                                new_name=name,
@@ -475,7 +475,7 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
             assert quote(response.request.path) == \
                 url_for("cat.reassign_category", category=cat.name)
             assert "Category responsible updated" in response.text
-            assert "You have to select a new responsible first" \
+            assert str(Message.Category.Responsible.Invalid) \
                 not in response.text
         # check and teardown
         for product in products:
@@ -524,9 +524,10 @@ def test_failed_reassign_category(
                 url_for("cat.reassign_category", category=cat.name),
                 data=data,
                 follow_redirects=True)
-            assert "Category responsible updated" not in response.text
+            assert str(Message.Category.Responsible.Updated()) \
+                not in response.text
             if new_resp_id == 0:
-                assert "You have to select a new responsible first" \
+                assert str(Message.Category.Responsible.Invalid()) \
                     in response.text
             else:
                 assert "Not a valid choice." in response.text

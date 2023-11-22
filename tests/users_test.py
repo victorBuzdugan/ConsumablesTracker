@@ -10,7 +10,6 @@ from sqlalchemy import select
 from werkzeug.security import check_password_hash
 
 from blueprints.sch.sch import cleaning_sch
-from constants import Constant
 from database import User, dbSession
 from messages import Message
 
@@ -38,7 +37,7 @@ def test_approve_registration(
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert str(Message.User.Approved(unreg_user)) in response.text
-        assert "Review the schedules" in response.text
+        assert str(Message.Schedule.Review()) in response.text
         response = client.get(url_for("sch.schedules"))
         assert unreg_user in response.text
         assert f"Schedule '{cleaning_sch.name}' added '{unreg_user}'" \
@@ -86,7 +85,7 @@ def test_failed_approve_registration_user_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "You have to be an admin..." in response.text
+        assert str(Message.UI.Auth.AdminReq()) in response.text
         assert session.get("user_id")
         with dbSession() as db_session:
             assert db_session.get(User, 5).reg_req
@@ -122,9 +121,9 @@ def test_approve_check_inventory(client: FlaskClient, admin_logged_in: User):
 
 
 @pytest.mark.parametrize(("user_id", "username", "flash_message"), (
-    ("6", "user6", "'Retired' user can't check inventory"),
-    ("5", "user5", "User with pending registration can't check inventory"),
-    ("7", "user7", "User without products attached can't check inventory"),
+    ("6", "user6", str(Message.User.DoneInv.Retired())),
+    ("5", "user5", str(Message.User.DoneInv.PendReg())),
+    ("7", "user7", str(Message.User.DoneInv.NoProd())),
     # id 7 because id 8 doesn't exist
     ("7", "user8", str(Message.User.NotExists("user8"))),
 ))
@@ -167,7 +166,7 @@ def test_failed_approve_check_inventory_user_logged_in(
             assert response.history[0].status_code == 302
             assert response.status_code == 200
             assert response.request.path == url_for("auth.login")
-            assert "You have to be an admin..." in response.text
+            assert str(Message.UI.Auth.AdminReq()) in response.text
             assert session.get("user_id")
         db_session.refresh(user)
         assert user.done_inv
@@ -243,7 +242,7 @@ def test_new_user(
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert f"User '{name}' created" in unescape(response.text)
-        assert "Review the schedules" in response.text
+        assert str(Message.Schedule.Review()) in response.text
         response = client.get(url_for("sch.schedules"))
         assert name in response.text
         assert f"Schedule '{cleaning_sch.name}' added '{name}'" \
@@ -272,44 +271,37 @@ def test_new_user(
         ("", "Q!111111", "", "1",
          str(Message.User.Name.Req())),
         ("us", "Q!111111", "", "1",
-         f"Username must be between {Constant.User.Name.min_length} and " +
-         f"{Constant.User.Name.max_length} characters!"),
+         str(Message.User.Name.LenLimit())),
         ("useruseruseruser", "Q!111111", "", "1",
-         f"Username must be between {Constant.User.Name.min_length} and " +
-         f"{Constant.User.Name.max_length} characters!"),
+         str(Message.User.Name.LenLimit())),
         ("new_user", "", "", "1",
          str(Message.User.Password.Req())),
         ("new_user", "Q!1", "", "1",
-         ("Password should have at least " +
-          f"{Constant.User.Password.min_length} characters!")),
+         str(Message.User.Password.LenLimit())),
         ("new_user", "aaaaaaaa", "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("new_user", "#1aaaaaa", "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("new_user", "#Aaaaaaa", "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("new_user", "1Aaaaaaa", "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("user1", "Q!111111", "", "1",
          str(Message.User.Name.Exists("user1"))),
         ("Admin", "Q!111111", "", "1",
          str(Message.User.Name.Exists("Admin"))),
         ("new_user", "Q!111111", "1", "plainaddress",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "1", "#@%^%#$@#$@#.com",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "1", "@example.com",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "1", "Joe Smith <email@example.com>",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "1", "email@example@example.com",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "1", "email@-example.com",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("new_user", "Q!111111", "3", "email@example.com",
          "Invalid Choice: could not coerce"),
         ("new_user", "Q!111111", "", "email@example.com",
@@ -340,7 +332,7 @@ def test_failed_new_user(
         assert response.status_code == 200
         assert "Create user" in response.text
         assert flash_message in unescape(response.text)
-        assert f"User '{name}' created" not in unescape(response.text)
+        assert str(Message.User.Created(name)) not in unescape(response.text)
     if name not in {"user1", "Admin"}:
         with dbSession() as db_session:
             assert not db_session.scalar(select(User).filter_by(name=name))
@@ -590,52 +582,45 @@ def test_edit_user(
          str(Message.User.Name.Req())),
         ("3", "us", "", "", "",
          "", "1",
-         f"Username must be between {Constant.User.Name.min_length} and " +
-         f"{Constant.User.Name.max_length} characters!"),
+         str(Message.User.Name.LenLimit())),
         ("2", "useruseruseruser", "", "", "on",
          "", "1",
-         f"Username must be between {Constant.User.Name.min_length} and " +
-         f"{Constant.User.Name.max_length} characters!"),
+         str(Message.User.Name.LenLimit())),
         ("2", "new_user", "Q!1", "", "on",
          "", "1",
-         ("Password should have at least " +
-          f"{Constant.User.Password.min_length} characters!")),
+         str(Message.User.Password.LenLimit())),
         # password
         ("3", "new_user", "aaaaaaaa", "", "",
          "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("4", "new_user", "#1aaaaaa", "", "",
          "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("3", "new_user", "#Aaaaaaa", "", "",
          "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         ("1", "new_user", "1Aaaaaaa", "", "on",
          "", "1",
-         "Password must have 1 big letter, 1 number, 1 special char (" +
-         f"{Constant.User.Password.symbols})!"),
+         str(Message.User.Password.Rules())),
         # email
         ("1", "new_user", "Q!111112", "", "on",
          "plainaddress", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("2", "new_user", "Q!111112", "", "on",
          "#@%^%#$@#$@#.com", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("3", "new_user", "Q!111112", "", "",
          "@example.com", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("4", "new_user", "Q!111112", "", "",
          "Joe Smith <email@example.com>", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("1", "new_user", "Q!111112", "", "on",
          "email@example@example.com", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         ("3", "new_user", "Q!111112", "", "",
          "email@-example.com", "1",
-         "Invalid email adress"),
+         str(Message.User.Email.Invalid())),
         # sat_group
         ("2", "new_user", "Q!111112", "", "on",
          "email@-example.com", "",
@@ -689,7 +674,7 @@ def test_failed_edit_user_form_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "User updated" not in response.text
+            assert str(Message.User.Updated()) not in response.text
             assert orig_name in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(user)
@@ -738,7 +723,7 @@ def test_failed_edit_user_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "User updated" not in response.text
+            assert str(Message.User.Updated()) not in response.text
             assert orig_name in response.text
             assert str(Message.User.Name.Exists(new_name)) in response.text
         db_session.refresh(user)
@@ -749,15 +734,15 @@ def test_failed_edit_user_name_duplicate(
     ("user_id", "new_check_inv", "new_admin", "new_in_use",
      "flash_message"), (
         ("7", "on", "", "on",
-         "User without products attached can't check inventory"),
+         str(Message.User.DoneInv.NoProd())),
         ("6", "on", "", "",
-         "'Retired' user can't check inventory"),
+         str(Message.User.DoneInv.Retired())),
         ("5", "on", "", "on",
-         "User with pending registration can't check inventory"),
+         str(Message.User.DoneInv.PendReg())),
         ("5", "", "on", "on",
-         "User with pending registration can't be admin"),
+         str(Message.User.Admin.PendReg())),
         ("3", "", "", "",
-         "Can't 'retire' a user if he is still responsible for products"),
+         str(Message.User.InUse.StillProd())),
 ))
 def test_failed_edit_user_db_validators(
         client: FlaskClient, admin_logged_in: User,
@@ -798,7 +783,7 @@ def test_failed_edit_user_db_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "User updated" not in response.text
+            assert str(Message.User.Updated()) not in response.text
             assert user.name in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(user)
@@ -877,9 +862,9 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):
                 data=data, follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert "User updated" not in response.text
+            assert str(Message.User.Updated()) not in response.text
             assert admin_logged_in.name in response.text
-            assert "You are the last admin!" in response.text
+            assert str(Message.User.Admin.LastAdmin()) in response.text
         db_session.refresh(user)
         assert user.admin
         db_session.get(User, 2).admin = True
@@ -920,7 +905,7 @@ def test_edit_user_change_admin_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "User updated" in response.text
+        assert str(Message.User.Updated()) in response.text
         assert new_name in response.text
         assert session.get("user_name") == new_name
         data = {
@@ -944,7 +929,7 @@ def test_edit_user_change_admin_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "User updated" in response.text
+        assert str(Message.User.Updated()) in response.text
         assert old_name in response.text
         assert session.get("user_name") == old_name
 
@@ -982,7 +967,7 @@ def test_edit_user_change_admin_logged_in_admin_status(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "User updated" in response.text
+        assert str(Message.User.Updated()) in response.text
         assert username in response.text
         assert "Admin dashboard" not in response.text
         assert not session.get("admin")
@@ -1063,8 +1048,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "Schedule updated" in response.text
-        assert "User updated" not in response.text
+        assert str(Message.Schedule.Updated()) in response.text
+        assert str(Message.User.Updated()) not in response.text
         assert cleaning_sch.current_order() == [2, 3, 1, 4, 7]
 
         assert session["admin"]
@@ -1093,8 +1078,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "Schedule updated" in response.text
-        assert "User updated" not in response.text
+        assert str(Message.Schedule.Updated()) in response.text
+        assert str(Message.User.Updated()) not in response.text
         assert cleaning_sch.current_order() == [2, 3, 1, 7, 4]
 
         assert session["admin"]
@@ -1123,8 +1108,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert "Schedule updated" in response.text
-        assert "User updated" not in response.text
+        assert str(Message.Schedule.Updated()) in response.text
+        assert str(Message.User.Updated()) not in response.text
         assert cleaning_sch.current_order() == [7, 2, 3, 1, 4]
         # teardown
         cleaning_sch.unregister()
@@ -1170,8 +1155,8 @@ def test_failed_edit_user_clean_order(
             url_for("users.edit_user", username=user.name),
             data=data,
             follow_redirects=True)
-        assert "Schedule updated" not in response.text
-        assert "User updated" not in response.text
+        assert str(Message.Schedule.Updated()) not in response.text
+        assert str(Message.User.Updated()) not in response.text
         assert flash_err in unescape(response.text)
         assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 # endregion
@@ -1209,8 +1194,7 @@ def test_delete_user(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sch.schedules")
-        assert f"User '{user.name}' has been deleted" \
-            in unescape(response.text)
+        assert f"User '{user.name}' has been deleted" in unescape(response.text)
         response = client.get(url_for("sch.schedules"))
         assert user.name not in response.text
         assert (f"Schedule '{cleaning_sch.name}' removed user with id " +

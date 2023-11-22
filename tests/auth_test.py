@@ -64,8 +64,7 @@ def _test_failed_registration(
         response = client.post("/auth/register", data=data)
     assert response.status_code == 200
     assert flash_message in unescape(response.text)
-    assert "Registration request sent. Please contact an admin." \
-            not in response.text
+    assert str(Message.User.Registered()) not in response.text
 
 
 @settings(max_examples=5)
@@ -77,9 +76,7 @@ def test_failed_registration_short_name(client: FlaskClient, name):
     if not name:
         flash_message = str(Message.User.Name.Req())
     else:
-        flash_message = ("Username must be between " +
-                         f"{Constant.User.Name.min_length} and " +
-                         f"{Constant.User.Name.max_length} characters!")
+        flash_message = str(Message.User.Name.LenLimit())
     _test_failed_registration(client=client,
                               name=name,
                               flash_message=flash_message)
@@ -90,9 +87,7 @@ def test_failed_registration_short_name(client: FlaskClient, name):
 @example(name=InvalidUser.long_name)
 def test_failed_registration_long_name(client: FlaskClient, name):
     """test_failed_registration_long_name"""
-    flash_message = ("Username must be between " +
-                     f"{Constant.User.Name.min_length} and " +
-                     f"{Constant.User.Name.max_length} characters!")
+    flash_message = str(Message.User.Name.LenLimit())
     _test_failed_registration(client=client,
                               name=name,
                               flash_message=flash_message)
@@ -108,8 +103,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
     if not password:
         flash_message = str(Message.User.Password.Req())
     else:
-        flash_message = ("Password should have at least " +
-                         f"{Constant.User.Password.min_length} characters!")
+        flash_message = str(Message.User.Password.LenLimit())
     _test_failed_registration(client=client,
                               password=password,
                               flash_message=flash_message)
@@ -124,8 +118,7 @@ def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
     if not confirm:
         flash_message = str(Message.User.Password.Req())
     else:
-        flash_message = ("Password should have at least " +
-                         f"{Constant.User.Password.min_length} characters!")
+        flash_message = str(Message.User.Password.LenLimit())
     _test_failed_registration(client=client,
                               confirm=confirm,
                               flash_message=flash_message)
@@ -192,7 +185,7 @@ def test_failed_registration_no_big_letter_in_password(
 def test_failed_registration_existing_username(
         client: FlaskClient, name):
     """test_failed_registration_existing_username"""
-    flash_message = f"The user {name} allready exists"
+    flash_message = str(Message.User.Name.Exists(name))
     _test_failed_registration(client=client,
                               name=name,
                               flash_message=flash_message)
@@ -328,9 +321,9 @@ def test_login_landing_page(client: FlaskClient, caplog: LogCaptureFixture):
         assert session["language"] == "ro"
         assert "Language changed to 'ro'" in caplog.messages
         caplog.clear()
-        assert 'Language changed' not in response.text
-        assert 'Username' not in response.text
-        assert 'Password' not in response.text
+        assert "Language changed" not in response.text
+        assert "Username" not in response.text
+        assert "Password" not in response.text
         assert "Limba a fost schimbată" in response.text
         assert "Nume" in response.text
         assert "Parolă" in response.text
@@ -344,7 +337,7 @@ def test_login_landing_page(client: FlaskClient, caplog: LogCaptureFixture):
         assert session["language"] == "en"
         assert "Language changed to 'en'" in caplog.messages
         caplog.clear()
-        assert "Language changed" in response.text
+        assert str(Message.UI.Basic.LangChd()) in response.text
         assert "Username" in response.text
         assert "Password" in response.text
         assert "Limba a fost schimbată" not in response.text
@@ -401,7 +394,7 @@ def test_failed_login_username(client: FlaskClient, name):
     if not name:
         flash_message = str(Message.User.Name.Req())
     else:
-        flash_message = "Wrong username or password!"
+        flash_message = str(Message.UI.Auth.Wrong())
     _test_failed_login(client=client,
                        name=name,
                        password=ValidUser.password,
@@ -421,7 +414,7 @@ def test_failed_login_password(client: FlaskClient):
             flash_message = str(Message.User.RegPending(user["name"]))
         else:
             password = "bad_password"
-            flash_message = "Wrong username or password!"
+            flash_message = str(Message.UI.Auth.Wrong())
         _test_failed_login(client=client,
                         name=user["name"],
                         password=password,
@@ -507,7 +500,7 @@ def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
         assert 'type="submit" value="Log In"' in response.text
-        assert "You have to be logged in..." in response.text
+        assert str(Message.UI.Auth.LoginReq()) in response.text
 
 
 # also tests @login_required
@@ -552,8 +545,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         InvalidUser.short_password,
         ValidUser.password,
         ValidUser.password,
-        ("Password should have at least " +
-         f"{Constant.User.Password.min_length} characters!"),
+        str(Message.User.Password.LenLimit()),
         id="Short old password"),
     pytest.param(
         ValidUser.password,
@@ -565,8 +557,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         InvalidUser.short_password,
         ValidUser.password,
-        ("Password should have at least " +
-         f"{Constant.User.Password.min_length} characters!"),
+        str(Message.User.Password.LenLimit()),
         id="Short new password"),
     pytest.param(
         ValidUser.password,
@@ -602,8 +593,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         ValidUser.password,
         InvalidUser.short_password,
-        ("Password should have at least " +
-         f"{Constant.User.Password.min_length} characters!"),
+        str(Message.User.Password.LenLimit()),
         id="Short confirmation password"),
     pytest.param(
         ValidUser.password,
@@ -615,7 +605,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         ValidUser.password,
         ValidUser.password,
-        "Wrong old password!",
+        str(Message.User.Password.WrongOld()),
         id="Wrong old password"),
     ]
 )
@@ -660,7 +650,7 @@ def test_change_password(client: FlaskClient, user_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "Password changed." in response.text
+        assert str(Message.User.Password.Changed()) in response.text
 
     with dbSession() as db_session:
         user_logged_in = db_session.get(User, user_logged_in.id)
