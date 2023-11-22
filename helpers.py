@@ -8,9 +8,9 @@ from os import path
 from zoneinfo import ZoneInfo
 
 from flask import flash, redirect, session, url_for
-from flask_babel import gettext
 
 from constants import Constant
+from messages import Message
 
 # region: logging configuration
 log_formatter = logging.Formatter(
@@ -57,7 +57,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("user_id") is None:
-            flash(gettext("You have to be logged in..."), "warning")
+            flash(**Message.UI.Auth.LoginReq.flash())
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function
@@ -67,7 +67,7 @@ def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if (session.get("user_id") is None) or (not session.get("admin")):
-            flash(gettext("You have to be an admin..."), "warning")
+            flash(**Message.UI.Auth.AdminReq.flash())
             return redirect(url_for("auth.login"))
         return f(*args, **kwargs)
     return decorated_function

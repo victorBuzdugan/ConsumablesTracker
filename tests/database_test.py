@@ -11,6 +11,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from blueprints.sch import clean_sch_info, sat_sch_info
 from database import Category, Product, Schedule, Supplier, User, dbSession
+from messages import Message
 
 func: Callable
 
@@ -88,14 +89,14 @@ def test_change_password():
 
 @pytest.mark.parametrize(("name", "password", "sat_group", "error_msg"), (
     # name
-    ("", "password", 1, "The user must have a name"),
-    (" ", "password", 1, "The user must have a name"),
-    (None, "password", 1, "The user must have a name"),
+    ("", "password", 1, str(Message.User.Name.Req())),
+    (" ", "password", 1, str(Message.User.Name.Req())),
+    (None, "password", 1, str(Message.User.Name.Req())),
     ("Admin", "password", 1, "The user Admin allready exists"),
     ("user1", "password", 1, "The user user1 allready exists"),
     # password
-    ("test_user", "", 1, "User must have a password"),
-    ("test_user", None, 1, "User must have a password"),
+    ("test_user", "", 1, str(Message.User.Password.Req())),
+    ("test_user", None, 1, str(Message.User.Password.Req())),
     # sat group
     ("test_user", "password", "", "Invalid sat_group"),
     ("test_user", "password", "a", "Invalid sat_group"),
@@ -521,9 +522,9 @@ def test_change_category_name():
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
-    ("", "The category must have a name"),
-    (" ", "The category must have a name"),
-    (None, "The category must have a name"),
+    ("", str(Message.Category.Name.Req())),
+    (" ", str(Message.Category.Name.Req())),
+    (None, str(Message.Category.Name.Req())),
     ("Household", "The category (.)* allready exists"),
     ("Groceries", "The category (.)* allready exists"),
 ))
@@ -831,7 +832,7 @@ def test_change_product_name():
 @pytest.mark.parametrize(
     ("name", "description", "user", "category", "supplier",
     "meas_unit", "min_stock", "ord_qty", "error_msg"), (
-        # name
+        # # name
         ("", "description", 1, 1, 1, "measunit", 1, 2,
             "The product must have a name"),
         (" ", "description", 1, 1, 1, "measunit", 1, 2,
@@ -839,17 +840,17 @@ def test_change_product_name():
         (None, "description", 1, 1, 1, "measunit", 1, 2,
             "The product must have a name"),
         ("Toilet paper", "description", 1, 1, 1, "measunit", 1, 2,
-            "The product (.)* allready exists"),
+            str(Message.Product.Name.Exists("Toilet paper"))),
         ("   Toilet paper   ", "description", 1, 1, 1, "measunit", 1, 2,
-            "The product (.)* allready exists"),
-        # description
+            str(Message.Product.Name.Exists("Toilet paper"))),
+        # # description
         ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2,
             "Product must have a description"),
         ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2,
             "Product must have a description"),
         ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2,
             "Product must have a description"),
-        # responsible
+        # # responsible
         ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
             "User does not exist"),
         ("__test__producttt__", "description", None, 1, 1, "measunit", 1, 2,
@@ -862,14 +863,14 @@ def test_change_product_name():
             "User does not exist"),
         # category
         ("__test__producttt__", "description", 1, "", 1, "measunit", 1, 2,
-            "Category does not exist"),
+            str(Message.Category.NotExists(""))),
         ("__test__producttt__", "description", 1, None, 1, "measunit", 1, 2,
-            "Category does not exist"),
+            str(Message.Category.NotExists(""))),
         ("__test__producttt__", "description", 1, 8, 1, "measunit", 1, 2,
             "Not in use category can't have products attached"),
         ("__test__producttt__", "description", 1, 9, 1, "measunit", 1, 2,
-            "Category does not exist"),
-        # supplier
+            str(Message.Category.NotExists(""))),
+        # # supplier
         ("__test__producttt__", "description", 1, 1, "", "measunit", 1, 2,
             "Supplier does not exist"),
         ("__test__producttt__", "description", 1, 1, None, "measunit", 1, 2,
@@ -878,14 +879,14 @@ def test_change_product_name():
             "Not in use supplier can't have products attached"),
         ("__test__producttt__", "description", 1, 1, 6, "measunit", 1, 2,
             "Supplier does not exist"),
-        # meas unit
+        # # meas unit
         ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
             "Product must have a measuring unit"),
         ("__test__producttt__", "description", 1, 1, 1, " ", 1, 2,
             "Product must have a measuring unit"),
         ("__test__producttt__", "description", 1, 1, 1, None, 1, 2,
             "Product must have a measuring unit"),
-        # min stock
+        # # min stock
         ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
             "Minimum stock must be ≥ 0"),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", None, 2,
@@ -894,7 +895,7 @@ def test_change_product_name():
             "Minimum stock must be ≥ 0"),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", -3, 2,
             "Minimum stock must be ≥ 0"),
-        # ord quantity
+        # # ord quantity
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "",
             "Order quantity must be ≥ 1"),
         ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, None,
@@ -1117,6 +1118,7 @@ def test_validate_product_responsible_last_product():
 @pytest.mark.parametrize(
     ("category_id", "err_message"), (
     (8, "Not in use category can't have products attached"),
+    # intentionally string message test
     (9, "Category does not exist")
     ))
 def test_validate_product_category_id(category_id, err_message):

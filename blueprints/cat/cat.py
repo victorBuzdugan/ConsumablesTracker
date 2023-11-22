@@ -3,7 +3,7 @@
 from typing import Callable
 
 from flask import Blueprint, flash, redirect, render_template, session, url_for
-from flask_babel import gettext, lazy_gettext
+from flask_babel import lazy_gettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
@@ -15,6 +15,7 @@ from wtforms.validators import InputRequired, Length
 from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
 from helpers import admin_required, flash_errors, logger
+from messages import Message
 
 func: Callable
 
@@ -36,12 +37,10 @@ class CreateCatForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Name"),
         validators=[
-            InputRequired(gettext("Category name is required")),
+            InputRequired(Message.Category.Name.Req()),
             Length(
                 min=Constant.Category.Name.min_length,
-                message=gettext("Category name must have at least %(m)s " +
-                                "characters",
-                                m=Constant.Category.Name.min_length))],
+                message=Message.Category.Name.LenLimit())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -132,8 +131,7 @@ def new_category():
                 db_session.add(category)
                 db_session.commit()
                 logger.debug("Category '%s' created", category.name)
-                flash(gettext("Category '%(cat_name)s' created",
-                              cat_name=category.name))
+                flash(**Message.Category.Created.flash(category.name))
                 return redirect(url_for(".categories"))
             except ValueError as error:
                 logger.warning("Category creation error")
@@ -158,15 +156,12 @@ def edit_category(category):
                 .filter_by(name=escape(category)))
             if edit_cat_form.delete.data:
                 if cat.all_products:
-                    flash(gettext("Can't delete category! " +
-                          "There are still products attached!"),
-                          "error")
+                    flash(**Message.Category.NoDelete.flash())
                 else:
                     db_session.delete(cat)
                     db_session.commit()
                     logger.debug("Category '%s' has been deleted", cat.name)
-                    flash(gettext("Category '%(cat_name)s' has been deleted",
-                                  cat_name=cat.name))
+                    flash(**Message.Category.Deleted.flash(cat.name))
                     return redirect(session["last_url"])
             elif edit_cat_form.reassign.data:
                 return redirect(url_for(".reassign_category",
@@ -181,7 +176,7 @@ def edit_category(category):
                 else:
                     if db_session.is_modified(cat, include_collections=False):
                         logger.debug("Category updated")
-                        flash(gettext("Category updated"))
+                        flash(**Message.Category.Updated.flash())
                         db_session.commit()
                         return redirect(session["last_url"])
     elif edit_cat_form.errors:
@@ -194,9 +189,8 @@ def edit_category(category):
                 .filter_by(name=escape(category)))):
             edit_cat_form = EditCatForm(obj=cat)
         else:
-            logger.debug("'%s' does not exist!", category)
-            flash(gettext("%(category)s does not exist!",
-                          category=category), "error")
+            logger.debug("Category '%s' does not exist!", category)
+            flash(**Message.Category.NotExists.flash(category))
             return redirect(url_for("cat.categories"))
 
     return render_template("cat/edit_category.html", form=edit_cat_form)
@@ -215,7 +209,7 @@ def reassign_category(category):
             .order_by(func.lower(User.name))
             ).all()
     reassign_cat_form.responsible_id.choices = [
-        (0, gettext("Select a new responsible"))]
+        (0, Message.Category.Responsible.Default())]
     reassign_cat_form.responsible_id.choices.extend(
         [(user.id, user.name) for user in users])
 
@@ -234,10 +228,9 @@ def reassign_category(category):
                                               .responsible_id.data)
                 db_session.commit()
                 logger.debug("Category '%s' responsible updated", cat.name)
-                flash(gettext("Category responsible updated"))
+                flash(**Message.Category.Responsible.Updated.flash())
         else:
-            flash(gettext("You have to select a new responsible first"),
-                  "error")
+            flash(**Message.Category.Responsible.Invalid.flash())
         return redirect(url_for(".reassign_category", category=category))
 
     elif reassign_cat_form.errors:
@@ -262,9 +255,8 @@ def reassign_category(category):
                           func.lower(Product.name))
             ).unique().all()
         else:
-            logger.debug("'%s' does not exist!", category)
-            flash(gettext("%(category)s does not exist!",
-                          category=category), "error")
+            logger.debug("Category '%s' does not exist!", category)
+            flash(**Message.Category.NotExists.flash(category))
             return redirect(url_for(".categories"))
 
     return render_template("cat/reassign_category.html",

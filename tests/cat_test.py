@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from constants import Constant
 from database import Category, Product, User, dbSession
+from messages import Message
 from tests import InvalidCategory, ValidCategory, test_categories, test_users
 
 pytestmark = pytest.mark.cat
@@ -316,18 +317,19 @@ def test_failed_edit_category_with_products_not_in_use(
 def test_failed_edit_category_not_existing_category(
         client: FlaskClient, admin_logged_in: User):
     """test_failed_edit_category_not_existing_category"""
+    cat_name = "not_existing_category"
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(
-            url_for("cat.edit_category", category="not_existing_category"),
+            url_for("cat.edit_category", category=cat_name),
             follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("cat.categories")
-        assert "not_existing_category does not exist!" in response.text
+        assert str(Message.Category.NotExists(cat_name)) in response.text
 # endregion
 
 
@@ -537,16 +539,17 @@ def test_failed_reassign_category(
 def test_failed_reassign_category_bad_name(
         client: FlaskClient, admin_logged_in: User):
     """test_failed_reassign_category_bad_name"""
+    cat_name = "not_existing_category"
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(
-            url_for("cat.reassign_category", category="not_existing_category"),
+            url_for("cat.reassign_category", category=cat_name),
             follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("cat.categories")
-        assert "not_existing_category does not exist!" in response.text
+        assert str(Message.Category.NotExists(cat_name)) in response.text
 # endregion

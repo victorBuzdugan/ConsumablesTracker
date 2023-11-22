@@ -12,12 +12,12 @@ from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
 from wtforms.validators import (Email, InputRequired, Length, NumberRange,
                                 Optional, Regexp)
 
-from blueprints.auth.auth import msg
 from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import cleaning_sch
 from constants import Constant
 from database import User, dbSession
 from helpers import admin_required, flash_errors, logger
+from messages import Message
 
 func: Callable
 
@@ -39,11 +39,11 @@ class CreateUserForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Username"),
         validators=[
-            InputRequired(msg["usr_req"]),
+            InputRequired(Message.User.Name.Req()),
             Length(
                 min=Constant.User.Name.min_length,
                 max=Constant.User.Name.max_length,
-                message=msg["usr_len"])],
+                message=Message.User.Name.LenLimit())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -52,10 +52,10 @@ class CreateUserForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("Password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
+                message=Message.User.Password.LenLimit()),
             Regexp(Constant.User.Password.regex, message=(
                 gettext("Password must have 1 big letter, " +
                 "1 number, 1 special char (%(passw_symb)s)!",
@@ -114,7 +114,7 @@ class EditUserForm(CreateUserForm):
             Optional(),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
+                message=Message.User.Password.LenLimit()),
             Regexp(Constant.User.Password.regex, message=(
                 gettext("Password must have 1 big letter, " +
                 "1 number, 1 special char (%(passw_symb)s)!",

@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Literal
 
 from flask import Flask, flash, redirect, request, session
-from flask_babel import Babel, gettext
+from flask_babel import Babel
 from flask_mail import Mail
 
 from blueprints.auth.auth import auth_bp
@@ -17,6 +17,7 @@ from blueprints.sch.sch import sch_bp
 from blueprints.sup.sup import sup_bp
 from blueprints.users.users import users_bp
 from helpers import logger
+from messages import Message
 
 LANGUAGES = ("ro", "en")
 
@@ -68,7 +69,7 @@ def set_language(language: str = "en"):
         language = "en"
         session["language"] = "en"
     logger.info("Language changed to '%s'", language)
-    flash(gettext("Language changed"))
+    flash(**Message.UI.Basic.LangChd.flash())
     if request.referrer:
         return redirect(request.referrer)
     return redirect("/")

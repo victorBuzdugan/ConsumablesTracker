@@ -12,6 +12,7 @@ from werkzeug.security import check_password_hash
 from blueprints.sch.sch import cleaning_sch
 from constants import Constant
 from database import User, dbSession
+from messages import Message
 
 pytestmark = pytest.mark.users
 
@@ -269,7 +270,7 @@ def test_new_user(
     ("name", "password", "email", "sat_group",
      "flash_message"), (
         ("", "Q!111111", "", "1",
-         "Username is required!"),
+         str(Message.User.Name.Req())),
         ("us", "Q!111111", "", "1",
          f"Username must be between {Constant.User.Name.min_length} and " +
          f"{Constant.User.Name.max_length} characters!"),
@@ -277,7 +278,7 @@ def test_new_user(
          f"Username must be between {Constant.User.Name.min_length} and " +
          f"{Constant.User.Name.max_length} characters!"),
         ("new_user", "", "", "1",
-         "Password is required!"),
+         str(Message.User.Password.Req())),
         ("new_user", "Q!1", "", "1",
          ("Password should have at least " +
           f"{Constant.User.Password.min_length} characters!")),
@@ -294,9 +295,9 @@ def test_new_user(
          "Password must have 1 big letter, 1 number, 1 special char (" +
          f"{Constant.User.Password.symbols})!"),
         ("user1", "Q!111111", "", "1",
-         "The user user1 allready exists"),
+         str(Message.User.Name.Exists("user1"))),
         ("Admin", "Q!111111", "", "1",
-         "The user Admin allready exists"),
+         str(Message.User.Name.Exists("Admin"))),
         ("new_user", "Q!111111", "1", "plainaddress",
          "Invalid email adress"),
         ("new_user", "Q!111111", "1", "#@%^%#$@#$@#.com",
@@ -586,7 +587,7 @@ def test_edit_user(
         # name
         ("4", "", "", "", "",
          "", "1",
-         "Username is required!"),
+         str(Message.User.Name.Req())),
         ("3", "us", "", "", "",
          "", "1",
          f"Username must be between {Constant.User.Name.min_length} and " +
@@ -739,7 +740,7 @@ def test_failed_edit_user_name_duplicate(
             assert response.status_code == 200
             assert "User updated" not in response.text
             assert orig_name in response.text
-            assert f"The user {new_name} allready exists" in response.text
+            assert str(Message.User.Name.Exists(new_name)) in response.text
         db_session.refresh(user)
         assert user.name != new_name
 
@@ -1257,7 +1258,7 @@ def test_delete_user_admin_log_out(
         assert response.request.path == url_for("auth.login")
         assert (f"Schedule '{cleaning_sch.name}' removed user with id " +
                 f"'{user.id}'") in caplog.messages
-        assert "Succesfully logged out..." in response.text
+        assert str(Message.User.Logout()) in response.text
 
 
 @pytest.mark.parametrize(("user_id", ), (

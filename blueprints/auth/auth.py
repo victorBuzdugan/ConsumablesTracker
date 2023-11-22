@@ -2,7 +2,7 @@
 
 from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
-from flask_babel import gettext, lazy_gettext
+from flask_babel import lazy_gettext
 from flask_wtf import FlaskForm
 from sqlalchemy import select
 from werkzeug.security import check_password_hash
@@ -13,19 +13,7 @@ from wtforms.validators import (Email, EqualTo, InputRequired, Length,
 from constants import Constant
 from database import User, dbSession
 from helpers import flash_errors, logger, login_required
-
-msg = {
-    "usr_req": lazy_gettext("Username is required!"),
-    "usr_len": lazy_gettext(
-        "Username must be between %(m)i and %(M)i characters!",
-        m=Constant.User.Name.min_length, M=Constant.User.Name.max_length),
-    "psw_req": lazy_gettext("Password is required!"),
-    "psw_len": lazy_gettext(
-        "Password should have at least %(pmin)i characters!",
-        pmin=Constant.User.Password.min_length),
-    "psw_rules": lazy_gettext("Check password rules!"),
-    "psw_eq": lazy_gettext("Passwords don't match!"),
-}
+from messages import Message
 
 auth_bp = Blueprint("auth",
                     __name__,
@@ -38,14 +26,14 @@ class LoginForm(FlaskForm):
     """Login form."""
     name = StringField(
         label=lazy_gettext("Username"),
-        validators=[InputRequired(msg["usr_req"])],
+        validators=[InputRequired(Message.User.Name.Req())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
             })
     password = PasswordField(
         label=lazy_gettext("Password"),
-        validators=[InputRequired(msg["psw_req"])],
+        validators=[InputRequired(Message.User.Password.Req())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -62,11 +50,11 @@ class RegisterForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Username"),
         validators=[
-            InputRequired(msg["usr_req"]),
+            InputRequired(Message.User.Name.Req()),
             Length(
                 min=Constant.User.Name.min_length,
                 max=Constant.User.Name.max_length,
-                message=msg["usr_len"])],
+                message=Message.User.Name.LenLimit())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
@@ -75,13 +63,13 @@ class RegisterForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("Password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
+                message=Message.User.Password.LenLimit()),
             Regexp(
                 Constant.User.Password.regex,
-                message=msg["psw_rules"])],
+                message=Message.User.Password.Rules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -90,11 +78,11 @@ class RegisterForm(FlaskForm):
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
-            EqualTo("password", msg["psw_eq"])],
+                message=Message.User.Password.LenLimit()),
+            EqualTo("password", Message.User.Password.NotMatching())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Retype password"),
@@ -105,7 +93,7 @@ class RegisterForm(FlaskForm):
         default=None,
         validators=[
             Optional(),
-            Email(gettext("Invalid email adress"))],
+            Email(Message.User.Email.Invalid())],
         render_kw={
             "class": "form-control",
             "placeholder": "Email",
@@ -123,10 +111,10 @@ class ChgPasswForm(FlaskForm):
     old_password = PasswordField(
         label=lazy_gettext("Old password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"])],
+                message=Message.User.Password.LenLimit())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Old password"),
@@ -135,13 +123,13 @@ class ChgPasswForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("New password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
+                message=Message.User.Password.LenLimit()),
             Regexp(
                 Constant.User.Password.regex,
-                message=msg["psw_rules"])],
+                message=Message.User.Password.Rules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("New password"),
@@ -150,11 +138,11 @@ class ChgPasswForm(FlaskForm):
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
         validators=[
-            InputRequired(msg["psw_req"]),
+            InputRequired(Message.User.Password.Req()),
             Length(
                 min=Constant.User.Password.min_length,
-                message=msg["psw_len"]),
-            EqualTo("password", msg["psw_eq"])],
+                message=Message.User.Password.LenLimit()),
+            EqualTo("password", Message.User.Password.NotMatching())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Retype password"),
@@ -195,17 +183,16 @@ def login():
                     session["user_name"] = user.name
                     if language:
                         session["language"] = language
-                    flash(gettext("Welcome %(username)s", username=user.name))
+                    flash(**Message.User.Login.flash(user.name))
                     return redirect(url_for("main.index"))
                 else:
-                    flash(gettext("Your registration is pending. " +
-                                  "Contact an admin."), "warning")
+                    flash(**Message.User.RegPending.flash())
             else:
-                flash(gettext("This user is not in use anymore!"), "warning")
+                flash(**Message.User.Retired.flash())
         else:
             logger.warning("Bad login credentials for user '%s'",
                            login_form.name.data)
-            flash(gettext("Wrong username or password!"), "warning")
+            flash(**Message.UI.Auth.Wrong.flash())
     elif login_form.errors:
         flash_errors(login_form.errors)
 
@@ -222,7 +209,7 @@ def logout():
     """Logout and clear session."""
     logger.info("Logging out")
     clear_session()
-    flash(gettext("Succesfully logged out..."))
+    flash(**Message.User.Logout.flash())
     return redirect(url_for(".login"))
 
 
@@ -232,8 +219,8 @@ def register():
     logger.info("Register page")
     # if user is logged in
     if session.get("user_id"):
-        session.clear()
-        flash(gettext("You have been logged out..."), "info")
+        clear_session()
+        flash(**Message.User.Logout.flash())
 
     reg_form: RegisterForm = RegisterForm()
 
@@ -247,8 +234,7 @@ def register():
                 db_session.add(user)
                 db_session.commit()
                 logger.debug("Registration requested")
-                flash(gettext("Registration request sent. " +
-                              "Please contact an admin."))
+                flash(**Message.User.Registered.flash())
                 return redirect(url_for(".login"))
             except ValueError as error:
                 flash(str(error), "error")
@@ -277,11 +263,11 @@ def change_password():
                 db_session.commit()
                 clear_session()
                 logger.debug("Password changed")
-                flash(gettext("Password changed."))
+                flash(**Message.User.Password.Changed.flash())
                 return redirect(url_for(".login"))
             else:
                 logger.warning("Wrong old password")
-                flash(gettext("Wrong old password!"), "error")
+                flash(**Message.User.Password.WrongOld.flash())
     elif chg_pass_form.errors:
         logger.warning("Change password error(s)")
         flash_errors(chg_pass_form.errors)
