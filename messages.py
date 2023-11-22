@@ -39,7 +39,6 @@ class Msg:
         return self.message(*args, **kwargs)
 
 
-
 class Message:
     """Unified messages"""
     class User:
@@ -103,17 +102,17 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Passwords don't match")
             )
-            Changed = Msg(
-                tested=False,
-                category=Color.GREEN.value,
-                message=lambda : lazy_gettext(
-                    "Password changed.")
-            )
             WrongOld = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
                     "Wrong old password!")
+            )
+            Changed = Msg(
+                tested=False,
+                category=Color.GREEN.value,
+                message=lambda : lazy_gettext(
+                    "Password changed.")
             )
         class Products:
             """User products attr messages"""
@@ -274,6 +273,12 @@ class Message:
             message=lambda name: lazy_gettext(
                 "Welcome %(name)s", name=name)
         )
+        Logout = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                "You have been logged out...")
+        )
         RegPending = Msg(
             tested=False,
             category=Color.YELLOW.value,
@@ -288,12 +293,6 @@ class Message:
                 "User %(name)s is not in use anymore",
                 name=name),
         )
-        Logout = Msg(
-            tested=False,
-            category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                "You have been logged out...")
-        )
         Registered = Msg(
             tested=False,
             category=Color.GREEN.value,
@@ -307,13 +306,6 @@ class Message:
                 "User %(name)s has been approved",
                 name=name),
         )
-        Created = Msg(
-            tested=False,
-            category=Color.GREEN.value,
-            message=lambda name: lazy_gettext(
-                "User '%(name)s' created",
-                name=name)
-        )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
@@ -325,6 +317,13 @@ class Message:
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
                 "User '%(name)s' has been deleted",
+                name=name)
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "User '%(name)s' created",
                 name=name)
         )
         Updated = Msg(
@@ -343,18 +342,18 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Category name is required")
             )
-            Exists = Msg(
-                tested=False,
-                category=Color.RED.value,
-                message=lambda name: lazy_gettext(
-                    "The category %(name)s allready exists", name=name)
-            )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
                     "Category name must have at least %(min)s characters",
                     min=Constant.Category.Name.min_length),
+            )
+            Exists = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda name: lazy_gettext(
+                    "The category %(name)s allready exists", name=name)
             )
         class Products:
             """Category products attr messages"""
@@ -394,13 +393,6 @@ class Message:
                  name=name) if name else lazy_gettext(
                  "Category does not exist")
         )
-        Created = Msg(
-            tested=False,
-            category=Color.GREEN.value,
-            message=lambda name: lazy_gettext(
-                "Category '%(name)s' created",
-                name=name)
-        )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
@@ -412,6 +404,13 @@ class Message:
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
                 "Category '%(name)s' has been deleted",
+                name=name)
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Category '%(name)s' created",
                 name=name)
         )
         Updated = Msg(
@@ -430,18 +429,18 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Supplier name is required")
             )
-            Exists = Msg(
-                tested=False,
-                category=Color.RED.value,
-                message=lambda name: lazy_gettext(
-                    "The supplier %(name)s allready exists", name=name)
-            )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
                     "Supplier name must have at least %(min)s characters",
                     min=Constant.Supplier.Name.min_length),
+            )
+            Exists = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda name: lazy_gettext(
+                    "The supplier %(name)s allready exists", name=name)
             )
         class Products:
             """Supplier products attr messages"""
@@ -481,13 +480,6 @@ class Message:
                  name=name) if name else lazy_gettext(
                  "Supplier does not exist")
         )
-        Created = Msg(
-            tested=False,
-            category=Color.GREEN.value,
-            message=lambda name: lazy_gettext(
-                "Supplier '%(name)s' created",
-                name=name)
-        )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
@@ -499,6 +491,13 @@ class Message:
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
                 "Supplier '%(name)s' has been deleted",
+                name=name)
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Supplier '%(name)s' created",
                 name=name)
         )
         Updated = Msg(
@@ -517,12 +516,6 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Product name is required")
             )
-            Exists = Msg(
-                tested=False,
-                category=Color.RED.value,
-                message=lambda name: lazy_gettext(
-                    "The product %(name)s allready exists", name=name)
-            )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
@@ -531,6 +524,12 @@ class Message:
                     "characters",
                     min=Constant.Product.Name.min_length,
                     max=Constant.Product.Name.max_length)
+            )
+            Exists = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda name: lazy_gettext(
+                    "The product %(name)s allready exists", name=name)
             )
         class Description:
             """Product description messages"""
@@ -634,13 +633,6 @@ class Message:
                  "Product %(name)s does not exist",
                  name=name)
         )
-        Created = Msg(
-            tested=False,
-            category=Color.GREEN.value,
-            message=lambda name: lazy_gettext(
-                "Product '%(name)s' created",
-                name=name)
-        )
         Deleted = Msg(
             tested=False,
             category=Color.GREEN.value,
@@ -648,11 +640,31 @@ class Message:
                 "Product '%(name)s' has been deleted",
                 name=name)
         )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Product '%(name)s' created",
+                name=name)
+        )
         Updated = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
                  "Product updated")
+        )
+        NoSort = Msg(
+            tested=False,
+            category=Color.YELLOW.value,
+            message=lambda attribute: lazy_gettext(
+                "Cannot sort products by %(attribute)s",
+                attribute=attribute)
+        )
+        NoOrder = Msg(
+            tested=False,
+            category=Color.YELLOW.value,
+            message=lambda : lazy_gettext(
+                "There are no products that need to be ordered")
         )
         Ordered = Msg(
             description="Could be one or more products",
@@ -667,21 +679,14 @@ class Message:
             message=lambda : lazy_gettext(
                  "All products ordered")
         )
-        NoOrder = Msg(
-            tested=False,
-            category=Color.YELLOW.value,
-            message=lambda : lazy_gettext(
-                "There are no products that need to be ordered")
-        )
-        NoSort = Msg(
-            tested=False,
-            category=Color.YELLOW.value,
-            message=lambda attribute: lazy_gettext(
-                "Cannot sort products by %(attribute)s",
-                attribute=attribute)
-        )
     class Schedule:
         """Schedule messages"""
+        InvalidChoice = Msg(
+            tested=False,
+            category=Color.RED.value,
+            message=lambda : lazy_gettext(
+                "Not a valid choice")
+        )
         Review = Msg(
             tested=False,
             category=Color.YELLOW.value,
@@ -693,12 +698,6 @@ class Message:
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
                 "Schedule updated")
-        )
-        InvalidChoice = Msg(
-            tested=False,
-            category=Color.RED.value,
-            message=lambda : lazy_gettext(
-                "Not a valid choice")
         )
     class UI:
         """Interface messages"""
@@ -744,5 +743,3 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Inventory check not required")
             )
-
-pass
