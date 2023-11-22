@@ -667,9 +667,9 @@ def test_change_supplier_name():
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
-    ("", "The supplier must have a name"),
-    (" ", "The supplier must have a name"),
-    (None, "The supplier must have a name"),
+    ("", str(Message.Supplier.Name.Req())),
+    (" ", str(Message.Supplier.Name.Req())),
+    (None, str(Message.Supplier.Name.Req())),
     ("Amazon", "The supplier (.)* allready exists"),
     ("Carrefour", "The supplier (.)* allready exists"),
 ))

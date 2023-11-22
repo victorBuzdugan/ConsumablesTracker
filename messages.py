@@ -379,13 +379,20 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "The supplier must have a name")
+                    "Supplier name is required")
             )
             Exists = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda name: lazy_gettext(
                     "The supplier %(name)s allready exists", name=name)
+            )
+            LenLimit = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Supplier name must have at least %(min)s characters",
+                    min=Constant.Supplier.Name.min_length),
             )
         class Products:
             """Supplier products attr messages"""
@@ -395,6 +402,27 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Not in use supplier can't have products attached")
             )
+        class Responsible:
+            """Supplier responsible messages"""
+            Default = Msg(
+                description="Default option for HTML select",
+                tested=False,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "Select a new responsible")
+            )
+            Updated = Msg(
+                tested=False,
+                category=Color.GREEN.value,
+                message=lambda : lazy_gettext(
+                    "Supplier responsible updated")
+            )
+            Invalid = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "You have to select a new responsible first")
+            )
         NotExists = Msg(
             description=":param name: could be empty - ''",
             tested=False,
@@ -403,6 +431,32 @@ class Message:
                  "Supplier %(name)s does not exist",
                  name=name) if name else lazy_gettext(
                  "Supplier does not exist")
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Supplier '%(name)s' created",
+                name=name)
+        )
+        NoDelete = Msg(
+            tested=False,
+            category=Color.RED.value,
+            message=lambda : lazy_gettext(
+                "Can't delete supplier! There are still products attached!")
+        )
+        Deleted = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "Supplier '%(name)s' has been deleted",
+                name=name)
+        )
+        Updated = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                 "Supplier updated")
         )
     class Product:
         """Product messages"""

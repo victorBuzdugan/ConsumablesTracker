@@ -10,6 +10,7 @@ from sqlalchemy import select
 
 from constants import Constant
 from database import Category, Product, Supplier, User, dbSession
+from messages import Message
 
 pytestmark = pytest.mark.sup
 
@@ -305,18 +306,19 @@ def test_failed_edit_supplier_in_use(
 def test_failed_edit_supplier_bad_name(
         client: FlaskClient, admin_logged_in: User):
     """test_failed_edit_supplier_bad_name"""
+    sup_name = "not_existing_supplier"
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(
-            url_for("sup.edit_supplier", supplier="not_existing_supplier"),
+            url_for("sup.edit_supplier", supplier=sup_name),
             follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sup.suppliers")
-        assert "not_existing_supplier does not exist!" in response.text
+        assert str(Message.Supplier.NotExists(sup_name)) in response.text
 # endregion
 
 
@@ -549,16 +551,17 @@ def test_failed_reassign_supplier_bad_choice(
 def test_failed_reassign_supplier_bad_name(
         client: FlaskClient, admin_logged_in: User):
     """test_failed_reassign_supplier_bad_name"""
+    sup_name = "not_existing_supplier"
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(
-            url_for("sup.reassign_supplier", supplier="not_existing_supplier"),
+            url_for("sup.reassign_supplier", supplier=sup_name),
             follow_redirects=True)
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sup.suppliers")
-        assert "not_existing_supplier does not exist!" in response.text
+        assert str(Message.Supplier.NotExists(sup_name)) in response.text
 # endregion
