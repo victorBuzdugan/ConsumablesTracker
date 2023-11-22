@@ -651,7 +651,7 @@ class Product(Base):
         with dbSession() as db_session:
             user = db_session.get(User, user_id)
             if not user:
-                raise ValueError(Message.User.NotExists())
+                raise ValueError(Message.User.NotExists(""))
             if not user.in_use:
                 raise ValueError(Message.User.Products.Retired())
             if user.reg_req:
@@ -673,7 +673,7 @@ class Product(Base):
         """Check for empty, not existing, not in use and last product."""
         # pylint: disable=unused-argument
         if not user:
-            raise ValueError(Message.User.NotExists())
+            raise ValueError(Message.User.NotExists(""))
         if not user.in_use:
             raise ValueError(Message.User.Products.Retired())
         if user.reg_req:
@@ -730,7 +730,7 @@ class Product(Base):
         with dbSession() as db_session:
             supplier = db_session.get(Supplier, supplier_id)
             if not supplier:
-                raise ValueError(Message.Supplier.NotExists())
+                raise ValueError(Message.Supplier.NotExists(""))
             if not supplier.in_use:
                 raise ValueError(Message.Supplier.Products.Retired())
         return supplier_id
@@ -743,7 +743,7 @@ class Product(Base):
         """Check for empty or not in use."""
         # pylint: disable=unused-argument
         if not supplier:
-            raise ValueError(Message.Supplier.NotExists())
+            raise ValueError(Message.Supplier.NotExists(""))
         if not supplier.in_use:
             raise ValueError(Message.Supplier.Products.Retired())
         return supplier

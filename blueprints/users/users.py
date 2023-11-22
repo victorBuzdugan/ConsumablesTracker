@@ -176,9 +176,8 @@ def approve_reg(username):
                           username=username))
             flash(gettext("Review the schedules"), "warning")
         else:
-            logger.warning("%s does not exist", username)
-            flash(gettext("%(username)s does not exist!",
-                          username=username), "error")
+            logger.warning("User %s does not exist", username)
+            flash(**Message.User.NotExists.flash(username))
 
     return redirect(session["last_url"])
 
@@ -198,8 +197,7 @@ def approve_check_inv(username):
                 flash(str(error))
         else:
             logger.warning("User inventory check approval error(s)")
-            flash(gettext("%(username)s does not exist!",
-                          username=username), "error")
+            flash(**Message.User.NotExists.flash(username))
 
     return redirect(session["last_url"])
 
@@ -347,8 +345,7 @@ def edit_user(username):
                 edit_user_form.clean_order.data = \
                     cleaning_sch.current_order().index(user.id)
         else:
-            flash(gettext("%(username)s does not exist!",
-                          username=username), "error")
+            flash(**Message.User.NotExists.flash(username))
             return redirect(url_for("main.index"))
 
     return render_template("users/edit_user.html", form=edit_user_form)

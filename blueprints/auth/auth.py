@@ -186,9 +186,9 @@ def login():
                     flash(**Message.User.Login.flash(user.name))
                     return redirect(url_for("main.index"))
                 else:
-                    flash(**Message.User.RegPending.flash())
+                    flash(**Message.User.RegPending.flash(user.name))
             else:
-                flash(**Message.User.Retired.flash())
+                flash(**Message.User.Retired.flash(user.name))
         else:
             logger.warning("Bad login credentials for user '%s'",
                            login_form.name.data)

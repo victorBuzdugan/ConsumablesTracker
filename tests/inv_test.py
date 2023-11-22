@@ -1,5 +1,6 @@
 """Inventory blueprint tests."""
 
+from html import unescape
 from typing import Callable
 
 import pytest
@@ -8,6 +9,7 @@ from flask.testing import FlaskClient
 from sqlalchemy import func, select
 
 from database import Product, User, dbSession
+from messages import Message
 
 func: Callable
 
@@ -374,9 +376,9 @@ def test_oth_user_admin_logged_in_no_check_inventory(
 
 @pytest.mark.parametrize(
     ("oth_user", "flash_message"), (
-    ("nonexistent", "User nonexistent does not exist!"),
-    ("user5", "User user5 awaits registration aproval!"),
-    ("user6", "User user6 is not in use anymore!")
+    ("nonexistent", str(Message.User.NotExists("nonexistent"))),
+    ("user5", "User user5 awaits registration aproval"),
+    ("user6", "User user6 is not in use anymore")
 ))
 def test_oth_user_admin_logged_in_special_users(
         client: FlaskClient, admin_logged_in: User,
@@ -580,8 +582,7 @@ def test_inventory_request_admin_logged_in(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert ("You are an admin! You don&#39;t need to request " +
-            "inventory checks" in response.text)
+        assert str(Message.User.ReqInv.Admin()) in unescape(response.text)
         assert "check inventory" not in response.text
         with dbSession() as db_session:
             assert not db_session.get(User, session.get("user_id")).req_inv

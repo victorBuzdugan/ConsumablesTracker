@@ -229,6 +229,12 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Users without products can't request inventorying")
             )
+            Sent = Msg(
+                tested=False,
+                category=Color.GREEN.value,
+                message=lambda : lazy_gettext(
+                    "Inventory check request sent")
+            )
         class Email:
             """User email messages"""
             Invalid = Msg(
@@ -238,9 +244,12 @@ class Message:
                     "Invalid email adress")
             )
         NotExists = Msg(
+            description=":param name: could be empty - ''",
             tested=False,
             category=Color.RED.value,
-            message=lambda : lazy_gettext(
+            message=lambda name: lazy_gettext(
+                 "User %(name)s does not exist",
+                 name=name) if name else lazy_gettext(
                  "User does not exist")
         )
         Login = Msg(
@@ -252,14 +261,16 @@ class Message:
         RegPending = Msg(
             tested=False,
             category=Color.YELLOW.value,
-            message=lambda : lazy_gettext(
-                "Your registration is pending. Contact an admin.")
+            message=lambda name: lazy_gettext(
+                "User %(name)s awaits registration aproval",
+                name=name),
         )
         Retired = Msg(
             tested=False,
             category=Color.YELLOW.value,
-            message=lambda : lazy_gettext(
-                "This user is not in use anymore!")
+            message=lambda name: lazy_gettext(
+                "User %(name)s is not in use anymore",
+                name=name),
         )
         Logout = Msg(
             tested=False,
@@ -385,9 +396,12 @@ class Message:
                     "Not in use supplier can't have products attached")
             )
         NotExists = Msg(
+            description=":param name: could be empty - ''",
             tested=False,
             category=Color.RED.value,
-            message=lambda : lazy_gettext(
+            message=lambda name: lazy_gettext(
+                 "Supplier %(name)s does not exist",
+                 name=name) if name else lazy_gettext(
                  "Supplier does not exist")
         )
     class Product:
@@ -509,5 +523,19 @@ class Message:
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
                     "Wrong username or password!")
+            )
+        class Inv:
+            """Inventory blueprint"""
+            Submitted = Msg(
+                tested=False,
+                category=Color.GREEN.value,
+                message=lambda : lazy_gettext(
+                    "Inventory has been submitted")
+            )
+            NotReq = Msg(
+                tested=False,
+                category=Color.BLUE.value,
+                message=lambda : lazy_gettext(
+                    "Inventory check not required")
             )
 pass

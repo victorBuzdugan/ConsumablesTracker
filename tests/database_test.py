@@ -852,15 +852,15 @@ def test_change_product_name():
             "Product must have a description"),
         # # responsible
         ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
-            "User does not exist"),
+            str(Message.User.NotExists(""))),
         ("__test__producttt__", "description", None, 1, 1, "measunit", 1, 2,
-            "User does not exist"),
+            str(Message.User.NotExists(None))),
         ("__test__producttt__", "description", 5, 1, 1, "measunit", 1, 2,
             "User with pending registration can't have products attached"),
         ("__test__producttt__", "description", 6, 1, 1, "measunit", 1, 2,
             "'Retired' users can't have products attached"),
         ("__test__producttt__", "description", 8, 1, 1, "measunit", 1, 2,
-            "User does not exist"),
+            str(Message.User.NotExists(""))),
         # category
         ("__test__producttt__", "description", 1, "", 1, "measunit", 1, 2,
             str(Message.Category.NotExists(""))),

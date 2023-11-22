@@ -67,7 +67,7 @@ def test_failed_approve_registration_bad_username(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"{ne_user} does not exist!" in response.text
+        assert str(Message.User.NotExists(ne_user)) in response.text
 
 
 def test_failed_approve_registration_user_logged_in(
@@ -126,7 +126,7 @@ def test_approve_check_inventory(client: FlaskClient, admin_logged_in: User):
     ("5", "user5", "User with pending registration can't check inventory"),
     ("7", "user7", "User without products attached can't check inventory"),
     # id 7 because id 8 doesn't exist
-    ("7", "user8", "user8 does not exist!"),
+    ("7", "user8", str(Message.User.NotExists("user8"))),
 ))
 def test_failed_approve_check_inventory(
         client: FlaskClient, admin_logged_in: User,
@@ -822,7 +822,7 @@ def test_failed_edit_user_bad_username(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"{bad_name} does not exist!" in response.text
+        assert str(Message.User.NotExists(bad_name)) in response.text
 
 
 def test_failed_edit_user_hidden_admin_bad_username(
@@ -840,7 +840,7 @@ def test_failed_edit_user_hidden_admin_bad_username(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"{admin_name} does not exist!" in response.text
+        assert str(Message.User.NotExists(admin_name)) in response.text
 
 
 def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):

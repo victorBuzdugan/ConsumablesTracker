@@ -416,9 +416,9 @@ def test_failed_login_password(client: FlaskClient):
             password = ""
             flash_message = str(Message.User.Password.Req())
         elif not user["in_use"]:
-            flash_message = "This user is not in use anymore!"
+            flash_message = str(Message.User.Retired(user["name"]))
         elif user["reg_req"]:
-            flash_message = "Your registration is pending. Contact an admin."
+            flash_message = str(Message.User.RegPending(user["name"]))
         else:
             password = "bad_password"
             flash_message = "Wrong username or password!"
