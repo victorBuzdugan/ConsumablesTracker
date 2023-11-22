@@ -83,11 +83,19 @@ class Message:
                     "Password should have at least %(min)i characters!",
                     min=Constant.User.Password.min_length),
             )
-            Rules = Msg(
+            CheckRules = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
                     "Check password rules")
+            )
+            Rules = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Password must have 1 big letter, 1 number, " +
+                    "1 special char (%(symbols)s)!",
+                    symbols=Constant.User.Password.symbols),
             )
             NotMatching = Msg(
                 tested=False,
@@ -243,6 +251,14 @@ class Message:
                 message=lambda : lazy_gettext(
                     "Invalid email adress")
             )
+        class SatGroup:
+            """User sat_group messages"""
+            Invalid = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "Group number doesn't exist")
+            )
         NotExists = Msg(
             description=":param name: could be empty - ''",
             tested=False,
@@ -283,6 +299,39 @@ class Message:
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
                 "Registration request sent. Please contact an admin.")
+        )
+        Approved = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "User %(name)s has been approved",
+                name=name),
+        )
+        Created = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "User '%(name)s' created",
+                name=name)
+        )
+        NoDelete = Msg(
+            tested=False,
+            category=Color.RED.value,
+            message=lambda : lazy_gettext(
+                "Can't delete user! He is still responsible for some products!")
+        )
+        Deleted = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda name: lazy_gettext(
+                "User '%(name)s' has been deleted",
+                name=name)
+        )
+        Updated = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                 "User updated")
         )
     class Category:
         """Category messages"""
@@ -630,6 +679,26 @@ class Message:
             message=lambda attribute: lazy_gettext(
                 "Cannot sort products by %(attribute)s",
                 attribute=attribute)
+        )
+    class Schedule:
+        """Schedule messages"""
+        Review = Msg(
+            tested=False,
+            category=Color.YELLOW.value,
+            message=lambda : lazy_gettext(
+                "Review the schedules")
+        )
+        Updated = Msg(
+            tested=False,
+            category=Color.GREEN.value,
+            message=lambda : lazy_gettext(
+                "Schedule updated")
+        )
+        InvalidChoice = Msg(
+            tested=False,
+            category=Color.RED.value,
+            message=lambda : lazy_gettext(
+                "Not a valid choice")
         )
     class UI:
         """Interface messages"""

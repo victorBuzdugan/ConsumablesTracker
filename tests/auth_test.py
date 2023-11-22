@@ -147,7 +147,7 @@ def test_failed_registration_confirmation_not_matching(
 def _test_failed_registration_password_rules(
         client: FlaskClient, password):
     """Common logic for testing password characters rules."""
-    flash_message = str(Message.User.Password.Rules())
+    flash_message = str(Message.User.Password.CheckRules())
     _test_failed_registration(client=client,
                               password=password,
                               confirm=password,
@@ -572,25 +572,25 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         InvalidUser.only_lowercase_password,
         InvalidUser.only_lowercase_password,
-        str(Message.User.Password.Rules()),
+        str(Message.User.Password.CheckRules()),
         id="Only lowercase new password"),
     pytest.param(
         ValidUser.password,
         InvalidUser.no_uppercase_password,
         InvalidUser.no_uppercase_password,
-        str(Message.User.Password.Rules()),
+        str(Message.User.Password.CheckRules()),
         id="No uppercase char in new password"),
     pytest.param(
         ValidUser.password,
         InvalidUser.no_number_password,
         InvalidUser.no_number_password,
-        str(Message.User.Password.Rules()),
+        str(Message.User.Password.CheckRules()),
         id="No number in new password"),
     pytest.param(
         ValidUser.password,
         InvalidUser.no_special_char_password,
         InvalidUser.no_special_char_password,
-        str(Message.User.Password.Rules()),
+        str(Message.User.Password.CheckRules()),
         id="No special char in new password"),
     pytest.param(
         ValidUser.password,

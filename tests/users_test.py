@@ -37,7 +37,7 @@ def test_approve_registration(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"{unreg_user} has been approved" in response.text
+        assert str(Message.User.Approved(unreg_user)) in response.text
         assert "Review the schedules" in response.text
         response = client.get(url_for("sch.schedules"))
         assert unreg_user in response.text

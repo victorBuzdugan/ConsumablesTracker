@@ -69,7 +69,7 @@ class RegisterForm(FlaskForm):
                 message=Message.User.Password.LenLimit()),
             Regexp(
                 Constant.User.Password.regex,
-                message=Message.User.Password.Rules())],
+                message=Message.User.Password.CheckRules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -129,7 +129,7 @@ class ChgPasswForm(FlaskForm):
                 message=Message.User.Password.LenLimit()),
             Regexp(
                 Constant.User.Password.regex,
-                message=Message.User.Password.Rules())],
+                message=Message.User.Password.CheckRules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("New password"),

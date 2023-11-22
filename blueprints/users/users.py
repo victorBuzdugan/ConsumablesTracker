@@ -56,10 +56,9 @@ class CreateUserForm(FlaskForm):
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
-            Regexp(Constant.User.Password.regex, message=(
-                gettext("Password must have 1 big letter, " +
-                "1 number, 1 special char (%(passw_symb)s)!",
-                passw_symb=Constant.User.Password.symbols)))],
+            Regexp(
+                Constant.User.Password.regex,
+                message=Message.User.Password.Rules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -69,7 +68,7 @@ class CreateUserForm(FlaskForm):
         label="Email",
         validators=[
             Optional(),
-            Email(gettext("Invalid email adress"))],
+            Email(Message.User.Email.Invalid())],
         default="",
         render_kw={
             "class": "form-control",
@@ -79,7 +78,10 @@ class CreateUserForm(FlaskForm):
     sat_group = SelectField(
         label=sat_sch_info.name,
         validators=[
-            NumberRange(1, 2, gettext("Group number doesn't exist"))],
+            NumberRange(
+                min=1,
+                max=2,
+                message=Message.User.SatGroup.Invalid())],
         choices=[(1, lazy_gettext("Group 1")), (2, lazy_gettext("Group 2"))],
         coerce=int,
         default="1",
@@ -115,10 +117,9 @@ class EditUserForm(CreateUserForm):
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
-            Regexp(Constant.User.Password.regex, message=(
-                gettext("Password must have 1 big letter, " +
-                "1 number, 1 special char (%(passw_symb)s)!",
-                passw_symb=Constant.User.Password.symbols)))],
+            Regexp(
+                Constant.User.Password.regex,
+                message=Message.User.Password.Rules())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -172,9 +173,8 @@ def approve_reg(username):
             db_session.commit()
             logger.debug("%s has been approved", username)
             cleaning_sch.add_user(user.id)
-            flash(gettext("%(username)s has been approved",
-                          username=username))
-            flash(gettext("Review the schedules"), "warning")
+            flash(**Message.User.Approved.flash(username))
+            flash(**Message.Schedule.Review.flash())
         else:
             logger.warning("User %s does not exist", username)
             flash(**Message.User.NotExists.flash(username))
@@ -234,9 +234,8 @@ def new_user():
                 db_session.commit()
                 logger.debug("User '%s' created", user.name)
                 cleaning_sch.add_user(user.id)
-                flash(gettext("User '%(username)s' created",
-                              username=user.name))
-                flash(gettext("Review the schedules"), "warning")
+                flash(**Message.User.Created.flash(user.name))
+                flash(**Message.Schedule.Review.flash())
                 return redirect(url_for("main.index"))
             except ValueError as error:
                 logger.warning("User creation error(s)")
@@ -271,16 +270,13 @@ def edit_user(username):
                 .filter_by(name=escape(username)))
             if edit_user_form.delete.data:
                 if user.all_products:
-                    flash(gettext("Can't delete user! " +
-                          "He is still responsible for some products!"),
-                          "error")
+                    flash(**Message.User.NoDelete.flash())
                 else:
                     db_session.delete(user)
                     db_session.commit()
                     logger.debug("User '%s' has been deleted", username)
                     cleaning_sch.remove_user(user.id)
-                    flash(gettext("User '%(username)s' has been deleted",
-                                  username=user.name))
+                    flash(**Message.User.Deleted.flash(user.name))
                     if user.id == session.get("user_id"):
                         return redirect(url_for("auth.logout"))
                     return redirect(session["last_url"])
@@ -301,20 +297,20 @@ def edit_user(username):
                             cleaning_sch.change_user_pos(
                                 user.id,
                                 edit_user_form.clean_order.data)
-                            flash(gettext("Schedule updated"))
+                            flash(**Message.Schedule.Updated.flash())
                             schedule_updated_flag = True
                     user.details = edit_user_form.details.data
                     user.admin = edit_user_form.admin.data
                     user.done_inv = not edit_user_form.check_inv.data
                     user.in_use = edit_user_form.in_use.data
                 except TypeError:
-                    flash("Not a valid choice", "error")
+                    flash(**Message.Schedule.InvalidChoice.flash())
                 except ValueError as error:
                     flash(str(error), "error")
                 else:
                     if db_session.is_modified(user, include_collections=False):
                         logger.debug("User updated")
-                        flash(gettext("User updated"))
+                        flash(**Message.User.Updated.flash())
                         db_session.commit()
                         if  user.in_use is not initial_in_use:
                             # add or remove from schedule
