@@ -172,7 +172,8 @@ def test_edit_supplier(
             assert response.history[0].status_code == 302
             assert response.status_code == 200
             assert quote(response.request.path) == url_for("sup.suppliers")
-            assert str(Message.Supplier.Updated()) in response.text
+            assert str(Message.Supplier.Updated(new_name)) \
+                in unescape(response.text)
             assert new_name in response.text
             assert new_details in response.text
 
@@ -222,7 +223,8 @@ def test_failed_edit_supplier_form_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Supplier.Updated()) not in response.text
+            assert str(Message.Supplier.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_name in response.text
             assert flash_msg in unescape(response.text)
         db_session.refresh(sup)
@@ -259,9 +261,11 @@ def test_failed_edit_supplier_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Supplier.Updated()) not in response.text
+            assert str(Message.Supplier.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_name in response.text
-            assert str(Message.Supplier.Name.Exists(new_name)) in response.text
+            assert str(Message.Supplier.Name.Exists(new_name)) \
+                in unescape(response.text)
         db_session.refresh(sup)
         assert sup.name != new_name
 
@@ -292,9 +296,10 @@ def test_failed_edit_supplier_in_use(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Supplier.Updated()) not in response.text
+            assert str(Message.Supplier.Updated(sup.name)) \
+                not in unescape(response.text)
             assert sup.name in response.text
-            assert str(Message.Supplier.Products.Retired()) \
+            assert str(Message.Supplier.InUse.StillProd()) \
                 in unescape(response.text)
         db_session.refresh(sup)
         assert sup.in_use
@@ -315,7 +320,8 @@ def test_failed_edit_supplier_bad_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sup.suppliers")
-        assert str(Message.Supplier.NotExists(sup_name)) in response.text
+        assert str(Message.Supplier.NotExists(sup_name)) \
+            in unescape(response.text)
 # endregion
 
 
@@ -468,7 +474,8 @@ def test_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=new_sup.name)
-            assert str(Message.Supplier.Responsible.Updated()) in response.text
+            assert str(Message.Supplier.Responsible.Updated(new_sup.name)) \
+                in unescape(response.text)
             assert str(Message.Supplier.Responsible.Invalid()) \
                 not in response.text
         # check and teardown
@@ -509,8 +516,8 @@ def test_failed_reassign_supplier(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) \
                 == url_for("sup.reassign_supplier", supplier=sup.name)
-            assert str(Message.Supplier.Responsible.Updated()) \
-                not in response.text
+            assert str(Message.Supplier.Responsible.Updated(sup.name)) \
+                not in unescape(response.text)
             assert str(Message.Supplier.Responsible.Invalid()) in response.text
 
 
@@ -541,7 +548,7 @@ def test_failed_reassign_supplier_bad_choice(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Supplier.Responsible.Updated()) \
+            assert str(Message.Supplier.Responsible.Updated(sup.name)) \
                 not in response.text
             assert "Not a valid choice." in response.text
 
@@ -561,5 +568,6 @@ def test_failed_reassign_supplier_bad_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sup.suppliers")
-        assert str(Message.Supplier.NotExists(sup_name)) in response.text
+        assert str(Message.Supplier.NotExists(sup_name)) \
+            in unescape(response.text)
 # endregion

@@ -176,7 +176,7 @@ def edit_supplier(supplier):
                 else:
                     if db_session.is_modified(sup, include_collections=False):
                         logger.debug("Supplier updated")
-                        flash(**Message.Supplier.Updated.flash())
+                        flash(**Message.Supplier.Updated.flash(sup.name))
                         db_session.commit()
                         return redirect(session["last_url"])
     elif edit_sup_form.errors:
@@ -228,7 +228,7 @@ def reassign_supplier(supplier):
                                               .responsible_id.data)
                 db_session.commit()
                 logger.debug("Supplier '%s' responsible updated", sup.name)
-                flash(**Message.Supplier.Responsible.Updated.flash())
+                flash(**Message.Supplier.Responsible.Updated.flash(sup.name))
         else:
             flash(**Message.Supplier.Responsible.Invalid.flash())
         return redirect(url_for(".reassign_supplier", supplier=supplier))

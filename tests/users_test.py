@@ -241,7 +241,7 @@ def test_new_user(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert f"User '{name}' created" in unescape(response.text)
+        assert str(Message.User.Created(name)) in unescape(response.text)
         assert str(Message.Schedule.Review()) in response.text
         response = client.get(url_for("sch.schedules"))
         assert name in response.text
@@ -535,7 +535,8 @@ def test_edit_user(
             assert response.history[0].status_code == 302
             assert response.status_code == 200
             assert response.request.path == url_for("main.index")
-            assert "User updated" in response.text
+            assert str(Message.User.Updated(new_name)) \
+                in unescape(response.text)
             assert new_name in response.text
             db_session.refresh(user)
             response = client.get(url_for("sch.schedules"))
@@ -674,7 +675,8 @@ def test_failed_edit_user_form_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.User.Updated()) not in response.text
+            assert str(Message.User.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_name in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(user)
@@ -723,9 +725,11 @@ def test_failed_edit_user_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.User.Updated()) not in response.text
+            assert str(Message.User.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_name in response.text
-            assert str(Message.User.Name.Exists(new_name)) in response.text
+            assert str(Message.User.Name.Exists(new_name)) \
+                in unescape(response.text)
         db_session.refresh(user)
         assert user.name != new_name
 
@@ -783,7 +787,8 @@ def test_failed_edit_user_db_validators(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.User.Updated()) not in response.text
+            assert str(Message.User.Updated(user.name)) \
+                not in unescape(response.text)
             assert user.name in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(user)
@@ -862,7 +867,8 @@ def test_edit_user_last_admin(client: FlaskClient, admin_logged_in: User):
                 data=data, follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.User.Updated()) not in response.text
+            assert str(Message.User.Updated(admin_logged_in.name)) \
+                not in unescape(response.text)
             assert admin_logged_in.name in response.text
             assert str(Message.User.Admin.LastAdmin()) in response.text
         db_session.refresh(user)
@@ -905,7 +911,7 @@ def test_edit_user_change_admin_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert str(Message.User.Updated()) in response.text
+        assert str(Message.User.Updated(new_name)) in unescape(response.text)
         assert new_name in response.text
         assert session.get("user_name") == new_name
         data = {
@@ -929,7 +935,7 @@ def test_edit_user_change_admin_name(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert str(Message.User.Updated()) in response.text
+        assert str(Message.User.Updated(old_name)) in unescape(response.text)
         assert old_name in response.text
         assert session.get("user_name") == old_name
 
@@ -967,7 +973,7 @@ def test_edit_user_change_admin_logged_in_admin_status(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
-        assert str(Message.User.Updated()) in response.text
+        assert str(Message.User.Updated(username)) in unescape(response.text)
         assert username in response.text
         assert "Admin dashboard" not in response.text
         assert not session.get("admin")
@@ -1049,7 +1055,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert str(Message.Schedule.Updated()) in response.text
-        assert str(Message.User.Updated()) not in response.text
+        assert str(Message.User.Updated(user.name)) \
+            not in unescape(response.text)
         assert cleaning_sch.current_order() == [2, 3, 1, 4, 7]
 
         assert session["admin"]
@@ -1079,7 +1086,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert str(Message.Schedule.Updated()) in response.text
-        assert str(Message.User.Updated()) not in response.text
+        assert str(Message.User.Updated(user.name)) \
+            not in unescape(response.text)
         assert cleaning_sch.current_order() == [2, 3, 1, 7, 4]
 
         assert session["admin"]
@@ -1109,7 +1117,8 @@ def test_edit_user_clean_order(client: FlaskClient, admin_logged_in: User):
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert str(Message.Schedule.Updated()) in response.text
-        assert str(Message.User.Updated()) not in response.text
+        assert str(Message.User.Updated(user.name)) \
+            not in unescape(response.text)
         assert cleaning_sch.current_order() == [7, 2, 3, 1, 4]
         # teardown
         cleaning_sch.unregister()
@@ -1156,7 +1165,8 @@ def test_failed_edit_user_clean_order(
             data=data,
             follow_redirects=True)
         assert str(Message.Schedule.Updated()) not in response.text
-        assert str(Message.User.Updated()) not in response.text
+        assert str(Message.User.Updated(user.name)) \
+            not in unescape(response.text)
         assert flash_err in unescape(response.text)
         assert cleaning_sch.current_order() == [1, 2, 3, 4, 7]
 # endregion
@@ -1194,7 +1204,7 @@ def test_delete_user(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("sch.schedules")
-        assert f"User '{user.name}' has been deleted" in unescape(response.text)
+        assert str(Message.User.Deleted(user.name)) in unescape(response.text)
         response = client.get(url_for("sch.schedules"))
         assert user.name not in response.text
         assert (f"Schedule '{cleaning_sch.name}' removed user with id " +
@@ -1274,8 +1284,7 @@ def test_failed_delete_user(
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "Can't delete user! He is still responsible for some products" \
-              in unescape(response.text)
+        assert str(Message.User.NoDelete()) in unescape(response.text)
     with dbSession() as db_session:
         assert db_session.get(User, user.id)
 # endregion

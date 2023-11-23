@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Callable
 
-from flask_babel import LazyString, lazy_gettext
+from flask_babel import LazyString, lazy_gettext, lazy_ngettext
 
 from constants import Constant
 
@@ -17,13 +17,14 @@ class Color(StrEnum):
     RED    = "error"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Msg:
     """UI messages base class.
     
     :param message: the UI message
     :param category: `message` | `info` | `warning` | `error`
-    :param description: message description
+    :param description: message extra information
+    :param tested: message tested
     """
     message: Callable[[str], LazyString]
     category: str = Color.GREEN.value
@@ -56,7 +57,8 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Username must be between %(min)i and %(max)i characters!",
+                    "The username must be between %(min)i and %(max)i " +
+                    "characters",
                     min=Constant.User.Name.min_length,
                     max=Constant.User.Name.max_length),
             )
@@ -64,7 +66,8 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda name: lazy_gettext(
-                    "The user %(name)s allready exists", name=name)
+                    "The user '%(name)s' already exists",
+                    name=name)
             )
         class Password:
             """User password messages"""
@@ -79,7 +82,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Password should have at least %(min)i characters!",
+                    "The password should have at least %(min)i characters",
                     min=Constant.User.Password.min_length),
             )
             CheckRules = Msg(
@@ -92,27 +95,27 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Password must have 1 big letter, 1 number, " +
-                    "1 special char (%(symbols)s)!",
+                    "The password must have 1 big letter, 1 number, and " +
+                    "1 special character (%(symbols)s)",
                     symbols=Constant.User.Password.symbols),
             )
             NotMatching = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Passwords don't match")
+                    "The passwords don't match")
             )
             WrongOld = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Wrong old password!")
+                    "Wrong old password")
             )
             Changed = Msg(
                 tested=False,
                 category=Color.GREEN.value,
                 message=lambda : lazy_gettext(
-                    "Password changed.")
+                    "The password was changed")
             )
         class Products:
             """User products attr messages"""
@@ -120,14 +123,14 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "'Retired' users can't have products attached")
+                    "You can't attach products to a retired user")
             )
             PendReg = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User with pending registration can't have products " +
-                    "attached")
+                    "You can't attach products to a user " +
+                    "with a pending registration")
             )
         class Admin:
             """User admin attr messages"""
@@ -135,13 +138,13 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User with pending registration can't be admin")
+                    "A user with a pending registration can't be admin")
             )
             LastAdmin = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "You are the last admin!")
+                    "You are the last admin")
             )
         class InUse:
             """User in_use attr messages"""
@@ -149,8 +152,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Can't 'retire' a user if he is still responsible for " +
-                    "products")
+                    "You can't retire a user if he is responsible for products")
             )
         class DoneInv:
             """User done_inv attr messages"""
@@ -158,19 +160,19 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "'Retired' user can't check inventory")
+                    "A retired user can't check inventory")
             )
             PendReg = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User with pending registration can't check inventory")
+                    "A user with a pending registration can't check inventory")
             )
             NoProd = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User without products attached can't check inventory")
+                    "A user without products attached can't check inventory")
             )
         class RegReq:
             """User reg_req attr messages"""
@@ -178,31 +180,34 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Admin users can't request registration")
+                    "Registration cannot be requested by an admin")
             )
             Retired = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "'Retired' users can't request registration")
+                    "Registration cannot be requested by a retired user")
             )
             CheckInv = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User that checks inventory can't request registration")
+                    "Registration cannot be requested by a user " +
+                    "who checks inventory")
             )
             ReqInv = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User that requested inventory can't request registration")
+                    "Registration cannot be requested by a user " +
+                    "who has requested inventorying")
             )
-            NoProd = Msg(
+            WithProd = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Users with products attached can't request registration")
+                    "Registration cannot be requested by a user " +
+                    "who has products attached")
             )
         class ReqInv:
             """User req_inv attr messages"""
@@ -216,31 +221,33 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "'Retired' users can't request inventorying")
+                    "Inventorying cannot be requested by a retired user")
             )
             PendReg = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User with pending registration can't request inventorying")
+                    "Inventorying cannot be requested by a user " +
+                    "with a pending registration")
             )
             CheckInv = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User can allready check inventory")
+                    "The user can already check inventory")
             )
             NoProd = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Users without products can't request inventorying")
+                    "Inventorying cannot be requested by a user " +
+                    "who has no products attached")
             )
             Sent = Msg(
                 tested=False,
                 category=Color.GREEN.value,
                 message=lambda : lazy_gettext(
-                    "Inventory check request sent")
+                    "The inventory check request was submitted")
             )
         class Email:
             """User email messages"""
@@ -248,7 +255,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Invalid email adress")
+                    "The email address is incorrect")
             )
         class SatGroup:
             """User sat_group messages"""
@@ -256,81 +263,82 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Group number doesn't exist")
+                    "The group number doesn't exist")
             )
         NotExists = Msg(
             description=":param name: could be empty - ''",
             tested=False,
             category=Color.RED.value,
             message=lambda name: lazy_gettext(
-                 "User %(name)s does not exist",
+                 "The user '%(name)s' does not exist",
                  name=name) if name else lazy_gettext(
-                 "User does not exist")
+                 "The user does not exist")
         )
         Login = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Welcome %(name)s", name=name)
+                "Hello, %(name)s", name=name)
         )
         Logout = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
-                "You have been logged out...")
+                "You have been logged out")
         )
         RegPending = Msg(
             tested=False,
             category=Color.YELLOW.value,
             message=lambda name: lazy_gettext(
-                "User %(name)s awaits registration aproval",
+                "The user '%(name)s' awaits registration approval",
                 name=name),
         )
         Retired = Msg(
             tested=False,
             category=Color.YELLOW.value,
             message=lambda name: lazy_gettext(
-                "User %(name)s is not in use anymore",
+                "The user '%(name)s' is retired",
                 name=name),
         )
         Registered = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
-                "Registration request sent. Please contact an admin.")
+                "The registration request was submitted. Contact an admin")
         )
         Approved = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "User %(name)s has been approved",
+                "The user '%(name)s' has been approved",
                 name=name),
         )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
             message=lambda : lazy_gettext(
-                "Can't delete user! He is still responsible for some products!")
+                "You can't delete a user if he is responsible for products")
         )
         Deleted = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "User '%(name)s' has been deleted",
+                "The user '%(name)s' has been deleted",
                 name=name)
         )
         Created = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "User '%(name)s' created",
+                "The user '%(name)s' was created",
                 name=name)
         )
         Updated = Msg(
             tested=False,
             category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                 "User updated")
+            message=lambda name: lazy_gettext(
+                 "User '%(name)s' updated",
+                 name=name)
         )
     class Category:
         """Category messages"""
@@ -340,28 +348,37 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Category name is required")
+                    "The category name is required")
             )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Category name must have at least %(min)s characters",
+                    "The category name must have at least %(min)s characters",
                     min=Constant.Category.Name.min_length),
             )
             Exists = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda name: lazy_gettext(
-                    "The category %(name)s allready exists", name=name)
+                    "The category '%(name)s' already exists",
+                    name=name)
             )
         class Products:
             """Category products attr messages"""
-            Retired = Msg(
+            Disabled = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Not in use category can't have products attached")
+                    "You can't attach products to a disabled category")
+            )
+        class InUse:
+            """Category in_use attr messages"""
+            StillProd = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "You can't disable a category if it has products attached")
             )
         class Responsible:
             """Category responsible messages"""
@@ -375,8 +392,9 @@ class Message:
             Updated = Msg(
                 tested=False,
                 category=Color.GREEN.value,
-                message=lambda : lazy_gettext(
-                    "Category responsible updated")
+                message=lambda name: lazy_gettext(
+                    "The user responsible for '%(name)s' updated",
+                    name=name)
             )
             Invalid = Msg(
                 tested=False,
@@ -389,35 +407,36 @@ class Message:
             tested=False,
             category=Color.RED.value,
             message=lambda name: lazy_gettext(
-                 "Category %(name)s does not exist",
+                 "The category '%(name)s' does not exist",
                  name=name) if name else lazy_gettext(
-                 "Category does not exist")
+                 "The category does not exist")
         )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
             message=lambda : lazy_gettext(
-                "Can't delete category! There are still products attached!")
+                "You can't delete a category if it has products attached")
         )
         Deleted = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Category '%(name)s' has been deleted",
+                "The category '%(name)s' has been deleted",
                 name=name)
         )
         Created = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Category '%(name)s' created",
+                "The category '%(name)s' was created",
                 name=name)
         )
         Updated = Msg(
             tested=False,
             category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                 "Category updated")
+            message=lambda name: lazy_gettext(
+                "The category '%(name)s' was updated",
+                name=name)
         )
     class Supplier:
         """Supplier messages"""
@@ -427,28 +446,37 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Supplier name is required")
+                    "The supplier name is required")
             )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Supplier name must have at least %(min)s characters",
+                    "The supplier name must have at least %(min)s characters",
                     min=Constant.Supplier.Name.min_length),
             )
             Exists = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda name: lazy_gettext(
-                    "The supplier %(name)s allready exists", name=name)
+                    "The supplier '%(name)s' already exists",
+                    name=name)
             )
         class Products:
             """Supplier products attr messages"""
-            Retired = Msg(
+            Disabled = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Not in use supplier can't have products attached")
+                    "You can't attach products to a disabled supplier")
+            )
+        class InUse:
+            """Supplier in_use attr messages"""
+            StillProd = Msg(
+                tested=False,
+                category=Color.RED.value,
+                message=lambda : lazy_gettext(
+                    "You can't disable a supplier if it has products attached")
             )
         class Responsible:
             """Supplier responsible messages"""
@@ -462,8 +490,9 @@ class Message:
             Updated = Msg(
                 tested=False,
                 category=Color.GREEN.value,
-                message=lambda : lazy_gettext(
-                    "Supplier responsible updated")
+                message=lambda name: lazy_gettext(
+                    "The user responsible for '%(name)s' updated",
+                    name=name)
             )
             Invalid = Msg(
                 tested=False,
@@ -476,35 +505,36 @@ class Message:
             tested=False,
             category=Color.RED.value,
             message=lambda name: lazy_gettext(
-                 "Supplier %(name)s does not exist",
+                 "The supplier '%(name)s' does not exist",
                  name=name) if name else lazy_gettext(
-                 "Supplier does not exist")
+                 "The supplier does not exist")
         )
         NoDelete = Msg(
             tested=False,
             category=Color.RED.value,
             message=lambda : lazy_gettext(
-                "Can't delete supplier! There are still products attached!")
+                "You can't delete a supplier if it has products attached")
         )
         Deleted = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Supplier '%(name)s' has been deleted",
+                "The supplier '%(name)s' has been deleted",
                 name=name)
         )
         Created = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Supplier '%(name)s' created",
+                "The supplier '%(name)s' was created",
                 name=name)
         )
         Updated = Msg(
             tested=False,
             category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                 "Supplier updated")
+            message=lambda name: lazy_gettext(
+                "The supplier '%(name)s' was updated",
+                name=name)
         )
     class Product:
         """Product messages"""
@@ -514,13 +544,13 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product name is required")
+                    "The product name is required")
             )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product name must be between %(min)s and %(max)s " +
+                    "The product name must be between %(min)s and %(max)s " +
                     "characters",
                     min=Constant.Product.Name.min_length,
                     max=Constant.Product.Name.max_length)
@@ -529,7 +559,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda name: lazy_gettext(
-                    "The product %(name)s allready exists", name=name)
+                    "The product '%(name)s' already exists", name=name)
             )
         class Description:
             """Product description messages"""
@@ -537,14 +567,14 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product description is required")
+                    "The product description is required")
             )
             LenLimit = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product description must be between %(min)s and %(max)s " +
-                    "characters",
+                    "The product description must be between " +
+                    "%(min)s and %(max)s characters",
                     min=Constant.Product.Description.min_length,
                     max=Constant.Product.Description.max_length)
             )
@@ -554,7 +584,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "User can't be deleted or does not exist")
+                    "The user can't be deleted or doesn't exist")
             )
         class Category:
             """Product category messages"""
@@ -562,7 +592,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Category can't be deleted or does not exist")
+                    "The category can't be deleted or doesn't exist")
             )
         class Supplier:
             """Product supplier messages"""
@@ -570,7 +600,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Supplier can't be deleted or does not exist")
+                    "The supplier can't be deleted or doesn't exist")
             )
         class MeasUnit:
             """Product meas_unit attr messages"""
@@ -578,7 +608,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product measuring unit is required")
+                    "The product measuring unit is required")
             )
         class MinStock:
             """Product min_stock attr messages"""
@@ -586,13 +616,13 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product minimum stock is required")
+                    "The product minimum stock is required")
             )
             Invalid = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Minimum stock must be ≥ %(value)s",
+                    "The product minimum stock must be ≥ %(value)s",
                     value=Constant.Product.MinStock.min_value)
             )
         class OrdQty:
@@ -601,13 +631,13 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Product order quantity is required")
+                    "The product order quantity is required")
             )
             Invalid = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Order quantity must be ≥ %(value)s",
+                    "The product order quantity must be ≥ %(value)s",
                     value=Constant.Product.OrdQty.min_value)
             )
         class ToOrder:
@@ -616,7 +646,7 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Can't order not in use products")
+                    "Disabled products can't be ordered")
             )
         class InUse:
             """Product in_use attr messages"""
@@ -624,34 +654,35 @@ class Message:
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Can't 'retire' a product that needs to be ordered")
+                    "You can't disable a product that must be ordered")
             )
         NotExists = Msg(
             tested=False,
             category=Color.RED.value,
             message=lambda name: lazy_gettext(
-                 "Product %(name)s does not exist",
+                 "The product '%(name)s' does not exist",
                  name=name)
         )
         Deleted = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Product '%(name)s' has been deleted",
+                "The product '%(name)s' has been deleted",
                 name=name)
         )
         Created = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda name: lazy_gettext(
-                "Product '%(name)s' created",
+                "The product '%(name)s' was created",
                 name=name)
         )
         Updated = Msg(
             tested=False,
             category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                 "Product updated")
+            message=lambda name: lazy_gettext(
+                "The product '%(name)s' was updated",
+                name=name)
         )
         NoSort = Msg(
             tested=False,
@@ -664,20 +695,23 @@ class Message:
             tested=False,
             category=Color.YELLOW.value,
             message=lambda : lazy_gettext(
-                "There are no products that need to be ordered")
+                "There are no products that must be ordered")
         )
         Ordered = Msg(
             description="Could be one or more products",
             tested=False,
             category=Color.GREEN.value,
-            message=lambda : lazy_gettext(
-                 "Products ordered")
+            message=lambda number: lazy_ngettext(
+                 "%(number)s product was removed from the order list",
+                 "%(number)s products were removed from the order list",
+                 number,
+                 number=number)
         )
         AllOrdered = Msg(
             tested=False,
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
-                 "All products ordered")
+                 "All products were removed from the order list")
         )
     class Schedule:
         """Schedule messages"""
@@ -697,7 +731,7 @@ class Message:
             tested=False,
             category=Color.GREEN.value,
             message=lambda : lazy_gettext(
-                "Schedule updated")
+                "The schedule was updated")
         )
     class UI:
         """Interface messages"""
@@ -707,7 +741,7 @@ class Message:
                 tested=False,
                 category=Color.GREEN.value,
                 message=lambda : lazy_gettext(
-                    "Language changed")
+                    "The language was changed")
             )
         class Auth:
             """Authentification blueprint"""
@@ -715,19 +749,19 @@ class Message:
                 tested=False,
                 category=Color.YELLOW.value,
                 message=lambda : lazy_gettext(
-                    "You have to be logged in...")
+                    "You have to be logged in to access this page")
             )
             AdminReq = Msg(
                 tested=False,
                 category=Color.YELLOW.value,
                 message=lambda : lazy_gettext(
-                    "You have to be an admin...")
+                    "You have to be an admin to access this page")
             )
             Wrong = Msg(
                 tested=False,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "Wrong username or password!")
+                    "The username or password is incorrect")
             )
         class Inv:
             """Inventory blueprint"""
@@ -735,11 +769,11 @@ class Message:
                 tested=False,
                 category=Color.GREEN.value,
                 message=lambda : lazy_gettext(
-                    "Inventory has been submitted")
+                    "The inventory has been submitted")
             )
             NotReq = Msg(
                 tested=False,
                 category=Color.BLUE.value,
                 message=lambda : lazy_gettext(
-                    "Inventory check not required")
+                    "Inventorying is not necessary")
             )

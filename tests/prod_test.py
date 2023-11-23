@@ -333,7 +333,8 @@ def test_edit_product(
             assert response.status_code == 200
             assert quote(response.request.path) == url_for("prod.products",
                                                            ordered_by="code")
-            assert str(Message.Product.Updated()) in response.text
+            assert str(Message.Product.Updated(new_name)) \
+                in unescape(response.text)
             assert new_name in response.text
             assert new_description in response.text
         db_session.refresh(prod)
@@ -406,7 +407,8 @@ def test_edit_product_last_responsible_product(
                     url_for("prod.edit_product", product=product.name),
                     data=data,
                     follow_redirects=True)
-                assert str(Message.Product.Updated()) in response.text
+                assert str(Message.Product.Updated(product.name)) \
+                    in unescape(response.text)
                 db_session.refresh(product)
                 assert product.responsible_id == admin_logged_in.id
             db_session.refresh(user)
@@ -421,7 +423,8 @@ def test_edit_product_last_responsible_product(
                     url_for("prod.edit_product", product=product.name),
                     data=data,
                     follow_redirects=True)
-                assert str(Message.Product.Updated()) in response.text
+                assert str(Message.Product.Updated(product.name)) \
+                    in unescape(response.text)
                 db_session.refresh(product)
                 assert product.responsible_id == user.id
             db_session.refresh(user)
@@ -607,7 +610,8 @@ def test_failed_edit_product_form_validators(
                 data=data, follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Product.Updated()) not in response.text
+            assert str(Message.Product.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_prod["name"] in response.text
             assert flash_message in unescape(response.text)
         db_session.refresh(prod)
@@ -651,9 +655,11 @@ def test_failed_edit_product_name_duplicate(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Product.Updated()) not in response.text
+            assert str(Message.Product.Updated(new_name)) \
+                not in unescape(response.text)
             assert orig_name in response.text
-            assert str(Message.Product.Name.Exists(new_name)) in response.text
+            assert str(Message.Product.Name.Exists(new_name)) \
+                in unescape(response.text)
         db_session.refresh(prod)
         assert prod.name != new_name
 
@@ -694,7 +700,8 @@ def test_failed_edit_product_to_order_in_use_validator(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Product.Updated()) not in response.text
+            assert str(Message.Product.Updated(prod.name)) \
+                not in unescape(response.text)
             assert prod.name in response.text
             assert str(Message.Product.ToOrder.Retired()) \
                 in unescape(response.text)
@@ -731,7 +738,8 @@ def test_failed_edit_product_to_order_in_use_validator(
                 follow_redirects=True)
             assert len(response.history) == 0
             assert response.status_code == 200
-            assert str(Message.Product.Updated()) not in response.text
+            assert str(Message.Product.Updated(prod.name)) \
+                not in unescape(response.text)
             assert prod.name in response.text
             assert str(Message.Product.InUse.ToOrder()) \
                 in unescape(response.text)
@@ -858,7 +866,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
                 response = client.post(
                     url_for("prod.products_to_order"), data=data)
                 assert "Products to order" in response.text
-                assert str(Message.Product.Ordered()) in response.text
+                assert str(Message.Product.Ordered(1)) in response.text
                 for product in products:
                     assert product.name in response.text
             assert len(products) == 1
@@ -877,7 +885,7 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
             assert response.request.path == url_for("main.index")
             assert "Products to order" not in response.text
             assert "Admin dashboard" in response.text
-            assert str(Message.Product.Ordered()) in response.text
+            assert str(Message.Product.Ordered(1)) in response.text
             assert str(Message.Product.NoOrder()) in response.text
 
 

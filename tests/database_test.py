@@ -387,7 +387,7 @@ def test_validate_ok_done_inv():
 @pytest.mark.parametrize(
     ("user_id", "err_message"), (
     (1, str(Message.User.RegReq.Admin())),
-    (3, str(Message.User.RegReq.NoProd())),
+    (3, str(Message.User.RegReq.WithProd())),
     (6, str(Message.User.RegReq.Retired())),
     ))
 def test_validate_reg_req(user_id, err_message):
@@ -610,7 +610,7 @@ def test_validate_category_products():
         assert not category.in_use
         with pytest.raises(
                 ValueError,
-                match=str(Message.Category.Products.Retired())):
+                match=str(Message.Category.Products.Disabled())):
             category.products.append(product)
         db_session.refresh(product)
         assert product.category.id == old_cat_id
@@ -623,7 +623,7 @@ def test_validate_category_not_in_use():
         assert category.in_use
         with pytest.raises(
                 ValueError,
-                match=str(Message.Category.Products.Retired())):
+                match=str(Message.Category.InUse.StillProd())):
             category.in_use = False
         assert category.in_use
 # endregion
@@ -754,7 +754,7 @@ def test_validate_supplier_products():
         supplier = db_session.get(Supplier, 5)
         with pytest.raises(
                 ValueError,
-                match=str(Message.Supplier.Products.Retired())):
+                match=str(Message.Supplier.Products.Disabled())):
             supplier.products.append(product)
         assert db_session.get(Product, 1).supplier == product.supplier
 
@@ -766,7 +766,7 @@ def test_validate_supplier_not_in_use():
         assert supplier.in_use
         with pytest.raises(
                 ValueError,
-                match=str(Message.Supplier.Products.Retired())):
+                match=str(Message.Supplier.InUse.StillProd())):
             supplier.in_use = False
         assert supplier.in_use
 # endregion
@@ -866,7 +866,7 @@ def test_change_product_name():
         ("__test__producttt__", "description", 1, None, 1, "measunit", 1, 2,
             str(Message.Category.NotExists(""))),
         ("__test__producttt__", "description", 1, 8, 1, "measunit", 1, 2,
-            str(Message.Category.Products.Retired())),
+            str(Message.Category.Products.Disabled())),
         ("__test__producttt__", "description", 1, 9, 1, "measunit", 1, 2,
             str(Message.Category.NotExists(""))),
         # # supplier
@@ -875,7 +875,7 @@ def test_change_product_name():
         ("__test__producttt__", "description", 1, 1, None, "measunit", 1, 2,
             str(Message.Supplier.NotExists(""))),
         ("__test__producttt__", "description", 1, 1, 5, "measunit", 1, 2,
-            str(Message.Supplier.Products.Retired())),
+            str(Message.Supplier.Products.Disabled())),
         ("__test__producttt__", "description", 1, 1, 6, "measunit", 1, 2,
             str(Message.Supplier.NotExists(""))),
         # # meas unit
@@ -1116,8 +1116,7 @@ def test_validate_product_responsible_last_product():
 
 @pytest.mark.parametrize(
     ("category_id", "err_message"), (
-    (8, str(Message.Category.Products.Retired())),
-    # intentionally string message test
+    (8, str(Message.Category.Products.Disabled())),
     (9, str(Message.Category.NotExists("")))
     ))
 def test_validate_product_category_id(category_id, err_message):
@@ -1132,7 +1131,7 @@ def test_validate_product_category_id(category_id, err_message):
 
 @pytest.mark.parametrize(
     ("supplier_id", "err_message"), (
-    (5, str(Message.Supplier.Products.Retired())),
+    (5, str(Message.Supplier.Products.Disabled())),
     (6, str(Message.Supplier.NotExists("")))
     ))
 def test_validate_product_supplier_id(supplier_id, err_message):

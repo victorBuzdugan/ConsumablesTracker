@@ -310,7 +310,7 @@ def edit_user(username):
                 else:
                     if db_session.is_modified(user, include_collections=False):
                         logger.debug("User updated")
-                        flash(**Message.User.Updated.flash())
+                        flash(**Message.User.Updated.flash(user.name))
                         db_session.commit()
                         if  user.in_use is not initial_in_use:
                             # add or remove from schedule

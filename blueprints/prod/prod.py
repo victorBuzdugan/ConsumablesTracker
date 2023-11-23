@@ -346,7 +346,7 @@ def edit_product(product):
                 else:
                     if db_session.is_modified(prod, include_collections=False):
                         logger.debug("Product updated")
-                        flash(**Message.Product.Updated.flash())
+                        flash(**Message.Product.Updated.flash(prod.name))
                         db_session.commit()
                         return redirect(session["last_url"])
 
@@ -391,14 +391,16 @@ def products_to_order():
                 .filter(Product.to_order)
                 .order_by(func.lower(Supplier.name))
             ).unique().all()
+            ordered_products = 0
             for product in prods:
                 if str(product.id) in request.form:
                     product.to_order = False
+                    ordered_products += 1
                 else:
                     product.to_order = True
             db_session.commit()
         logger.debug("Product(s) ordered")
-        flash(**Message.Product.Ordered.flash())
+        flash(**Message.Product.Ordered.flash(ordered_products))
         session["last_url"] = url_for("main.index")
     elif prod_to_order_form.errors:
         logger.warning("Product order error(s)")

@@ -71,7 +71,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in: User):
                     f'{session["user_name"]}') in response.text
             assert ('You have <span class="text-secondary">' +
                     f'{len(user.products)} products') in response.text
-            assert str(Message.UI.Inv.NotReq()) in response.text
+            assert "Inventory check not required" in response.text
             assert user.sat_group == 2
             assert sat_sch_info.negative_en in response.text
             assert clean_sch_info.negative_en in response.text
@@ -142,7 +142,7 @@ def test_index_admin_logged_in_user_dashboard(
                     f'{session["user_name"]}') in response.text
             assert ('You have <span class="text-secondary">' +
                     f'{user.in_use_products} products') in response.text
-            assert str(Message.UI.Inv.NotReq()) in response.text
+            assert "Inventory check not required" in response.text
             assert user.sat_group == 1
             assert sat_sch_info.positive_en in response.text
             assert clean_sch_info.positive_en in response.text
@@ -186,7 +186,7 @@ def test_index_admin_logged_in_user_dashboard(
         client.get(url_for("set_language", language="ro"))
         assert session["language"] == "ro"
         response = client.get(url_for("main.index"))
-        assert "Language changed" not in response.text
+        assert "The language was changed" not in response.text
         assert "Admin dashboard" not in response.text
         assert "Statistics" not in response.text
         assert "Limba a fost schimbată" in response.text
@@ -243,7 +243,7 @@ def test_index_hidden_admin_logged_in_user_dashboard(
                     f'{hidden_admin_logged_in.name}') in response.text
             assert ('You have <span class="text-secondary">' +
                     f'{user.in_use_products} products') in response.text
-            assert str(Message.UI.Inv.NotReq()) in response.text
+            assert "Inventory check not required" in response.text
             assert user.sat_group == 1
             assert sat_sch_info.negative_en in response.text
             assert clean_sch_info.negative_en in response.text
@@ -343,7 +343,7 @@ def test_index_admin_logged_in_admin_dashboard_table(
         client.get(url_for("set_language", language="ro"))
         assert session["language"] == "ro"
         response = client.get(url_for("main.index"))
-        assert "Language changed" not in response.text
+        assert "The language was changed" not in response.text
         assert "Admin dashboard" not in response.text
         assert "Bolded users have administrative privileges" \
             not in response.text
@@ -435,7 +435,7 @@ def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         assert response.status_code == 200
-        assert str(Message.Product.NoOrder()) in response.text
+        assert "There are no products that need to be ordered" in response.text
         with dbSession() as db_session:
             db_session.get(Product, 1).to_order = True
             db_session.get(Product, 2).to_order = True
@@ -461,7 +461,8 @@ def test_index_admin_logged_in_admin_dashboard_product_need_to_be_ordered(
             db_session.get(Product, 3).to_order = False
             db_session.commit()
             response = client.get(url_for("main.index"))
-            assert str(Message.Product.NoOrder()) in response.text
+            assert "There are no products that need to be ordered" \
+                in response.text
 
 
 def test_index_admin_logged_in_statistics(

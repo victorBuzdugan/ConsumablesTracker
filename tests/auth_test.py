@@ -229,7 +229,7 @@ def test_failed_registration_invalid_email(
         return (email.split("@")[0] + "@" +
                 "x" * 256 +
                 "." + email.rsplit(".")[1])
-    flash_message = "Invalid email adress"
+    flash_message = str(Message.User.Email.Invalid())
     invalidate_email = st_random.choice([remove_local,
                                       remove_at_symbol,
                                       remove_domain,
@@ -282,7 +282,7 @@ def test_registration(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("auth.login")
-        assert "Registration request sent. Please contact an admin." \
+        assert str(Message.User.Registered()) \
             in response.text
 
     with dbSession() as db_session:
@@ -321,7 +321,7 @@ def test_login_landing_page(client: FlaskClient, caplog: LogCaptureFixture):
         assert session["language"] == "ro"
         assert "Language changed to 'ro'" in caplog.messages
         caplog.clear()
-        assert "Language changed" not in response.text
+        assert "The language was changed" not in response.text
         assert "Username" not in response.text
         assert "Password" not in response.text
         assert "Limba a fost schimbată" in response.text
@@ -438,7 +438,7 @@ def test_login_and_logout(client: FlaskClient, user):
         assert session["user_id"] == user["id"]
         assert session["admin"] == user["admin"]
         assert session["user_name"] == user["name"]
-        assert f"Welcome {user['name']}" in response.text
+        assert str(Message.User.Login(user['name'])) in response.text
         assert len(response.history) == 1
         assert response.history[0].status_code == 302
         assert response.status_code == 200

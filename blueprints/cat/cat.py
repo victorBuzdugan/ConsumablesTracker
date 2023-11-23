@@ -176,7 +176,7 @@ def edit_category(category):
                 else:
                     if db_session.is_modified(cat, include_collections=False):
                         logger.debug("Category updated")
-                        flash(**Message.Category.Updated.flash())
+                        flash(**Message.Category.Updated.flash(cat.name))
                         db_session.commit()
                         return redirect(session["last_url"])
     elif edit_cat_form.errors:
@@ -228,7 +228,7 @@ def reassign_category(category):
                                               .responsible_id.data)
                 db_session.commit()
                 logger.debug("Category '%s' responsible updated", cat.name)
-                flash(**Message.Category.Responsible.Updated.flash())
+                flash(**Message.Category.Responsible.Updated.flash(cat.name))
         else:
             flash(**Message.Category.Responsible.Invalid.flash())
         return redirect(url_for(".reassign_category", category=category))

@@ -102,7 +102,7 @@ def test_new_category(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("cat.categories")
-        assert f"Category '{name}' created" in unescape(response.text)
+        assert str(Message.Category.Created(name)) in unescape(response.text)
         assert name in unescape(response.text)
     with dbSession() as db_session:
         cat = db_session.scalar(select(Category).filter_by(name=name))
@@ -152,10 +152,9 @@ def test_failed_new_category_invalid_name(request, name: str):
     """Invalid or no name"""
     name = name.strip()
     if name:
-        flash_message = ("Category name must have at least " +
-                         f"{Constant.Category.Name.min_length} characters")
+        flash_message = str(Message.Category.Name.LenLimit())
     else:
-        flash_message = "Category name is required"
+        flash_message = str(Message.Category.Name.Req())
     _test_failed_new_category(request=request,
                               name=name,
                               flash_message=flash_message)
@@ -165,7 +164,7 @@ def test_failed_new_category_invalid_name(request, name: str):
 @given(category=st.sampled_from(test_categories))
 def test_failed_new_category_duplicate_name(request, category):
     """Duplicate category name."""
-    flash_message = f"The category {category['name']} allready exists"
+    flash_message = str(Message.Category.Name.Exists(category['name']))
     _test_failed_new_category(request=request,
                               name=category['name'],
                               flash_message=flash_message,
@@ -213,7 +212,8 @@ def test_edit_category(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert quote(response.request.path) == url_for("cat.categories")
-        assert "Category updated" in response.text
+        assert str(Message.Category.Updated(new_name)) \
+            in unescape(response.text)
         assert new_name in unescape(response.text)
         assert new_description in unescape(response.text)
     with dbSession() as db_session:
@@ -256,7 +256,8 @@ def _test_failed_edit_category(
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert str(Message.Category.Updated()) not in response.text
+        assert str(Message.Category.Updated(new_name)) \
+            not in unescape(response.text)
         assert category["name"] in response.text
         assert flash_message in unescape(response.text)
     with dbSession() as db_session:
@@ -306,8 +307,8 @@ def test_failed_edit_category_duplicate_name(
                                  if category["has_products"]]))
 def test_failed_edit_category_with_products_not_in_use(
         request, category: dict):
-    """Retire categories that still have products attached"""
-    flash_message = "Not in use category can't have products attached"
+    """Retire category that still have products attached"""
+    flash_message = str(Message.Category.InUse.StillProd())
     _test_failed_edit_category(request=request,
                                category=category,
                                new_in_use="",
@@ -361,7 +362,7 @@ def test_delete_category(client: FlaskClient, admin_logged_in: User):
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for("cat.categories")
-        assert f"Category '{cat.name}' has been deleted" \
+        assert str(Message.Category.Deleted(cat.name)) \
             in unescape(response.text)
     with dbSession() as db_session:
         assert not db_session.get(Category, cat.id)
@@ -393,7 +394,7 @@ def test_failed_delete_category_with_products(
             follow_redirects=True)
         assert len(response.history) == 0
         assert response.status_code == 200
-        assert "Can't delete category! There are still products attached!" \
+        assert str(Message.Category.NoDelete()) \
             in unescape(response.text)
     with dbSession() as db_session:
         assert db_session.get(Category, category["id"])
@@ -474,7 +475,8 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
             assert response.status_code == 200
             assert quote(response.request.path) == \
                 url_for("cat.reassign_category", category=cat.name)
-            assert "Category responsible updated" in response.text
+            assert str(Message.Category.Responsible.Updated(category["name"])) \
+                in unescape(response.text)
             assert str(Message.Category.Responsible.Invalid) \
                 not in response.text
         # check and teardown
@@ -524,8 +526,8 @@ def test_failed_reassign_category(
                 url_for("cat.reassign_category", category=cat.name),
                 data=data,
                 follow_redirects=True)
-            assert str(Message.Category.Responsible.Updated()) \
-                not in response.text
+            assert str(Message.Category.Responsible.Updated(category["name"])) \
+                not in unescape(response.text)
             if new_resp_id == 0:
                 assert str(Message.Category.Responsible.Invalid()) \
                     in response.text

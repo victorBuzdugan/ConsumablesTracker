@@ -392,7 +392,7 @@ class User(Base):
             if self.req_inv:
                 raise ValueError(Message.User.RegReq.ReqInv())
             if self.products:
-                raise ValueError(Message.User.RegReq.NoProd())
+                raise ValueError(Message.User.RegReq.WithProd())
         return value
 
     @validates("req_inv")
@@ -487,7 +487,7 @@ class Category(Base):
         """A category that's not in use can't have products assigned."""
         # pylint: disable=unused-argument
         if value and not self.in_use:
-            raise ValueError(Message.Category.Products.Retired())
+            raise ValueError(Message.Category.Products.Disabled())
         return value
 
     @validates("in_use")
@@ -496,7 +496,7 @@ class Category(Base):
         """A category that has products can't 'retire'."""
         # pylint: disable=unused-argument
         if not value and self.products:
-            raise ValueError(Message.Category.Products.Retired())
+            raise ValueError(Message.Category.InUse.StillProd())
         return value
 
 
@@ -559,7 +559,7 @@ class Supplier(Base):
         """A supplier that's not in use can't have products assigned."""
         # pylint: disable=unused-argument
         if value and not self.in_use:
-            raise ValueError(Message.Supplier.Products.Retired())
+            raise ValueError(Message.Supplier.Products.Disabled())
         return value
 
     @validates("in_use")
@@ -568,7 +568,7 @@ class Supplier(Base):
         """A supplier that has products can't 'retire'."""
         # pylint: disable=unused-argument
         if not value and self.products:
-            raise ValueError(Message.Supplier.Products.Retired())
+            raise ValueError(Message.Supplier.InUse.StillProd())
         return value
 
 
@@ -702,7 +702,7 @@ class Product(Base):
             if not category:
                 raise ValueError(Message.Category.NotExists(""))
             if not category.in_use:
-                raise ValueError(Message.Category.Products.Retired())
+                raise ValueError(Message.Category.Products.Disabled())
         return category_id
 
     @validates("category")
@@ -715,7 +715,7 @@ class Product(Base):
         if not category:
             raise ValueError(Message.Category.NotExists(""))
         if not category.in_use:
-            raise ValueError(Message.Category.Products.Retired())
+            raise ValueError(Message.Category.Products.Disabled())
         return category
 
     @validates("supplier_id")
@@ -732,7 +732,7 @@ class Product(Base):
             if not supplier:
                 raise ValueError(Message.Supplier.NotExists(""))
             if not supplier.in_use:
-                raise ValueError(Message.Supplier.Products.Retired())
+                raise ValueError(Message.Supplier.Products.Disabled())
         return supplier_id
 
     @validates("supplier")
@@ -745,7 +745,7 @@ class Product(Base):
         if not supplier:
             raise ValueError(Message.Supplier.NotExists(""))
         if not supplier.in_use:
-            raise ValueError(Message.Supplier.Products.Retired())
+            raise ValueError(Message.Supplier.Products.Disabled())
         return supplier
 
     @validates("meas_unit")

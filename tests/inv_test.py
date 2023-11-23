@@ -626,7 +626,7 @@ def test_inventory_request_user_logged_in_yes_check_inventory(
         assert response.history[0].status_code == 302
         assert response.status_code == 200
         assert response.request.path == url_for('inv.inventory')
-        assert "User can allready check inventory" in response.text
+        assert str(Message.User.ReqInv.CheckInv()) in response.text
         assert "Critical products are highlighted in red" in response.text
         with dbSession() as db_session:
             assert not db_session.get(User, user_logged_in.id).req_inv
