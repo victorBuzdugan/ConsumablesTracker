@@ -89,14 +89,14 @@ def test_change_password():
 
 @pytest.mark.parametrize(("name", "password", "sat_group", "error_msg"), (
     # name
-    ("", "password", 1, str(Message.User.Name.Req())),
-    (" ", "password", 1, str(Message.User.Name.Req())),
-    (None, "password", 1, str(Message.User.Name.Req())),
+    ("", "password", 1, str(Message.User.Name.Required())),
+    (" ", "password", 1, str(Message.User.Name.Required())),
+    (None, "password", 1, str(Message.User.Name.Required())),
     ("Admin", "password", 1, str(Message.User.Name.Exists("Admin"))),
     ("user1", "password", 1, str(Message.User.Name.Exists("user1"))),
     # password
-    ("test_user", "", 1, str(Message.User.Password.Req())),
-    ("test_user", None, 1, str(Message.User.Password.Req())),
+    ("test_user", "", 1, str(Message.User.Password.Required())),
+    ("test_user", None, 1, str(Message.User.Password.Required())),
     # sat group
     ("test_user", "password", "", "Invalid sat_group"),
     ("test_user", "password", "a", "Invalid sat_group"),
@@ -521,9 +521,9 @@ def test_change_category_name():
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
-    ("", str(Message.Category.Name.Req())),
-    (" ", str(Message.Category.Name.Req())),
-    (None, str(Message.Category.Name.Req())),
+    ("", str(Message.Category.Name.Required())),
+    (" ", str(Message.Category.Name.Required())),
+    (None, str(Message.Category.Name.Required())),
     ("Household", str(Message.Category.Name.Exists("Household"))),
     ("Groceries", str(Message.Category.Name.Exists("Groceries"))),
 ))
@@ -666,9 +666,9 @@ def test_change_supplier_name():
 
 
 @pytest.mark.parametrize(("name", "error_msg"), (
-    ("", str(Message.Supplier.Name.Req())),
-    (" ", str(Message.Supplier.Name.Req())),
-    (None, str(Message.Supplier.Name.Req())),
+    ("", str(Message.Supplier.Name.Required())),
+    (" ", str(Message.Supplier.Name.Required())),
+    (None, str(Message.Supplier.Name.Required())),
     ("Amazon", str(Message.Supplier.Name.Exists("Amazon"))),
     ("Carrefour", str(Message.Supplier.Name.Exists("Carrefour"))),
 ))
@@ -833,22 +833,22 @@ def test_change_product_name():
     "meas_unit", "min_stock", "ord_qty", "error_msg"), (
         # # name
         ("", "description", 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Name.Req())),
+            str(Message.Product.Name.Required())),
         (" ", "description", 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Name.Req())),
+            str(Message.Product.Name.Required())),
         (None, "description", 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Name.Req())),
+            str(Message.Product.Name.Required())),
         ("Toilet paper", "description", 1, 1, 1, "measunit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
         ("   Toilet paper   ", "description", 1, 1, 1, "measunit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
         # # description
         ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Description.Req())),
+            str(Message.Product.Description.Required())),
         ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Description.Req())),
+            str(Message.Product.Description.Required())),
         ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2,
-            str(Message.Product.Description.Req())),
+            str(Message.Product.Description.Required())),
         # # responsible
         ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
             str(Message.User.NotExists(""))),
@@ -880,11 +880,11 @@ def test_change_product_name():
             str(Message.Supplier.NotExists(""))),
         # # meas unit
         ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
-            str(Message.Product.MeasUnit.Req())),
+            str(Message.Product.MeasUnit.Required())),
         ("__test__producttt__", "description", 1, 1, 1, " ", 1, 2,
-            str(Message.Product.MeasUnit.Req())),
+            str(Message.Product.MeasUnit.Required())),
         ("__test__producttt__", "description", 1, 1, 1, None, 1, 2,
-            str(Message.Product.MeasUnit.Req())),
+            str(Message.Product.MeasUnit.Required())),
         # # min stock
         ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
             str(Message.Product.MinStock.Invalid())),

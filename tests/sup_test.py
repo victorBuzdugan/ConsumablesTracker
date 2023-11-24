@@ -97,7 +97,7 @@ def test_new_supplier(
 
 
 @pytest.mark.parametrize(("name", "flash_message"), (
-    ("", str(Message.Supplier.Name.Req())),
+    ("", str(Message.Supplier.Name.Required())),
     ("su", str(Message.Supplier.Name.LenLimit())),
     ("Amazon", str(Message.Supplier.Name.Exists("Amazon"))),
 ))
@@ -189,8 +189,8 @@ def test_edit_supplier(
 
 
 @pytest.mark.parametrize(("sup_id", "new_name", "new_in_use", "flash_msg"), (
-    ("1", "", "on", str(Message.Supplier.Name.Req())),
-    ("4", "", "on", str(Message.Supplier.Name.Req())),
+    ("1", "", "on", str(Message.Supplier.Name.Required())),
+    ("4", "", "on", str(Message.Supplier.Name.Required())),
     ("3", "ca", "on", str(Message.Supplier.Name.LenLimit())),
     ("5", "ca", "", str(Message.Supplier.Name.LenLimit())),
 ))

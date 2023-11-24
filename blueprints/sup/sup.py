@@ -37,7 +37,7 @@ class CreateSupForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Name"),
         validators=[
-            InputRequired(Message.Supplier.Name.Req()),
+            InputRequired(Message.Supplier.Name.Required()),
             Length(
                 min=Constant.Supplier.Name.min_length,
                 message=Message.Supplier.Name.LenLimit())],

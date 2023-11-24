@@ -74,7 +74,7 @@ def _test_failed_registration(
 def test_failed_registration_short_name(client: FlaskClient, name):
     """test_failed_registration_short_name"""
     if not name:
-        flash_message = str(Message.User.Name.Req())
+        flash_message = str(Message.User.Name.Required())
     else:
         flash_message = str(Message.User.Name.LenLimit())
     _test_failed_registration(client=client,
@@ -101,7 +101,7 @@ def test_failed_registration_long_name(client: FlaskClient, name):
 def test_failed_registration_short_password(client: FlaskClient, password):
     """test_failed_registration_short_password"""
     if not password:
-        flash_message = str(Message.User.Password.Req())
+        flash_message = str(Message.User.Password.Required())
     else:
         flash_message = str(Message.User.Password.LenLimit())
     _test_failed_registration(client=client,
@@ -116,7 +116,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
 def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
     """test_failed_registration_short_confirmation"""
     if not confirm:
-        flash_message = str(Message.User.Password.Req())
+        flash_message = str(Message.User.Password.Required())
     else:
         flash_message = str(Message.User.Password.LenLimit())
     _test_failed_registration(client=client,
@@ -392,7 +392,7 @@ def _test_failed_login(client: FlaskClient, name, password, flash_message):
 def test_failed_login_username(client: FlaskClient, name):
     """Failed login bad username or no username"""
     if not name:
-        flash_message = str(Message.User.Name.Req())
+        flash_message = str(Message.User.Name.Required())
     else:
         flash_message = str(Message.UI.Auth.Wrong())
     _test_failed_login(client=client,
@@ -407,7 +407,7 @@ def test_failed_login_password(client: FlaskClient):
         password = user["password"]
         if user == test_users[0]:
             password = ""
-            flash_message = str(Message.User.Password.Req())
+            flash_message = str(Message.User.Password.Required())
         elif not user["in_use"]:
             flash_message = str(Message.User.Retired(user["name"]))
         elif user["reg_req"]:
@@ -539,7 +539,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         "",
         ValidUser.password,
         ValidUser.password,
-        str(Message.User.Password.Req()),
+        str(Message.User.Password.Required()),
         id="Missing old password"),
     pytest.param(
         InvalidUser.short_password,
@@ -551,7 +551,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         "",
         ValidUser.password,
-        str(Message.User.Password.Req()),
+        str(Message.User.Password.Required()),
         id="Missing new password"),
     pytest.param(
         ValidUser.password,
@@ -587,7 +587,7 @@ def test_change_password_landing_page_if_admin_logged_in(
         ValidUser.password,
         ValidUser.password,
         "",
-        str(Message.User.Password.Req()),
+        str(Message.User.Password.Required()),
         id="Missing confirmation password"),
     pytest.param(
         ValidUser.password,

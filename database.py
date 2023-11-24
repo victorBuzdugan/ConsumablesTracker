@@ -279,7 +279,7 @@ class User(Base):
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.User.Name.Req())
+            raise ValueError(Message.User.Name.Required())
         value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
@@ -293,7 +293,7 @@ class User(Base):
         Returns hashed `value`"""
         # pylint: disable=unused-argument
         if not value:
-            raise ValueError(Message.User.Password.Req())
+            raise ValueError(Message.User.Password.Required())
         return generate_password_hash(value)
 
     @validates("products")
@@ -470,7 +470,7 @@ class Category(Base):
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.Category.Name.Req())
+            raise ValueError(Message.Category.Name.Required())
         value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
@@ -542,7 +542,7 @@ class Supplier(Base):
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.Supplier.Name.Req())
+            raise ValueError(Message.Supplier.Name.Required())
         value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
@@ -625,7 +625,7 @@ class Product(Base):
         """Check for duplicate or empty name."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.Product.Name.Req())
+            raise ValueError(Message.Product.Name.Required())
         value = value.strip()
         if value != self.name:
             with dbSession() as db_session:
@@ -639,7 +639,7 @@ class Product(Base):
         """Check for empty description."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.Product.Description.Req())
+            raise ValueError(Message.Product.Description.Required())
         return value.strip()
 
     @validates("responsible_id")
@@ -753,7 +753,7 @@ class Product(Base):
         """Check for empty measuring unit."""
         # pylint: disable=unused-argument
         if not value or not value.strip():
-            raise ValueError(Message.Product.MeasUnit.Req())
+            raise ValueError(Message.Product.MeasUnit.Required())
         return value.strip()
 
     @validates("min_stock")

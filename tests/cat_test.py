@@ -154,7 +154,7 @@ def test_failed_new_category_invalid_name(request, name: str):
     if name:
         flash_message = str(Message.Category.Name.LenLimit())
     else:
-        flash_message = str(Message.Category.Name.Req())
+        flash_message = str(Message.Category.Name.Required())
     _test_failed_new_category(request=request,
                               name=name,
                               flash_message=flash_message)
@@ -281,7 +281,7 @@ def test_failed_edit_category_invalid_name(
     if new_name:
         flash_message = str(Message.Category.Name.LenLimit())
     else:
-        flash_message = str(Message.Category.Name.Req())
+        flash_message = str(Message.Category.Name.Required())
     _test_failed_edit_category(request=request,
                                category=category,
                                new_name=new_name,

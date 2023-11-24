@@ -38,7 +38,7 @@ class CreateProdForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Code"),
         validators=[
-            InputRequired(Message.Product.Name.Req()),
+            InputRequired(Message.Product.Name.Required()),
             Length(
                 min=Constant.Product.Name.min_length,
                 max=Constant.Product.Name.max_length,
@@ -51,7 +51,7 @@ class CreateProdForm(FlaskForm):
     description = StringField(
         label=lazy_gettext("Description"),
         validators=[
-            InputRequired(Message.Product.Description.Req()),
+            InputRequired(Message.Product.Description.Required()),
             Length(
                 min=Constant.Product.Description.min_length,
                 max=Constant.Product.Description.max_length,
@@ -82,7 +82,7 @@ class CreateProdForm(FlaskForm):
                 })
     meas_unit = StringField(
         label=lazy_gettext("Measuring unit"),
-        validators=[InputRequired(Message.Product.MeasUnit.Req())],
+        validators=[InputRequired(Message.Product.MeasUnit.Required())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Measuring unit"),
@@ -91,7 +91,7 @@ class CreateProdForm(FlaskForm):
     min_stock = IntegerField(
         label=lazy_gettext("Minimum stock"),
         validators=[
-            InputRequired(Message.Product.MinStock.Req()),
+            InputRequired(Message.Product.MinStock.Required()),
             NumberRange(
                 min=Constant.Product.MinStock.min_value,
                 message=Message.Product.MinStock.Invalid())],
@@ -103,7 +103,7 @@ class CreateProdForm(FlaskForm):
     ord_qty = IntegerField(
         label=lazy_gettext("Order quantity"),
         validators=[
-            InputRequired(Message.Product.OrdQty.Req()),
+            InputRequired(Message.Product.OrdQty.Required()),
             NumberRange(
                 min=Constant.Product.OrdQty.min_value,
                 message=Message.Product.OrdQty.Invalid())],

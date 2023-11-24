@@ -39,7 +39,7 @@ class CreateUserForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Username"),
         validators=[
-            InputRequired(Message.User.Name.Req()),
+            InputRequired(Message.User.Name.Required()),
             Length(
                 min=Constant.User.Name.min_length,
                 max=Constant.User.Name.max_length,
@@ -52,7 +52,7 @@ class CreateUserForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("Password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),

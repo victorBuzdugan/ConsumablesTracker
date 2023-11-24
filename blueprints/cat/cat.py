@@ -37,7 +37,7 @@ class CreateCatForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Name"),
         validators=[
-            InputRequired(Message.Category.Name.Req()),
+            InputRequired(Message.Category.Name.Required()),
             Length(
                 min=Constant.Category.Name.min_length,
                 message=Message.Category.Name.LenLimit())],

@@ -46,7 +46,7 @@ class Message:
         """User messages"""
         class Name:
             """User name messages"""
-            Req = Msg(
+            Required = Msg(
                 description="Displayed at user creation and authentification",
                 tested=True,
                 category=Color.RED.value,
@@ -71,7 +71,7 @@ class Message:
             )
         class Password:
             """User password messages"""
-            Req = Msg(
+            Required = Msg(
                 description="Displayed at user creation and authentification",
                 tested=True,
                 category=Color.RED.value,
@@ -344,7 +344,7 @@ class Message:
         """Category messages"""
         class Name:
             """Category name messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -442,7 +442,7 @@ class Message:
         """Supplier messages"""
         class Name:
             """Supplier name messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -540,7 +540,7 @@ class Message:
         """Product messages"""
         class Name:
             """Product name messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -563,7 +563,7 @@ class Message:
             )
         class Description:
             """Product description messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -604,7 +604,7 @@ class Message:
             )
         class MeasUnit:
             """Product meas_unit attr messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -612,7 +612,7 @@ class Message:
             )
         class MinStock:
             """Product min_stock attr messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -627,7 +627,7 @@ class Message:
             )
         class OrdQty:
             """Product ord_qty attr messages"""
-            Req = Msg(
+            Required = Msg(
                 tested=True,
                 category=Color.RED.value,
                 message=lambda : lazy_gettext(

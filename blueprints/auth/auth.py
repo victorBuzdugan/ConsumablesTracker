@@ -26,14 +26,14 @@ class LoginForm(FlaskForm):
     """Login form."""
     name = StringField(
         label=lazy_gettext("Username"),
-        validators=[InputRequired(Message.User.Name.Req())],
+        validators=[InputRequired(Message.User.Name.Required())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Username"),
             })
     password = PasswordField(
         label=lazy_gettext("Password"),
-        validators=[InputRequired(Message.User.Password.Req())],
+        validators=[InputRequired(Message.User.Password.Required())],
         render_kw={
             "class": "form-control",
             "placeholder": lazy_gettext("Password"),
@@ -50,7 +50,7 @@ class RegisterForm(FlaskForm):
     name = StringField(
         label=lazy_gettext("Username"),
         validators=[
-            InputRequired(Message.User.Name.Req()),
+            InputRequired(Message.User.Name.Required()),
             Length(
                 min=Constant.User.Name.min_length,
                 max=Constant.User.Name.max_length,
@@ -63,7 +63,7 @@ class RegisterForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("Password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
@@ -78,7 +78,7 @@ class RegisterForm(FlaskForm):
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
@@ -111,7 +111,7 @@ class ChgPasswForm(FlaskForm):
     old_password = PasswordField(
         label=lazy_gettext("Old password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit())],
@@ -123,7 +123,7 @@ class ChgPasswForm(FlaskForm):
     password = PasswordField(
         label=lazy_gettext("New password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
@@ -138,7 +138,7 @@ class ChgPasswForm(FlaskForm):
     confirm = PasswordField(
         label=lazy_gettext("Retype password"),
         validators=[
-            InputRequired(Message.User.Password.Req()),
+            InputRequired(Message.User.Password.Required()),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
