@@ -95,7 +95,8 @@ def test_products_page_admin_logged_in(
         assert response.status_code == 200
         assert quote(response.request.path) == url_for("prod.products",
                                                        ordered_by="code")
-        assert str(Message.Product.NoSort("not_existing")) in response.text
+        assert str(Message.Product.NoSort("not_existing")) \
+            in unescape(response.text)
 # endregion
 
 

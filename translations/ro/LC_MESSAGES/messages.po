@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  v2.0\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-11-23 20:49+0200\n"
+"POT-Creation-Date: 2023-11-24 11:03+0200\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -407,12 +407,20 @@ msgstr "Produsul '%(name)s' a fost actualizat"
 
 #: messages.py:690
 #, python-format
-msgid "Cannot sort products by %(attribute)s"
-msgstr "Nu se pot sorta produsele după %(attribute)s"
+msgid "Cannot sort products by '%(attribute)s'"
+msgstr "Nu se pot sorta produsele după '%(attribute)s'"
 
 #: messages.py:697
 msgid "There are no products that must be ordered"
 msgstr "Nu este nici un produs de comandat"
+
+#: messages.py:704
+#, python-format
+msgid "%(number)s product was removed from the order list"
+msgid_plural "%(number)s products were removed from the order list"
+msgstr[0] "%(number)s produs a fost scos de pe lista de comandat"
+msgstr[1] "%(number)s produse au fost scoase de pe lista de comandat"
+msgstr[2] "%(number)s de produse au fost scoase de pe lista de comandat"
 
 #: messages.py:713
 msgid "All products were removed from the order list"
