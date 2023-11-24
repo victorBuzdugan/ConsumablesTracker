@@ -115,7 +115,8 @@ def categories():
     return render_template(
         "cat/categories.html",
         categories=cats,
-        stats=stats)
+        stats=stats,
+        Message=Message)
 
 
 @cat_bp.route("/new", methods=["GET", "POST"])

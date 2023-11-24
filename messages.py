@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Callable, Optional
 
+from flask import url_for
 from flask_babel import LazyString, lazy_gettext, lazy_ngettext
+from markupsafe import Markup
 
 from constants import Constant
 
@@ -16,18 +18,137 @@ class Color(StrEnum):
     YELLOW = "warning"
     RED    = "error"
 
+def stats(element: str,
+          all_elements: int=-1,
+          in_use_elements: int=-1,
+          with_link: bool=False):
+    """Build the stat message based on the arguments.
+    
+    :param element: user, category, supplier, product, crit_product
+    :param all_elements: number of all elements
+    :param in_use_elements: number of elements in use
+    :param with_link: if true builds the message with a link
+    """
+    # constants
+    span = '<span class="text-secondary">'
+    end_span = "</span>"
+    end_link = "</a>"
+    def build_link(link):
+        return ('<a class="link-secondary link-offset-2 ' +
+                'link-underline-opacity-25 link-underline-opacity-100-hover" ' +
+                f'href="{link}">')
+    # prechecks
+    if all_elements < 0 and in_use_elements < 0:
+        raise ValueError("Invalid arguments")
+    # first half
+    counter = all_elements if all_elements >= 0 else in_use_elements
+    match element:
+        case "users":
+            html_text = lazy_ngettext(
+                "There is %(start_format)s%(number)s user",
+                "There are %(start_format)s%(number)s users",
+                counter,
+                number=counter,
+                start_format=(
+                    build_link(url_for("main.index"))
+                    if with_link else span)
+            )
+        case "categories":
+            html_text = lazy_ngettext(
+                "There is %(start_format)s%(number)s category",
+                "There are %(start_format)s%(number)s categories",
+                counter,
+                number=counter,
+                start_format=(
+                    build_link(url_for("cat.categories"))
+                    if with_link else span)
+            )
+        case "suppliers":
+            html_text = lazy_ngettext(
+                "There is %(start_format)s%(number)s supplier",
+                "There are %(start_format)s%(number)s suppliers",
+                counter,
+                number=counter,
+                start_format=(
+                    build_link(url_for("sup.suppliers"))
+                    if with_link else span)
+            )
+        case "products":
+            html_text = lazy_ngettext(
+                "There is %(start_format)s%(number)s product",
+                "There are %(start_format)s%(number)s products",
+                counter,
+                number=counter,
+                start_format=(
+                    build_link(url_for("prod.products", ordered_by="code"))
+                    if with_link else span)
+            )
+        case "critical_products":
+            html_text = lazy_ngettext(
+                "There is %(start_format)s%(number)s critical product",
+                "There are %(start_format)s%(number)s critical products",
+                counter,
+                number=counter,
+                start_format=(build_link(url_for("main.index"))
+                              if with_link else span)
+            )
+        case _:
+            raise ValueError(f"Invalid element '{element}'")
+    html_text += end_link if with_link else end_span
+    # optional second half
+    if all_elements < 0:
+        html_text += " " + lazy_gettext("in use")
+    elif all_elements >= 0 and in_use_elements >= 0:
+        html_text += ", " + lazy_ngettext(
+            "and",
+            "of which",
+            all_elements
+        )
+        html_text += " " + span + lazy_ngettext(
+            "%(number)s is in use",
+            "%(number)s are in use",
+            in_use_elements,
+            number=in_use_elements
+        )
+        html_text += end_span
+    return Markup(html_text)
+
+
+def strikethrough(element: str):
+    """Build the strikethrough caption message based on argument.
+    
+    :param element: user, category, supplier, product, crit_product
+    """
+    html_text = "*"
+    match element:
+        case "users":
+            html_text += lazy_gettext(
+                "Strikethrough users are no longer in use.")
+        case "categories":
+            html_text += lazy_gettext(
+                "Strikethrough categories are no longer in use.")
+        case "suppliers":
+            html_text += lazy_gettext(
+                "Strikethrough suppliers are no longer in use.")
+        case "products":
+            html_text += lazy_gettext(
+                "Strikethrough products are no longer in use.")
+        case _:
+            raise ValueError(f"Invalid element '{element}'")
+    return Markup(html_text)
 
 @dataclass(frozen=True)
 class Msg:
     """UI messages base class.
     
     :param message: the UI message
-    :param category: `message` | `info` | `warning` | `error`
-    :param description: message extra information
-    :param tested: message tested
+    :param category: `message` | `info` | `warning` | `error` | `None`
+        `None` means it's not supposed to be flashed
+    :param description: optional message extra information
+    :param tested: message visually tested in the UI
     """
     message: Callable[[str], LazyString]
-    category: Optional[str] = Color.GREEN.value
+    category: Optional[Color] = Color.GREEN.value
     description: Optional[str] = None
     tested: Optional[bool] = False
 
@@ -835,3 +956,15 @@ class Message:
                 message=lambda : lazy_gettext(
                     "All fields except email are required")
             )
+        Stats = Msg(
+            description="Statistics message",
+            tested=False,
+            category=None,
+            message=stats
+        )
+        Strikethrough = Msg(
+            description="Build strikethrough message",
+            tested=False,
+            category=None,
+            message=strikethrough
+        )
