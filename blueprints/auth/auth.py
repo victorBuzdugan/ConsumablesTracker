@@ -200,7 +200,9 @@ def login():
     if request.method == "POST":
         return redirect(url_for(".login", form=login_form))
 
-    return render_template("auth/login.html", form=login_form)
+    return render_template("auth/login.html",
+                           form=login_form,
+                           Message=Message)
 
 
 @auth_bp.route("/logout")
@@ -242,7 +244,9 @@ def register():
         logger.warning("Bad registration data")
         flash_errors(reg_form.errors)
 
-    return render_template("auth/register.html", form=reg_form)
+    return render_template("auth/register.html",
+                           form=reg_form,
+                           Message=Message)
 
 
 @auth_bp.route("/change-password", methods=["GET", "POST"])
@@ -272,4 +276,6 @@ def change_password():
         logger.warning("Change password error(s)")
         flash_errors(chg_pass_form.errors)
 
-    return render_template("auth/change_password.html", form=chg_pass_form)
+    return render_template("auth/change_password.html",
+                           form=chg_pass_form,
+                           Message=Message)

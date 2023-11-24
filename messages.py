@@ -27,8 +27,8 @@ class Msg:
     :param tested: message tested
     """
     message: Callable[[str], LazyString]
-    category: str = Color.GREEN.value
-    description: str = None
+    category: Optional[str] = Color.GREEN.value
+    description: Optional[str] = None
     tested: Optional[bool] = False
 
     def flash(self, *args, **kwargs) -> dict[str, str]:
@@ -46,6 +46,16 @@ class Message:
         """User messages"""
         class Name:
             """User name messages"""
+            class Requirements:
+                """User name requirements"""
+                MinLen = Msg(
+                    description="HTML name requirement",
+                    tested=True,
+                    category=None,
+                    message=lambda : lazy_gettext(
+                        "Must have at least %(min)i characters",
+                        min=Constant.User.Name.min_length)
+                )
             Required = Msg(
                 description="Displayed at user creation and authentification",
                 tested=True,
@@ -71,6 +81,38 @@ class Message:
             )
         class Password:
             """User password messages"""
+            class Requirements:
+                """User password requirements"""
+                MinLen = Msg(
+                    description="HTML password requirement",
+                    tested=True,
+                    category=None,
+                    message=lambda : lazy_gettext(
+                        "Must have at least %(min)i characters",
+                        min=Constant.User.Password.min_length)
+                )
+                BigLetter = Msg(
+                    description="HTML password requirement",
+                    tested=True,
+                    category=None,
+                    message=lambda : lazy_gettext(
+                        "Must have at least 1 big letter")
+                )
+                Number = Msg(
+                    description="HTML password requirement",
+                    tested=True,
+                    category=None,
+                    message=lambda : lazy_gettext(
+                        "Must have at least 1 number")
+                )
+                SpecChar = Msg(
+                    description="HTML password requirement",
+                    tested=True,
+                    category=None,
+                    message=lambda : lazy_gettext(
+                        "Must have at least 1 special character (%(symbols)s)",
+                        symbols=Constant.User.Password.symbols)
+                )
             Required = Msg(
                 description="Displayed at user creation and authentification",
                 tested=True,
@@ -776,4 +818,20 @@ class Message:
                 category=Color.BLUE.value,
                 message=lambda : lazy_gettext(
                     "Inventorying is not necessary")
+            )
+        class FieldsReq:
+            """Fields requirements"""
+            All = Msg(
+                description="HTML form fields requirements",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "All fields are required")
+            )
+            AllExcEmail = Msg(
+                description="HTML form fields requirements",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "All fields except email are required")
             )

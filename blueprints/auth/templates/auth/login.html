@@ -23,7 +23,7 @@
                     <div class="alert d-none p-0" id="name-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
                             <li class="userrequirements userleng">
-                            {{ gettext("Enter username") }}</li>
+                            {{ Message.User.Name.Required() }}</li>
                         </ul>
                     </div>
                 </div>
@@ -36,12 +36,12 @@
                     <div class="alert d-none p-0" id="password-alert" role="alert" data-mdb-color="warning">
                         <ul class="list-unstyled mb-0">
                             <li class="requirements leng">
-                            {{ gettext("Enter password") }}</li>
+                            {{ Message.User.Password.Required() }}</li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">{{ _("All fields are required") }}</span>
+            <span class="text-body-tertiary">{{ Message.UI.FieldsReq.All() }}</span>
         </div>
         
         <div class="card-footer py-3">

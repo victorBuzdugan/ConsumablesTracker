@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-11-24 11:03+0200\n"
+"POT-Creation-Date: 2023-11-24 15:59+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,444 +17,470 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: messages.py:53
+#: messages.py:55 messages.py:90
+#, python-format
+msgid "Must have at least %(min)i characters"
+msgstr ""
+
+#: messages.py:63
 msgid "The username is required"
 msgstr ""
 
-#: messages.py:59
+#: messages.py:69
 #, python-format
 msgid "The username must be between %(min)i and %(max)i characters"
 msgstr ""
 
-#: messages.py:68
+#: messages.py:78
 #, python-format
 msgid "The user '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:78
+#: messages.py:98
+msgid "Must have at least 1 big letter"
+msgstr ""
+
+#: messages.py:105
+msgid "Must have at least 1 number"
+msgstr ""
+
+#: messages.py:112
+#, python-format
+msgid "Must have at least 1 special character (%(symbols)s)"
+msgstr ""
+
+#: messages.py:120
 msgid "The password is required"
 msgstr ""
 
-#: messages.py:84
+#: messages.py:126
 #, python-format
 msgid "The password should have at least %(min)i characters"
 msgstr ""
 
-#: messages.py:91
+#: messages.py:133
 msgid "Check password rules"
 msgstr ""
 
-#: messages.py:97
+#: messages.py:139
 #, python-format
 msgid ""
 "The password must have 1 big letter, 1 number, and 1 special character "
 "(%(symbols)s)"
 msgstr ""
 
-#: messages.py:105
+#: messages.py:147
 msgid "The passwords don't match"
 msgstr ""
 
-#: messages.py:111
+#: messages.py:153
 msgid "Wrong old password"
 msgstr ""
 
-#: messages.py:117
+#: messages.py:159
 msgid "The password was changed"
 msgstr ""
 
-#: messages.py:125
+#: messages.py:167
 msgid "You can't attach products to a retired user"
 msgstr ""
 
-#: messages.py:131
+#: messages.py:173
 msgid "You can't attach products to a user with a pending registration"
 msgstr ""
 
-#: messages.py:140
+#: messages.py:182
 msgid "A user with a pending registration can't be admin"
 msgstr ""
 
-#: messages.py:146
+#: messages.py:188
 msgid "You are the last admin"
 msgstr ""
 
-#: messages.py:154
+#: messages.py:196
 msgid "You can't retire a user if he is responsible for products"
 msgstr ""
 
-#: messages.py:162
+#: messages.py:204
 msgid "A retired user can't check inventory"
 msgstr ""
 
-#: messages.py:168
+#: messages.py:210
 msgid "A user with a pending registration can't check inventory"
 msgstr ""
 
-#: messages.py:174
+#: messages.py:216
 msgid "A user without products attached can't check inventory"
 msgstr ""
 
-#: messages.py:182
+#: messages.py:224
 msgid "Registration cannot be requested by an admin"
 msgstr ""
 
-#: messages.py:188
+#: messages.py:230
 msgid "Registration cannot be requested by a retired user"
 msgstr ""
 
-#: messages.py:194
+#: messages.py:236
 msgid "Registration cannot be requested by a user who checks inventory"
 msgstr ""
 
-#: messages.py:201
+#: messages.py:243
 msgid "Registration cannot be requested by a user who has requested inventorying"
 msgstr ""
 
-#: messages.py:208
+#: messages.py:250
 msgid "Registration cannot be requested by a user who has products attached"
 msgstr ""
 
-#: messages.py:217
+#: messages.py:259
 msgid "Admins don't need to request inventorying"
 msgstr ""
 
-#: messages.py:223
+#: messages.py:265
 msgid "Inventorying cannot be requested by a retired user"
 msgstr ""
 
-#: messages.py:229
+#: messages.py:271
 msgid "Inventorying cannot be requested by a user with a pending registration"
 msgstr ""
 
-#: messages.py:236
+#: messages.py:278
 msgid "The user can already check inventory"
 msgstr ""
 
-#: messages.py:242
+#: messages.py:284
 msgid "Inventorying cannot be requested by a user who has no products attached"
 msgstr ""
 
-#: messages.py:249
+#: messages.py:291
 msgid "The inventory check request was submitted"
 msgstr ""
 
-#: messages.py:257
+#: messages.py:299
 msgid "The email address is incorrect"
 msgstr ""
 
-#: messages.py:265
+#: messages.py:307
 msgid "The group number doesn't exist"
 msgstr ""
 
-#: messages.py:272
+#: messages.py:314
 #, python-format
 msgid "The user '%(name)s' does not exist"
 msgstr ""
 
-#: messages.py:274
+#: messages.py:316
 msgid "The user does not exist"
 msgstr ""
 
-#: messages.py:280
+#: messages.py:322
 #, python-format
 msgid "Hello, %(name)s"
 msgstr ""
 
-#: messages.py:286
+#: messages.py:328
 msgid "You have been logged out"
 msgstr ""
 
-#: messages.py:292
+#: messages.py:334
 #, python-format
 msgid "The user '%(name)s' awaits registration approval"
 msgstr ""
 
-#: messages.py:299
+#: messages.py:341
 #, python-format
 msgid "The user '%(name)s' is retired"
 msgstr ""
 
-#: messages.py:306
+#: messages.py:348
 msgid "The registration request was submitted. Contact an admin"
 msgstr ""
 
-#: messages.py:312
+#: messages.py:354
 #, python-format
 msgid "The user '%(name)s' has been approved"
 msgstr ""
 
-#: messages.py:319
+#: messages.py:361
 msgid "You can't delete a user if he is responsible for products"
 msgstr ""
 
-#: messages.py:325
+#: messages.py:367
 #, python-format
 msgid "The user '%(name)s' has been deleted"
 msgstr ""
 
-#: messages.py:332
+#: messages.py:374
 #, python-format
 msgid "The user '%(name)s' was created"
 msgstr ""
 
-#: messages.py:339
+#: messages.py:381
 #, python-format
 msgid "User '%(name)s' updated"
 msgstr ""
 
-#: messages.py:350
+#: messages.py:392
 msgid "The category name is required"
 msgstr ""
 
-#: messages.py:356
+#: messages.py:398
 #, python-format
 msgid "The category name must have at least %(min)s characters"
 msgstr ""
 
-#: messages.py:363
+#: messages.py:405
 #, python-format
 msgid "The category '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:372
+#: messages.py:414
 msgid "You can't attach products to a disabled category"
 msgstr ""
 
-#: messages.py:380
+#: messages.py:422
 msgid "You can't disable a category if it has products attached"
 msgstr ""
 
-#: messages.py:389 messages.py:487
+#: messages.py:431 messages.py:529
 msgid "Select a new responsible"
 msgstr ""
 
-#: messages.py:395 messages.py:493
+#: messages.py:437 messages.py:535
 #, python-format
 msgid "The user responsible for '%(name)s' updated"
 msgstr ""
 
-#: messages.py:402 messages.py:500
+#: messages.py:444 messages.py:542
 msgid "You have to select a new responsible first"
 msgstr ""
 
-#: messages.py:409
+#: messages.py:451
 #, python-format
 msgid "The category '%(name)s' does not exist"
 msgstr ""
 
-#: messages.py:411
+#: messages.py:453
 msgid "The category does not exist"
 msgstr ""
 
-#: messages.py:417
+#: messages.py:459
 msgid "You can't delete a category if it has products attached"
 msgstr ""
 
-#: messages.py:423
+#: messages.py:465
 #, python-format
 msgid "The category '%(name)s' has been deleted"
 msgstr ""
 
-#: messages.py:430
+#: messages.py:472
 #, python-format
 msgid "The category '%(name)s' was created"
 msgstr ""
 
-#: messages.py:437
+#: messages.py:479
 #, python-format
 msgid "The category '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:448
+#: messages.py:490
 msgid "The supplier name is required"
 msgstr ""
 
-#: messages.py:454
+#: messages.py:496
 #, python-format
 msgid "The supplier name must have at least %(min)s characters"
 msgstr ""
 
-#: messages.py:461
+#: messages.py:503
 #, python-format
 msgid "The supplier '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:470
+#: messages.py:512
 msgid "You can't attach products to a disabled supplier"
 msgstr ""
 
-#: messages.py:478
+#: messages.py:520
 msgid "You can't disable a supplier if it has products attached"
 msgstr ""
 
-#: messages.py:507
+#: messages.py:549
 #, python-format
 msgid "The supplier '%(name)s' does not exist"
 msgstr ""
 
-#: messages.py:509
+#: messages.py:551
 msgid "The supplier does not exist"
 msgstr ""
 
-#: messages.py:515
+#: messages.py:557
 msgid "You can't delete a supplier if it has products attached"
 msgstr ""
 
-#: messages.py:521
+#: messages.py:563
 #, python-format
 msgid "The supplier '%(name)s' has been deleted"
 msgstr ""
 
-#: messages.py:528
+#: messages.py:570
 #, python-format
 msgid "The supplier '%(name)s' was created"
 msgstr ""
 
-#: messages.py:535
+#: messages.py:577
 #, python-format
 msgid "The supplier '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:546
+#: messages.py:588
 msgid "The product name is required"
 msgstr ""
 
-#: messages.py:552
+#: messages.py:594
 #, python-format
 msgid "The product name must be between %(min)s and %(max)s characters"
 msgstr ""
 
-#: messages.py:561
+#: messages.py:603
 #, python-format
 msgid "The product '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:569
+#: messages.py:611
 msgid "The product description is required"
 msgstr ""
 
-#: messages.py:575
+#: messages.py:617
 #, python-format
 msgid "The product description must be between %(min)s and %(max)s characters"
 msgstr ""
 
-#: messages.py:586
+#: messages.py:628
 msgid "The user can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:594
+#: messages.py:636
 msgid "The category can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:602
+#: messages.py:644
 msgid "The supplier can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:610
+#: messages.py:652
 msgid "The product measuring unit is required"
 msgstr ""
 
-#: messages.py:618
+#: messages.py:660
 msgid "The product minimum stock is required"
 msgstr ""
 
-#: messages.py:624
+#: messages.py:666
 #, python-format
 msgid "The product minimum stock must be ≥ %(value)s"
 msgstr ""
 
-#: messages.py:633
+#: messages.py:675
 msgid "The product order quantity is required"
 msgstr ""
 
-#: messages.py:639
+#: messages.py:681
 #, python-format
 msgid "The product order quantity must be ≥ %(value)s"
 msgstr ""
 
-#: messages.py:648
+#: messages.py:690
 msgid "Disabled products can't be ordered"
 msgstr ""
 
-#: messages.py:656
+#: messages.py:698
 msgid "You can't disable a product that must be ordered"
 msgstr ""
 
-#: messages.py:662
+#: messages.py:704
 #, python-format
 msgid "The product '%(name)s' does not exist"
 msgstr ""
 
-#: messages.py:669
+#: messages.py:711
 #, python-format
 msgid "The product '%(name)s' has been deleted"
 msgstr ""
 
-#: messages.py:676
+#: messages.py:718
 #, python-format
 msgid "The product '%(name)s' was created"
 msgstr ""
 
-#: messages.py:683
+#: messages.py:725
 #, python-format
 msgid "The product '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:690
+#: messages.py:732
 #, python-format
 msgid "Cannot sort products by '%(attribute)s'"
 msgstr ""
 
-#: messages.py:697
+#: messages.py:739
 msgid "There are no products that must be ordered"
 msgstr ""
 
-#: messages.py:704
+#: messages.py:746
 #, python-format
 msgid "%(number)s product was removed from the order list"
 msgid_plural "%(number)s products were removed from the order list"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:713
+#: messages.py:755
 msgid "All products were removed from the order list"
 msgstr ""
 
-#: messages.py:721
+#: messages.py:763
 msgid "Not a valid choice"
 msgstr ""
 
-#: messages.py:727
+#: messages.py:769
 msgid "Review the schedules"
 msgstr ""
 
-#: messages.py:733
+#: messages.py:775
 msgid "The schedule was updated"
 msgstr ""
 
-#: messages.py:743
+#: messages.py:785
 msgid "The language was changed"
 msgstr ""
 
-#: messages.py:751
+#: messages.py:793
 msgid "You have to be logged in to access this page"
 msgstr ""
 
-#: messages.py:757
+#: messages.py:799
 msgid "You have to be an admin to access this page"
 msgstr ""
 
-#: messages.py:763
+#: messages.py:805
 msgid "The username or password is incorrect"
 msgstr ""
 
-#: messages.py:771
+#: messages.py:813
 msgid "The inventory has been submitted"
 msgstr ""
 
-#: messages.py:777
+#: messages.py:819
 msgid "Inventorying is not necessary"
+msgstr ""
+
+#: messages.py:828
+msgid "All fields are required"
+msgstr ""
+
+#: messages.py:835
+msgid "All fields except email are required"
 msgstr ""
 
 #: blueprints/auth/auth.py:28 blueprints/auth/auth.py:32
@@ -498,40 +524,6 @@ msgstr ""
 msgid "Change Password"
 msgstr ""
 
-#: blueprints/auth/templates/auth/change_password.html:29
-msgid "Old password (at least 8 chars)"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:42
-#: blueprints/auth/templates/auth/register.html:39
-msgid "Must have at least 8 chars"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:44
-#: blueprints/auth/templates/auth/register.html:41
-msgid "Must have at least 1 big letter"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:46
-#: blueprints/auth/templates/auth/register.html:43
-msgid "Must have at least 1 number"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:48
-#: blueprints/auth/templates/auth/register.html:45
-msgid "Must have at least 1 special char"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:61
-#: blueprints/auth/templates/auth/register.html:58
-msgid "Passwords don't match"
-msgstr ""
-
-#: blueprints/auth/templates/auth/change_password.html:66
-#: blueprints/auth/templates/auth/login.html:44
-msgid "All fields are required"
-msgstr ""
-
 #: blueprints/auth/templates/auth/login.html:7
 msgid "Log In"
 msgstr ""
@@ -540,25 +532,9 @@ msgstr ""
 msgid "Login"
 msgstr ""
 
-#: blueprints/auth/templates/auth/login.html:26
-msgid "Enter username"
-msgstr ""
-
-#: blueprints/auth/templates/auth/login.html:39
-msgid "Enter password"
-msgstr ""
-
 #: blueprints/auth/templates/auth/register.html:7
 #: blueprints/auth/templates/auth/register.html:13 templates/layout.html:49
 msgid "Register"
-msgstr ""
-
-#: blueprints/auth/templates/auth/register.html:26
-msgid "Must have at least 3 chars"
-msgstr ""
-
-#: blueprints/auth/templates/auth/register.html:67
-msgid "All fields except email are required"
 msgstr ""
 
 #: blueprints/cat/cat.py:38 blueprints/cat/templates/cat/categories.html:17
