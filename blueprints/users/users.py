@@ -244,7 +244,9 @@ def new_user():
         logger.warning("User creation error(s)")
         flash_errors(new_user_form.errors)
 
-    return render_template("users/new_user.html", form=new_user_form)
+    return render_template("users/new_user.html",
+                           form=new_user_form,
+                           Message=Message)
 
 
 @users_bp.route("/edit/<path:username>", methods=["GET", "POST"])
@@ -344,4 +346,6 @@ def edit_user(username):
             flash(**Message.User.NotExists.flash(username))
             return redirect(url_for("main.index"))
 
-    return render_template("users/edit_user.html", form=edit_user_form)
+    return render_template("users/edit_user.html",
+                           form=edit_user_form,
+                           Message=Message)

@@ -31,6 +31,12 @@ def _build_grey_link(link: str) -> str:
             'link-underline-opacity-25 link-underline-opacity-100-hover" ' +
             f'href="{link}">')
 
+def _build_yellow_link(link: str) -> str:
+    """Build/decorate yellow link"""
+    return ('<a class="link-warning link-offset-2 ' +
+            'link-underline-opacity-25 link-underline-opacity-100-hover" ' +
+            f'href="{link}">')
+
 def _build_red_link(link: str) -> str:
     """Build/decorate red link"""
     return ('<a class="link-danger link-offset-2 ' +
@@ -1109,6 +1115,30 @@ class Message:
                 category=None,
                 message=lambda : lazy_gettext(
                     "Confirm that all products were ordered.")
+            )
+        class User:
+            """Users blueprint"""
+            AwaitsReg = _Msg(
+                description="HTML",
+                tested=True,
+                category=None,
+                message=lambda name: lazy_gettext(
+                    "User awaits %(start_format)sregistration approval" +
+                    "%(end_format)s",
+                    start_format=_build_red_link(
+                        url_for("users.approve_reg", username=name)),
+                    end_format=_END_LINK)
+            )
+            ReqInv = _Msg(
+                description="HTML",
+                tested=True,
+                category=None,
+                message=lambda name: lazy_gettext(
+                    "User requested %(start_format)sinventorying" +
+                    "%(end_format)s",
+                    start_format=_build_yellow_link(
+                        url_for('users.approve_check_inv', username=name)),
+                    end_format=_END_LINK)
             )
         class FieldsReq:
             """Fields requirements"""

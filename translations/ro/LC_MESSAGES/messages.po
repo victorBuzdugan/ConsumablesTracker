@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  v2.07\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-11-25 17:05+0200\n"
+"POT-Creation-Date: 2023-11-25 18:06+0200\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: messages.py:65
+#: messages.py:71
 #, python-format
 msgid "There is %(start_format)s%(number)s user"
 msgid_plural "There are %(start_format)s%(number)s users"
@@ -27,7 +27,7 @@ msgstr[0] "Este %(start_format)s%(number)s utilizator"
 msgstr[1] "Sunt %(start_format)s%(number)s utilizatori"
 msgstr[2] "Sunt %(start_format)s%(number)s de utilizatori"
 
-#: messages.py:75
+#: messages.py:81
 #, python-format
 msgid "There is %(start_format)s%(number)s category"
 msgid_plural "There are %(start_format)s%(number)s categories"
@@ -35,7 +35,7 @@ msgstr[0] "Este %(start_format)s%(number)s categorie"
 msgstr[1] "Sunt %(start_format)s%(number)s categorii"
 msgstr[2] "Sunt %(start_format)s%(number)s de categorii"
 
-#: messages.py:85
+#: messages.py:91
 #, python-format
 msgid "There is %(start_format)s%(number)s supplier"
 msgid_plural "There are %(start_format)s%(number)s suppliers"
@@ -43,7 +43,7 @@ msgstr[0] "Este %(start_format)s%(number)s furnizor"
 msgstr[1] "Sunt %(start_format)s%(number)s furnizori"
 msgstr[2] "Sunt %(start_format)s%(number)s de furnizori"
 
-#: messages.py:95
+#: messages.py:101
 #, python-format
 msgid "There is %(start_format)s%(number)s product"
 msgid_plural "There are %(start_format)s%(number)s products"
@@ -51,7 +51,7 @@ msgstr[0] "Este %(start_format)s%(number)s produs"
 msgstr[1] "Sunt %(start_format)s%(number)s produse"
 msgstr[2] "Sunt %(start_format)s%(number)s de produse"
 
-#: messages.py:106
+#: messages.py:112
 #, python-format
 msgid "There is %(start_format)s%(number)s critical product"
 msgid_plural "There are %(start_format)s%(number)s critical products"
@@ -59,21 +59,19 @@ msgstr[0] "Este %(start_format)s%(number)s produs critic"
 msgstr[1] "Sunt %(start_format)s%(number)s produse critice"
 msgstr[2] "Sunt %(start_format)s%(number)s de produse critice"
 
-#: messages.py:115
+#: messages.py:121
 msgid "in use"
 msgstr "în uz"
 
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:110 messages.py:117
-#: messages.py:180
+#: blueprints/sup/templates/sup/suppliers.html:37 messages.py:123
+#: messages.py:186
 msgid "and"
 msgid_plural "of which"
 msgstr[0] "iar"
 msgstr[1] "dintre care"
 msgstr[2] "dintre care"
 
-#: messages.py:122 messages.py:185
+#: messages.py:128 messages.py:191
 #, python-format
 msgid "%(number)s is in use"
 msgid_plural "%(number)s are in use"
@@ -81,7 +79,7 @@ msgstr[0] "%(number)s este în uz"
 msgstr[1] "%(number)s sunt în uz"
 msgstr[2] "%(number)s sunt în uz"
 
-#: messages.py:152
+#: messages.py:158
 #, python-format
 msgid "User is responsible for %(start_format)s%(number)s product"
 msgid_plural "User is responsible for %(start_format)s%(number)s products"
@@ -89,7 +87,7 @@ msgstr[0] "Utilizatorul răspunde de %(start_format)s%(number)s produs"
 msgstr[1] "Utilizatorul răspunde de %(start_format)s%(number)s produse"
 msgstr[2] "Utilizatorul răspunde de %(start_format)s%(number)s de produse"
 
-#: messages.py:162
+#: messages.py:168
 #, python-format
 msgid "Category has %(start_format)s%(number)s product"
 msgid_plural "Category has %(start_format)s%(number)s products"
@@ -97,7 +95,7 @@ msgstr[0] "Categoria are %(start_format)s%(number)s produs"
 msgstr[1] "Categoria are %(start_format)s%(number)s produse"
 msgstr[2] "Categoria are %(start_format)s%(number)s de produse"
 
-#: messages.py:172
+#: messages.py:178
 #, python-format
 msgid "Supplier has %(start_format)s%(number)s product"
 msgid_plural "Supplier has %(start_format)s%(number)s products"
@@ -105,35 +103,35 @@ msgstr[0] "Furnizorul are %(start_format)s%(number)s produs"
 msgstr[1] "Furnizorul are %(start_format)s%(number)s produse"
 msgstr[2] "Furnizorul are %(start_format)s%(number)s de produse"
 
-#: messages.py:202
+#: messages.py:208
 msgid "Strikethrough users are no longer in use."
 msgstr "Utilizatorii cu text tăiat sunt scoși din uz."
 
-#: messages.py:205
+#: messages.py:211
 msgid "Strikethrough categories are no longer in use."
 msgstr "Categoriile cu text tăiat sunt scoase din uz."
 
-#: messages.py:208
+#: messages.py:214
 msgid "Strikethrough suppliers are no longer in use."
 msgstr "Furnizorii cu text tăiat sunt scoși din uz."
 
-#: messages.py:211
+#: messages.py:217
 msgid "Strikethrough products are no longer in use."
 msgstr "Produsele cu text tăiat sunt scoase din uz."
 
-#: messages.py:221
+#: messages.py:227
 msgid "You requested inventorying"
 msgstr "Ai cerut inventariere"
 
-#: blueprints/inv/templates/inv/inventory.html:57 messages.py:225
+#: blueprints/inv/templates/inv/inventory.html:57 messages.py:231
 msgid "Inventory check not required"
 msgstr "Nu este necesară inventarierea"
 
-#: messages.py:229
+#: messages.py:235
 msgid "Check inventory"
 msgstr "Inventariază"
 
-#: messages.py:244
+#: messages.py:250
 #, python-format
 msgid ""
 "There is %(start_format)s%(number)s product%(end_format)s that needs to "
@@ -147,56 +145,56 @@ msgstr[2] ""
 "Sunt %(start_format)s%(number)s de produse%(end_format)s ce trebuie "
 "comandate"
 
-#: messages.py:250
+#: messages.py:256
 msgid "There are no products that need to be ordered"
 msgstr "Nu este nici un produs ce trebuie comandat"
 
-#: messages.py:295 messages.py:330
+#: messages.py:301 messages.py:336
 #, python-format
 msgid "Must have at least %(min)i characters"
 msgstr "Trebuie să aibă minim %(min)i caractere"
 
-#: messages.py:303
+#: messages.py:309
 msgid "The username is required"
 msgstr "Numele utilizatorului este obligatoriu"
 
-#: messages.py:309
+#: messages.py:315
 #, python-format
 msgid "The username must be between %(min)i and %(max)i characters"
 msgstr "Numele utilizatorului trebuie să aibă între %(min)i și %(max)i caractere"
 
-#: messages.py:318
+#: messages.py:324
 #, python-format
 msgid "The user '%(name)s' already exists"
 msgstr "Utilizatorul '%(name)s' există deja"
 
-#: messages.py:338
+#: messages.py:344
 msgid "Must have at least 1 big letter"
 msgstr "Trebuie să aibă minim 1 literă mare"
 
-#: messages.py:345
+#: messages.py:351
 msgid "Must have at least 1 number"
 msgstr "Trebuie să aibă minim 1 număr"
 
-#: messages.py:352
+#: messages.py:358
 #, python-format
 msgid "Must have at least 1 special character (%(symbols)s)"
 msgstr "Trebuie să aibă minim 1 caracter special (%(symbols)s)"
 
-#: messages.py:360
+#: messages.py:366
 msgid "The password is required"
 msgstr "Parola este obligatorie"
 
-#: messages.py:366
+#: messages.py:372
 #, python-format
 msgid "The password should have at least %(min)i characters"
 msgstr "Parola trebuie să aibă cel puțin %(min)i caractere"
 
-#: messages.py:373
+#: messages.py:379
 msgid "Check password rules"
 msgstr "Verifică regulile pentru parolă"
 
-#: messages.py:379
+#: messages.py:385
 #, python-format
 msgid ""
 "The password must have 1 big letter, 1 number, and 1 special character "
@@ -205,366 +203,366 @@ msgstr ""
 "Parola trebuie să conțină 1 literă mare, 1 număr și 1 caracter special "
 "(%(symbols)s)!"
 
-#: messages.py:387
+#: messages.py:393
 msgid "The passwords don't match"
 msgstr "Parolele nu se potrivesc"
 
-#: messages.py:393
+#: messages.py:399
 msgid "Wrong old password"
 msgstr "Parolă veche greșită"
 
-#: messages.py:399
+#: messages.py:405
 msgid "The password was changed"
 msgstr "Parola a fost schimbată"
 
-#: messages.py:407
+#: messages.py:413
 msgid "You can't attach products to a retired user"
 msgstr "Nu poți atașa produse unui utilizator scos din uz"
 
-#: messages.py:413
+#: messages.py:419
 msgid "You can't attach products to a user with a pending registration"
 msgstr "Nu poți atașa produse unui utilizator în curs de aprobare"
 
-#: messages.py:422
+#: messages.py:428
 msgid "A user with a pending registration can't be admin"
 msgstr "Un utilizator în curs de aprobare nu poate fi administrator"
 
-#: messages.py:428
+#: messages.py:434
 msgid "You are the last admin"
 msgstr "Ești ultimul administrator"
 
-#: messages.py:436
+#: messages.py:442
 msgid "You can't retire a user if he is responsible for products"
 msgstr "Nu poți scoate din uz un utilizator dacă încă e responsabil de produse"
 
-#: messages.py:444
+#: messages.py:450
 msgid "A retired user can't check inventory"
 msgstr "Un utilizator scos din uz nu poate inventaria"
 
-#: messages.py:450
+#: messages.py:456
 msgid "A user with a pending registration can't check inventory"
 msgstr "Un utilizator în curs de aprobare nu poate inventaria"
 
-#: messages.py:456
+#: messages.py:462
 msgid "A user without products attached can't check inventory"
 msgstr "Un utilizator fără produse nu poate inventaria"
 
-#: messages.py:464
+#: messages.py:470
 msgid "Registration cannot be requested by an admin"
 msgstr "Un administrator nu poate solicita înregistrare"
 
-#: messages.py:470
+#: messages.py:476
 msgid "Registration cannot be requested by a retired user"
 msgstr "Un utilizator scos din uz nu poate solicita înregistrare"
 
-#: messages.py:476
+#: messages.py:482
 msgid "Registration cannot be requested by a user who checks inventory"
 msgstr "Un utilizator în curs de inventariere nu poate solicita înregistrare"
 
-#: messages.py:483
+#: messages.py:489
 msgid "Registration cannot be requested by a user who has requested inventorying"
 msgstr "Un utilizator care a cerut inventariere nu poate solicita înregistrare"
 
-#: messages.py:490
+#: messages.py:496
 msgid "Registration cannot be requested by a user who has products attached"
 msgstr "Un utilizator care are produse atașate nu poate solicita înregistrare"
 
-#: messages.py:499
+#: messages.py:505
 msgid "Admins don't need to request inventorying"
 msgstr "Administratorii nu trebuie să solicite inventariere"
 
-#: messages.py:505
+#: messages.py:511
 msgid "Inventorying cannot be requested by a retired user"
 msgstr "Un utilizator scos din uz nu poate solicita inventariere"
 
-#: messages.py:511
+#: messages.py:517
 msgid "Inventorying cannot be requested by a user with a pending registration"
 msgstr "Un utilizator în curs de aprobare nu poate solicita inventariere"
 
-#: messages.py:518
+#: messages.py:524
 msgid "The user can already check inventory"
 msgstr "Utilizatorul poate deja inventaria"
 
-#: messages.py:524
+#: messages.py:530
 msgid "Inventorying cannot be requested by a user who has no products attached"
 msgstr "Un utilizator fără produse atașate nu poate solicita inventariere"
 
-#: messages.py:531
+#: messages.py:537
 msgid "The inventory check request was submitted"
 msgstr "Solicitarea de inventariere a fost trimisă"
 
-#: messages.py:539
+#: messages.py:545
 msgid "The email address is incorrect"
 msgstr "Adresa de email este incorectă"
 
-#: messages.py:547
+#: messages.py:553
 msgid "The group number doesn't exist"
 msgstr "Numărul grupului nu există"
 
-#: messages.py:554
+#: messages.py:560
 #, python-format
 msgid "The user '%(name)s' does not exist"
 msgstr "Utilizatorul '%(name)s' nu există"
 
-#: messages.py:556
+#: messages.py:562
 msgid "The user does not exist"
 msgstr "Utilizatorul nu există"
 
-#: messages.py:562
+#: messages.py:568
 #, python-format
 msgid "Hello, %(name)s"
 msgstr "Bună, %(name)s"
 
-#: messages.py:568
+#: messages.py:574
 msgid "You have been logged out"
 msgstr "Ai fost delogat"
 
-#: messages.py:574
+#: messages.py:580
 #, python-format
 msgid "The user '%(name)s' awaits registration approval"
 msgstr "Utilizatorul '%(name)s' așteaptă aprobarea înregistrării"
 
-#: messages.py:581
+#: messages.py:587
 #, python-format
 msgid "The user '%(name)s' is retired"
 msgstr "Utilizatorul '%(name)s' este scos din uz"
 
-#: messages.py:588
+#: messages.py:594
 msgid "The registration request was submitted. Contact an admin"
 msgstr "Solicitarea de înregistrare a fost trimisă. Contactează un administrator"
 
-#: messages.py:594
+#: messages.py:600
 #, python-format
 msgid "The user '%(name)s' has been approved"
 msgstr "Utilizatorul '%(name)s' a fost aprobat"
 
-#: messages.py:601
+#: messages.py:607
 msgid "You can't delete a user if he is responsible for products"
 msgstr "Nu poți șterge un utilizator dacă e responsabil de produse"
 
-#: messages.py:607
+#: messages.py:613
 #, python-format
 msgid "The user '%(name)s' has been deleted"
 msgstr "Utilizatorul '%(name)s' a fost șters"
 
-#: messages.py:614
+#: messages.py:620
 #, python-format
 msgid "The user '%(name)s' was created"
 msgstr "Utilizatorul '%(name)s' a fost creat"
 
-#: messages.py:621
+#: messages.py:627
 #, python-format
 msgid "User '%(name)s' updated"
 msgstr "Utilizatorul '%(name)s' a fost actualizat"
 
-#: messages.py:632
+#: messages.py:638
 msgid "The category name is required"
 msgstr "Numele categoriei e obligatoriu"
 
-#: messages.py:638
+#: messages.py:644
 #, python-format
 msgid "The category name must have at least %(min)s characters"
 msgstr "Numele categoriei trebuie să aibă cel puțin %(min)s caractere "
 
-#: messages.py:645
+#: messages.py:651
 #, python-format
 msgid "The category '%(name)s' already exists"
 msgstr "Categoria '%(name)s' există deja"
 
-#: messages.py:654
+#: messages.py:660
 msgid "You can't attach products to a disabled category"
 msgstr "Nu poți atașa produse unei categorii scoase din uz"
 
-#: messages.py:662
+#: messages.py:668
 msgid "You can't disable a category if it has products attached"
 msgstr "Nu poți scoate din uz o categorie dacă are produse atașate"
 
-#: messages.py:671 messages.py:769
+#: messages.py:677 messages.py:775
 msgid "Select a new responsible"
 msgstr "Selectează un nou responsabil"
 
-#: messages.py:677 messages.py:775
+#: messages.py:683 messages.py:781
 #, python-format
 msgid "The user responsible for '%(name)s' updated"
 msgstr "Responsabilul pentru '%(name)s' a fost actualizat"
 
-#: messages.py:684 messages.py:782
+#: messages.py:690 messages.py:788
 msgid "You have to select a new responsible first"
 msgstr "Trebuie să selectezi un responsabil nou mai întâi"
 
-#: messages.py:691
+#: messages.py:697
 #, python-format
 msgid "The category '%(name)s' does not exist"
 msgstr "Categoria '%(name)s' nu există"
 
-#: messages.py:693
+#: messages.py:699
 msgid "The category does not exist"
 msgstr "Categoria nu există"
 
-#: messages.py:699
+#: messages.py:705
 msgid "You can't delete a category if it has products attached"
 msgstr "Nu poți șterge o categorie dacă are produse atașate"
 
-#: messages.py:705
+#: messages.py:711
 #, python-format
 msgid "The category '%(name)s' has been deleted"
 msgstr "Categoria '%(name)s' a fost ștearsă"
 
-#: messages.py:712
+#: messages.py:718
 #, python-format
 msgid "The category '%(name)s' was created"
 msgstr "Categoria '%(name)s' a fost creată"
 
-#: messages.py:719
+#: messages.py:725
 #, python-format
 msgid "The category '%(name)s' was updated"
 msgstr "Categoria '%(name)s' a fost actualizată"
 
-#: messages.py:730
+#: messages.py:736
 msgid "The supplier name is required"
 msgstr "Numele furnizorului e obligatoriu"
 
-#: messages.py:736
+#: messages.py:742
 #, python-format
 msgid "The supplier name must have at least %(min)s characters"
 msgstr "Numele furnizorului trebuie să aibă cel puțin %(min)s caractere"
 
-#: messages.py:743
+#: messages.py:749
 #, python-format
 msgid "The supplier '%(name)s' already exists"
 msgstr "Furnizorul '%(name)s' există deja"
 
-#: messages.py:752
+#: messages.py:758
 msgid "You can't attach products to a disabled supplier"
 msgstr "Nu poți atașa produse unui furnizor scos din uz"
 
-#: messages.py:760
+#: messages.py:766
 msgid "You can't disable a supplier if it has products attached"
 msgstr "Nu poți scoate din uz un furnizor dacă are produse atașate"
 
-#: messages.py:789
+#: messages.py:795
 #, python-format
 msgid "The supplier '%(name)s' does not exist"
 msgstr "Furnizorul '%(name)s' nu există"
 
-#: messages.py:791
+#: messages.py:797
 msgid "The supplier does not exist"
 msgstr "Furnizorul nu există"
 
-#: messages.py:797
+#: messages.py:803
 msgid "You can't delete a supplier if it has products attached"
 msgstr "Nu poți șterge un furnizor dacă are produse atașate"
 
-#: messages.py:803
+#: messages.py:809
 #, python-format
 msgid "The supplier '%(name)s' has been deleted"
 msgstr "Furnizorul '%(name)s' a fost șters"
 
-#: messages.py:810
+#: messages.py:816
 #, python-format
 msgid "The supplier '%(name)s' was created"
 msgstr "Furnizorul '%(name)s' a fost creat"
 
-#: messages.py:817
+#: messages.py:823
 #, python-format
 msgid "The supplier '%(name)s' was updated"
 msgstr "Furnizorul '%(name)s' a fost actualizat"
 
-#: messages.py:828
+#: messages.py:834
 msgid "The product name is required"
 msgstr "Numele produsului e obligatoriu"
 
-#: messages.py:834
+#: messages.py:840
 #, python-format
 msgid "The product name must be between %(min)s and %(max)s characters"
 msgstr "Numele produsului trebuie să aibă între %(min)s și %(max)s caractere"
 
-#: messages.py:843
+#: messages.py:849
 #, python-format
 msgid "The product '%(name)s' already exists"
 msgstr "Produsul '%(name)s' există deja"
 
-#: messages.py:851
+#: messages.py:857
 msgid "The product description is required"
 msgstr "Descrierea produsului e obligatorie"
 
-#: messages.py:857
+#: messages.py:863
 #, python-format
 msgid "The product description must be between %(min)s and %(max)s characters"
 msgstr "Descrierea produsului trebuie să aibă între %(min)s și %(max)s caractere"
 
-#: messages.py:868
+#: messages.py:874
 msgid "The user can't be deleted or doesn't exist"
 msgstr "Utilizatorul nu poate fi șters sau nu există"
 
-#: messages.py:876
+#: messages.py:882
 msgid "The category can't be deleted or doesn't exist"
 msgstr "Categoria nu poate fi ștearsă sau nu există"
 
-#: messages.py:884
+#: messages.py:890
 msgid "The supplier can't be deleted or doesn't exist"
 msgstr "Furnizorul nu poate fi șters sau nu există"
 
-#: messages.py:892
+#: messages.py:898
 msgid "The product measuring unit is required"
 msgstr "Unitatea de măsură a produsului e obligatorie"
 
-#: messages.py:900
+#: messages.py:906
 msgid "The product minimum stock is required"
 msgstr "Stocul minim al produsului e obligatoriu"
 
-#: messages.py:906
+#: messages.py:912
 #, python-format
 msgid "The product minimum stock must be ≥ %(value)s"
 msgstr "Stocul minim al produsului trebuie să fie ≥ %(value)s"
 
-#: messages.py:915
+#: messages.py:921
 msgid "The product order quantity is required"
 msgstr "Cantitatea de comandă a produsului e obligatorie"
 
-#: messages.py:921
+#: messages.py:927
 #, python-format
 msgid "The product order quantity must be ≥ %(value)s"
 msgstr "Cantitatea de comandă a produsului trebuie să fie ≥ %(value)s"
 
-#: messages.py:930
+#: messages.py:936
 msgid "Disabled products can't be ordered"
 msgstr "Nu pot fi comandate produse scoase din uz"
 
-#: messages.py:938
+#: messages.py:944
 msgid "You can't disable a product that must be ordered"
 msgstr "Nu se poate scoate din uz un produs ce trebuie comandat"
 
-#: messages.py:944
+#: messages.py:950
 #, python-format
 msgid "The product '%(name)s' does not exist"
 msgstr "Produsul '%(name)s' nu există"
 
-#: messages.py:951
+#: messages.py:957
 #, python-format
 msgid "The product '%(name)s' has been deleted"
 msgstr "Produsul '%(name)s' a fost șters"
 
-#: messages.py:958
+#: messages.py:964
 #, python-format
 msgid "The product '%(name)s' was created"
 msgstr "Produsul '%(name)s' a fost creat"
 
-#: messages.py:965
+#: messages.py:971
 #, python-format
 msgid "The product '%(name)s' was updated"
 msgstr "Produsul '%(name)s' a fost actualizat"
 
-#: messages.py:972
+#: messages.py:978
 #, python-format
 msgid "Cannot sort products by '%(attribute)s'"
 msgstr "Nu se pot sorta produsele după '%(attribute)s'"
 
-#: messages.py:979
+#: messages.py:985
 msgid "There are no products that must be ordered"
 msgstr "Nu este nici un produs de comandat"
 
-#: messages.py:986
+#: messages.py:992
 #, python-format
 msgid "%(number)s product was removed from the order list"
 msgid_plural "%(number)s products were removed from the order list"
@@ -572,52 +570,52 @@ msgstr[0] "%(number)s produs a fost scos de pe lista de comandat"
 msgstr[1] "%(number)s produse au fost scoase de pe lista de comandat"
 msgstr[2] "%(number)s de produse au fost scoase de pe lista de comandat"
 
-#: messages.py:995
+#: messages.py:1001
 msgid "All products were removed from the order list"
 msgstr "Toate produsele au fost scoase de pe lista de comandat"
 
-#: messages.py:1003
+#: messages.py:1009
 msgid "Not a valid choice"
 msgstr "Opțiune invalidă"
 
-#: messages.py:1009
+#: messages.py:1015
 msgid "Review the schedules"
 msgstr "Verifică programul"
 
-#: messages.py:1015
+#: messages.py:1021
 msgid "The schedule was updated"
 msgstr "Programul a fost actualizat"
 
-#: messages.py:1025
+#: messages.py:1031
 msgid "The language was changed"
 msgstr "Limba a fost schimbată"
 
-#: messages.py:1033
+#: messages.py:1039
 msgid "You have to be logged in to access this page"
 msgstr "Trebuie să fii logat ca să poți accesa pagina"
 
-#: messages.py:1039
+#: messages.py:1045
 msgid "You have to be an admin to access this page"
 msgstr "Trebuie să fii administrator ca să poți accesa pagina"
 
-#: messages.py:1045
+#: messages.py:1051
 msgid "The username or password is incorrect"
 msgstr "Nume utilizator sau parolă incorecte"
 
-#: messages.py:1053
+#: messages.py:1059
 msgid "The inventory has been submitted"
 msgstr "Inventarul a fost trimis"
 
-#: messages.py:1059
+#: messages.py:1065
 msgid "Inventorying is not necessary"
 msgstr "Nu este necesară inventarierea"
 
-#: messages.py:1068
+#: messages.py:1074
 #, python-format
 msgid "Logged in as %(start_format)s%(name)s%(end_format)s"
 msgstr "Logat ca %(start_format)s%(name)s%(end_format)s"
 
-#: messages.py:1078
+#: messages.py:1084
 #, python-format
 msgid "You have %(start_format)s%(number)s product %(end_format)s assigned"
 msgid_plural "You have %(start_format)s%(number)s products %(end_format)s assigned"
@@ -625,52 +623,59 @@ msgstr[0] "Ai %(start_format)s%(number)s produs %(end_format)s atribuit"
 msgstr[1] "Ai %(start_format)s%(number)s produse %(end_format)s atribuite"
 msgstr[2] "Ai %(start_format)s%(number)s de produse %(end_format)s atribuite"
 
-#: messages.py:1086
+#: messages.py:1092
 #, python-format
 msgid "%(start_format)sYou don't have products assigned%(end_format)s"
 msgstr "%(start_format)sNu ai nici un produs atribuit%(end_format)s"
 
-#: messages.py:1110
+#: messages.py:1116
 msgid "Confirm that all products were ordered."
 msgstr "Confirmă că toate produsele au fost comandate."
 
-#: messages.py:1119
+#: messages.py:1129
+#, python-format
+msgid "User awaits %(start_format)sregistration approval%(end_format)s"
+msgstr "Utilizatorul așteaptă %(start_format)saprobarea înregistrării%(end_format)s"
+
+#: messages.py:1140
+#, python-format
+msgid "User requested %(start_format)sinventorying%(end_format)s"
+msgstr "Utilizatorul a cerut %(start_format)sinventariere%(end_format)s"
+
+#: messages.py:1149
 msgid "All fields are required"
 msgstr "Toate câmpurile sunt obligatorii"
 
-#: messages.py:1126
+#: messages.py:1156
 msgid "All fields except email are required"
 msgstr "Toate câmpurile în afară de email sunt obligatorii"
 
-#: blueprints/sup/templates/sup/edit_supplier.html:46
-#: blueprints/sup/templates/sup/new_supplier.html:28
-#: blueprints/users/templates/users/edit_user.html:99
-#: blueprints/users/templates/users/new_user.html:59 messages.py:1133
+#: blueprints/users/templates/users/new_user.html:59 messages.py:1163
 msgid "Underlined fields are required"
 msgstr "Câmpurile subliniate sunt obligatorii"
 
-#: blueprints/sup/templates/sup/reassign_supplier.html:18 messages.py:1148
+#: messages.py:1178
 msgid "*Critical products are highlighted in red."
 msgstr "*Produsele cu text roșu sunt produse critice."
 
-#: messages.py:1155
+#: messages.py:1185
 msgid "*Select to order a product if current stock is less then minimum stock."
 msgstr ""
 "*Selectează un produs pentru comandă dacă stocul curent este mai mic "
 "decât stocul minim"
 
-#: messages.py:1163
+#: messages.py:1193
 msgid "*Bolded users have administrative privileges."
 msgstr "*Utilizatorii cu text îngroșat sunt administratori"
 
-#: messages.py:1184
+#: messages.py:1214
 #, python-format
 msgid ""
 "This will delete %(start_format)s%(name)s%(end_format)s. You can't undo "
 "this action!"
 msgstr "%(start_format)s%(name)s%(end_format)s va fi șters definitiv!"
 
-#: messages.py:1195
+#: messages.py:1225
 #, python-format
 msgid "This will reassign %(start_format)s%(number)s product%(end_format)s!"
 msgid_plural "This will reassign %(start_format)s%(number)s products%(end_format)s!"
@@ -1134,32 +1139,6 @@ msgstr "Editare Furnizor"
 msgid "Edit supplier"
 msgstr "Editează furnizorul"
 
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-msgid "Supplier has"
-msgstr "Furnizorul are"
-
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/reassign_supplier.html:80
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "product"
-msgid_plural "products"
-msgstr[0] "produs"
-msgstr[1] "produse"
-msgstr[2] "de produse"
-
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "is in use"
-msgid_plural "are in use"
-msgstr[0] "este în uz"
-msgstr[1] "sunt în uz"
-msgstr[2] "sunt în uz"
-
-#: blueprints/sup/templates/sup/edit_supplier.html:71
-msgid "This will delete this supplier! You can't undo this action."
-msgstr "Furnizorul va fi șters definitiv!"
-
 #: blueprints/sup/templates/sup/new_supplier.html:3
 msgid "New supplier"
 msgstr "Creeare furnizor"
@@ -1176,22 +1155,10 @@ msgstr "Redistribuie furnizor"
 msgid "Reassign all products for supplier"
 msgstr "Redistribuie toate produsele pentru furnizor"
 
-#: blueprints/sup/templates/sup/reassign_supplier.html:17
-msgid "*Strikethrough products are no longer in use."
-msgstr "*Produsele cu text tăiat sunt scoase din uz."
-
-#: blueprints/sup/templates/sup/reassign_supplier.html:80
-msgid "This will reassign"
-msgstr "Se vor redistribui"
-
 #: blueprints/sup/templates/sup/suppliers.html:3
 #: blueprints/sup/templates/sup/suppliers.html:8 templates/layout.html:30
 msgid "Suppliers"
 msgstr "Furnizori"
-
-#: blueprints/sup/templates/sup/suppliers.html:14
-msgid "*Strikethrough suppliers are no longer in use."
-msgstr "*Furnizorii cu text tăiat sunt scoși din uz."
 
 #: blueprints/sup/templates/sup/suppliers.html:37
 msgid "There is"
@@ -1206,6 +1173,13 @@ msgid_plural "suppliers"
 msgstr[0] "furnizor"
 msgstr[1] "furnizori"
 msgstr[2] "de furnizori"
+
+#: blueprints/sup/templates/sup/suppliers.html:37
+msgid "is in use"
+msgid_plural "are in use"
+msgstr[0] "este în uz"
+msgstr[1] "sunt în uz"
+msgstr[2] "sunt în uz"
 
 #: blueprints/users/users.py:85
 msgid "Group 1"
@@ -1245,30 +1219,6 @@ msgstr "Editare Utilizator"
 #: blueprints/users/templates/users/edit_user.html:13
 msgid "Edit user"
 msgstr "Editează utilizatorul"
-
-#: blueprints/users/templates/users/edit_user.html:104
-msgid "User awaits"
-msgstr "Utilizatorul așteaptă"
-
-#: blueprints/users/templates/users/edit_user.html:104
-msgid "registration approval"
-msgstr "aprobarea înregistrării"
-
-#: blueprints/users/templates/users/edit_user.html:107
-msgid "User requested"
-msgstr "Utilizatorul a cerut"
-
-#: blueprints/users/templates/users/edit_user.html:107
-msgid "inventory check"
-msgstr "inventariere"
-
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "User is responsible for"
-msgstr "Utilizatorul răspunde de"
-
-#: blueprints/users/templates/users/edit_user.html:130
-msgid "This will delete this user! You can't undo this action."
-msgstr "Utilizatorul va fi șters definitiv!"
 
 #: blueprints/users/templates/users/new_user.html:3
 msgid "New User"
