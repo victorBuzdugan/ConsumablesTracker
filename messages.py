@@ -1045,6 +1045,14 @@ class Message:
                 message=lambda : lazy_gettext(
                     "*Critical products are highlighted in red.")
             )
+            InvOrder = Msg(
+                description="Critical products HTML message",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "*Select to order a product if current stock is less " +
+                    "then minimum stock.")
+            )
         class Stats:
             """HTML captions"""
             Global = Msg(

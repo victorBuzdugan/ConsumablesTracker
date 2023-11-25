@@ -61,7 +61,7 @@ def inventory():
 
     return render_template(
         "inv/inventory.html",
-        products=products, form=inv_form, user=user)
+        products=products, form=inv_form, user=user, Message=Message)
 
 
 @inv_bp.route("/inventory/<path:username>", methods=["GET", "POST"])
@@ -117,7 +117,7 @@ def inventory_user(username):
 
     return render_template(
         "inv/inventory.html",
-        products=products, form=inv_form, user=user)
+        products=products, form=inv_form, user=user, Message=Message)
 
 
 @inv_bp.route("/inventory/request")

@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v2.04\n"
+"Project-Id-Version:  v2.05\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-11-25 11:04+0200\n"
+"POT-Creation-Date: 2023-11-25 13:08+0200\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -605,21 +605,26 @@ msgstr "Toate câmpurile în afară de email sunt obligatorii"
 msgid "Underlined fields are required"
 msgstr "Câmpurile subliniate sunt obligatorii"
 
-#: blueprints/inv/templates/inv/inventory.html:23
 #: blueprints/prod/templates/prod/products.html:15
 #: blueprints/prod/templates/prod/products_to_oder.html:17
 #: blueprints/sup/templates/sup/reassign_supplier.html:18 messages.py:1045
 msgid "*Critical products are highlighted in red."
-msgstr "*Produsele roșii sunt critice."
+msgstr "*Produsele cu text roșu sunt produse critice."
 
-#: messages.py:1066
+#: messages.py:1052
+msgid "*Select to order a product if current stock is less then minimum stock."
+msgstr ""
+"*Selectează un produs pentru comandă dacă stocul curent este mai mic "
+"decât stocul minim"
+
+#: messages.py:1074
 #, python-format
 msgid ""
 "This will delete %(start_format)s%(name)s%(end_format)s. You can't undo "
 "this action!"
 msgstr "%(start_format)s%(name)s%(end_format)s va fi șters definitiv!"
 
-#: messages.py:1077
+#: messages.py:1085
 #, python-format
 msgid "This will reassign %(start_format)s%(number)s product%(end_format)s!"
 msgid_plural "This will reassign %(start_format)s%(number)s products%(end_format)s!"
@@ -912,12 +917,6 @@ msgstr "Inventar"
 #: blueprints/inv/templates/inv/inventory.html:13 blueprints/users/users.py:146
 msgid "Inventory check"
 msgstr "Inventariere"
-
-#: blueprints/inv/templates/inv/inventory.html:22
-msgid "*Select to order a product if current stock is less then minimum stock."
-msgstr ""
-"*Selectează un produs pentru comandă dacă stocul curent este mai mic "
-"decât stocul minim"
 
 #: blueprints/inv/templates/inv/inventory.html:29
 msgid "Min. Stock"

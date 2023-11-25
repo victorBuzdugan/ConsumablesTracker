@@ -19,8 +19,8 @@
             <div class="table-responsive mx-auto">
                 <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped m-0">
                     {% if not user.done_inv %}
-                    <caption class="text-center">{{ gettext("*Select to order a product if current stock is less then minimum stock.") }}</caption>
-                    <caption class="text-center">{{ gettext("*Critical products are highlighted in red.") }}</caption>
+                    <caption class="text-center">{{ Message.UI.Captions.InvOrder() }}</caption>
+                    <caption class="text-center">{{ Message.UI.Captions.CriticalProducts() }}</caption>
                     {% endif %}
                     <thead>
                         <tr>
@@ -54,7 +54,7 @@
             </div>
         </div>
         <div class="card-footer py-3">
-            <input class="btn btn-primary px-4" type="submit" {% if user.done_inv %}value="{{ gettext("Inventory check not required") }}" disabled{% else %}value="{{ gettext("Submit inventory") }}"{% endif %} >
+            <input class="btn btn-primary px-4" type="submit" {% if user.done_inv %}value="{{ gettext('Inventory check not required') }}" disabled{% else %}value="{{ gettext('Submit inventory') }}"{% endif %} >
         </div>
     </div>
 </form>
