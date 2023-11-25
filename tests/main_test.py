@@ -483,12 +483,6 @@ def test_index_admin_logged_in_statistics(
             in_use_suppliers = db_session.scalar(
                 select(func.count(Supplier.id))
                 .filter_by(in_use=True))
-            in_use_products = db_session.scalar(
-                select(func.count(Product.id))
-                .filter_by(in_use=True))
-            critical_products = db_session.scalar(
-                select(func.count(Product.id))
-                .filter_by(in_use=True, critical=True))
             assert ('There are <span class="text-secondary">' +
                     f"{in_use_users}" +
                     " users</span> in use") in response.text

@@ -14,8 +14,8 @@ from werkzeug.security import check_password_hash
 from app import app, babel, get_locale
 from constants import Constant
 from database import User, dbSession
-from tests import InvalidUser, ValidUser, test_users
 from messages import Message
+from tests import InvalidUser, ValidUser, test_users
 
 pytestmark = pytest.mark.auth
 
