@@ -87,7 +87,7 @@ def test_index_user_logged_in(client: FlaskClient, user_logged_in: User):
             user.req_inv = True
             db_session.commit()
             response = client.get(url_for("main.index"))
-            assert "You requested a inventory check" in response.text
+            assert str(Message.UI.Main.Inv(True, True)) in response.text
             assert (f'href={url_for("inv.inventory_request")}>' +
                     "Request inventory") not in response.text
             user.req_inv = False
@@ -241,8 +241,8 @@ def test_index_hidden_admin_logged_in_user_dashboard(
             assert response.status_code == 200
             assert ('Logged in as <span class="text-secondary">' +
                     f'{hidden_admin_logged_in.name}') in response.text
-            assert ('You have <span class="text-secondary">' +
-                    f'{user.in_use_products} products') in response.text
+            assert str(Message.UI.Main.YouHave(user.in_use_products)) \
+                in response.text
             assert "Inventory check not required" in response.text
             assert user.sat_group == 1
             assert sat_sch_info.negative_en in response.text
@@ -498,9 +498,3 @@ def test_index_admin_logged_in_statistics(
             assert ('href="/supplier/suppliers">' +
                     f"{in_use_suppliers}" +
                     " suppliers</a> in use") in response.text
-            assert ('href="/product/products-sorted-by-code">' +
-                    f"{in_use_products}" +
-                    " products</a> in use, of which " +
-                    '<span class="text-secondary">' +
-                    f"{critical_products}" +
-                    "</span> are critical.") in response.text

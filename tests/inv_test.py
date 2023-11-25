@@ -602,7 +602,7 @@ def test_inventory_request_user_logged_in(
         assert response.status_code == 200
         assert response.request.path == url_for("main.index")
         assert str(Message.User.ReqInv.Sent()) in response.text
-        assert "You requested a inventory check" in response.text
+        assert str(Message.UI.Main.Inv(True, True)) in response.text
         with dbSession() as db_session:
             assert db_session.get(User, user_logged_in.id).req_inv
             db_session.get(User, user_logged_in.id).req_inv = False

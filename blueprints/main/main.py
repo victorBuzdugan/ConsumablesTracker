@@ -9,6 +9,7 @@ from sqlalchemy.orm import joinedload, raiseload
 from blueprints.sch import clean_sch_info, sat_sch_info
 from database import Category, Product, Supplier, User, dbSession
 from helpers import logger, login_required
+from messages import Message
 
 func: Callable
 
@@ -46,12 +47,6 @@ def index():
                 "products_to_order": db_session.scalar(
                         select(func.count(Product.id))
                         .filter_by(in_use=True, to_order=True)),
-                "products_in_use": db_session.scalar(
-                        select(func.count(Product.id))
-                        .filter_by(in_use=True)),
-                "critical_products": db_session.scalar(
-                        select(func.count(Product.id))
-                        .filter_by(in_use=True, critical=True)),
                 "users_in_use": db_session.scalar(
                         select(func.count(User.id))
                         .filter_by(in_use=True)),
@@ -61,6 +56,12 @@ def index():
                 "suppliers_in_use": db_session.scalar(
                         select(func.count(Supplier.id))
                         .filter_by(in_use=True)),
+                "products_in_use": db_session.scalar(
+                        select(func.count(Product.id))
+                        .filter_by(in_use=True)),
+                "crit_products_in_use": db_session.scalar(
+                        select(func.count(Product.id))
+                        .filter_by(in_use=True, critical=True)),
             }
 
             return render_template(
@@ -69,9 +70,11 @@ def index():
                 users=users,
                 stats=stats,
                 saturday_sch=sat_sch_info,
-                cleaning_sch=clean_sch_info)
+                cleaning_sch=clean_sch_info,
+                Message=Message)
 
     return render_template("main/index.html",
                            user=user,
                            saturday_sch=sat_sch_info,
-                           cleaning_sch=clean_sch_info)
+                           cleaning_sch=clean_sch_info,
+                           Message=Message)

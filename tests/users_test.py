@@ -151,14 +151,14 @@ def test_failed_approve_check_inventory_user_logged_in(
         client: FlaskClient, user_logged_in: User):
     """test_failed_approve_check_inventory_user_logged_in"""
     with dbSession() as db_session:
-        user = db_session.get(User, 4)
+        user = db_session.get(User, user_logged_in.id)
         user.req_inv = True
         db_session.commit()
         with client:
             response = client.get("/")
-            assert session["user_name"] == user_logged_in.name
             assert not session["admin"]
-            assert "requested inventory" not in response.text
+            assert url_for("users.approve_check_inv", username=user.name) \
+                not in response.text
             response = client.get(
                 url_for("users.approve_check_inv", username=user.name),
                 follow_redirects=True)

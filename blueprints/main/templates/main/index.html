@@ -12,19 +12,9 @@
             <strong>{{ gettext("User dashboard") }}</strong>
         </div>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item">{{ gettext("Logged in as") }} <span class="text-secondary">{{ user.name }}</span></li>
-            <li class="list-group-item">{{ gettext("You have") }} <span class="text-secondary">{{ user.in_use_products }} {{ ngettext("product", "products", user.in_use_products) }}</span> {{ ngettext("assigned", "assigned", user.in_use_products) }}</li>
-            <li class="list-group-item">
-                {% if user.req_inv %}
-                    <span class="text-warning">{{ gettext("You requested a inventory check") }}</span>
-                {% else %}
-                    {% if user.done_inv %}
-                        <span class="text-secondary">{{ gettext("Inventory check not required") }}</span>
-                    {% else %}
-                        <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('inv.inventory') }}">{{ gettext("Check inventory") }}</a>
-                    {% endif %}
-                {% endif %}
-            </li>
+            <li class="list-group-item">{{ Message.UI.Main.LoggedInAs(user.name) }}</li>
+            <li class="list-group-item">{{ Message.UI.Main.YouHave(user.in_use_products) }}</li>
+            <li class="list-group-item">{{ Message.UI.Main.Inv(user.req_inv, user.done_inv) }}</li>
             <li class="list-group-item">
                 {% if user.sat_group_this_week and user.name != "Admin" %}
                     <span class="text-warning">{{ saturday_sch.positive }}</span>
@@ -53,8 +43,8 @@
                 <li class="list-group-item p-2 pb-0">
                     <div class="table-responsive mx-auto" style="width: auto;">
                         <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                            <caption class="text-center pb-0">{{ gettext("*Bolded users have administrative privileges.") }}</caption>
-                            <caption class="text-center pb-0">{{ gettext("*Strikethrough users are no longer in use.") }}</caption>
+                            <caption class="text-center pb-0">{{ Message.UI.Captions.BoldUsers() }}</caption>
+                            <caption class="text-center pb-0">{{ Message.UI.Captions.Strikethrough("users") }}</caption>
                             <thead>
                                 <tr>
                                     <th class="px-3">{{ gettext("Name") }}</th>
@@ -89,13 +79,7 @@
                         </table>
                     </div>
                 </li>
-                <li class="list-group-item">
-                    {% if stats.products_to_order %}
-                        <span class="text-danger">{{ ngettext("There is", "There are", stats.products_to_order) }} <a class="link-danger link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products_to_order') }}">{{ stats.products_to_order }} {{ ngettext("product", "products", stats.products_to_order) }}</a> {{ ngettext("that needs to be ordered", "that need to be ordered", stats.products_to_order) }}
-                    {% else %}
-                        {{ gettext("There are no products that need to be ordered") }}
-                    {% endif %}
-                </li>
+                <li class="list-group-item">{{ Message.UI.Main.ProdToOrder(stats.products_to_order) }}</li>
             </ul>
             <div class="card-footer">
                 <a class="btn btn-primary px-4" href="{{ url_for('users.approve_check_inv_all') }}">{{ gettext("Start Inventorying") }}</a>
@@ -107,18 +91,11 @@
                 <strong>{{ gettext("Statistics") }}</strong>
             </div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item">
-                    {{ ngettext("There is", "There are", stats.users_in_use) }} <span class="text-secondary">{{ stats.users_in_use }} {{ ngettext("user", "users", stats.users_in_use) }}</span> {{ gettext("in use") }}
-                </li>
-                <li class="list-group-item">
-                    {{ ngettext("There is", "There are", stats.categories_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('cat.categories') }}">{{ stats.categories_in_use }} {{ ngettext("category", "categories", stats.categories_in_use) }}</a> {{ gettext("in use") }}
-                </li>
-                <li class="list-group-item">
-                    {{ ngettext("There is", "There are", stats.suppliers_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('sup.suppliers') }}">{{ stats.suppliers_in_use }} {{ ngettext("supplier", "suppliers", stats.suppliers_in_use) }}</a> {{ gettext("in use") }}
-                </li>
-                <li class="list-group-item">
-                    {{ ngettext("There is", "There are", stats.products_in_use) }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='code') }}">{{ stats.products_in_use }} {{ ngettext("product", "products", stats.products_in_use) }}</a> {{ gettext("in use") }}, {{ ngettext("and", "of which", stats.products_in_use) }} <span class="text-secondary">{{ stats.critical_products }}</span> {{ ngettext("is critical", "are critical", stats.critical_products) }}.
-                </li>
+                <li class="list-group-item">{{ Message.UI.Stats.Global("users", in_use_elements=stats.users_in_use) }}</li>
+                <li class="list-group-item">{{ Message.UI.Stats.Global("categories", in_use_elements=stats.categories_in_use, with_link=True) }}</li>
+                <li class="list-group-item">{{ Message.UI.Stats.Global("suppliers", in_use_elements=stats.suppliers_in_use, with_link=True) }}</li>
+                <li class="list-group-item">{{ Message.UI.Stats.Global("products", in_use_elements=stats.products_in_use, with_link=True) }}</li>
+                <li class="list-group-item">{{ Message.UI.Stats.Global("critical_products", in_use_elements=stats.crit_products_in_use, with_link=True) }}</li>
             </ul>
         </div>
     {% endif %}
