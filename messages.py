@@ -1101,6 +1101,15 @@ class Message:
                 category=None,
                 message=_prod_order
             )
+        class Prod:
+            """Products blueprint"""
+            ConfirmAllOrd = _Msg(
+                description="HTML",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "Confirm that all products were ordered.")
+            )
         class FieldsReq:
             """Fields requirements"""
             All = _Msg(

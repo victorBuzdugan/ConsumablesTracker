@@ -225,7 +225,8 @@ def products(ordered_by):
     return render_template(
         "prod/products.html",
         products=prods,
-        stats=stats)
+        stats=stats,
+        Message=Message)
 
 
 @prod_bp.route("/new", methods=["GET", "POST"])
@@ -285,7 +286,9 @@ def new_product():
         logger.warning("Product creation error(s)")
         flash_errors(new_prod_form.errors)
 
-    return render_template("prod/new_product.html", form=new_prod_form)
+    return render_template("prod/new_product.html",
+                           form=new_prod_form,
+                           Message=Message)
 
 
 @prod_bp.route("/edit/<path:product>", methods=["GET", "POST"])
@@ -369,7 +372,9 @@ def edit_product(product):
             flash(**Message.Product.NotExists.flash(product))
             return redirect(url_for(".products", ordered_by="code"))
 
-    return render_template("prod/edit_product.html", form=edit_prod_form)
+    return render_template("prod/edit_product.html",
+                           form=edit_prod_form,
+                           Message=Message)
 
 
 @prod_bp.route("/products-to-order", methods=["GET", "POST"])
@@ -424,7 +429,8 @@ def products_to_order():
         return render_template(
             "prod/products_to_oder.html",
             products=prods,
-            form=prod_to_order_form)
+            form=prod_to_order_form,
+            Message=Message)
     else:
         logger.debug("There are no products that need to be ordered")
         flash(**Message.Product.NoOrder.flash())

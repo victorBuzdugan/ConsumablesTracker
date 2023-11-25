@@ -11,8 +11,8 @@
         <li class="list-group-item p-0">
             <div class="table-responsive mx-auto" style="width: auto;">
                 <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                    <caption class="text-center pb-0">{{ gettext("*Strikethrough products are no longer in use.") }}</caption>
-                    <caption class="text-center pb-0">{{ gettext("*Critical products are highlighted in red.") }}</caption>
+                    <caption class="text-center pb-0">{{ Message.UI.Captions.Strikethrough("products") }}</caption>
+                    <caption class="text-center pb-0">{{ Message.UI.Captions.CriticalProducts() }}</caption>
                     <thead>
                         <tr>
                             <th class="px-1">
@@ -75,12 +75,8 @@
                 </table>
             </div>
         </li>
-        <li class="list-group-item">
-            {{ ngettext("There is", "There are", stats.all_products) }} <span class="text-secondary">{{ stats.all_products }} {{ ngettext("product", "products", stats.all_products) }}</span>, {{ ngettext("and", "of which", stats.all_products) }} <span class="text-secondary">{{ stats.in_use_products }} {{ ngettext("is in use", "are in use", stats.in_use_products) }}</span>
-        </li>
-        <li class="list-group-item">
-            {{ ngettext("There is", "There are", stats.critical_products) }} <span class="text-secondary">{{ stats.critical_products }} {{ ngettext("critical product", "critical products", stats.critical_products) }}</span>, {{ ngettext("and", "of which", stats.critical_products) }} <span class="text-secondary">{{ stats.in_use_critical_products }} {{ ngettext("is in use", "are in use", stats.in_use_critical_products) }}</span>
-        </li>
+        <li class="list-group-item">{{ Message.UI.Stats.Global("products", stats.all_products, stats.in_use_products) }}</li>
+        <li class="list-group-item">{{ Message.UI.Stats.Global("critical_products", stats.critical_products, stats.in_use_critical_products) }}</li>
     </ul>
 </div>
 

@@ -854,9 +854,8 @@ def test_order_page(client: FlaskClient, admin_logged_in: User):
             assert "All ordered" in response.text
             for product in products:
                 assert product.name in response.text
-            assert ('There are <span class="text-secondary">' +
-                    f'{len(products)} products</span> ' +
-                    'that need to be ordered') in response.text
+            assert str(Message.UI.Main.ProdToOrder(len(products))) \
+                in response.text
             for _ in range(numb_products-1):
                 prod = products.pop()
                 client.get(url_for("prod.products_to_order"))
@@ -912,9 +911,8 @@ def test_order_page_all_ordered(client: FlaskClient, admin_logged_in: User):
             assert "All ordered" in response.text
             for product in products:
                 assert product.name in response.text
-            assert ('There are <span class="text-secondary">' +
-                    f'{len(products)} products</span> ' +
-                    'that need to be ordered') in response.text
+            assert str(Message.UI.Main.ProdToOrder(len(products))) \
+                in response.text
             response = client.get(
                 url_for("prod.all_products_ordered"), follow_redirects=True)
             assert len(response.history) == 1

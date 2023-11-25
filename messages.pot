@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-11-25 15:52+0200\n"
+"POT-Creation-Date: 2023-11-25 17:05+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,8 +56,6 @@ msgstr[1] ""
 msgid "in use"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
 #: blueprints/users/templates/users/edit_user.html:110 messages.py:117
@@ -614,44 +612,44 @@ msgid "%(start_format)sYou don't have products assigned%(end_format)s"
 msgstr ""
 
 #: messages.py:1110
+msgid "Confirm that all products were ordered."
+msgstr ""
+
+#: messages.py:1119
 msgid "All fields are required"
 msgstr ""
 
-#: messages.py:1117
+#: messages.py:1126
 msgid "All fields except email are required"
 msgstr ""
 
-#: blueprints/prod/templates/prod/edit_product.html:110
-#: blueprints/prod/templates/prod/new_product.html:92
 #: blueprints/sup/templates/sup/edit_supplier.html:46
 #: blueprints/sup/templates/sup/new_supplier.html:28
 #: blueprints/users/templates/users/edit_user.html:99
-#: blueprints/users/templates/users/new_user.html:59 messages.py:1124
+#: blueprints/users/templates/users/new_user.html:59 messages.py:1133
 msgid "Underlined fields are required"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products.html:15
-#: blueprints/prod/templates/prod/products_to_oder.html:17
-#: blueprints/sup/templates/sup/reassign_supplier.html:18 messages.py:1139
+#: blueprints/sup/templates/sup/reassign_supplier.html:18 messages.py:1148
 msgid "*Critical products are highlighted in red."
 msgstr ""
 
-#: messages.py:1146
+#: messages.py:1155
 msgid "*Select to order a product if current stock is less then minimum stock."
 msgstr ""
 
-#: messages.py:1154
+#: messages.py:1163
 msgid "*Bolded users have administrative privileges."
 msgstr ""
 
-#: messages.py:1175
+#: messages.py:1184
 #, python-format
 msgid ""
 "This will delete %(start_format)s%(name)s%(end_format)s. You can't undo "
 "this action!"
 msgstr ""
 
-#: messages.py:1186
+#: messages.py:1195
 #, python-format
 msgid "This will reassign %(start_format)s%(number)s product%(end_format)s!"
 msgid_plural "This will reassign %(start_format)s%(number)s products%(end_format)s!"
@@ -743,7 +741,7 @@ msgid "In use"
 msgstr ""
 
 #: blueprints/cat/cat.py:74 blueprints/prod/prod.py:144
-#: blueprints/prod/templates/prod/products_to_oder.html:66
+#: blueprints/prod/templates/prod/products_to_oder.html:64
 #: blueprints/sup/sup.py:74 blueprints/users/users.py:159
 msgid "Update"
 msgstr ""
@@ -802,7 +800,7 @@ msgstr ""
 #: blueprints/cat/templates/cat/edit_category.html:74
 #: blueprints/cat/templates/cat/reassign_category.html:83
 #: blueprints/prod/templates/prod/edit_product.html:132
-#: blueprints/prod/templates/prod/products_to_oder.html:82
+#: blueprints/prod/templates/prod/products_to_oder.html:80
 #: blueprints/sup/templates/sup/edit_supplier.html:74
 #: blueprints/sup/templates/sup/reassign_supplier.html:83
 #: blueprints/users/templates/users/edit_user.html:133
@@ -1027,10 +1025,6 @@ msgstr ""
 msgid "Edit product"
 msgstr ""
 
-#: blueprints/prod/templates/prod/edit_product.html:129
-msgid "This will delete this product! You can't undo this action."
-msgstr ""
-
 #: blueprints/prod/templates/prod/new_product.html:3
 msgid "New product"
 msgstr ""
@@ -1044,46 +1038,6 @@ msgstr ""
 msgid "Products"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products.html:14
-#: blueprints/sup/templates/sup/reassign_supplier.html:17
-msgid "*Strikethrough products are no longer in use."
-msgstr ""
-
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products.html:82
-#: blueprints/prod/templates/prod/products_to_oder.html:59
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "There is"
-msgid_plural "There are"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products_to_oder.html:59
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/reassign_supplier.html:80
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "product"
-msgid_plural "products"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products.html:82
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "is in use"
-msgid_plural "are in use"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/prod/templates/prod/products.html:82
-msgid "critical product"
-msgid_plural "critical products"
-msgstr[0] ""
-msgstr[1] ""
-
 #: blueprints/prod/templates/prod/products_to_oder.html:11
 msgid "Products to order"
 msgstr ""
@@ -1096,25 +1050,15 @@ msgstr ""
 msgid "Ordered"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products_to_oder.html:59
-msgid "that needs to be ordered"
-msgid_plural "that need to be ordered"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/prod/templates/prod/products_to_oder.html:69
+#: blueprints/prod/templates/prod/products_to_oder.html:67
 msgid "All ordered"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products_to_oder.html:75
+#: blueprints/prod/templates/prod/products_to_oder.html:73
 msgid "Confirm all products ordered"
 msgstr ""
 
-#: blueprints/prod/templates/prod/products_to_oder.html:79
-msgid "Confirm that all products were ordered"
-msgstr ""
-
-#: blueprints/prod/templates/prod/products_to_oder.html:83
+#: blueprints/prod/templates/prod/products_to_oder.html:81
 msgid "All products ordered"
 msgstr ""
 
@@ -1167,6 +1111,22 @@ msgstr ""
 msgid "Supplier has"
 msgstr ""
 
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/reassign_supplier.html:80
+#: blueprints/users/templates/users/edit_user.html:110
+msgid "product"
+msgid_plural "products"
+msgstr[0] ""
+msgstr[1] ""
+
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:110
+msgid "is in use"
+msgid_plural "are in use"
+msgstr[0] ""
+msgstr[1] ""
+
 #: blueprints/sup/templates/sup/edit_supplier.html:71
 msgid "This will delete this supplier! You can't undo this action."
 msgstr ""
@@ -1187,6 +1147,10 @@ msgstr ""
 msgid "Reassign all products for supplier"
 msgstr ""
 
+#: blueprints/sup/templates/sup/reassign_supplier.html:17
+msgid "*Strikethrough products are no longer in use."
+msgstr ""
+
 #: blueprints/sup/templates/sup/reassign_supplier.html:80
 msgid "This will reassign"
 msgstr ""
@@ -1199,6 +1163,12 @@ msgstr ""
 #: blueprints/sup/templates/sup/suppliers.html:14
 msgid "*Strikethrough suppliers are no longer in use."
 msgstr ""
+
+#: blueprints/sup/templates/sup/suppliers.html:37
+msgid "There is"
+msgid_plural "There are"
+msgstr[0] ""
+msgstr[1] ""
 
 #: blueprints/sup/templates/sup/suppliers.html:37
 msgid "supplier"

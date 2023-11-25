@@ -107,7 +107,7 @@
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">{{ gettext("Underlined fields are required") }}</span>
+            <span class="text-body-tertiary">{{ Message.UI.FieldsReq.Underlined() }}</span>
         </div>
 
         <div class="card-footer py-3">
@@ -126,7 +126,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                {{ gettext("This will delete this product! You can't undo this action.") }}
+                                {{ Message.UI.DelElement(form.name.data) }}
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>

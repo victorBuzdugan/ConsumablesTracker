@@ -14,7 +14,7 @@
             <li class="list-group-item p-0">
                 <div class="table-responsive mx-auto" style="width: auto;">
                     <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                        <caption class="text-center pb-0">{{ gettext("*Critical products are highlighted in red.") }}</caption>
+                        <caption class="text-center pb-0">{{ Message.UI.Captions.CriticalProducts() }}</caption>
                         <thead>
                             <tr>
                                 <th class="px-1">{{ gettext("Code") }}</th>
@@ -55,15 +55,13 @@
                     </table>
                 </div>
             </li>
-            <li class="list-group-item">
-                {{ ngettext("There is", "There are", products|length) }} <span class="text-secondary">{{ products|length }} {{ ngettext("product", "products", products|length) }}</span> {{ ngettext("that needs to be ordered", "that need to be ordered", products|length) }}
-            </li>
+            <li class="list-group-item">{{ Message.UI.Main.ProdToOrder(products|length) }}</li>
         </ul>
 
         <div class="card-footer py-3">
             <div class="row row-cols-2 g-4">
                 <div class="col">
-                    <input class="btn btn-primary px-4" type="submit" value="{{ gettext("Update") }}">
+                    <input class="btn btn-primary px-4" type="submit" value="{{ gettext('Update') }}">
                 </div>
                 <div class="col">
                     <button type="button" class="btn btn-warning px-4" data-bs-toggle="modal" data-bs-target="#deleteModal">{{ gettext("All ordered") }}</button>
@@ -76,7 +74,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                {{ gettext("Confirm that all products were ordered") }}.
+                                {{ Message.UI.Prod.ConfirmAllOrd() }}
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
