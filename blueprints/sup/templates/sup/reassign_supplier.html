@@ -14,8 +14,8 @@
         <li class="list-group-item p-0">
             <div class="table-responsive mx-auto" style="width: auto;">
                 <table class="table align-middle table-sm table-hover table-bordered border-light-subtle table-striped">
-                    <caption class="text-center pb-0">{{ gettext("*Strikethrough products are no longer in use.") }}</caption>
-                    <caption class="text-center pb-0">{{ gettext("*Critical products are highlighted in red.") }}</caption>
+                    <caption class="text-center pb-0">{{ Message.UI.Captions.Strikethrough("products") }}</caption>
+                    <caption class="text-center pb-0">{{ Message.UI.Captions.CriticalProducts() }}</caption>
                     <thead>
                         <tr>
                             <th class="px-1">{{ gettext("Code") }}</th>
@@ -77,7 +77,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            {{ gettext("This will reassign") }} {{ products|length }} {{ ngettext("product", "products", products|length) }}!
+                            {{ Message.UI.Reassign(products|length) }}
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>

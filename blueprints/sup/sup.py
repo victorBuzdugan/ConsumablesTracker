@@ -115,7 +115,8 @@ def suppliers():
     return render_template(
         "sup/suppliers.html",
         suppliers=supps,
-        stats=stats)
+        stats=stats,
+        Message=Message)
 
 
 @sup_bp.route("/new", methods=["GET", "POST"])
@@ -140,7 +141,9 @@ def new_supplier():
         logger.warning("Supplier creation error(s)")
         flash_errors(new_sup_form.errors)
 
-    return render_template("sup/new_supplier.html", form=new_sup_form)
+    return render_template("sup/new_supplier.html",
+                           form=new_sup_form,
+                           Message=Message)
 
 
 @sup_bp.route("/edit/<path:supplier>", methods=["GET", "POST"])
@@ -193,7 +196,9 @@ def edit_supplier(supplier):
             flash(**Message.Supplier.NotExists.flash(supplier))
             return redirect(url_for(".suppliers"))
 
-    return render_template("sup/edit_supplier.html", form=edit_sup_form)
+    return render_template("sup/edit_supplier.html",
+                           form=edit_sup_form,
+                           Message=Message)
 
 
 @sup_bp.route("/reassign/<path:supplier>", methods=["GET", "POST"])
@@ -261,4 +266,5 @@ def reassign_supplier(supplier):
 
     return render_template("sup/reassign_supplier.html",
                            form=reassign_sup_form,
-                           products=products)
+                           products=products,
+                           Message=Message)
