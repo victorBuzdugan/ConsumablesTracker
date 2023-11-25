@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-11-25 18:06+0200\n"
+"POT-Creation-Date: 2023-11-25 18:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,8 +56,7 @@ msgstr[1] ""
 msgid "in use"
 msgstr ""
 
-#: blueprints/sup/templates/sup/suppliers.html:37 messages.py:123
-#: messages.py:186
+#: messages.py:123 messages.py:186
 msgid "and"
 msgid_plural "of which"
 msgstr[0] ""
@@ -631,7 +630,7 @@ msgstr ""
 msgid "All fields except email are required"
 msgstr ""
 
-#: blueprints/users/templates/users/new_user.html:59 messages.py:1163
+#: messages.py:1163
 msgid "Underlined fields are required"
 msgstr ""
 
@@ -1133,24 +1132,6 @@ msgstr ""
 msgid "Suppliers"
 msgstr ""
 
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "There is"
-msgid_plural "There are"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "supplier"
-msgid_plural "suppliers"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "is in use"
-msgid_plural "are in use"
-msgstr[0] ""
-msgstr[1] ""
-
 #: blueprints/users/users.py:85
 msgid "Group 1"
 msgstr ""
@@ -1167,15 +1148,15 @@ msgstr ""
 msgid "Create user"
 msgstr ""
 
-#: blueprints/users/users.py:261
+#: blueprints/users/users.py:263
 msgid "This week"
 msgstr ""
 
-#: blueprints/users/users.py:262
+#: blueprints/users/users.py:264
 msgid "In"
 msgstr ""
 
-#: blueprints/users/users.py:262
+#: blueprints/users/users.py:264
 msgid "week"
 msgid_plural "weeks"
 msgstr[0] ""

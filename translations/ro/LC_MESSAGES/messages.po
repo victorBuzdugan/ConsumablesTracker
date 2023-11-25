@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version:  v2.07\n"
+"Project-Id-Version:  v2.1\n"
 "Report-Msgid-Bugs-To: buzdugan.victor@icloud.com\n"
-"POT-Creation-Date: 2023-11-25 18:06+0200\n"
+"POT-Creation-Date: 2023-11-25 18:30+0200\n"
 "PO-Revision-Date: 2023-09-14 10:55+0300\n"
 "Last-Translator: victorBuzdugan <buzdugan.victor@icloud.com>\n"
 "Language: ro\n"
@@ -63,8 +63,7 @@ msgstr[2] "Sunt %(start_format)s%(number)s de produse critice"
 msgid "in use"
 msgstr "în uz"
 
-#: blueprints/sup/templates/sup/suppliers.html:37 messages.py:123
-#: messages.py:186
+#: messages.py:123 messages.py:186
 msgid "and"
 msgid_plural "of which"
 msgstr[0] "iar"
@@ -635,7 +634,9 @@ msgstr "Confirmă că toate produsele au fost comandate."
 #: messages.py:1129
 #, python-format
 msgid "User awaits %(start_format)sregistration approval%(end_format)s"
-msgstr "Utilizatorul așteaptă %(start_format)saprobarea înregistrării%(end_format)s"
+msgstr ""
+"Utilizatorul așteaptă %(start_format)saprobarea "
+"înregistrării%(end_format)s"
 
 #: messages.py:1140
 #, python-format
@@ -650,7 +651,7 @@ msgstr "Toate câmpurile sunt obligatorii"
 msgid "All fields except email are required"
 msgstr "Toate câmpurile în afară de email sunt obligatorii"
 
-#: blueprints/users/templates/users/new_user.html:59 messages.py:1163
+#: messages.py:1163
 msgid "Underlined fields are required"
 msgstr "Câmpurile subliniate sunt obligatorii"
 
@@ -1160,27 +1161,6 @@ msgstr "Redistribuie toate produsele pentru furnizor"
 msgid "Suppliers"
 msgstr "Furnizori"
 
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "There is"
-msgid_plural "There are"
-msgstr[0] "Este"
-msgstr[1] "Sunt"
-msgstr[2] "Sunt"
-
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "supplier"
-msgid_plural "suppliers"
-msgstr[0] "furnizor"
-msgstr[1] "furnizori"
-msgstr[2] "de furnizori"
-
-#: blueprints/sup/templates/sup/suppliers.html:37
-msgid "is in use"
-msgid_plural "are in use"
-msgstr[0] "este în uz"
-msgstr[1] "sunt în uz"
-msgstr[2] "sunt în uz"
-
 #: blueprints/users/users.py:85
 msgid "Group 1"
 msgstr "Grup 1"
@@ -1197,15 +1177,15 @@ msgstr "Admin"
 msgid "Create user"
 msgstr "Creează utilizator"
 
-#: blueprints/users/users.py:261
+#: blueprints/users/users.py:263
 msgid "This week"
 msgstr "Săptămâna asta"
 
-#: blueprints/users/users.py:262
+#: blueprints/users/users.py:264
 msgid "In"
 msgstr "În"
 
-#: blueprints/users/users.py:262
+#: blueprints/users/users.py:264
 msgid "week"
 msgid_plural "weeks"
 msgstr[0] "săptămână"

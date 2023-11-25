@@ -34,7 +34,7 @@
             </div>
         </li>
         <li class="list-group-item">
-            {{ ngettext("There is", "There are", stats.all_suppliers) }} <span class="text-secondary">{{ stats.all_suppliers }} {{ ngettext("supplier", "suppliers", stats.all_suppliers)}}</span>, {{ ngettext("and", "of which", stats.all_suppliers) }} <span class="text-secondary">{{ stats.in_use_suppliers }} {{ ngettext("is in use", "are in use", stats.in_use_suppliers) }}</span>
+            {{ Message.UI.Stats.Global("suppliers", stats.all_suppliers, stats.in_use_suppliers) }}
         </li>
     </ul>
 </div>

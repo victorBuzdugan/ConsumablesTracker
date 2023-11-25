@@ -1,4 +1,3 @@
-[ ] html messages???
 [ ] Pair Log with message
 - Pair logger with the message class (when you create a product, also log it)
 [x] Search for all gettext 
@@ -12,3 +11,4 @@
 [x] Replace text messages
 - replace some text messages with a better version and a unified logic message
 [x] Test Messages
+[x] html messages???
