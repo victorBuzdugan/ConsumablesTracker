@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-11-24 21:12+0200\n"
+"POT-Creation-Date: 2023-11-25 11:04+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,35 +17,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.12.1\n"
 
-#: messages.py:53
+#: messages.py:55
 #, python-format
 msgid "There is %(start_format)s%(number)s user"
 msgid_plural "There are %(start_format)s%(number)s users"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:63
+#: messages.py:65
 #, python-format
 msgid "There is %(start_format)s%(number)s category"
 msgid_plural "There are %(start_format)s%(number)s categories"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:73
+#: messages.py:75
 #, python-format
 msgid "There is %(start_format)s%(number)s supplier"
 msgid_plural "There are %(start_format)s%(number)s suppliers"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:83
+#: messages.py:85
 #, python-format
 msgid "There is %(start_format)s%(number)s product"
 msgid_plural "There are %(start_format)s%(number)s products"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:92
+#: messages.py:94
 #, python-format
 msgid "There is %(start_format)s%(number)s critical product"
 msgid_plural "There are %(start_format)s%(number)s critical products"
@@ -55,510 +55,561 @@ msgstr[1] ""
 #: blueprints/main/templates/main/index.html:111
 #: blueprints/main/templates/main/index.html:114
 #: blueprints/main/templates/main/index.html:117
-#: blueprints/main/templates/main/index.html:120 messages.py:100
+#: blueprints/main/templates/main/index.html:120 messages.py:102
 msgid "in use"
 msgstr ""
 
-#: blueprints/cat/templates/cat/edit_category.html:51
 #: blueprints/main/templates/main/index.html:120
 #: blueprints/prod/templates/prod/products.html:79
 #: blueprints/prod/templates/prod/products.html:82
 #: blueprints/sup/templates/sup/edit_supplier.html:51
 #: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:110 messages.py:102
+#: blueprints/users/templates/users/edit_user.html:110 messages.py:104
+#: messages.py:168
 msgid "and"
 msgid_plural "of which"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:107
+#: messages.py:109 messages.py:173
 #, python-format
 msgid "%(number)s is in use"
 msgid_plural "%(number)s are in use"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:125
+#: messages.py:140
+#, python-format
+msgid "User is responsible for %(start_format)s%(number)s product"
+msgid_plural "User is responsible for %(start_format)s%(number)s products"
+msgstr[0] ""
+msgstr[1] ""
+
+#: messages.py:150
+#, python-format
+msgid "Category has %(start_format)s%(number)s product"
+msgid_plural "Category has %(start_format)s%(number)s products"
+msgstr[0] ""
+msgstr[1] ""
+
+#: messages.py:160
+#, python-format
+msgid "Supplier has %(start_format)s%(number)s product"
+msgid_plural "Supplier has %(start_format)s%(number)s products"
+msgstr[0] ""
+msgstr[1] ""
+
+#: messages.py:191
 msgid "Strikethrough users are no longer in use."
 msgstr ""
 
-#: messages.py:128
+#: messages.py:194
 msgid "Strikethrough categories are no longer in use."
 msgstr ""
 
-#: messages.py:131
+#: messages.py:197
 msgid "Strikethrough suppliers are no longer in use."
 msgstr ""
 
-#: messages.py:134
+#: messages.py:200
 msgid "Strikethrough products are no longer in use."
 msgstr ""
 
-#: messages.py:176 messages.py:211
+#: messages.py:243 messages.py:278
 #, python-format
 msgid "Must have at least %(min)i characters"
 msgstr ""
 
-#: messages.py:184
+#: messages.py:251
 msgid "The username is required"
 msgstr ""
 
-#: messages.py:190
+#: messages.py:257
 #, python-format
 msgid "The username must be between %(min)i and %(max)i characters"
 msgstr ""
 
-#: messages.py:199
+#: messages.py:266
 #, python-format
 msgid "The user '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:219
+#: messages.py:286
 msgid "Must have at least 1 big letter"
 msgstr ""
 
-#: messages.py:226
+#: messages.py:293
 msgid "Must have at least 1 number"
 msgstr ""
 
-#: messages.py:233
+#: messages.py:300
 #, python-format
 msgid "Must have at least 1 special character (%(symbols)s)"
 msgstr ""
 
-#: messages.py:241
+#: messages.py:308
 msgid "The password is required"
 msgstr ""
 
-#: messages.py:247
+#: messages.py:314
 #, python-format
 msgid "The password should have at least %(min)i characters"
 msgstr ""
 
-#: messages.py:254
+#: messages.py:321
 msgid "Check password rules"
 msgstr ""
 
-#: messages.py:260
+#: messages.py:327
 #, python-format
 msgid ""
 "The password must have 1 big letter, 1 number, and 1 special character "
 "(%(symbols)s)"
 msgstr ""
 
-#: messages.py:268
+#: messages.py:335
 msgid "The passwords don't match"
 msgstr ""
 
-#: messages.py:274
+#: messages.py:341
 msgid "Wrong old password"
 msgstr ""
 
-#: messages.py:280
+#: messages.py:347
 msgid "The password was changed"
 msgstr ""
 
-#: messages.py:288
+#: messages.py:355
 msgid "You can't attach products to a retired user"
 msgstr ""
 
-#: messages.py:294
+#: messages.py:361
 msgid "You can't attach products to a user with a pending registration"
 msgstr ""
 
-#: messages.py:303
+#: messages.py:370
 msgid "A user with a pending registration can't be admin"
 msgstr ""
 
-#: messages.py:309
+#: messages.py:376
 msgid "You are the last admin"
 msgstr ""
 
-#: messages.py:317
+#: messages.py:384
 msgid "You can't retire a user if he is responsible for products"
 msgstr ""
 
-#: messages.py:325
+#: messages.py:392
 msgid "A retired user can't check inventory"
 msgstr ""
 
-#: messages.py:331
+#: messages.py:398
 msgid "A user with a pending registration can't check inventory"
 msgstr ""
 
-#: messages.py:337
+#: messages.py:404
 msgid "A user without products attached can't check inventory"
 msgstr ""
 
-#: messages.py:345
+#: messages.py:412
 msgid "Registration cannot be requested by an admin"
 msgstr ""
 
-#: messages.py:351
+#: messages.py:418
 msgid "Registration cannot be requested by a retired user"
 msgstr ""
 
-#: messages.py:357
+#: messages.py:424
 msgid "Registration cannot be requested by a user who checks inventory"
 msgstr ""
 
-#: messages.py:364
+#: messages.py:431
 msgid "Registration cannot be requested by a user who has requested inventorying"
 msgstr ""
 
-#: messages.py:371
+#: messages.py:438
 msgid "Registration cannot be requested by a user who has products attached"
 msgstr ""
 
-#: messages.py:380
+#: messages.py:447
 msgid "Admins don't need to request inventorying"
 msgstr ""
 
-#: messages.py:386
+#: messages.py:453
 msgid "Inventorying cannot be requested by a retired user"
 msgstr ""
 
-#: messages.py:392
+#: messages.py:459
 msgid "Inventorying cannot be requested by a user with a pending registration"
 msgstr ""
 
-#: messages.py:399
+#: messages.py:466
 msgid "The user can already check inventory"
 msgstr ""
 
-#: messages.py:405
+#: messages.py:472
 msgid "Inventorying cannot be requested by a user who has no products attached"
 msgstr ""
 
-#: messages.py:412
+#: messages.py:479
 msgid "The inventory check request was submitted"
 msgstr ""
 
-#: messages.py:420
+#: messages.py:487
 msgid "The email address is incorrect"
 msgstr ""
 
-#: messages.py:428
-msgid "The group number doesn't exist"
-msgstr ""
-
-#: messages.py:435
-#, python-format
-msgid "The user '%(name)s' does not exist"
-msgstr ""
-
-#: messages.py:437
-msgid "The user does not exist"
-msgstr ""
-
-#: messages.py:443
-#, python-format
-msgid "Hello, %(name)s"
-msgstr ""
-
-#: messages.py:449
-msgid "You have been logged out"
-msgstr ""
-
-#: messages.py:455
-#, python-format
-msgid "The user '%(name)s' awaits registration approval"
-msgstr ""
-
-#: messages.py:462
-#, python-format
-msgid "The user '%(name)s' is retired"
-msgstr ""
-
-#: messages.py:469
-msgid "The registration request was submitted. Contact an admin"
-msgstr ""
-
-#: messages.py:475
-#, python-format
-msgid "The user '%(name)s' has been approved"
-msgstr ""
-
-#: messages.py:482
-msgid "You can't delete a user if he is responsible for products"
-msgstr ""
-
-#: messages.py:488
-#, python-format
-msgid "The user '%(name)s' has been deleted"
-msgstr ""
-
 #: messages.py:495
-#, python-format
-msgid "The user '%(name)s' was created"
+msgid "The group number doesn't exist"
 msgstr ""
 
 #: messages.py:502
 #, python-format
+msgid "The user '%(name)s' does not exist"
+msgstr ""
+
+#: messages.py:504
+msgid "The user does not exist"
+msgstr ""
+
+#: messages.py:510
+#, python-format
+msgid "Hello, %(name)s"
+msgstr ""
+
+#: messages.py:516
+msgid "You have been logged out"
+msgstr ""
+
+#: messages.py:522
+#, python-format
+msgid "The user '%(name)s' awaits registration approval"
+msgstr ""
+
+#: messages.py:529
+#, python-format
+msgid "The user '%(name)s' is retired"
+msgstr ""
+
+#: messages.py:536
+msgid "The registration request was submitted. Contact an admin"
+msgstr ""
+
+#: messages.py:542
+#, python-format
+msgid "The user '%(name)s' has been approved"
+msgstr ""
+
+#: messages.py:549
+msgid "You can't delete a user if he is responsible for products"
+msgstr ""
+
+#: messages.py:555
+#, python-format
+msgid "The user '%(name)s' has been deleted"
+msgstr ""
+
+#: messages.py:562
+#, python-format
+msgid "The user '%(name)s' was created"
+msgstr ""
+
+#: messages.py:569
+#, python-format
 msgid "User '%(name)s' updated"
 msgstr ""
 
-#: messages.py:513
-msgid "The category name is required"
-msgstr ""
-
-#: messages.py:519
-#, python-format
-msgid "The category name must have at least %(min)s characters"
-msgstr ""
-
-#: messages.py:526
-#, python-format
-msgid "The category '%(name)s' already exists"
-msgstr ""
-
-#: messages.py:535
-msgid "You can't attach products to a disabled category"
-msgstr ""
-
-#: messages.py:543
-msgid "You can't disable a category if it has products attached"
-msgstr ""
-
-#: messages.py:552 messages.py:650
-msgid "Select a new responsible"
-msgstr ""
-
-#: messages.py:558 messages.py:656
-#, python-format
-msgid "The user responsible for '%(name)s' updated"
-msgstr ""
-
-#: messages.py:565 messages.py:663
-msgid "You have to select a new responsible first"
-msgstr ""
-
-#: messages.py:572
-#, python-format
-msgid "The category '%(name)s' does not exist"
-msgstr ""
-
-#: messages.py:574
-msgid "The category does not exist"
-msgstr ""
-
 #: messages.py:580
-msgid "You can't delete a category if it has products attached"
+msgid "The category name is required"
 msgstr ""
 
 #: messages.py:586
 #, python-format
-msgid "The category '%(name)s' has been deleted"
+msgid "The category name must have at least %(min)s characters"
 msgstr ""
 
 #: messages.py:593
 #, python-format
+msgid "The category '%(name)s' already exists"
+msgstr ""
+
+#: messages.py:602
+msgid "You can't attach products to a disabled category"
+msgstr ""
+
+#: messages.py:610
+msgid "You can't disable a category if it has products attached"
+msgstr ""
+
+#: messages.py:619 messages.py:717
+msgid "Select a new responsible"
+msgstr ""
+
+#: messages.py:625 messages.py:723
+#, python-format
+msgid "The user responsible for '%(name)s' updated"
+msgstr ""
+
+#: messages.py:632 messages.py:730
+msgid "You have to select a new responsible first"
+msgstr ""
+
+#: messages.py:639
+#, python-format
+msgid "The category '%(name)s' does not exist"
+msgstr ""
+
+#: messages.py:641
+msgid "The category does not exist"
+msgstr ""
+
+#: messages.py:647
+msgid "You can't delete a category if it has products attached"
+msgstr ""
+
+#: messages.py:653
+#, python-format
+msgid "The category '%(name)s' has been deleted"
+msgstr ""
+
+#: messages.py:660
+#, python-format
 msgid "The category '%(name)s' was created"
 msgstr ""
 
-#: messages.py:600
+#: messages.py:667
 #, python-format
 msgid "The category '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:611
-msgid "The supplier name is required"
-msgstr ""
-
-#: messages.py:617
-#, python-format
-msgid "The supplier name must have at least %(min)s characters"
-msgstr ""
-
-#: messages.py:624
-#, python-format
-msgid "The supplier '%(name)s' already exists"
-msgstr ""
-
-#: messages.py:633
-msgid "You can't attach products to a disabled supplier"
-msgstr ""
-
-#: messages.py:641
-msgid "You can't disable a supplier if it has products attached"
-msgstr ""
-
-#: messages.py:670
-#, python-format
-msgid "The supplier '%(name)s' does not exist"
-msgstr ""
-
-#: messages.py:672
-msgid "The supplier does not exist"
-msgstr ""
-
 #: messages.py:678
-msgid "You can't delete a supplier if it has products attached"
+msgid "The supplier name is required"
 msgstr ""
 
 #: messages.py:684
 #, python-format
-msgid "The supplier '%(name)s' has been deleted"
+msgid "The supplier name must have at least %(min)s characters"
 msgstr ""
 
 #: messages.py:691
 #, python-format
+msgid "The supplier '%(name)s' already exists"
+msgstr ""
+
+#: messages.py:700
+msgid "You can't attach products to a disabled supplier"
+msgstr ""
+
+#: messages.py:708
+msgid "You can't disable a supplier if it has products attached"
+msgstr ""
+
+#: messages.py:737
+#, python-format
+msgid "The supplier '%(name)s' does not exist"
+msgstr ""
+
+#: messages.py:739
+msgid "The supplier does not exist"
+msgstr ""
+
+#: messages.py:745
+msgid "You can't delete a supplier if it has products attached"
+msgstr ""
+
+#: messages.py:751
+#, python-format
+msgid "The supplier '%(name)s' has been deleted"
+msgstr ""
+
+#: messages.py:758
+#, python-format
 msgid "The supplier '%(name)s' was created"
 msgstr ""
 
-#: messages.py:698
+#: messages.py:765
 #, python-format
 msgid "The supplier '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:709
+#: messages.py:776
 msgid "The product name is required"
 msgstr ""
 
-#: messages.py:715
+#: messages.py:782
 #, python-format
 msgid "The product name must be between %(min)s and %(max)s characters"
 msgstr ""
 
-#: messages.py:724
+#: messages.py:791
 #, python-format
 msgid "The product '%(name)s' already exists"
 msgstr ""
 
-#: messages.py:732
+#: messages.py:799
 msgid "The product description is required"
 msgstr ""
 
-#: messages.py:738
+#: messages.py:805
 #, python-format
 msgid "The product description must be between %(min)s and %(max)s characters"
 msgstr ""
 
-#: messages.py:749
+#: messages.py:816
 msgid "The user can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:757
+#: messages.py:824
 msgid "The category can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:765
+#: messages.py:832
 msgid "The supplier can't be deleted or doesn't exist"
 msgstr ""
 
-#: messages.py:773
+#: messages.py:840
 msgid "The product measuring unit is required"
 msgstr ""
 
-#: messages.py:781
+#: messages.py:848
 msgid "The product minimum stock is required"
 msgstr ""
 
-#: messages.py:787
+#: messages.py:854
 #, python-format
 msgid "The product minimum stock must be ≥ %(value)s"
 msgstr ""
 
-#: messages.py:796
+#: messages.py:863
 msgid "The product order quantity is required"
 msgstr ""
 
-#: messages.py:802
+#: messages.py:869
 #, python-format
 msgid "The product order quantity must be ≥ %(value)s"
 msgstr ""
 
-#: messages.py:811
+#: messages.py:878
 msgid "Disabled products can't be ordered"
 msgstr ""
 
-#: messages.py:819
+#: messages.py:886
 msgid "You can't disable a product that must be ordered"
 msgstr ""
 
-#: messages.py:825
+#: messages.py:892
 #, python-format
 msgid "The product '%(name)s' does not exist"
 msgstr ""
 
-#: messages.py:832
+#: messages.py:899
 #, python-format
 msgid "The product '%(name)s' has been deleted"
 msgstr ""
 
-#: messages.py:839
+#: messages.py:906
 #, python-format
 msgid "The product '%(name)s' was created"
 msgstr ""
 
-#: messages.py:846
+#: messages.py:913
 #, python-format
 msgid "The product '%(name)s' was updated"
 msgstr ""
 
-#: messages.py:853
+#: messages.py:920
 #, python-format
 msgid "Cannot sort products by '%(attribute)s'"
 msgstr ""
 
-#: messages.py:860
+#: messages.py:927
 msgid "There are no products that must be ordered"
 msgstr ""
 
-#: messages.py:867
+#: messages.py:934
 #, python-format
 msgid "%(number)s product was removed from the order list"
 msgid_plural "%(number)s products were removed from the order list"
 msgstr[0] ""
 msgstr[1] ""
 
-#: messages.py:876
+#: messages.py:943
 msgid "All products were removed from the order list"
 msgstr ""
 
-#: messages.py:884
+#: messages.py:951
 msgid "Not a valid choice"
 msgstr ""
 
-#: messages.py:890
+#: messages.py:957
 msgid "Review the schedules"
 msgstr ""
 
-#: messages.py:896
+#: messages.py:963
 msgid "The schedule was updated"
 msgstr ""
 
-#: messages.py:906
+#: messages.py:973
 msgid "The language was changed"
 msgstr ""
 
-#: messages.py:914
+#: messages.py:981
 msgid "You have to be logged in to access this page"
 msgstr ""
 
-#: messages.py:920
+#: messages.py:987
 msgid "You have to be an admin to access this page"
 msgstr ""
 
-#: messages.py:926
+#: messages.py:993
 msgid "The username or password is incorrect"
 msgstr ""
 
-#: messages.py:934
+#: messages.py:1001
 msgid "The inventory has been submitted"
 msgstr ""
 
-#: messages.py:940
+#: messages.py:1007
 msgid "Inventorying is not necessary"
 msgstr ""
 
-#: messages.py:949
+#: messages.py:1016
 msgid "All fields are required"
 msgstr ""
 
-#: messages.py:956
+#: messages.py:1023
 msgid "All fields except email are required"
 msgstr ""
+
+#: blueprints/prod/templates/prod/edit_product.html:110
+#: blueprints/prod/templates/prod/new_product.html:92
+#: blueprints/sup/templates/sup/edit_supplier.html:46
+#: blueprints/sup/templates/sup/new_supplier.html:28
+#: blueprints/users/templates/users/edit_user.html:99
+#: blueprints/users/templates/users/new_user.html:59 messages.py:1030
+msgid "Underlined fields are required"
+msgstr ""
+
+#: blueprints/inv/templates/inv/inventory.html:23
+#: blueprints/prod/templates/prod/products.html:15
+#: blueprints/prod/templates/prod/products_to_oder.html:17
+#: blueprints/sup/templates/sup/reassign_supplier.html:18 messages.py:1045
+msgid "*Critical products are highlighted in red."
+msgstr ""
+
+#: messages.py:1066
+#, python-format
+msgid ""
+"This will delete %(start_format)s%(name)s%(end_format)s. You can't undo "
+"this action!"
+msgstr ""
+
+#: messages.py:1077
+#, python-format
+msgid "This will reassign %(start_format)s%(number)s product%(end_format)s!"
+msgid_plural "This will reassign %(start_format)s%(number)s products%(end_format)s!"
+msgstr[0] ""
+msgstr[1] ""
 
 #: blueprints/auth/auth.py:28 blueprints/auth/auth.py:32
 #: blueprints/auth/auth.py:51 blueprints/auth/auth.py:60
@@ -693,57 +744,12 @@ msgstr ""
 msgid "Edit category"
 msgstr ""
 
-#: blueprints/cat/templates/cat/edit_category.html:46
-#: blueprints/cat/templates/cat/new_category.html:28
-#: blueprints/prod/templates/prod/edit_product.html:110
-#: blueprints/prod/templates/prod/new_product.html:92
-#: blueprints/sup/templates/sup/edit_supplier.html:46
-#: blueprints/sup/templates/sup/new_supplier.html:28
-#: blueprints/users/templates/users/edit_user.html:99
-#: blueprints/users/templates/users/new_user.html:59
-msgid "Underlined fields are required"
-msgstr ""
-
-#: blueprints/cat/templates/cat/edit_category.html:51
-msgid "Category has"
-msgstr ""
-
-#: blueprints/cat/templates/cat/edit_category.html:51
-#: blueprints/cat/templates/cat/reassign_category.html:80
-#: blueprints/main/templates/main/index.html:16
-#: blueprints/main/templates/main/index.html:94
-#: blueprints/main/templates/main/index.html:120
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products_to_oder.html:59
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/reassign_supplier.html:80
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "product"
-msgid_plural "products"
-msgstr[0] ""
-msgstr[1] ""
-
-#: blueprints/cat/templates/cat/edit_category.html:51
-#: blueprints/prod/templates/prod/products.html:79
-#: blueprints/prod/templates/prod/products.html:82
-#: blueprints/sup/templates/sup/edit_supplier.html:51
-#: blueprints/sup/templates/sup/suppliers.html:37
-#: blueprints/users/templates/users/edit_user.html:110
-msgid "is in use"
-msgid_plural "are in use"
-msgstr[0] ""
-msgstr[1] ""
-
 #: blueprints/cat/templates/cat/edit_category.html:67
 #: blueprints/prod/templates/prod/edit_product.html:125
 #: blueprints/sup/templates/sup/edit_supplier.html:67
 #: blueprints/users/templates/users/edit_user.html:126
 msgctxt "question"
 msgid "Delete"
-msgstr ""
-
-#: blueprints/cat/templates/cat/edit_category.html:71
-msgid "This will delete this category! You can't undo this action."
 msgstr ""
 
 #: blueprints/cat/templates/cat/edit_category.html:74
@@ -770,20 +776,6 @@ msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:9
 msgid "Reassign all products for category"
-msgstr ""
-
-#: blueprints/cat/templates/cat/reassign_category.html:17
-#: blueprints/prod/templates/prod/products.html:14
-#: blueprints/sup/templates/sup/reassign_supplier.html:17
-msgid "*Strikethrough products are no longer in use."
-msgstr ""
-
-#: blueprints/cat/templates/cat/reassign_category.html:18
-#: blueprints/inv/templates/inv/inventory.html:23
-#: blueprints/prod/templates/prod/products.html:15
-#: blueprints/prod/templates/prod/products_to_oder.html:17
-#: blueprints/sup/templates/sup/reassign_supplier.html:18
-msgid "*Critical products are highlighted in red."
 msgstr ""
 
 #: blueprints/cat/templates/cat/reassign_category.html:21
@@ -837,11 +829,6 @@ msgstr ""
 #: blueprints/sup/templates/sup/reassign_supplier.html:76
 msgctxt "question"
 msgid "Reassign all products"
-msgstr ""
-
-#: blueprints/cat/templates/cat/reassign_category.html:80
-#: blueprints/sup/templates/sup/reassign_supplier.html:80
-msgid "This will reassign"
 msgstr ""
 
 #: blueprints/guide/templates/guide/guide.html:3
@@ -944,6 +931,19 @@ msgstr ""
 #: blueprints/main/templates/main/index.html:16
 msgid "You have"
 msgstr ""
+
+#: blueprints/main/templates/main/index.html:16
+#: blueprints/main/templates/main/index.html:94
+#: blueprints/main/templates/main/index.html:120
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products_to_oder.html:59
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/reassign_supplier.html:80
+#: blueprints/users/templates/users/edit_user.html:110
+msgid "product"
+msgid_plural "products"
+msgstr[0] ""
+msgstr[1] ""
 
 #: blueprints/main/templates/main/index.html:16
 msgid "assigned"
@@ -1099,6 +1099,21 @@ msgstr ""
 msgid "Products"
 msgstr ""
 
+#: blueprints/prod/templates/prod/products.html:14
+#: blueprints/sup/templates/sup/reassign_supplier.html:17
+msgid "*Strikethrough products are no longer in use."
+msgstr ""
+
+#: blueprints/prod/templates/prod/products.html:79
+#: blueprints/prod/templates/prod/products.html:82
+#: blueprints/sup/templates/sup/edit_supplier.html:51
+#: blueprints/sup/templates/sup/suppliers.html:37
+#: blueprints/users/templates/users/edit_user.html:110
+msgid "is in use"
+msgid_plural "are in use"
+msgstr[0] ""
+msgstr[1] ""
+
 #: blueprints/prod/templates/prod/products.html:82
 msgid "critical product"
 msgid_plural "critical products"
@@ -1200,6 +1215,10 @@ msgstr ""
 
 #: blueprints/sup/templates/sup/reassign_supplier.html:9
 msgid "Reassign all products for supplier"
+msgstr ""
+
+#: blueprints/sup/templates/sup/reassign_supplier.html:80
+msgid "This will reassign"
 msgstr ""
 
 #: blueprints/sup/templates/sup/suppliers.html:3

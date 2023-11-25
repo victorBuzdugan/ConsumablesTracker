@@ -141,7 +141,9 @@ def new_category():
         logger.warning("Category creation error")
         flash_errors(new_cat_form.errors)
 
-    return render_template("cat/new_category.html", form=new_cat_form)
+    return render_template("cat/new_category.html",
+                           form=new_cat_form,
+                           Message=Message)
 
 
 @cat_bp.route("/edit/<path:category>", methods=["GET", "POST"])
@@ -194,7 +196,9 @@ def edit_category(category):
             flash(**Message.Category.NotExists.flash(category))
             return redirect(url_for("cat.categories"))
 
-    return render_template("cat/edit_category.html", form=edit_cat_form)
+    return render_template("cat/edit_category.html",
+                           form=edit_cat_form,
+                           Message=Message)
 
 
 @cat_bp.route("/reassign/<path:category>", methods=["GET", "POST"])
@@ -262,4 +266,5 @@ def reassign_category(category):
 
     return render_template("cat/reassign_category.html",
                            form=reassign_cat_form,
-                           products=products)
+                           products=products,
+                           Message=Message)

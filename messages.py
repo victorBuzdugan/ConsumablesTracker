@@ -18,25 +18,27 @@ class Color(StrEnum):
     YELLOW = "warning"
     RED    = "error"
 
-def stats(element: str,
+SPAN = '<span class="text-secondary">'
+END_SPAN = "</span>"
+END_LINK = "</a>"
+def build_link(link):
+    """Build/decorate the link"""
+    return ('<a class="link-secondary link-offset-2 ' +
+            'link-underline-opacity-25 link-underline-opacity-100-hover" ' +
+            f'href="{link}">')
+
+
+def global_stats(element: str,
           all_elements: int=-1,
           in_use_elements: int=-1,
           with_link: bool=False):
-    """Build the stat message based on the arguments.
+    """Build the global stat message based on the arguments.
     
-    :param element: user, category, supplier, product, crit_product
+    :param element: users, categories, suppliers, products, critical_products
     :param all_elements: number of all elements
     :param in_use_elements: number of elements in use
     :param with_link: if true builds the message with a link
     """
-    # constants
-    span = '<span class="text-secondary">'
-    end_span = "</span>"
-    end_link = "</a>"
-    def build_link(link):
-        return ('<a class="link-secondary link-offset-2 ' +
-                'link-underline-opacity-25 link-underline-opacity-100-hover" ' +
-                f'href="{link}">')
     # prechecks
     if all_elements < 0 and in_use_elements < 0:
         raise ValueError("Invalid arguments")
@@ -51,7 +53,7 @@ def stats(element: str,
                 number=counter,
                 start_format=(
                     build_link(url_for("main.index"))
-                    if with_link else span)
+                    if with_link else SPAN)
             )
         case "categories":
             html_text = lazy_ngettext(
@@ -61,7 +63,7 @@ def stats(element: str,
                 number=counter,
                 start_format=(
                     build_link(url_for("cat.categories"))
-                    if with_link else span)
+                    if with_link else SPAN)
             )
         case "suppliers":
             html_text = lazy_ngettext(
@@ -71,7 +73,7 @@ def stats(element: str,
                 number=counter,
                 start_format=(
                     build_link(url_for("sup.suppliers"))
-                    if with_link else span)
+                    if with_link else SPAN)
             )
         case "products":
             html_text = lazy_ngettext(
@@ -81,7 +83,7 @@ def stats(element: str,
                 number=counter,
                 start_format=(
                     build_link(url_for("prod.products", ordered_by="code"))
-                    if with_link else span)
+                    if with_link else SPAN)
             )
         case "critical_products":
             html_text = lazy_ngettext(
@@ -90,27 +92,91 @@ def stats(element: str,
                 counter,
                 number=counter,
                 start_format=(build_link(url_for("main.index"))
-                              if with_link else span)
+                              if with_link else SPAN)
             )
         case _:
             raise ValueError(f"Invalid element '{element}'")
-    html_text += end_link if with_link else end_span
+    html_text += END_LINK if with_link else END_SPAN
     # optional second half
     if all_elements < 0:
         html_text += " " + lazy_gettext("in use")
-    elif all_elements >= 0 and in_use_elements >= 0:
+    elif all_elements > 0 and in_use_elements >= 0:
         html_text += ", " + lazy_ngettext(
             "and",
             "of which",
             all_elements
         )
-        html_text += " " + span + lazy_ngettext(
+        html_text += " " + SPAN + lazy_ngettext(
             "%(number)s is in use",
             "%(number)s are in use",
             in_use_elements,
             number=in_use_elements
         )
-        html_text += end_span
+        html_text += END_SPAN
+    return Markup(html_text)
+
+
+def indiv_stats(element: str,
+          all_products: int,
+          in_use_products: int):
+    """Build the individual stat message based on the arguments.
+    
+    :param element: user, category, supplier
+    :param all_products: number of all products of this element
+    :param in_use_products: number of products in use of this element
+    """
+    # prechecks
+    if all_products < 0 or in_use_products < 0:
+        raise ValueError("Invalid arguments")
+    # first half
+    match element:
+        case "user":
+            html_text = lazy_ngettext(
+                "User is responsible for %(start_format)s%(number)s product",
+                "User is responsible for %(start_format)s%(number)s products",
+                all_products,
+                number=all_products,
+                start_format=
+                    build_link(url_for("prod.products",
+                                       ordered_by="responsible"))
+            )
+        case "category":
+            html_text = lazy_ngettext(
+                "Category has %(start_format)s%(number)s product",
+                "Category has %(start_format)s%(number)s products",
+                all_products,
+                number=all_products,
+                start_format=
+                    build_link(url_for("prod.products",
+                                       ordered_by="category"))
+            )
+        case "supplier":
+            html_text = lazy_ngettext(
+                "Supplier has %(start_format)s%(number)s product",
+                "Supplier has %(start_format)s%(number)s products",
+                all_products,
+                number=all_products,
+                start_format=
+                    build_link(url_for("prod.products",
+                                       ordered_by="supplier"))
+            )
+        case _:
+            raise ValueError(f"Invalid element '{element}'")
+    html_text += END_LINK
+    # second half
+    if all_products > 0:
+        html_text += ", " + lazy_ngettext(
+            "and",
+            "of which",
+            all_products
+        )
+        html_text += " " + SPAN + lazy_ngettext(
+            "%(number)s is in use",
+            "%(number)s are in use",
+            in_use_products,
+            number=in_use_products
+        )
+        html_text += END_SPAN
     return Markup(html_text)
 
 
@@ -146,6 +212,7 @@ class Msg:
         `None` means it's not supposed to be flashed
     :param description: optional message extra information
     :param tested: message visually tested in the UI
+        `None` means it's not possible to test this message in the UI
     """
     message: Callable[[str], LazyString]
     category: Optional[Color] = Color.GREEN.value
@@ -956,15 +1023,64 @@ class Message:
                 message=lambda : lazy_gettext(
                     "All fields except email are required")
             )
-        Stats = Msg(
-            description="Statistics message",
-            tested=False,
-            category=None,
-            message=stats
-        )
-        Strikethrough = Msg(
+            Underlined = Msg(
+                description="HTML form fields requirements",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "Underlined fields are required")
+            )
+        class Captions:
+            """HTML captions"""
+            Strikethrough = Msg(
+                description="Build strikethrough HTML message",
+                tested=True,
+                category=None,
+                message=strikethrough
+            )
+            CriticalProducts = Msg(
+                description="Critical products HTML message",
+                tested=True,
+                category=None,
+                message=lambda : lazy_gettext(
+                    "*Critical products are highlighted in red.")
+            )
+        class Stats:
+            """HTML captions"""
+            Global = Msg(
+                description="Build global statistics message",
+                tested=True,
+                category=None,
+                message=global_stats
+            )
+            Indiv = Msg(
+                description="Build individual statistics message",
+                tested=True,
+                category=None,
+                message=indiv_stats
+            )
+        DelElement = Msg(
             description="Build strikethrough message",
-            tested=False,
+            tested=True,
             category=None,
-            message=strikethrough
+            message=lambda name: lazy_gettext(
+                "This will delete %(start_format)s%(name)s%(end_format)s. " +
+                "You can't undo this action!",
+                name=name,
+                start_format=SPAN,
+                end_format=END_SPAN)
+        )
+        Reassign = Msg(
+            description="HTML message",
+            tested=True,
+            category=None,
+            message=lambda number: lazy_ngettext(
+                "This will reassign %(start_format)s%(number)s product" +
+                "%(end_format)s!",
+                "This will reassign %(start_format)s%(number)s products" +
+                "%(end_format)s!",
+                number,
+                number=number,
+                start_format=SPAN,
+                end_format=END_SPAN)
         )

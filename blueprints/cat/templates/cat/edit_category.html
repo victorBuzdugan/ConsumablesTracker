@@ -43,12 +43,12 @@
                     </div>
                 </div>
             </div>
-            <span class="text-body-tertiary">{{ gettext("Underlined fields are required") }}</span>
+            <span class="text-body-tertiary">{{ Message.UI.FieldsReq.Underlined() }}</span>
         </div>
 
         <ul class="list-group list-group-flush m-0">
             <li class="list-group-item">
-                {{ gettext("Category has") }} <a class="link-secondary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="{{ url_for('prod.products', ordered_by='category') }}">{{ form.all_products.data }} {{ ngettext("product", "products", form.all_products.data) }}</a>, {{ ngettext("and", "of which", form.all_products.data) }} <span class="text-secondary">{{ form.in_use_products.data }} {{ ngettext("is in use", "are in use", form.in_use_products.data) }}</span>
+                {{ Message.UI.Stats.Indiv("category", form.all_products.data, form.in_use_products.data) }}
             </li>
         </ul>
 
@@ -68,7 +68,7 @@
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                             </div>
                             <div class="modal-body">
-                                {{ gettext("This will delete this category! You can't undo this action.") }}
+                                {{ Message.UI.DelElement(form.name.data) }}
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ gettext("Close") }}</button>
