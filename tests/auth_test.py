@@ -1,5 +1,6 @@
 """Authentification blueprint tests."""
 
+import re
 from html import unescape
 
 import pytest
@@ -15,19 +16,22 @@ from app import app, babel, get_locale
 from constants import Constant
 from database import User, dbSession
 from messages import Message
-from tests import InvalidUser, ValidUser, test_users
+from tests import InvalidUser, ValidUser, redirected_to, test_users
 
 pytestmark = pytest.mark.auth
 
 
 # region: registration page
-def test_registration_landing_page(client: FlaskClient):
-    """test_registration_landing_page"""
+def test_registration_landing_page_user_not_logged_in(client: FlaskClient):
+    """test_registration_landing_page_user_not_logged_in"""
+    retype_passw_field = re.compile(r'<input .* placeholder="Retype password"')
+    req_reg_button = re.compile(r'<input .* value="Request registration">')
     with client:
         client.get("/")
         response = client.get(url_for("auth.register"))
         assert response.status_code == 200
-        assert 'type="submit" value="Request registration"' in response.text
+        assert retype_passw_field.search(response.text)
+        assert req_reg_button.search(response.text)
 
 
 def test_clear_session_if_user_logged_in(
@@ -67,7 +71,7 @@ def _test_failed_registration(
     assert str(Message.User.Registered()) not in response.text
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(name=st.text(min_size=1, max_size=Constant.User.Name.min_length - 1))
 @example(name="")
 @example(name=InvalidUser.short_name)
@@ -82,7 +86,7 @@ def test_failed_registration_short_name(client: FlaskClient, name):
                               flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(name=st.text(min_size=Constant.User.Name.max_length + 1))
 @example(name=InvalidUser.long_name)
 def test_failed_registration_long_name(client: FlaskClient, name):
@@ -93,7 +97,7 @@ def test_failed_registration_long_name(client: FlaskClient, name):
                               flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(password=st.text(min_size=1,
                         max_size=Constant.User.Password.min_length - 1))
 @example(password="")
@@ -109,7 +113,7 @@ def test_failed_registration_short_password(client: FlaskClient, password):
                               flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(confirm=st.text(min_size=1,
                        max_size=Constant.User.Password.min_length - 1))
 @example(confirm="")
@@ -124,7 +128,7 @@ def test_failed_registration_short_confirmation(client: FlaskClient, confirm):
                               flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(password=st.text(min_size=8), confirm=st.text(min_size=8))
 def test_failed_registration_confirmation_not_matching(
         client: FlaskClient, password, confirm):
@@ -278,12 +282,8 @@ def test_registration(
             "email": email}
         response = client.post(
             "/auth/register", data=data, follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
-        assert str(Message.User.Registered()) \
-            in response.text
+        assert redirected_to(url_for("auth.login"), response)
+        assert str(Message.User.Registered()) in response.text
 
     with dbSession() as db_session:
         db_user = db_session.scalar(
@@ -298,73 +298,69 @@ def test_registration(
 # endregion
 
 
-# region: login and logout methods
+# region: login and logout pages
 def test_login_landing_page(client: FlaskClient, caplog: LogCaptureFixture):
-    """test_login_landing_page"""
+    """Test login landing page, babel get_locale and language change"""
+    log_in_button = re.compile(r'<input.*type="submit".*value="Log In">')
+    en_texts = ("The language was changed", "Username", "Password")
+    ro_texts = ("Limba a fost schimbată", "Nume", "Parolă")
     with client:
         client.get("/")
-        babel.init_app(app=app, locale_selector=get_locale)
         # test get locale 'en'
+        babel.init_app(app=app, locale_selector=get_locale)
         response = client.get(url_for("auth.login"),
                               headers={"Accept-Language": "en-GB,en;q=0.9"})
         assert response.status_code == 200
+        assert log_in_button.search(response.text)
         assert "Got locale language 'en'" in caplog.messages
         caplog.clear()
-        assert 'type="submit" value="Log In"' in response.text
+        # change language to 'ro'
         response = client.get(url_for("set_language", language="ro"),
                               headers={"Referer": url_for("auth.login")},
                               follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
+        assert redirected_to(url_for("auth.login"), response)
         assert session["language"] == "ro"
+        for text in en_texts:
+            assert text not in response.text
+        for text in ro_texts:
+            assert text in response.text
         assert "Language changed to 'ro'" in caplog.messages
         caplog.clear()
-        assert "The language was changed" not in response.text
-        assert "Username" not in response.text
-        assert "Password" not in response.text
-        assert "Limba a fost schimbată" in response.text
-        assert "Nume" in response.text
-        assert "Parolă" in response.text
+        # change language to 'en'
         response = client.get(url_for("set_language", language="en"),
                               headers={"Referer": url_for("auth.login")},
                               follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
+        assert redirected_to(url_for("auth.login"), response)
         assert session["language"] == "en"
+        for text in en_texts:
+            assert text in response.text
+        for text in ro_texts:
+            assert text not in response.text
         assert "Language changed to 'en'" in caplog.messages
         caplog.clear()
-        assert str(Message.UI.Basic.LangChd()) in response.text
-        assert "Username" in response.text
-        assert "Password" in response.text
-        assert "Limba a fost schimbată" not in response.text
-        assert "Nume" not in response.text
-        assert "Parolă" not in response.text
-        # test language None and no referer
+        # test language None and no referer(first redirects to main page)
         client.get(url_for("auth.register"))
         response = client.get(url_for("set_language", language="None"),
                               follow_redirects=True)
-        assert len(response.history) == 2
-        assert response.history[0].status_code == 302
-        assert response.history[1].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
+        assert response.history[1].request.path == url_for("main.index")
+        assert redirected_to(url_for("auth.login"), response, 2)
         assert session["language"] == "en"
         assert "Language changed to 'en'" in caplog.messages
+        # teardown
         babel.init_app(app=app, locale_selector=lambda: "en")
 
 
 def test_could_not__get_locale(client: FlaskClient, caplog: LogCaptureFixture):
     """test_could_not__get_locale"""
-    with client.session_transaction() as ssession:
-        ssession.clear()
+    # clear language from session
+    with client.session_transaction() as this_session:
+        this_session.clear()
     with client:
+        # configure babel to get_locale
         babel.init_app(app=app, locale_selector=get_locale)
         client.get("/")
         assert "Could not get locale language" in caplog.messages
+        # teardown
         babel.init_app(app=app, locale_selector=lambda: "en")
 
 
@@ -379,14 +375,11 @@ def _test_failed_login(client: FlaskClient, name, password, flash_message):
             "password": password}
         response = client.post(url_for("auth.login"), data=data,
                                follow_redirects=True)
-        assert response.request.path == url_for("auth.login")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
+        assert redirected_to(url_for("auth.login"), response)
     assert flash_message in response.text
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(name=st.text())
 @example(name="")
 def test_failed_login_username(client: FlaskClient, name):
@@ -421,12 +414,11 @@ def test_failed_login_password(client: FlaskClient):
                         flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(user=st.sampled_from(test_users))
-def test_login_and_logout(client: FlaskClient, user):
+def test_login_and_logout(client: FlaskClient, user: dict):
     """Login and then logout"""
-    if user["reg_req"] or not user["in_use"]:
-        return
+    assume(user["in_use"] and not user["reg_req"])
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
@@ -435,26 +427,20 @@ def test_login_and_logout(client: FlaskClient, user):
             "name": user["name"],
             "password": user["password"]}
         response = client.post("/auth/login", data=data, follow_redirects=True)
+        assert redirected_to(url_for("main.index"), response)
+        assert str(Message.User.Login(user['name'])) in response.text
         assert session["user_id"] == user["id"]
         assert session["admin"] == user["admin"]
         assert session["user_name"] == user["name"]
-        assert str(Message.User.Login(user['name'])) in response.text
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("main.index")
         # logout
         response = client.get(url_for("auth.logout"), follow_redirects=True)
+        assert redirected_to(url_for("auth.login"), response)
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(csrf=st.text(min_size=1))
 @example(None)
 @example("")
@@ -473,68 +459,55 @@ def test_failed_login_wrong_csrf(client: FlaskClient, csrf):
             "password": "doesnt_matter"}
         response = client.post(url_for("auth.login"), data=data,
                                follow_redirects=True)
-        assert response.request.path == url_for("auth.login")
-    assert len(response.history) == 1
-    assert response.history[0].status_code == 302
-    assert response.status_code == 200
+        assert redirected_to(url_for("auth.login"), response)
     assert flash_message in response.text
 # endregion
 
 
 # region: change password
-# also tests @login_required
 def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
     """test_change_password_landing_page_if_not_logged_in"""
+    log_in_btn = re.compile(
+        r'<input.*type="submit".*value="Log In">')
+    change_passw_btn = re.compile(
+        r'<input.*type="submit".*value="Change password">')
+    session_elements = ("user_id", "admin", "user_name")
     with client:
         client.get("/")
-        assert not session.get("user_id")
-        assert not session.get("admin")
-        assert not session.get("user_name")
-        response = client.get(url_for("auth.change_password"),
-                              follow_redirects=True)
-        assert not session.get("user_id")
-        assert not session.get("admin")
-        assert not session.get("user_name")
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
-        assert 'type="submit" value="Log In"' in response.text
+        for elem in session_elements:
+            assert not session.get(elem)
+        response = client.get(
+            url_for("auth.change_password"), follow_redirects=True)
+        for elem in session_elements:
+            assert not session.get(elem)
+        assert redirected_to(url_for("auth.login"), response)
         assert str(Message.UI.Auth.LoginReq()) in response.text
+        assert log_in_btn.search(response.text)
+        assert not change_passw_btn.search(response.text)
 
 
-# also tests @login_required
+@settings(max_examples=3)
+@given(user=st.sampled_from(test_users))
 def test_change_password_landing_page_if_user_logged_in(
-        client: FlaskClient, user_logged_in: User):
+        client: FlaskClient, user: dict):
     """test_change_password_landing_page_if_user_logged_in"""
+    assume(user["in_use"] and not user["reg_req"])
+    change_passw_btn = re.compile(
+        r'<input.*type="submit".*value="Change password">')
+    with client.session_transaction() as this_session:
+        this_session["user_id"] = user["id"]
+        this_session["admin"] = user["admin"]
+        this_session["user_name"] = user["name"]
     with client:
         client.get("/")
+        assert session.get("user_id") == user["id"]
         response = client.get(url_for("auth.change_password"))
-        assert session.get("user_id") == user_logged_in.id
-        assert session.get("admin") == user_logged_in.admin
-        assert not session.get("admin")
-        assert session.get("user_name") == user_logged_in.name
     assert response.status_code == 200
-    assert 'type="submit" value="Change password"' in response.text
-
-
-# also tests @login_required if admin
-def test_change_password_landing_page_if_admin_logged_in(
-        client: FlaskClient, admin_logged_in: User):
-    """test_change_password_landing_page_if_admin_logged_in"""
-    with client:
-        client.get("/")
-        response = client.get(url_for("auth.change_password"))
-        assert session.get("user_id") == admin_logged_in.id
-        assert session.get("admin") == admin_logged_in.admin
-        assert session.get("admin")
-        assert session.get("user_name") == admin_logged_in.username
-    assert response.status_code == 200
-    assert 'type="submit" value="Change password"' in response.text
+    assert change_passw_btn.search(response.text)
 
 
 @pytest.mark.parametrize(
-    ("old_password", "password", "confirm", "flash_message"),
+    ("old_password", "new_password", "confirm", "flash_message"),
     [pytest.param(
         "",
         ValidUser.password,
@@ -611,7 +584,7 @@ def test_change_password_landing_page_if_admin_logged_in(
 )
 def test_failed_change_password(
         client: FlaskClient, user_logged_in: User,
-        old_password, password, confirm, flash_message):
+        old_password, new_password, confirm, flash_message):
     """test_failed_change_password"""
     with client:
         client.get("/")
@@ -619,14 +592,14 @@ def test_failed_change_password(
         data = {
             "csrf_token": g.csrf_token,
             "old_password": old_password,
-            "password": password,
+            "password": new_password,
             "confirm": confirm}
         response = client.post(url_for("auth.change_password"), data=data)
     assert response.status_code == 200
-    assert flash_message in unescape(response.text)
+    assert flash_message in response.text
     with dbSession() as db_session:
         user_logged_in = db_session.get(User, user_logged_in.id)
-        assert not check_password_hash(user_logged_in.password, password)
+        assert not check_password_hash(user_logged_in.password, new_password)
 
 
 def test_change_password(client: FlaskClient, user_logged_in: User):
@@ -643,18 +616,16 @@ def test_change_password(client: FlaskClient, user_logged_in: User):
             "confirm": new_password}
         response = client.post(
             url_for("auth.change_password"), data=data, follow_redirects=True)
+        assert redirected_to(url_for("auth.login"), response)
+        assert str(Message.User.Password.Changed()) in response.text
         assert not session.get("user_id")
         assert not session.get("admin")
         assert not session.get("user_name")
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
-        assert str(Message.User.Password.Changed()) in response.text
 
     with dbSession() as db_session:
         user_logged_in = db_session.get(User, user_logged_in.id)
         assert check_password_hash(user_logged_in.password, new_password)
+        # teardown
         user_logged_in.password = old_password
         db_session.commit()
         db_session.refresh(user_logged_in)

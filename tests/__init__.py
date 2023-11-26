@@ -1,7 +1,9 @@
-"""Tests constants."""
+"""Tests constants and helpers."""
 
 from dataclasses import dataclass
 from os import getenv, path
+
+from werkzeug.test import TestResponse
 
 from constants import Constant
 from daily_task import db_backup_name
@@ -15,6 +17,30 @@ ORIG_DB = path.join(Constant.Basic.current_dir,
 TEMP_DB = path.join(Constant.Basic.current_dir,
                     path.splitext(TEST_DB_NAME)[0] + "_temp.db")
 
+
+# region helpers
+def redirected_to(final_url: str,
+                response: TestResponse,
+                total_redirects: int = 1) -> bool:
+    """Test if the `final_url` is the final redirect in `response`.
+    
+    :param final_url: the url to check
+    :param response: the client response
+    :param total_redirects: the history length
+    """
+    try:
+        assert len(response.history) == total_redirects
+        for num in range(total_redirects):
+            assert response.history[num].status_code == 302
+        assert response.status_code == 200
+        assert response.request.path == final_url
+    except AssertionError:
+        return False
+    return True
+# endregion
+
+
+# region: users
 @dataclass(frozen=True)
 class ValidUser:
     """Valid user data."""
@@ -35,19 +61,6 @@ class InvalidUser:
                                   "x" * Constant.User.Password.min_length)
     no_number_password: str = ("#X" +
                                "x" * Constant.User.Password.min_length)
-
-@dataclass(frozen=True)
-class ValidCategory:
-    """Valid category data."""
-    name: str = "x" * Constant.Category.Name.min_length
-    description: str = ""
-    in_use: str = "on"
-
-@dataclass(frozen=True)
-class InvalidCategory:
-    """Invalid category data."""
-    short_name: str = "x" * (Constant.Category.Name.min_length - 1)
-
 
 test_users: tuple[dict[str, str|bool|int]] = (
     {
@@ -155,6 +168,21 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "sat_group": 1,
     },
 )
+# endregion
+
+
+# region: categories
+@dataclass(frozen=True)
+class ValidCategory:
+    """Valid category data."""
+    name: str = "x" * Constant.Category.Name.min_length
+    description: str = ""
+    in_use: str = "on"
+
+@dataclass(frozen=True)
+class InvalidCategory:
+    """Invalid category data."""
+    short_name: str = "x" * (Constant.Category.Name.min_length - 1)
 
 test_categories: tuple[dict[str, str|bool]] = (
     {
@@ -214,3 +242,4 @@ test_categories: tuple[dict[str, str|bool]] = (
         "description": "",
         "has_products": False},
 )
+# endregion
