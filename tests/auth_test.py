@@ -1,4 +1,4 @@
-"""Authentification blueprint tests."""
+"""Authentication blueprint tests."""
 
 import re
 from html import unescape
@@ -441,10 +441,12 @@ def test_login_and_logout(client: FlaskClient, user: dict):
 
 
 @settings(max_examples=3)
-@given(csrf=st.text(min_size=1))
-@example(None)
-@example("")
-def test_failed_login_wrong_csrf(client: FlaskClient, csrf):
+@given(csrf=st.text(min_size=1),
+       user=st.sampled_from([user for user in test_users
+                             if user["in_use"] and not user["reg_req"]]))
+@example(csrf=None, user=test_users[1])
+@example(csrf="", user=test_users[1])
+def test_failed_login_wrong_csrf(client: FlaskClient, csrf, user):
     """Failed login because missing or wrong csrf"""
     if csrf is None or csrf == "":
         flash_message = "The CSRF token is missing"
@@ -453,10 +455,11 @@ def test_failed_login_wrong_csrf(client: FlaskClient, csrf):
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
+        assume(csrf != g.csrf_token)
         data = {
             "csrf_token": csrf,
-            "name": "doesnt_matter",
-            "password": "doesnt_matter"}
+            "name": user["name"],
+            "password": user["password"]}
         response = client.post(url_for("auth.login"), data=data,
                                follow_redirects=True)
         assert redirected_to(url_for("auth.login"), response)
@@ -474,12 +477,12 @@ def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
     session_elements = ("user_id", "admin", "user_name")
     with client:
         client.get("/")
-        for elem in session_elements:
-            assert not session.get(elem)
+        for element in session_elements:
+            assert not session.get(element)
         response = client.get(
             url_for("auth.change_password"), follow_redirects=True)
-        for elem in session_elements:
-            assert not session.get(elem)
+        for element in session_elements:
+            assert not session.get(element)
         assert redirected_to(url_for("auth.login"), response)
         assert str(Message.UI.Auth.LoginReq()) in response.text
         assert log_in_btn.search(response.text)
@@ -573,7 +576,7 @@ def test_change_password_landing_page_if_user_logged_in(
         ValidUser.password,
         ValidUser.password + "x",
         str(Message.User.Password.NotMatching()),
-        id="Confirmation not mathcing new password"),
+        id="Confirmation not matching new password"),
     pytest.param(
         ValidUser.password,
         ValidUser.password,
