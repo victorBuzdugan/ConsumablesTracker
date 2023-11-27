@@ -18,7 +18,10 @@ from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
                    test_categories, test_users)
 
 mail.state.suppress = True
-hypothesis.settings.register_profile("default", deadline=3000)
+hypothesis.settings.register_profile(
+    "default",
+    deadline=3000,
+    suppress_health_check=[hypothesis.HealthCheck.function_scoped_fixture])
 hypothesis.settings.load_profile("default")
 
 
@@ -51,7 +54,7 @@ def fixture_client() -> FlaskClient:
     print("\nYield client")
     app.testing = True
     app.secret_key = 'testing'
-    # make sure to allways display en messages for testing purposes
+    # make sure to always display en messages for testing purposes
     babel.init_app(app=app, locale_selector=lambda: "en")
     yield app.test_client()
     # teardown
@@ -263,7 +266,7 @@ def create_test_products():
             critical=False))
         db_session.add(Product(
             name="Cleaning Cloth",
-            description="Microfiber Cleaning Cloth",
+            description="Microfibre Cleaning Cloth",
             responsible=db_session.get(User, 2),
             category=db_session.get(Category, 1),
             supplier=db_session.get(Supplier, 3),

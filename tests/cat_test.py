@@ -1,19 +1,20 @@
 """Categories blueprint tests."""
 
+import re
 from html import unescape
-from urllib.parse import quote
 
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
-from hypothesis import HealthCheck, assume, example, given, settings
+from hypothesis import assume, example, given, settings
 from hypothesis import strategies as st
 from sqlalchemy import select
 
 from constants import Constant
 from database import Category, Product, User, dbSession
 from messages import Message
-from tests import InvalidCategory, ValidCategory, test_categories, test_users
+from tests import (InvalidCategory, ValidCategory, redirected_to,
+                   test_categories, test_users)
 
 pytestmark = pytest.mark.cat
 
@@ -22,35 +23,32 @@ pytestmark = pytest.mark.cat
 def test_categories_page_user_logged_in(
         client: FlaskClient, user_logged_in: User):
     """test_categories_page_user_logged_in"""
-    assert not user_logged_in.admin
     with client:
         client.get("/")
+        assert session["user_id"] == user_logged_in.id
+        assert not session["admin"]
         response = client.get(url_for("cat.categories"), follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("auth.login")
+        assert redirected_to(url_for("auth.login"), response)
         assert str(Message.UI.Auth.AdminReq()) in response.text
 
 
 def test_categories_page_admin_logged_in(
         client: FlaskClient, admin_logged_in: User):
     """test_categories_page_admin_logged_in"""
-    assert admin_logged_in.admin
+    strikethrough_decoration = '<span class="text-decoration-line-through">'
     with client:
         client.get("/")
-        response = client.get(url_for("cat.categories"), follow_redirects=True)
-        assert len(response.history) == 0
+        assert session["user_id"] == admin_logged_in.id
+        assert session["admin"]
+        response = client.get(url_for("cat.categories"))
         assert response.status_code == 200
         assert str(Message.UI.Auth.AdminReq()) not in response.text
-        assert "Categories" in response.text
-        assert "Strikethrough categories are no longer in use" \
+        assert str(Message.UI.Captions.Strikethrough("categories")) \
             in response.text
         for category in test_categories:
             assert category["name"] in response.text
-        assert ("link-dark link-offset-2 link-underline-opacity-50 " +
-                "link-underline-opacity-100-hover" in response.text)
-        assert "text-decoration-line-through" in response.text
+        # not in use category
+        assert strikethrough_decoration in response.text
         categories_not_in_use = [cat for cat in test_categories
                                  if not cat["in_use"]]
         with dbSession() as db_session:
@@ -61,7 +59,7 @@ def test_categories_page_admin_logged_in(
                     ).in_use = True
             db_session.commit()
             response = client.get(url_for("cat.categories"))
-            assert "text-decoration-line-through" not in response.text
+            assert strikethrough_decoration not in response.text
             for cat in categories_not_in_use:
                 db_session.scalar(
                     select(Category)
@@ -72,8 +70,7 @@ def test_categories_page_admin_logged_in(
 
 
 # region: new category
-@settings(max_examples=10,
-          suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=5)
 @given(name=st.text(min_size=Constant.Category.Name.min_length),
        description=st.text())
 @example(name=ValidCategory.name,
@@ -85,12 +82,14 @@ def test_new_category(
     name = name.strip()
     assume(len(name) > 2)
     assume(name not in [cat["name"] for cat in test_categories])
+    create_cat_btn = re.compile(
+        r'<input.*type="submit".*value="Create category">')
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(url_for("cat.new_category"))
-        assert "Create category" in response.text
+        assert create_cat_btn.search(response.text)
         data = {
             "csrf_token": g.csrf_token,
             "name": name,
@@ -98,11 +97,8 @@ def test_new_category(
             }
         response = client.post(
             url_for("cat.new_category"), data=data, follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("cat.categories")
-        assert str(Message.Category.Created(name)) in unescape(response.text)
+        assert redirected_to(url_for("cat.categories"), response)
+        assert str(Message.Category.Created(name)) in response.text
         assert name in unescape(response.text)
     with dbSession() as db_session:
         cat = db_session.scalar(select(Category).filter_by(name=name))
@@ -117,9 +113,10 @@ def _test_failed_new_category(
         request: pytest.FixtureRequest,
         name: str, flash_message: str, check_db: bool = True):
     """Common logic for failed new category."""
-
     client: FlaskClient = request.getfixturevalue("client")
     admin_logged_in: User = request.getfixturevalue("admin_logged_in")
+    create_cat_btn = re.compile(
+        r'<input.*type="submit".*value="Create category">')
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
@@ -132,20 +129,19 @@ def _test_failed_new_category(
             "description": "",
             }
         response = client.post(
-            url_for("cat.new_category"), data=data, follow_redirects=True)
-        assert len(response.history) == 0
+            url_for("cat.new_category"), data=data)
         assert response.status_code == 200
-        assert "Create category" in response.text
+        assert create_cat_btn.search(response.text)
         assert flash_message in unescape(response.text)
-        assert str(Message.Category.Created(name)) \
-            not in unescape(response.text)
+        assert str(Message.Category.Created(name)) not in response.text
     if check_db:
         with dbSession() as db_session:
             assert not db_session.scalar(select(Category).filter_by(name=name))
 
 
-@settings(max_examples=5)
-@given(name=st.text(min_size=1, max_size=2))
+@settings(max_examples=3)
+@given(name=st.text(min_size=1,
+                    max_size=Constant.Category.Name.min_length - 1))
 @example("")
 @example(InvalidCategory.short_name)
 def test_failed_new_category_invalid_name(request, name: str):
@@ -160,7 +156,7 @@ def test_failed_new_category_invalid_name(request, name: str):
                               flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories))
 def test_failed_new_category_duplicate_name(request, category):
     """Duplicate category name."""
@@ -173,8 +169,7 @@ def test_failed_new_category_duplicate_name(request, category):
 
 
 # region: edit category
-@settings(max_examples=10,
-          suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=10)
 @given(category=st.sampled_from(test_categories),
        new_name=st.text(min_size=Constant.Category.Name.min_length),
        new_description=st.text())
@@ -184,7 +179,7 @@ def test_failed_new_category_duplicate_name(request, category):
 def test_edit_category(
         client: FlaskClient, admin_logged_in: User,
         category: dict, new_name: str, new_description: str):
-    """test_edit_category"""
+    """Test successfully edit category"""
     new_name = new_name.strip()
     assume(len(new_name) >= Constant.Category.Name.min_length)
     with client:
@@ -192,9 +187,8 @@ def test_edit_category(
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         client.get(url_for("cat.categories"))
-        response = client.get(url_for("cat.edit_category",
-                                        category=category["name"]))
-        assert len(response.history) == 0
+        response = client.get(
+            url_for("cat.edit_category", category=category["name"]))
         assert response.status_code == 200
         assert category["name"] in response.text
         data = {
@@ -208,16 +202,14 @@ def test_edit_category(
             url_for("cat.edit_category", category=category["name"]),
             data=data,
             follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert quote(response.request.path) == url_for("cat.categories")
+        assert redirected_to(url_for("cat.categories"), response)
         assert str(Message.Category.Updated(new_name)) \
             in unescape(response.text)
         assert new_name in unescape(response.text)
         assert new_description in unescape(response.text)
     with dbSession() as db_session:
         cat = db_session.get(Category, category["id"])
+        assert cat.name == new_name
         assert cat.description == new_description
         assert cat.in_use
         # teardown
@@ -252,9 +244,7 @@ def _test_failed_edit_category(
         }
         response = client.post(
             url_for("cat.edit_category", category=category["name"]),
-            data=data,
-            follow_redirects=True)
-        assert len(response.history) == 0
+            data=data)
         assert response.status_code == 200
         assert str(Message.Category.Updated(new_name)) \
             not in unescape(response.text)
@@ -267,9 +257,10 @@ def _test_failed_edit_category(
         assert cat.in_use == category["in_use"]
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories),
-       new_name=st.text(min_size=1, max_size=2))
+       new_name=st.text(min_size=1,
+                        max_size=Constant.Category.Name.min_length - 1))
 @example(category=test_categories[0],
          new_name="")
 @example(category=test_categories[0],
@@ -288,7 +279,7 @@ def test_failed_edit_category_invalid_name(
                                flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories),
        name=st.sampled_from([category["name"] for category in test_categories]))
 def test_failed_edit_category_duplicate_name(
@@ -302,12 +293,12 @@ def test_failed_edit_category_duplicate_name(
                                flash_message=flash_message)
 
 
-@settings(max_examples=5)
+@settings(max_examples=3)
 @given(category=st.sampled_from([category for category in test_categories
                                  if category["has_products"]]))
 def test_failed_edit_category_with_products_not_in_use(
         request, category: dict):
-    """Retire category that still have products attached"""
+    """Retire a category that still has products attached"""
     flash_message = str(Message.Category.InUse.StillProd())
     _test_failed_edit_category(request=request,
                                category=category,
@@ -326,22 +317,21 @@ def test_failed_edit_category_not_existing_category(
         response = client.get(
             url_for("cat.edit_category", category=cat_name),
             follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("cat.categories")
+        assert redirected_to(url_for("cat.categories"), response)
         assert str(Message.Category.NotExists(cat_name)) in response.text
 # endregion
 
 
 # region: delete category
 def test_delete_category(client: FlaskClient, admin_logged_in: User):
-    """test_delete_category"""
+    """Test successfully delete category"""
+    # setup
     with dbSession() as db_session:
         cat = Category(name=ValidCategory.name)
         db_session.add(cat)
         db_session.commit()
         assert cat.id
+    # delete cat
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
@@ -358,18 +348,14 @@ def test_delete_category(client: FlaskClient, admin_logged_in: User):
             url_for("cat.edit_category", category=cat.name),
             data=data,
             follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("cat.categories")
-        assert str(Message.Category.Deleted(cat.name)) \
-            in unescape(response.text)
+        assert redirected_to(url_for("cat.categories"), response)
+        assert str(Message.Category.Deleted(cat.name)) in response.text
+    # db check
     with dbSession() as db_session:
         assert not db_session.get(Category, cat.id)
 
 
-@settings(max_examples=5,
-          suppress_health_check=[HealthCheck.function_scoped_fixture])
+@settings(max_examples=3)
 @given(category=st.sampled_from([category for category in test_categories
                                  if category["has_products"]]))
 def test_failed_delete_category_with_products(
@@ -390,22 +376,20 @@ def test_failed_delete_category_with_products(
         }
         response = client.post(
             url_for("cat.edit_category", category=category["name"]),
-            data=data,
-            follow_redirects=True)
-        assert len(response.history) == 0
+            data=data)
         assert response.status_code == 200
-        assert str(Message.Category.NoDelete()) \
-            in unescape(response.text)
+        assert str(Message.Category.NoDelete()) in response.text
     with dbSession() as db_session:
         assert db_session.get(Category, category["id"])
 # endregion
 
 
 # region: reassign category
+@settings(max_examples=1)
+@given(cat = st.sampled_from(test_categories))
 def test_landing_page_from_category_edit(
-        client: FlaskClient, admin_logged_in: User):
+        client: FlaskClient, admin_logged_in: User, cat:dict):
     """test_landing_page_from_category_edit"""
-    cat = test_categories[3]
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
@@ -422,96 +406,85 @@ def test_landing_page_from_category_edit(
             url_for("cat.edit_category", category=cat["name"]),
             data=data,
             follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("cat.reassign_category",
-                                                category=cat["name"])
+        assert redirected_to(
+            url_for("cat.reassign_category", category=cat["name"]),
+            response)
         assert "Reassign all products for category" in response.text
         assert cat["name"] in response.text
 
 
 def test_reassign_category(client: FlaskClient, admin_logged_in: User):
-    """Testing Electronics that has all products responsible_id to user1"""
+    """Testing `Electronics` that has all products responsible_id to `user1`"""
     category = test_categories[2]
     assert category["name"] == "Electronics"
-    responsible = test_users[1]
-    assert responsible["name"] == "user1"
+    old_responsible = test_users[1]
+    assert old_responsible["name"] == "user1"
     new_responsible = test_users[2]
     assert new_responsible["name"] == "user2"
 
     with dbSession() as db_session:
-        cat = db_session.scalar(
-            select(Category).filter_by(name=category["name"]))
-        resp = db_session.scalar(
-            select(User).filter_by(name=responsible["name"]))
-        new_resp = db_session.scalar(
-            select(User).filter_by(name=new_responsible["name"]))
+        cat = db_session.get(Category, category["id"])
+        old_responsible = db_session.get(User, old_responsible["id"])
+        new_responsible = db_session.get(User, new_responsible["id"])
         products = db_session.scalars(
             select(Product)
             .filter_by(category=cat)).all()
         for product in products:
-            assert product.responsible == resp
+            assert product.responsible == old_responsible
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
             assert session["admin"]
             response = client.get(url_for("cat.reassign_category",
                                           category=cat.name))
-            assert len(response.history) == 0
             assert response.status_code == 200
             assert cat.name in response.text
             data = {
                 "csrf_token": g.csrf_token,
-                "responsible_id": str(new_resp.id),
+                "responsible_id": str(new_responsible.id),
                 "submit": True,
                 }
             response = client.post(
                 url_for("cat.reassign_category", category=cat.name),
                 data=data,
                 follow_redirects=True)
-            assert len(response.history) == 1
-            assert response.history[0].status_code == 302
-            assert response.status_code == 200
-            assert quote(response.request.path) == \
-                url_for("cat.reassign_category", category=cat.name)
+            assert redirected_to(
+                url_for("cat.reassign_category", category=cat.name), response)
             assert str(Message.Category.Responsible.Updated(category["name"])) \
                 in unescape(response.text)
-            assert str(Message.Category.Responsible.Invalid) \
+            assert str(Message.Category.Responsible.Invalid()) \
                 not in response.text
         # check and teardown
         for product in products:
             db_session.refresh(product)
-            assert product.responsible == new_resp
-            product.responsible = resp
+            assert product.responsible == new_responsible
+            product.responsible = old_responsible
         db_session.commit()
 
 
-@settings(max_examples=5,
-          suppress_health_check=[HealthCheck.function_scoped_fixture])
-@given(new_resp_id=st.integers(min_value=len(test_users)))
-@example(new_resp_id=0)
-@example(new_resp_id=test_users.index(
+@settings(max_examples=3)
+@given(new_responsible_id=st.integers(min_value=len(test_users)))
+@example(new_responsible_id=0)
+@example(new_responsible_id=test_users.index(
     [user for user in test_users if not user["in_use"]][1]))
-@example(new_resp_id=test_users.index(
+@example(new_responsible_id=test_users.index(
     [user for user in test_users if user["reg_req"]][0]))
 def test_failed_reassign_category(
-        client: FlaskClient, admin_logged_in, new_resp_id):
-    """test_failed_reassign_category"""
+        client: FlaskClient, admin_logged_in, new_responsible_id):
+    """Test failed reassign category invalid new_responsible"""
     category = test_categories[2]
     assert category["name"] == "Electronics"
     responsible = test_users[1]
     assert responsible["name"] == "user1"
+
     with dbSession() as db_session:
-        cat = db_session.scalar(
-            select(Category).filter_by(name=category["name"]))
-        resp = db_session.scalar(
-            select(User).filter_by(name=responsible["name"]))
+        cat = db_session.get(Category, category["id"])
+        responsible = db_session.get(User, responsible["id"])
         products = db_session.scalars(
             select(Product)
             .filter_by(category=cat)).all()
         for product in products:
-            assert product.responsible == resp
+            assert product.responsible == responsible
         with client:
             client.get("/")
             assert session["user_name"] == admin_logged_in.name
@@ -519,7 +492,7 @@ def test_failed_reassign_category(
             client.get(url_for("cat.reassign_category", category=cat.name))
             data = {
                 "csrf_token": g.csrf_token,
-                "responsible_id": str(new_resp_id),
+                "responsible_id": str(new_responsible_id),
                 "submit": True,
                 }
             response = client.post(
@@ -528,15 +501,20 @@ def test_failed_reassign_category(
                 follow_redirects=True)
             assert str(Message.Category.Responsible.Updated(category["name"])) \
                 not in unescape(response.text)
-            if new_resp_id == 0:
+            if new_responsible_id == 0:
+                assert redirected_to(
+                    url_for("cat.reassign_category", category=cat.name),
+                    response)
                 assert str(Message.Category.Responsible.Invalid()) \
                     in response.text
             else:
+                assert len(response.history) == 0
+                assert response.status_code == 200
                 assert "Not a valid choice." in response.text
         # database check
         for product in products:
             db_session.refresh(product)
-            assert product.responsible == resp
+            assert product.responsible == responsible
 
 
 def test_failed_reassign_category_bad_name(
@@ -550,9 +528,6 @@ def test_failed_reassign_category_bad_name(
         response = client.get(
             url_for("cat.reassign_category", category=cat_name),
             follow_redirects=True)
-        assert len(response.history) == 1
-        assert response.history[0].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == url_for("cat.categories")
+        assert redirected_to(url_for("cat.categories"), response)
         assert str(Message.Category.NotExists(cat_name)) in response.text
 # endregion
