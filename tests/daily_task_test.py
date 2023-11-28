@@ -1,164 +1,182 @@
 """Daily task tests."""
 
-import pathlib
+import re
 from datetime import date, timedelta
-from os import environ, getenv, path, remove, rename
+from os import environ, getenv
 from shutil import copyfile
 
 import pytest
 from freezegun import freeze_time
+from hypothesis import given, settings
+from hypothesis import strategies as st
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
 from app import mail
-from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import IndivSchedule
 from daily_task import (db_backup, db_reinit, main, send_admins_notif,
                         send_log, send_users_notif, update_schedules)
 from database import Product, Schedule, User, dbSession
-from helpers import logger
-from tests import BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB
+from tests import BACKUP_DB, LOG_FILE, ORIG_DB, PROD_DB, TEMP_DB, test_users
 
 pytestmark = pytest.mark.daily
 
+admins_with_email = [user for user in test_users
+                     if user["admin"] and user["email"]]
 
 # region: main
 @pytest.mark.mail
 def test_main(caplog: LogCaptureFixture):
     """test_main"""
-    assert path.isfile(PROD_DB)
-    assert not path.isfile(BACKUP_DB)
-    assert not path.isfile(ORIG_DB)
-    pathlib.Path.unlink(logger.handlers[0].baseFilename, missing_ok=True)
+    # prechecks
+    assert PROD_DB.exists()
+    BACKUP_DB.unlink(missing_ok=True)
+    ORIG_DB.unlink(missing_ok=True)
+    LOG_FILE.unlink(missing_ok=True)
+
     main()
-    assert path.isfile(PROD_DB)
-    assert path.isfile(BACKUP_DB)
-    assert not path.isfile(ORIG_DB)
+    assert PROD_DB.exists()
+    assert BACKUP_DB.exists()
+    assert not ORIG_DB.exists()
     assert "Starting first-time backup" in caplog.messages
     assert "Database backed up" in caplog.messages
     assert "Production database vacuumed" in caplog.messages
     assert "This app doesn't need database reinit" in caplog.messages
     assert "No need to update schedules" in caplog.messages
+    assert "No eligible user found to send notification" in caplog.messages
+    assert admins_with_email
+    for admin in admins_with_email:
+        assert f"Sent admin email notification to '{admin['name']}'" \
+            in caplog.messages
     assert "No recipient or no log file to send" in caplog.messages
     # teardown
-    remove(BACKUP_DB)
+    BACKUP_DB.unlink()
 
 
 @pytest.mark.mail
-@freeze_time("2023-04-02")
 def test_main_timeline(caplog: LogCaptureFixture):
-    """Test db_backup in time."""
-    assert path.isfile(PROD_DB)
-    backup_file = BACKUP_DB.rsplit("_", 1)[0]
-    backup_db_daily = backup_file + "_daily.db"
-    backup_db_weekly = backup_file + "_weekly.db"
-    backup_db_monthly = backup_file + "_monthly.db"
+    """Test backup and sending notifications in time."""
+    # setup
+    assert PROD_DB.exists()
+    backup_db_daily = PROD_DB.with_stem(PROD_DB.stem + "_backup_daily")
+    backup_db_weekly = PROD_DB.with_stem(PROD_DB.stem + "_backup_weekly")
+    backup_db_monthly = PROD_DB.with_stem(PROD_DB.stem + "_backup_monthly")
+    # prechecks
+    assert not backup_db_daily.exists()
+    assert not backup_db_weekly.exists()
+    assert not backup_db_monthly.exists()
 
-    assert not path.isfile(backup_db_daily)
-    assert not path.isfile(backup_db_weekly)
-    assert not path.isfile(backup_db_monthly)
-    assert date.today() == date(2023, 4, 2)
-    assert date.today().isoweekday() == 7
+    # sunday - first daily backup
+    # weekend - no notifications
+    with freeze_time("2023-04-02"):
+        assert date.today() == date(2023, 4, 2)
+        assert date.today().isoweekday() == 7
+        main()
+        assert backup_db_daily.exists()
+        assert not backup_db_weekly.exists()
+        assert not backup_db_monthly.exists()
+        assert "Starting first-time backup" in caplog.messages
+        assert "Database backed up" in caplog.messages
+        assert "Weekly backup" not in caplog.messages
+        assert "Monthly backup" not in caplog.messages
+        assert "No user notifications will be sent (weekend)" \
+            in caplog.messages
+        assert "No admin notifications will be sent (weekend)" \
+            in caplog.messages
+        caplog.clear()
 
-    main()
-    assert path.isfile(backup_db_daily)
-    assert not path.isfile(backup_db_weekly)
-    assert not path.isfile(backup_db_monthly)
-    assert "Starting first-time backup" in caplog.messages
-    assert "Database backed up" in caplog.messages
-    assert "Weekly backup" not in caplog.messages
-    assert "Monthly backup" not in caplog.messages
-    assert "No user notifications will be sent (weekend)" \
-        in caplog.messages
-    assert "No admin notifications will be sent (weekend)" \
-        in caplog.messages
-    caplog.clear()
-
+    # monday - first weekly backup
+    # not weekend - send notifications
     with freeze_time("2023-04-03"):
         assert date.today().isoweekday() == 1
-        record_daily_time = path.getmtime(backup_db_daily)
+        record_daily_time = backup_db_daily.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) == record_daily_time
-        assert path.isfile(backup_db_weekly)
-        assert not path.isfile(backup_db_monthly)
+        assert backup_db_daily.stat().st_mtime == record_daily_time
+        assert backup_db_weekly.exists()
+        assert not backup_db_monthly.exists()
         assert "Starting first-time backup" in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" in caplog.messages
         assert "Monthly backup" not in caplog.messages
         assert "No eligible user found to send notification" \
             in caplog.messages
-        assert "Sent admin email notification to 'user1'" \
-            in caplog.messages
-        assert "Sent admin email notification to 'user2'" \
-            in caplog.messages
+        assert admins_with_email
+        for admin in admins_with_email:
+            assert f"Sent admin email notification to '{admin['name']}'" \
+                in caplog.messages
         caplog.clear()
 
+    # sunday - second daily backup
     with freeze_time("2023-04-09"):
         assert date.today().isoweekday() == 7
-        record_daily_time = path.getmtime(backup_db_daily)
-        record_weekly_time = path.getmtime(backup_db_weekly)
+        record_daily_time = backup_db_daily.stat().st_mtime
+        record_weekly_time = backup_db_weekly.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) > record_daily_time
-        assert path.getmtime(backup_db_weekly) == record_weekly_time
-        assert not path.isfile(backup_db_monthly)
+        assert backup_db_daily.stat().st_mtime > record_daily_time
+        assert backup_db_weekly.stat().st_mtime == record_weekly_time
+        assert not backup_db_monthly.exists()
         assert "Starting first-time backup" not in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" not in caplog.messages
         assert "Monthly backup" not in caplog.messages
         caplog.clear()
 
+    # monday - second weekly backup
     with freeze_time("2023-04-10"):
         assert date.today().isoweekday() == 1
-        record_daily_time = path.getmtime(backup_db_daily)
-        record_weekly_time = path.getmtime(backup_db_weekly)
+        record_daily_time = backup_db_daily.stat().st_mtime
+        record_weekly_time = backup_db_weekly.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) == record_daily_time
-        assert path.getmtime(backup_db_weekly) > record_weekly_time
-        assert not path.isfile(backup_db_monthly)
+        assert backup_db_daily.stat().st_mtime == record_daily_time
+        assert backup_db_weekly.stat().st_mtime > record_weekly_time
+        assert not backup_db_monthly.exists()
         assert "Starting first-time backup" not in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" in caplog.messages
         assert "Monthly backup" not in caplog.messages
         caplog.clear()
 
+    # 1'st of the month - first monthly backup
     with freeze_time("2023-05-01"):
         assert date.today().isoweekday() == 1
-        record_daily_time = path.getmtime(backup_db_daily)
-        record_weekly_time = path.getmtime(backup_db_weekly)
+        record_daily_time = backup_db_daily.stat().st_mtime
+        record_weekly_time = backup_db_weekly.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) == record_daily_time
-        assert path.getmtime(backup_db_weekly) == record_weekly_time
-        assert path.isfile(backup_db_monthly)
+        assert backup_db_daily.stat().st_mtime == record_daily_time
+        assert backup_db_weekly.stat().st_mtime == record_weekly_time
+        assert backup_db_monthly.exists()
         assert "Starting first-time backup" in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" not in caplog.messages
         assert "Monthly backup" in caplog.messages
         caplog.clear()
 
+    # sunday - third daily backup
     with freeze_time("2023-05-07"):
         assert date.today().isoweekday() == 7
-        record_daily_time = path.getmtime(backup_db_daily)
-        record_weekly_time = path.getmtime(backup_db_weekly)
-        record_monthly_time = path.getmtime(backup_db_monthly)
+        record_daily_time = backup_db_daily.stat().st_mtime
+        record_weekly_time = backup_db_weekly.stat().st_mtime
+        record_monthly_time = backup_db_monthly.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) > record_daily_time
-        assert path.getmtime(backup_db_weekly) == record_weekly_time
-        assert path.getmtime(backup_db_monthly) == record_monthly_time
+        assert backup_db_daily.stat().st_mtime > record_daily_time
+        assert backup_db_weekly.stat().st_mtime == record_weekly_time
+        assert backup_db_monthly.stat().st_mtime == record_monthly_time
         assert "Starting first-time backup" not in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" not in caplog.messages
         assert "Monthly backup" not in caplog.messages
         caplog.clear()
 
+    # 1'st of the month - second monthly backup
     with freeze_time("2023-06-01"):
         assert date.today().isoweekday() == 4
-        record_daily_time = path.getmtime(backup_db_daily)
-        record_weekly_time = path.getmtime(backup_db_weekly)
-        record_monthly_time = path.getmtime(backup_db_monthly)
+        record_daily_time = backup_db_daily.stat().st_mtime
+        record_weekly_time = backup_db_weekly.stat().st_mtime
+        record_monthly_time = backup_db_monthly.stat().st_mtime
         main()
-        assert path.getmtime(backup_db_daily) == record_daily_time
-        assert path.getmtime(backup_db_weekly) == record_weekly_time
-        assert path.getmtime(backup_db_monthly) > record_monthly_time
+        assert backup_db_daily.stat().st_mtime == record_daily_time
+        assert backup_db_weekly.stat().st_mtime == record_weekly_time
+        assert backup_db_monthly.stat().st_mtime > record_monthly_time
         assert "Starting first-time backup" not in caplog.messages
         assert "Database backed up" in caplog.messages
         assert "Weekly backup" not in caplog.messages
@@ -166,109 +184,88 @@ def test_main_timeline(caplog: LogCaptureFixture):
         caplog.clear()
 
     # teardown
-    remove(backup_db_daily)
-    remove(backup_db_weekly)
-    remove(backup_db_monthly)
+    backup_db_daily.unlink()
+    backup_db_weekly.unlink()
+    backup_db_monthly.unlink()
 # endregion
 
 
 # region: backup/reinit
 # region: backup and vacuum
-def test_db_backup_update_file(caplog: LogCaptureFixture):
-    """test_db_backup_update_file"""
-    assert not path.isfile(BACKUP_DB)
+def test_db_backup_updates_file(caplog: LogCaptureFixture):
+    """test_db_backup_updates_file"""
+    # setup
+    BACKUP_DB.unlink(missing_ok=True)
+    # run test
     db_backup()
-    assert path.isfile(BACKUP_DB)
+    assert BACKUP_DB.exists()
     assert "Starting first-time backup" in caplog.messages
     assert "Database backed up" in caplog.messages
     caplog.clear()
-    first_backup_time = path.getmtime(BACKUP_DB)
+    first_backup_time = BACKUP_DB.stat().st_mtime
     db_backup()
     assert "Starting first-time backup" not in caplog.messages
     assert "Database backed up" in caplog.messages
-    assert path.getmtime(BACKUP_DB) > first_backup_time
+    assert BACKUP_DB.stat().st_mtime > first_backup_time
     # teardown
-    remove(BACKUP_DB)
+    BACKUP_DB.unlink()
 
 
 def test_db_backup_not_needed(caplog: LogCaptureFixture):
     """test_db_backup_not_needed"""
+    # setup
     copyfile(PROD_DB, ORIG_DB)
+    # run test
     db_backup()
     assert "No need to backup database as it will be reinitialised" \
         in caplog.messages
-    remove(ORIG_DB)
+    # teardown
+    ORIG_DB.unlink()
 
 
 def test_failed_db_backup(caplog: LogCaptureFixture):
     """test_failed_db_backup"""
-    rename(PROD_DB, TEMP_DB)
+    # setup
+    PROD_DB.rename(TEMP_DB)
+    # run test
     db_backup()
     assert "Database could not be backed up" in caplog.messages
     assert "Database could not be vacuumed" in caplog.messages
     # teardown
-    rename(TEMP_DB, PROD_DB)
+    TEMP_DB.rename(PROD_DB)
 # endregion
 
 
 # region: reinit
-def test_db_reinit(caplog: LogCaptureFixture):
-    """test_db_reinit"""
-    user_id = 7
-    sch_id = 1
+@settings(max_examples=2)
+@given(user = st.sampled_from([user for user in test_users
+                               if not user["has_products"]]))
+def test_db_reinit(caplog: LogCaptureFixture, user: dict):
+    """Test successfully reinit the database"""
+    # setup
     copyfile(PROD_DB, ORIG_DB)
     with dbSession() as db_session:
-        user = db_session.get(User, user_id)
-        assert user
-        db_session.delete(user)
+        db_session.delete(db_session.get(User, user["id"]))
         db_session.commit()
-        assert not db_session.get(User, user_id)
+        assert not db_session.get(User, user["id"])
+    # run test
     db_reinit()
     with dbSession() as db_session:
-        assert db_session.get(User, user_id)
-        assert db_session.get(Schedule, sch_id).next_date == date.today()
+        assert db_session.get(User, user["id"])
     assert "Database reinitialised" in caplog.messages
-    caplog.clear()
-    # test DON'T remember schedules dates
-    with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules()
-    assert f"Schedule '{sat_sch_info.name_en}' group '1' will be updated"\
-        in caplog.messages
-    assert f"Schedule '{clean_sch_info.name_en}' user 'user1' will be updated"\
-        in caplog.messages
-    assert "2 schedules updated" in caplog.messages
-    assert "No need to update schedules" not in caplog.messages
-    caplog.clear()
-    with dbSession() as db_session:
-        assert db_session.get(Schedule, sch_id).next_date \
-            == date.today() + timedelta(weeks=2)
-    db_reinit()
-    assert "Database reinitialised" in caplog.messages
-    with freeze_time(date.today() + timedelta(days=1)):
-        update_schedules()
-    assert f"Schedule '{sat_sch_info.name_en}' group '1' will be updated"\
-        in caplog.messages
-    assert f"Schedule '{clean_sch_info.name_en}' user 'user1' will be updated"\
-        in caplog.messages
-    assert "2 schedules updated" in caplog.messages
-    assert "No need to update schedules" not in caplog.messages
-    with dbSession() as db_session:
-        assert db_session.get(Schedule, sch_id).next_date \
-            == date.today() + timedelta(weeks=2)
     # teardown
-    copyfile(ORIG_DB, PROD_DB)
-    remove(ORIG_DB)
+    ORIG_DB.unlink()
 
 
 def test_failed_db_reinit(caplog: LogCaptureFixture):
     """test_failed_db_reinit"""
     copyfile(PROD_DB, ORIG_DB)
-    rename(PROD_DB, TEMP_DB)
+    PROD_DB.rename(TEMP_DB)
     db_reinit()
     assert "Database could not be reinitialised" in caplog.messages
     # teardown
-    rename(TEMP_DB, PROD_DB)
-    remove(ORIG_DB)
+    TEMP_DB.rename(PROD_DB)
+    ORIG_DB.unlink()
 # endregion
 # endregion
 
@@ -277,7 +274,9 @@ def test_failed_db_reinit(caplog: LogCaptureFixture):
 @freeze_time("2023-05-06")
 def test_update_group_schedules_1(caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 2 weeks interval"""
+    # constants
     name = "test_saturday_working"
+    # setup
     assert date.today() == date(2023, 5, 6)
     assert date.today().isoweekday() == 6
     schedules = [
@@ -299,9 +298,11 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
+    # run test
     update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
+    # advance time to 1 day before group 1 update date
     with freeze_time(date.today() + timedelta(days=1)):
         update_schedules()
         assert "No need to update schedules" in caplog.messages
@@ -311,6 +312,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "updated" not in caplog.messages
         caplog.clear()
+    # advance time to group 1 update date
     with freeze_time(date.today() + timedelta(days=2)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
@@ -320,6 +322,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
+    # advance time to 1 day before group 2 update date
     with freeze_time(date.today() + timedelta(days=15)):
         update_schedules()
         assert "No need to update schedules" in caplog.messages
@@ -329,6 +332,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "updated" not in caplog.messages
         caplog.clear()
+    # advance time to group 2 update date
     with freeze_time(date.today() + timedelta(days=16)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
@@ -338,6 +342,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             in caplog.messages
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
+    # advance time past group 1 and group 2 update date
     with freeze_time(date(2023, 10, 9)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
@@ -347,6 +352,7 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             in caplog.messages
         assert "2 schedules updated" in caplog.messages
         caplog.clear()
+    # final checks and teardown
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(
             select(Schedule)
@@ -368,7 +374,9 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
 @freeze_time("2023-09-01")
 def test_update_group_schedules_2(caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 1 weeks interval"""
+    # constants
     name = "test_sunday_movie"
+    # setup
     assert date.today() == date(2023, 9, 1)
     assert date.today().isoweekday() == 5
     schedules = [
@@ -390,9 +398,11 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
     with dbSession() as db_session:
         db_session.add_all(schedules)
         db_session.commit()
+    # run test
     update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
+    # advance time to 1 day before group 1 update date
     with freeze_time(date.today() + timedelta(days=2)):
         update_schedules()
         assert date.today().isoweekday() == 7
@@ -403,6 +413,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "updated" not in caplog.messages
         caplog.clear()
+    # advance time to group 1 update date
     with freeze_time(date.today() + timedelta(days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -413,6 +424,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
+    # advance time to 1 day before group 2 update date
     with freeze_time(date.today() + timedelta(days=9)):
         update_schedules()
         assert date.today().isoweekday() == 7
@@ -423,6 +435,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
             not in caplog.messages
         assert "updated" not in caplog.messages
         caplog.clear()
+    # advance time to group 2 update date
     with freeze_time(date.today() + timedelta(days=10)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -433,6 +446,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
             in caplog.messages
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
+    # advance time past group 1 and group 2 update date
     with freeze_time(date(2023, 10, 6)):
         update_schedules()
         assert date.today().isoweekday() == 5
@@ -443,6 +457,7 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
             in caplog.messages
         assert "2 schedules updated" in caplog.messages
         caplog.clear()
+    # final checks and teardown
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(
             select(Schedule)
@@ -464,7 +479,9 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
 @freeze_time("2023-08-04")
 def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
     """Explicit date checking 1 week interval"""
+    # constants
     name = "test_schedule"
+    # setup
     assert date.today() == date(2023, 8, 4)
     assert date.today().isoweekday() == 5
     test_sch = IndivSchedule(
@@ -475,12 +492,12 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         start_date=date.today())
     test_sch.register(start_date=date(2023, 7, 31))
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # run test
     update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # advance time to 1 day before update
     with freeze_time(date.today() + timedelta(days=2)):
         update_schedules()
         assert date.today().isoweekday() == 7
@@ -498,7 +515,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # advance time to update day
     with freeze_time(date.today() + timedelta(days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -516,7 +533,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
-
+    # advance time to 1 day before update
     with freeze_time(date.today() + timedelta(weeks=1, days=2)):
         update_schedules()
         assert date.today().isoweekday() == 7
@@ -534,7 +551,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
-
+    # advance time to update day
     with freeze_time(date.today() + timedelta(weeks=1, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -552,7 +569,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
-
+    # advance time to update day
     with freeze_time(date.today() + timedelta(weeks=2, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -570,7 +587,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [4, 7, 1, 2, 3]
-
+    # advance time past two updates
     with freeze_time(date.today() + timedelta(weeks=4, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -588,7 +605,7 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "2 schedules updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # advance time past four updates
     with freeze_time(date.today() + timedelta(weeks=8, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -606,7 +623,6 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert "4 schedules updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [7, 1, 2, 3, 4]
-
     # teardown
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(
@@ -620,7 +636,9 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
 @freeze_time("2023-08-04")
 def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
     """Explicit date checking 2 week interval"""
+    # constants
     name = "test_schedule"
+    # setup
     assert date.today() == date(2023, 8, 4)
     assert date.today().isoweekday() == 5
     test_sch = IndivSchedule(
@@ -631,12 +649,12 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         start_date=date.today())
     test_sch.register()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # run test
     update_schedules()
     assert "No need to update schedules" in caplog.messages
     caplog.clear()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # advance time to 1 day before update
     with freeze_time(date.today() + timedelta(weeks=0, days=2)):
         update_schedules()
         assert date.today().isoweekday() == 7
@@ -654,7 +672,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
-
+    # advance time to update day
     with freeze_time(date.today() + timedelta(weeks=0, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -672,7 +690,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
-
+    # advance time to 1 week before update
     with freeze_time(date.today() + timedelta(weeks=1, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -690,7 +708,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
-
+    # advance time to update day
     with freeze_time(date.today() + timedelta(weeks=2, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -708,7 +726,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "1 schedule updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
-
+    # advance time to 1 week before update
     with freeze_time(date.today() + timedelta(weeks=3, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -726,7 +744,7 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "updated" not in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
-
+    # advance time past two updates
     with freeze_time(date.today() + timedelta(weeks=6, days=3)):
         update_schedules()
         assert date.today().isoweekday() == 1
@@ -744,7 +762,6 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
         assert "2 schedules updated" in caplog.messages
         caplog.clear()
         assert test_sch.current_order() == [7, 1, 2, 3, 4]
-
     # teardown
     with dbSession() as db_session:
         schedules: list[Schedule] = db_session.scalars(
@@ -759,327 +776,383 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
 # region: email notifications
 @pytest.mark.mail
 @freeze_time("2023-11-03")
-def test_send_user_notifications_email(caplog: LogCaptureFixture):
-    """test_send_user_notifications_email"""
+@settings(max_examples=2)
+@given(data = st.data())
+def test_send_user_notifications_email(
+        caplog: LogCaptureFixture, data: st.DataObject):
+    """Test successfully send user notifications"""
+    # setup
+    users_with_prod = [user for user in test_users if user["has_products"]]
+    users = []
+    for _ in range(3):
+        users.append(data.draw(st.sampled_from(users_with_prod)))
+        users_with_prod.remove(users[-1])
+    users.sort(key=lambda user: user["id"])
     assert date.today().isocalendar().weekday not in {6, 7}
+    # run test
     with mail.record_messages() as outbox:
         send_users_notif()
         assert len(outbox) == 0
         assert "No eligible user found to send notification" in caplog.messages
         caplog.clear()
     with dbSession() as db_session:
-        user1 = db_session.get(User, 1)
-        user4 = db_session.get(User, 4)
-        user1.done_inv = False
-        user4.done_inv = False
+        for user in users:
+            db_session.get(User, user["id"]).done_inv = False
         db_session.commit()
-        with mail.record_messages() as outbox:
-            send_users_notif()
-            assert len(outbox) == 2
-            assert outbox[0].subject == "ConsumablesTracker - Reminder"
-            assert 'ConsumablesTracker' in outbox[0].sender
-            assert user1.email in outbox[0].recipients
-            assert user1.email in outbox[0].send_to
-            assert "Don't forget to check the inventory!" in outbox[0].body
-            assert f"Hi <b>{user1.name}</b>" in outbox[0].html
+    with mail.record_messages() as outbox:
+        send_users_notif()
+        assert len(outbox) == len(users)
+        for ind, user in enumerate(users):
+            assert outbox[ind].subject == "ConsumablesTracker - Reminder"
+            assert 'ConsumablesTracker' in outbox[ind].sender
+            assert user["email"] in outbox[ind].recipients
+            assert user["email"] in outbox[ind].send_to
+            assert "Don't forget to check the inventory!" in outbox[ind].body
+            assert f"Hi <b>{user['name']}</b>" in outbox[ind].html
             assert "Don't forget to <b>check the inventory</b>!" \
-                in outbox[0].html
-            assert outbox[1].subject == "ConsumablesTracker - Reminder"
-            assert 'ConsumablesTracker' in outbox[1].sender
-            assert user4.email in outbox[1].recipients
-            assert user4.email in outbox[1].send_to
-            assert "Don't forget to check the inventory!" in outbox[1].body
-            assert f"Hi <b>{user4.name}</b>" in outbox[1].html
-            assert "Don't forget to <b>check the inventory</b>!" \
-                in outbox[1].html
-        assert "No eligible user found to send notification" \
-            not in caplog.messages
-        assert f"Sent user email notification to '{user1.name}'" \
+                in outbox[ind].html
+    assert "No eligible user found to send notification" not in caplog.messages
+    for user in users:
+        assert f"Sent user email notification to '{user['name']}'" \
             in caplog.messages
-        assert f"Sent user email notification to '{user4.name}'" \
-            in caplog.messages
-        caplog.clear()
-        user4_email = user4.email
-        user4.email = ""
+    caplog.clear()
+    # remove email from a user
+    removed_user = users.pop()
+    with dbSession() as db_session:
+        db_session.get(User, removed_user["id"]).email = ""
         db_session.commit()
-        with mail.record_messages() as outbox:
-            send_users_notif()
-            assert len(outbox) == 1
-            assert user1.email in outbox[0].send_to
-        assert "No eligible user found to send notification" \
-            not in caplog.messages
-        assert f"Sent user email notification to '{user1.name}'" \
+    with mail.record_messages() as outbox:
+        send_users_notif()
+        assert len(outbox) == len(users)
+        for ind, user in enumerate(users):
+            assert user["email"] in outbox[ind].send_to
+    assert "No eligible user found to send notification" not in caplog.messages
+    for user in users:
+        assert f"Sent user email notification to '{user['name']}'" \
             in caplog.messages
-        assert f"Sent user email notification to '{user4.name}'" \
-            not in caplog.messages
-        caplog.clear()
-        # teardown
-        user1.done_inv = True
-        user4.done_inv = True
-        user4.email = user4_email
-        db_session.commit()
+    assert f"Sent user email notification to '{removed_user['name']}'" \
+        not in caplog.messages
+    caplog.clear()
+    # test weekend
     with freeze_time("2023-11-04"):
+        assert date.today().isocalendar().weekday == 6
         send_users_notif()
         assert "No user notifications will be sent (weekend)" \
             in caplog.messages
         caplog.clear()
     with freeze_time("2023-11-05"):
+        assert date.today().isocalendar().weekday == 7
         send_users_notif()
         assert "No user notifications will be sent (weekend)" \
             in caplog.messages
+    # teardown
+    with dbSession() as db_session:
+        for user in users:
+            db_session.get(User, user["id"]).done_inv = True
+        db_session.get(User, removed_user["id"]).done_inv = True
+        db_session.get(User, removed_user["id"]).email = removed_user["email"]
+        db_session.commit()
 
 
 @pytest.mark.mail
 @freeze_time("2023-11-03")
 def test_failed_send_user_notifications_email(caplog: LogCaptureFixture):
     """test_failed_send_user_notifications_email"""
+    invalid_address = re.compile(
+        r"The recipient address.*is not a valid RFC 5321.*address")
+    # setup
+    user = test_users[1]
     assert date.today().isocalendar().weekday not in {6, 7}
     with dbSession() as db_session:
-        user1 = db_session.get(User, 1)
-        user1.done_inv = False
+        db_session.get(User, user["id"]).done_inv = False
         db_session.commit()
-        mail_username = mail.state.username
-        mail.state.suppress = False
-        mail.state.username = "wrong_username"
-        with mail.record_messages() as outbox:
-            send_users_notif()
-            assert len(outbox) == 0
-        assert "No eligible user found to send notification" \
-            not in caplog.messages
-        assert f"Sent user email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert "Failed email SMTP authentication" in caplog.messages
-        caplog.clear()
-        mail.state.username = mail_username
-        user1_email = user1.email
-        user1.email = "wrong_email"
-        db_session.commit()
-        with mail.record_messages() as outbox:
-            send_users_notif()
-            assert len(outbox) == 0
-        assert "No eligible user found to send notification" \
-            not in caplog.messages
-        assert f"Sent user email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert "not a valid RFC 5321 address" in caplog.text
-        # teardown
-        user1.done_inv = True
-        user1.email = user1_email
-        db_session.commit()
-        mail.state.suppress = True
-
-
-@pytest.mark.mail
-@freeze_time("2023-11-03")
-def test_send_admin_notifications_email(caplog: LogCaptureFixture):
-    """test_send_admin_notifications_email"""
-    assert date.today().isocalendar().weekday not in {6, 7}
+    mail_username = mail.state.username
+    mail.state.suppress = False
+    mail.state.username = "wrong_mail_username"
+    # run test
+    with mail.record_messages() as outbox:
+        send_users_notif()
+        assert len(outbox) == 0
+    assert "No eligible user found to send notification" not in caplog.messages
+    assert f"Sent user email notification to '{user['name']}'" \
+        not in caplog.messages
+    assert "Failed email SMTP authentication" in caplog.messages
+    caplog.clear()
+    # section setup
+    mail.state.username = mail_username
     with dbSession() as db_session:
-        user1 = db_session.get(User, 1)
-        user2 = db_session.get(User, 2)
-        user3 = db_session.get(User, 3)
-        user4 = db_session.get(User, 4)
-        user5 = db_session.get(User, 5)
-        product = db_session.get(Product, 1)
-        # No eligible admin found to send notification
-        user1_email = user1.email
-        user2_email = user2.email
-        user1.email = ""
-        user2.email = ""
+        db_session.get(User, user["id"]).email = "wrong_email_address"
         db_session.commit()
+    # run test
+    with mail.record_messages() as outbox:
+        send_users_notif()
+        assert len(outbox) == 0
+    assert "No eligible user found to send notification" not in caplog.messages
+    assert f"Sent user email notification to '{user['name']}'" \
+        not in caplog.messages
+    assert invalid_address.search(caplog.text)
+    # teardown
+    with dbSession() as db_session:
+        db_session.get(User, user["id"]).done_inv = True
+        db_session.get(User, user["id"]).email = user["email"]
+        db_session.commit()
+    mail.state.suppress = True
+
+
+# region: send admin notifications
+@pytest.fixture(name="admins")
+def admins_fixture() -> list[dict]:
+    """List of all in use admins."""
+    return [user for user in test_users if user["admin"] and user["in_use"]]
+
+
+@pytest.fixture(name="users_reg_req")
+def users_reg_req_fixture() -> list[dict]:
+    """List of users that requested registration."""
+    return [user for user in test_users if user["reg_req"]]
+
+
+@pytest.fixture(name="users")
+def users_fixture() -> list[dict]:
+    """List of users that requested registration."""
+    return [user for user in test_users
+                if not user["admin"] and user["has_products"]]
+
+
+# region: no email sent
+def _test_send_admin_notifications_no_email_sent(
+        caplog: LogCaptureFixture, freeze_date: str, messages: list[str]):
+    """Common logic for admin notifications no mail sent"""
+    log_messages = {
+        "weekend": "No admin notifications will be sent (weekend)",
+        "no_admin_email": "No eligible admin found to send notification",
+        "not_needed": "No admin notifications need to be sent",
+    }
+    with freeze_time(freeze_date):
         with mail.record_messages() as outbox:
             send_admins_notif()
             assert len(outbox) == 0
-        assert "No eligible admin found to send notification" \
-            in caplog.messages
-        assert "No admin notifications need to be sent" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user2.name}'" \
-            not in caplog.messages
-        caplog.clear()
-        user1.email = user1_email
-        # No admin notifications need to be sent
-        user5.reg_req = False
+    assert len(caplog.messages) == len(messages)
+    for message in messages:
+        assert log_messages[message] in caplog.messages
+
+
+@pytest.mark.parametrize("freeze_date", [
+    pytest.param("2023-11-04", id="Saturday"),
+    pytest.param("2023-11-04", id="Sunday"),
+])
+def test_send_admin_notifications_email_weekend(
+        caplog: LogCaptureFixture, freeze_date: str):
+    """test_send_admin_notifications_email_weekend"""
+    assert date.fromisoformat(freeze_date).isocalendar().weekday in {6, 7}
+    _test_send_admin_notifications_no_email_sent(
+        caplog=caplog,
+        freeze_date=freeze_date,
+        messages=["weekend"]
+    )
+
+
+def test_send_admin_notifications_email_no_eligible_admin(
+        caplog: LogCaptureFixture, admins: list[dict]):
+    """test_send_admin_notifications_email_no_eligible_admin"""
+    freeze_date = "2023-11-03"
+    assert date.fromisoformat(freeze_date).isocalendar().weekday not in {6, 7}
+    with dbSession() as db_session:
+        for admin in admins:
+            db_session.get(User, admin["id"]).email = ""
         db_session.commit()
+    _test_send_admin_notifications_no_email_sent(
+        caplog=caplog,
+        freeze_date=freeze_date,
+        messages=["no_admin_email"]
+    )
+    with dbSession() as db_session:
+        for admin in admins:
+            db_session.get(User, admin["id"]).email = admin["email"]
+        db_session.commit()
+
+
+def test_send_admin_notifications_email_not_needed(
+        caplog: LogCaptureFixture, users_reg_req: list[dict]):
+    """test_send_admin_notifications_email_not_needed"""
+    freeze_date = "2023-11-03"
+    assert date.fromisoformat(freeze_date).isocalendar().weekday not in {6, 7}
+    with dbSession() as db_session:
+        for user in users_reg_req:
+            db_session.get(User, user["id"]).reg_req = False
+        db_session.commit()
+    _test_send_admin_notifications_no_email_sent(
+        caplog=caplog,
+        freeze_date=freeze_date,
+        messages=["not_needed"]
+    )
+    with dbSession() as db_session:
+        for user in users_reg_req:
+            db_session.get(User, user["id"]).reg_req = True
+        db_session.commit()
+# endregion
+
+
+# region: mail sent
+def _test_send_admin_notifications_email_sent(
+        caplog: LogCaptureFixture, admins: list[dict], messages: list[str]):
+    """Common logic for admin notifications and mail sent"""
+    log_messages = {
+        "weekend": "No admin notifications will be sent (weekend)",
+        "no_admin_email": "No eligible admin found to send notification",
+        "not_needed": "No admin notifications need to be sent",
+    }
+    mail_messages = {
+        "reg_req": "there are users that need registration approval",
+        "req_inv": "there are users that requested inventorying",
+        "check_inv": "there are users that have to check the inventory",
+        "prod_ord": "there are products that need to be ordered",
+    }
+    with freeze_time("2023-11-03"):
+        assert date.today().isocalendar().weekday not in {6, 7}
         with mail.record_messages() as outbox:
             send_admins_notif()
-        assert "No eligible admin found to send notification" \
-            not in caplog.messages
-        assert "No admin notifications need to be sent" \
-            in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user2.name}'" \
-            not in caplog.messages
-        caplog.clear()
-        user5.reg_req = True
-        db_session.commit()
-        # there are users that need registration approval
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 1
-            assert outbox[0].subject == "ConsumablesTracker - Notifications"
-            assert 'ConsumablesTracker' in outbox[0].sender
-            assert user1.email in outbox[0].recipients
-            assert user1.email in outbox[0].send_to
-            assert "there are users that need registration approval" \
-                in outbox[0].body
-            assert "there are users that requested inventorying" \
-                not in outbox[0].body
-            assert "there are users that have to check the inventory" \
-                not in outbox[0].body
-            assert "there are products that need to be ordered" \
-                not in outbox[0].body
-            assert f"Hi <b>{user1.name}</b>" in outbox[0].html
-            assert "These are the <b>daily notifications</b>:" \
-                in outbox[0].html
-            assert "there are users that need registration approval</li>" \
-                in outbox[0].html
-        assert "No eligible admin found to send notification" \
-            not in caplog.messages
-        assert "No admin notifications need to be sent" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            in caplog.messages
-        assert f"Sent admin email notification to '{user2.name}'" \
-            not in caplog.messages
-        caplog.clear()
-        # there are users that requested inventorying
-        user2.email = user2_email
-        user3.req_inv = True
-        db_session.commit()
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 2
-            assert user1.email in outbox[0].send_to
-            assert "there are users that need registration approval" \
-                in outbox[0].body
-            assert "there are users that requested inventorying" \
-                in outbox[0].body
-            assert "there are users that have to check the inventory" \
-                not in outbox[0].body
-            assert "there are products that need to be ordered" \
-                not in outbox[0].body
-            assert outbox[1].subject == "ConsumablesTracker - Notifications"
-            assert 'ConsumablesTracker' in outbox[1].sender
-            assert user2.email in outbox[1].recipients
-            assert user2.email in outbox[1].send_to
-            assert "there are users that need registration approval" \
-                in outbox[1].body
-            assert "there are users that requested inventorying" \
-                in outbox[1].body
-            assert f"Hi <b>{user2.name}</b>" in outbox[1].html
-            assert "These are the <b>daily notifications</b>:" \
-                in outbox[1].html
-            assert "there are users that need registration approval</li>" \
-                in outbox[1].html
-            assert "there are users that requested inventorying</li>" \
-                in outbox[1].html
-            assert "there are users that have to check the inventory" \
-                not in outbox[1].body
-            assert "there are products that need to be ordered" \
-                not in outbox[1].body
-        assert "No eligible admin found to send notification" \
-            not in caplog.messages
-        assert "No admin notifications need to be sent" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            in caplog.messages
-        assert f"Sent admin email notification to '{user2.name}'" \
-            in caplog.messages
-        # there are users that have to check the inventory
-        user4.done_inv = False
-        db_session.commit()
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 2
-            assert user1.email in outbox[0].send_to
-            assert "there are users that need registration approval" \
-                in outbox[0].body
-            assert "there are users that requested inventorying" \
-                in outbox[0].body
-            assert "there are users that have to check the inventory" \
-                in outbox[0].body
-            assert "there are products that need to be ordered" \
-                not in outbox[0].body
-            assert user2.email in outbox[1].send_to
-            assert "there are users that have to check the inventory" \
-                in outbox[1].body
-        # there are products that need to be ordered
-        product.to_order = True
-        db_session.commit()
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 2
-            assert user1.email in outbox[0].send_to
-            assert "there are users that need registration approval" \
-                in outbox[0].body
-            assert "there are users that requested inventorying" \
-                in outbox[0].body
-            assert "there are users that have to check the inventory" \
-                in outbox[0].body
-            assert "there are products that need to be ordered" \
-                in outbox[0].body
-            assert user2.email in outbox[1].send_to
-            assert "there are products that need to be ordered" \
-                in outbox[1].body
-        # teardown
-        user3.req_inv = False
-        user4.done_inv = True
-        product.to_order = False
-        db_session.commit()
-    with freeze_time("2023-11-04"):
-        send_admins_notif()
-        assert "No admin notifications will be sent (weekend)" \
-            in caplog.messages
-        caplog.clear()
-    with freeze_time("2023-11-05"):
-        send_admins_notif()
-        assert "No admin notifications will be sent (weekend)" \
+            assert len(outbox) == len(admins)
+            for ind, admin in enumerate(admins):
+                assert outbox[ind].subject == \
+                    "ConsumablesTracker - Notifications"
+                assert 'ConsumablesTracker' in outbox[ind].sender
+                assert admin["email"] in outbox[ind].recipients
+                assert admin["email"] in outbox[ind].send_to
+                for message in messages:
+                    assert mail_messages[message] in outbox[ind].body
+                    assert mail_messages[message] in outbox[ind].html
+                assert f"Hi <b>{admin['name']}</b>" in outbox[ind].html
+                assert "These are the <b>daily notifications</b>:" \
+                    in outbox[ind].html
+    assert len(caplog.messages) == len(admins)
+    for log_message in log_messages.values():
+        assert log_message not in caplog.messages
+    for admin in admins:
+        assert f"Sent admin email notification to '{admin['name']}'" \
             in caplog.messages
 
 
 @pytest.mark.mail
+def test_send_admin_notifications_email_registration_requested(
+        caplog: LogCaptureFixture,
+        admins: list[dict], users_reg_req: list[dict]):
+    """test_send_admin_notifications_email_registration_requested"""
+    assert users_reg_req
+    _test_send_admin_notifications_email_sent(
+        caplog=caplog,
+        admins=admins,
+        messages=["reg_req"]
+    )
+
+
+@pytest.mark.mail
+def test_send_admin_notifications_email_inventorying_requested(
+        caplog: LogCaptureFixture,
+        admins: list[dict], users_reg_req: list[dict], users: list[dict]):
+    """test_send_admin_notifications_email_inventorying_requested"""
+    assert users_reg_req
+    with dbSession() as db_session:
+        db_session.get(User, users[0]["id"]).req_inv = True
+        db_session.commit()
+    _test_send_admin_notifications_email_sent(
+        caplog=caplog,
+        admins=admins,
+        messages=["reg_req", "req_inv"]
+    )
+    with dbSession() as db_session:
+        db_session.get(User, users[0]["id"]).req_inv = False
+        db_session.commit()
+
+
+@pytest.mark.mail
+def test_send_admin_notifications_email_inventorying_in_progress(
+        caplog: LogCaptureFixture,
+        admins: list[dict], users_reg_req: list[dict], users: list[dict]):
+    """test_send_admin_notifications_email_inventorying_in_progress"""
+    assert users_reg_req
+    with dbSession() as db_session:
+        db_session.get(User, users[0]["id"]).done_inv = False
+        db_session.commit()
+    _test_send_admin_notifications_email_sent(
+        caplog=caplog,
+        admins=admins,
+        messages=["reg_req", "check_inv"]
+    )
+    with dbSession() as db_session:
+        db_session.get(User, users[0]["id"]).done_inv = True
+        db_session.commit()
+
+
+@pytest.mark.mail
+def test_send_admin_notifications_email_products_need_ordering(
+        caplog: LogCaptureFixture,
+        admins: list[dict], users_reg_req: list[dict]):
+    """test_send_admin_notifications_email_products_need_ordering"""
+    prod_id = 1
+    assert users_reg_req
+    with dbSession() as db_session:
+        db_session.get(Product, prod_id).to_order = True
+        db_session.commit()
+    _test_send_admin_notifications_email_sent(
+        caplog=caplog,
+        admins=admins,
+        messages=["reg_req", "prod_ord"]
+    )
+    with dbSession() as db_session:
+        db_session.get(Product, prod_id).to_order = False
+        db_session.commit()
+# endregion
+
+
+@pytest.mark.mail
 @freeze_time("2023-11-03")
-def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
+def test_failed_send_admin_notifications_email(
+        caplog: LogCaptureFixture, admins: list[dict]):
     """test_failed_send_admin_notifications_email"""
+    # setup
+    invalid_address = re.compile(
+        r"The recipient address.*is not a valid RFC 5321.*address")
     assert date.today().isocalendar().weekday not in {6, 7}
+    mail_username = mail.state.username
+    mail.state.suppress = False
+    mail.state.username = "wrong_mail_username"
+    # run test
+    with mail.record_messages() as outbox:
+        send_admins_notif()
+        assert len(outbox) == 0
+    assert "No eligible admin found to send notification" \
+        not in caplog.messages
+    assert "No admin notifications need to be sent" \
+        not in caplog.messages
+    for admin in admins:
+        assert f"Sent admin email notification to '{admin['name']}'" \
+            not in caplog.messages
+    assert "Failed email SMTP authentication" in caplog.messages
+    caplog.clear()
+    # section setup
+    mail.state.username = mail_username
     with dbSession() as db_session:
-        user1 = db_session.get(User, 1)
-        mail_username = mail.state.username
-        mail.state.suppress = False
-        mail.state.username = "wrong_username"
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 0
-        assert "No eligible admin found to send notification" \
-            not in caplog.messages
-        assert "No admin notifications need to be sent" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert "Failed email SMTP authentication" in caplog.messages
-        caplog.clear()
-        mail.state.username = mail_username
-        user1_email = user1.email
-        user1.email = "wrong_email"
+        db_session.get(User, admins[0]["id"]).email = "wrong_email_address"
         db_session.commit()
-        with mail.record_messages() as outbox:
-            send_admins_notif()
-            assert len(outbox) == 0
-        assert "No eligible admin found to send notification" \
+    # run test
+    with mail.record_messages() as outbox:
+        send_admins_notif()
+        assert len(outbox) == 0
+    assert "No eligible admin found to send notification" \
+        not in caplog.messages
+    assert "No admin notifications need to be sent" \
+        not in caplog.messages
+    for admin in admins:
+        assert f"Sent admin email notification to '{admin['name']}'" \
             not in caplog.messages
-        assert "No admin notifications need to be sent" \
-            not in caplog.messages
-        assert f"Sent admin email notification to '{user1.name}'" \
-            not in caplog.messages
-        assert "not a valid RFC 5321 address" in caplog.text
-        # teardown
-        user1.email = user1_email
+    assert invalid_address.search(caplog.text)
+    # teardown
+    with dbSession() as db_session:
+        db_session.get(User, admins[0]["id"]).email = admins[0]["email"]
         db_session.commit()
-        mail.state.suppress = True
+    mail.state.suppress = True
+# endregion
 # endregion
 
 
@@ -1087,19 +1160,20 @@ def test_failed_send_admin_notifications_email(caplog: LogCaptureFixture):
 @pytest.mark.mail
 def test_send_log(caplog: LogCaptureFixture):
     """test_send_log"""
-    log_file = logger.handlers[0].baseFilename
-    pathlib.Path.unlink(log_file, missing_ok=True)
-    assert not path.isfile(log_file)
+    # setup
+    LOG_FILE.unlink(missing_ok=True)
+    # run test
     send_log()
     assert "No recipient or no log file to send" in caplog.messages
     assert "Sent log file to" not in caplog.text
     caplog.clear()
-    # write a log message
-    with open(file=log_file, mode="w", encoding="UTF-8") as file:
-        file.write(f"{date.today().strftime('%d.%m')} Some log message")
-    assert path.isfile(log_file)
+    # setup section
+    LOG_FILE.write_text(
+        f"{date.today().strftime('%d.%m')} Some log message",
+        encoding="UTF-8")
     recipient = getenv("ADMIN_EMAIL")
     assert recipient
+    # run test
     with mail.record_messages() as outbox:
         send_log()
         assert len(outbox) == 1
@@ -1112,9 +1186,11 @@ def test_send_log(caplog: LogCaptureFixture):
         assert "No recipient or no log file to send" not in caplog.messages
         assert "Sent log file to" in caplog.text
         caplog.clear()
+    # setup section
     environ["ADMIN_EMAIL"] = ""
-    assert path.isfile(log_file)
+    assert LOG_FILE.exists()
     assert not getenv("ADMIN_EMAIL")
+    # run test
     send_log()
     assert "No recipient or no log file to send" in caplog.messages
     assert "Sent log file to" not in caplog.text
@@ -1125,27 +1201,30 @@ def test_send_log(caplog: LogCaptureFixture):
 @pytest.mark.mail
 def test_failed_send_log(caplog: LogCaptureFixture):
     """test_failed_send_log"""
-    log_file = logger.handlers[0].baseFilename
-    # write a log message
-    with open(file=log_file, mode="w", encoding="UTF-8") as file:
-        file.write(f"{date.today().strftime('%d.%m')} Some log message")
-    assert path.isfile(log_file)
+    # setup
+    invalid_address = re.compile(
+        r"The recipient address.*is not a valid RFC 5321.*address")
+    LOG_FILE.write_text(
+        f"{date.today().strftime('%d.%m')} Some log message",
+        encoding="UTF-8")
     recipient = getenv("ADMIN_EMAIL")
     assert recipient
     mail_username = mail.state.username
     mail.state.suppress = False
     mail.state.username = "wrong_username"
+    # run test
     with mail.record_messages() as outbox:
         send_log()
         assert len(outbox) == 0
     assert "Failed email SMTP authentication" in caplog.messages
-    mail.state.username = mail_username
     caplog.clear()
+    # setup section
+    mail.state.username = mail_username
     environ["ADMIN_EMAIL"] = "wrong_email"
     with mail.record_messages() as outbox:
         send_log()
         assert len(outbox) == 0
-    assert "not a valid RFC 5321 address" in caplog.text
+    assert invalid_address.search(caplog.text)
     # teardown
     environ["ADMIN_EMAIL"] = recipient
     mail.state.suppress = True
