@@ -486,7 +486,7 @@ def test_category_creation():
     """test_category_creation"""
     category = Category(
         name="category11",
-        description="Some description")
+        details="Some details")
     with dbSession() as db_session:
         db_session.add(category)
         db_session.commit()
@@ -495,7 +495,7 @@ def test_category_creation():
         assert category.name == category.name
         assert category.products == []
         assert category.in_use is True
-        assert category.description == category.description
+        assert category.details == category.details
         # teardown
         db_session.delete(category)
         db_session.commit()
@@ -545,7 +545,7 @@ def test_bulk_category_insertion():
         for category in categories:
             assert category.products == []
             assert category.in_use
-            assert not category.description
+            assert not category.details
             # teardown
             db_session.delete(category)
         db_session.commit()
@@ -785,7 +785,7 @@ def test_product_creation():
             responsible=user,
             category=category,
             supplier=supplier,
-            meas_unit="measunit",
+            meas_unit="meas_unit",
             min_stock=10,
             ord_qty=20,
             critical=False)
@@ -832,78 +832,78 @@ def test_change_product_name():
     ("name", "description", "user", "category", "supplier",
     "meas_unit", "min_stock", "ord_qty", "error_msg"), (
         # # name
-        ("", "description", 1, 1, 1, "measunit", 1, 2,
+        ("", "description", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Name.Required())),
-        (" ", "description", 1, 1, 1, "measunit", 1, 2,
+        (" ", "description", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Name.Required())),
-        (None, "description", 1, 1, 1, "measunit", 1, 2,
+        (None, "description", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Name.Required())),
-        ("Toilet paper", "description", 1, 1, 1, "measunit", 1, 2,
+        ("Toilet paper", "description", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
-        ("   Toilet paper   ", "description", 1, 1, 1, "measunit", 1, 2,
+        ("   Toilet paper   ", "description", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Name.Exists("Toilet paper"))),
         # # description
-        ("__test__producttt__", "", 1, 1, 1, "measunit", 1, 2,
+        ("__test__product__", "", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Description.Required())),
-        ("__test__producttt__", " ", 1, 1, 1, "measunit", 1, 2,
+        ("__test__product__", " ", 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Description.Required())),
-        ("__test__producttt__", None, 1, 1, 1, "measunit", 1, 2,
+        ("__test__product__", None, 1, 1, 1, "meas_unit", 1, 2,
             str(Message.Product.Description.Required())),
         # # responsible
-        ("__test__producttt__", "description", "", 1, 1, "measunit", 1, 2,
+        ("__test__product__", "description", "", 1, 1, "meas_unit", 1, 2,
             str(Message.User.NotExists(""))),
-        ("__test__producttt__", "description", None, 1, 1, "measunit", 1, 2,
+        ("__test__product__", "description", None, 1, 1, "meas_unit", 1, 2,
             str(Message.User.NotExists(None))),
-        ("__test__producttt__", "description", 5, 1, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 5, 1, 1, "meas_unit", 1, 2,
             str(Message.User.Products.PendReg())),
-        ("__test__producttt__", "description", 6, 1, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 6, 1, 1, "meas_unit", 1, 2,
             str(Message.User.Products.Retired())),
-        ("__test__producttt__", "description", 8, 1, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 8, 1, 1, "meas_unit", 1, 2,
             str(Message.User.NotExists(""))),
         # category
-        ("__test__producttt__", "description", 1, "", 1, "measunit", 1, 2,
+        ("__test__product__", "description", 1, "", 1, "meas_unit", 1, 2,
             str(Message.Category.NotExists(""))),
-        ("__test__producttt__", "description", 1, None, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 1, None, 1, "meas_unit", 1, 2,
             str(Message.Category.NotExists(""))),
-        ("__test__producttt__", "description", 1, 8, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 1, 8, 1, "meas_unit", 1, 2,
             str(Message.Category.Products.Disabled())),
-        ("__test__producttt__", "description", 1, 9, 1, "measunit", 1, 2,
+        ("__test__product__", "description", 1, 9, 1, "meas_unit", 1, 2,
             str(Message.Category.NotExists(""))),
         # # supplier
-        ("__test__producttt__", "description", 1, 1, "", "measunit", 1, 2,
+        ("__test__product__", "description", 1, 1, "", "meas_unit", 1, 2,
             str(Message.Supplier.NotExists(""))),
-        ("__test__producttt__", "description", 1, 1, None, "measunit", 1, 2,
+        ("__test__product__", "description", 1, 1, None, "meas_unit", 1, 2,
             str(Message.Supplier.NotExists(""))),
-        ("__test__producttt__", "description", 1, 1, 5, "measunit", 1, 2,
+        ("__test__product__", "description", 1, 1, 5, "meas_unit", 1, 2,
             str(Message.Supplier.Products.Disabled())),
-        ("__test__producttt__", "description", 1, 1, 6, "measunit", 1, 2,
+        ("__test__product__", "description", 1, 1, 6, "meas_unit", 1, 2,
             str(Message.Supplier.NotExists(""))),
         # # meas unit
-        ("__test__producttt__", "description", 1, 1, 1, "", 1, 2,
+        ("__test__product__", "description", 1, 1, 1, "", 1, 2,
             str(Message.Product.MeasUnit.Required())),
-        ("__test__producttt__", "description", 1, 1, 1, " ", 1, 2,
+        ("__test__product__", "description", 1, 1, 1, " ", 1, 2,
             str(Message.Product.MeasUnit.Required())),
-        ("__test__producttt__", "description", 1, 1, 1, None, 1, 2,
+        ("__test__product__", "description", 1, 1, 1, None, 1, 2,
             str(Message.Product.MeasUnit.Required())),
         # # min stock
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", "", 2,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", "", 2,
             str(Message.Product.MinStock.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", None, 2,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", None, 2,
             str(Message.Product.MinStock.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", "0", 2,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", "0", 2,
             str(Message.Product.MinStock.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", -3, 2,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", -3, 2,
             str(Message.Product.MinStock.Invalid())),
         # # ord quantity
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "",
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", 1, "",
             str(Message.Product.OrdQty.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, None,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", 1, None,
             str(Message.Product.OrdQty.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, "1",
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", 1, "1",
             str(Message.Product.OrdQty.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, 0,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", 1, 0,
             str(Message.Product.OrdQty.Invalid())),
-        ("__test__producttt__", "description", 1, 1, 1, "measunit", 1, -3,
+        ("__test__product__", "description", 1, 1, 1, "meas_unit", 1, -3,
             str(Message.Product.OrdQty.Invalid())),
 ))
 def test_failed_product_creation(
@@ -943,7 +943,7 @@ def test_bulk_product_insertion():
                 "responsible_id": 1,
                 "category_id": 1,
                 "supplier_id": 1,
-                "meas_unit": "measunit",
+                "meas_unit": "meas_unit",
                 "min_stock": 10,
                 "ord_qty": 20} for no in range(last_id + 1, last_id + 4)
             ]

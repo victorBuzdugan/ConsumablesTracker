@@ -46,8 +46,8 @@ class CreateCatForm(FlaskForm):
             "placeholder": lazy_gettext("Username"),
             "autocomplete": "off",
             })
-    description = TextAreaField(
-        label=lazy_gettext("Description"),
+    details = TextAreaField(
+        label=lazy_gettext("Details"),
         render_kw={
                 "class": "form-control",
                 "placeholder": lazy_gettext("Details"),
@@ -172,7 +172,7 @@ def edit_category(category):
             else:
                 try:
                     cat.name = edit_cat_form.name.data
-                    cat.description = edit_cat_form.description.data
+                    cat.details = edit_cat_form.details.data
                     cat.in_use = edit_cat_form.in_use.data
                 except ValueError as error:
                     flash(str(error), "error")

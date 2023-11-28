@@ -62,11 +62,11 @@ class User(Base):
     :param admin: user has administrator rights
     :param in_use: user can still be used; not obsolete
     :param done_inv: user has sent the inventory
-    :param check_inv: user has to check the inventory; reverese of `done_inv`
+    :param check_inv: user has to check the inventory; reverse of `done_inv`
     :param reg_req: user has requested registration
     :param req_inv: user has requested inventorying
     :param details: user details, extra info
-    :param email: user email adress
+    :param email: user email address
     :param sat_group: saturday group
     :param sat_group_this_week: check if saturday group is this week
     :param clean_this_week: check if user is scheduled for cleaning
@@ -245,7 +245,7 @@ class User(Base):
 
     @property
     def check_inv(self) -> bool:
-        """Check inventory flag. Reverese of `done_inv`"""
+        """Check inventory flag. Reverse of `done_inv`"""
         return not self.done_inv
 
     @property
@@ -435,13 +435,13 @@ class Category(Base):
     :param name: category name
     :param products: list of products belonging to this category
     :param in_use: category can still be used; not obsolete
-    :param description: category description, extra info
+    :param details: category details, extra info
     """
     name: Mapped[str] = mapped_column(unique=True)
     products: Mapped[List["Product"]] = relationship(
         default_factory=list, back_populates="category", repr=False)
     in_use: Mapped[bool] = mapped_column(default=True)
-    description: Mapped[Optional[str]] = mapped_column(
+    details: Mapped[Optional[str]] = mapped_column(
         default="", repr=False)
 
     __table_args__ = (
@@ -577,7 +577,7 @@ class Product(Base):
 
     :param id: product id
     :param name: product short name / number / code
-    :param description: produc description, extra info
+    :param description: product description, extra info
     :param responsible_id: user id responsible for inventorying the product
     :param responsible: `User` class object for responsible
     :param category_id: category id of this product

@@ -72,12 +72,12 @@ def test_categories_page_admin_logged_in(
 # region: new category
 @settings(max_examples=5)
 @given(name=st.text(min_size=Constant.Category.Name.min_length),
-       description=st.text())
+       details=st.text())
 @example(name=ValidCategory.name,
-         description=ValidCategory.description)
+         details=ValidCategory.details)
 def test_new_category(
         client: FlaskClient, admin_logged_in: User,
-        name: str, description: str):
+        name: str, details: str):
     """test_new_category"""
     name = name.strip()
     assume(len(name) > 2)
@@ -93,7 +93,7 @@ def test_new_category(
         data = {
             "csrf_token": g.csrf_token,
             "name": name,
-            "description": description,
+            "details": details,
             }
         response = client.post(
             url_for("cat.new_category"), data=data, follow_redirects=True)
@@ -103,7 +103,7 @@ def test_new_category(
     with dbSession() as db_session:
         cat = db_session.scalar(select(Category).filter_by(name=name))
         assert cat.in_use
-        assert cat.description == description
+        assert cat.details == details
         db_session.delete(cat)
         db_session.commit()
         assert not db_session.get(Category, cat.id)
@@ -126,7 +126,7 @@ def _test_failed_new_category(
         data = {
             "csrf_token": g.csrf_token,
             "name": name,
-            "description": "",
+            "details": "",
             }
         response = client.post(
             url_for("cat.new_category"), data=data)
@@ -172,13 +172,13 @@ def test_failed_new_category_duplicate_name(request, category):
 @settings(max_examples=10)
 @given(category=st.sampled_from(test_categories),
        new_name=st.text(min_size=Constant.Category.Name.min_length),
-       new_description=st.text())
+       new_details=st.text())
 @example(category=test_categories[0],
        new_name=ValidCategory.name,
-       new_description=ValidCategory.description)
+       new_details=ValidCategory.details)
 def test_edit_category(
         client: FlaskClient, admin_logged_in: User,
-        category: dict, new_name: str, new_description: str):
+        category: dict, new_name: str, new_details: str):
     """Test successfully edit category"""
     new_name = new_name.strip()
     assume(len(new_name) >= Constant.Category.Name.min_length)
@@ -194,7 +194,7 @@ def test_edit_category(
         data = {
             "csrf_token": g.csrf_token,
             "name": new_name,
-            "description": new_description,
+            "details": new_details,
             "in_use": "on",
             "submit": True,
         }
@@ -206,15 +206,15 @@ def test_edit_category(
         assert str(Message.Category.Updated(new_name)) \
             in unescape(response.text)
         assert new_name in unescape(response.text)
-        assert new_description in unescape(response.text)
+        assert new_details in unescape(response.text)
     with dbSession() as db_session:
         cat = db_session.get(Category, category["id"])
         assert cat.name == new_name
-        assert cat.description == new_description
+        assert cat.details == new_details
         assert cat.in_use
         # teardown
         cat.name = category["name"]
-        cat.description = category["description"]
+        cat.details = category["details"]
         cat.in_use = category["in_use"]
         db_session.commit()
 
@@ -238,7 +238,7 @@ def _test_failed_edit_category(
         data = {
             "csrf_token": g.csrf_token,
             "name": new_name,
-            "description": category["description"],
+            "details": category["details"],
             "in_use": new_in_use,
             "submit": True,
         }

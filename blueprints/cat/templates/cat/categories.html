@@ -17,7 +17,7 @@
                             <th class="px-3">{{ gettext("Name") }}</th>
                             <th class="px-3">{{ gettext("In use Products") }}</th>
                             <th class="px-3">{{ gettext("All Products") }}</th>
-                            <th class="px-3">{{ gettext("Description") }}</th>
+                            <th class="px-3">{{ gettext("Details") }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -26,7 +26,7 @@
                             <td><span class="{% if not category.in_use %}text-decoration-line-through{% endif %}"><a class="link-dark link-offset-2 link-underline-opacity-50 link-underline-opacity-100-hover" href="{{ url_for('cat.edit_category', category=category.name) }}">{{ category.name }}</a></span></td>
                             <td>{{ category.in_use_products }}</td>
                             <td class="text-secondary">{{ category.all_products }}</td>
-                            <td class="text-secondary">{{ category.description }}</td>
+                            <td class="text-secondary">{{ category.details }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

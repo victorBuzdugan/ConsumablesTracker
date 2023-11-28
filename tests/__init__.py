@@ -185,7 +185,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
 class ValidCategory:
     """Valid category data."""
     name: str = "x" * Constant.Category.Name.min_length
-    description: str = ""
+    details: str = ""
     in_use: str = "on"
 
 @dataclass(frozen=True)
@@ -199,7 +199,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 1,
         "name": "Household",
         "in_use": True,
-        "description": "Household consumables",
         "has_products": True,
     },
     {
@@ -207,7 +206,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 2,
         "name": "Personal",
         "in_use": True,
-        "description": "Personal consumables",
         "has_products": True,
     },
     {
@@ -215,7 +213,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 3,
         "name": "Electronics",
         "in_use": True,
-        "description": "",
         "has_products": True,
     },
     {
@@ -223,7 +220,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 4,
         "name": "Kids",
         "in_use": True,
-        "description": "",
         "has_products": True,
     },
     {
@@ -231,7 +227,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 5,
         "name": "Health",
         "in_use": True,
-        "description": "",
         "has_products": True,
     },
     {
@@ -239,7 +234,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 6,
         "name": "Groceries",
         "in_use": True,
-        "description": "",
         "has_products": True,
     },
     {
@@ -247,7 +241,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 7,
         "name": "Pets",
         "in_use": True,
-        "description": "",
         "has_products": True,
     },
     {
@@ -255,7 +248,6 @@ test_categories: tuple[dict[str, str|bool]] = (
         "id": 8,
         "name": "Others",
         "in_use": False,
-        "description": "",
         "has_products": False,
     },
 )

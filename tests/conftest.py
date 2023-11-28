@@ -131,7 +131,7 @@ def hidden_admin_logged_in(client: FlaskClient):
 def create_test_categories():
     """Insert into db a set of test categories."""
     print("\nCreate test categories")
-    valid_attrs = ("in_use", "description", "id")
+    valid_attrs = ("in_use", "details", "id")
     with dbSession() as db_session:
         for category_dict in test_categories:
             category = Category(name=category_dict["name"])
