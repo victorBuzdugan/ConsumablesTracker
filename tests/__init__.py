@@ -1,21 +1,22 @@
 """Tests constants and helpers."""
 
 from dataclasses import dataclass
-from os import getenv, path
+from os import getenv
+from pathlib import Path
 
 from werkzeug.test import TestResponse
 
 from constants import Constant
 from daily_task import db_backup_name
+from helpers import logger
 
 TEST_DB_NAME = "." + Constant.Basic.db_name
 
-PROD_DB = path.join(Constant.Basic.current_dir, TEST_DB_NAME)
+PROD_DB = Path(Constant.Basic.current_dir, TEST_DB_NAME)
 BACKUP_DB = db_backup_name(PROD_DB)
-ORIG_DB = path.join(Constant.Basic.current_dir,
-                    path.splitext(TEST_DB_NAME)[0] + "_orig.db")
-TEMP_DB = path.join(Constant.Basic.current_dir,
-                    path.splitext(TEST_DB_NAME)[0] + "_temp.db")
+ORIG_DB = PROD_DB.with_stem(PROD_DB.stem + "_orig")
+TEMP_DB = PROD_DB.with_stem(PROD_DB.stem + "_temp")
+LOG_FILE = Path(logger.handlers[0].baseFilename)
 
 
 # region helpers
@@ -75,10 +76,11 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "",
         "sat_group": 1,
+        "has_products": False,
     },
     {
         "details": "Admin user with products",
-        "sat_group": 1,
+        "id": 1,
         "name": "user1",
         "password": "Q!111111",
         "admin": True,
@@ -87,7 +89,8 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "reg_req": False,
         "req_inv": False,
         "email": "consumablestracker+user1@gmail.com",
-        "id": 1,
+        "sat_group": 1,
+        "has_products": True,
     },
     {
         "details": "Admin user with products",
@@ -101,6 +104,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "consumablestracker+user2@gmail.com",
         "sat_group": 2,
+        "has_products": True,
     },
     {
         "details": "Normal user with products",
@@ -114,6 +118,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "consumablestracker+user3@gmail.com",
         "sat_group": 1,
+        "has_products": True,
     },
     {
         "details": "Normal user with products",
@@ -127,6 +132,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "consumablestracker+user4@gmail.com",
         "sat_group": 2,
+        "has_products": True,
     },
     {
         "details": "Normal user that requested registration",
@@ -140,6 +146,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "consumablestracker+user5@gmail.com",
         "sat_group": 1,
+        "has_products": False,
     },
     {
         "details": "Normal user that is retired",
@@ -153,6 +160,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "consumablestracker+user6@gmail.com",
         "sat_group": 1,
+        "has_products": False,
     },
     {
         "details": "Normal user without products",
@@ -166,6 +174,7 @@ test_users: tuple[dict[str, str|bool|int]] = (
         "req_inv": False,
         "email": "",
         "sat_group": 1,
+        "has_products": False,
     },
 )
 # endregion
@@ -191,55 +200,63 @@ test_categories: tuple[dict[str, str|bool]] = (
         "name": "Household",
         "in_use": True,
         "description": "Household consumables",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 2,
         "name": "Personal",
         "in_use": True,
         "description": "Personal consumables",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 3,
         "name": "Electronics",
         "in_use": True,
         "description": "",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 4,
         "name": "Kids",
         "in_use": True,
         "description": "",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 5,
         "name": "Health",
         "in_use": True,
         "description": "",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 6,
         "name": "Groceries",
         "in_use": True,
         "description": "",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Normal in use category",
         "id": 7,
         "name": "Pets",
         "in_use": True,
         "description": "",
-        "has_products": True},
+        "has_products": True,
+    },
     {
         "details": "Retired category",
         "id": 8,
         "name": "Others",
         "in_use": False,
         "description": "",
-        "has_products": False},
+        "has_products": False,
+    },
 )
 # endregion

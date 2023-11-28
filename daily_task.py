@@ -4,7 +4,8 @@
 import math
 import sqlite3
 from datetime import date, timedelta
-from os import getenv, path, remove
+from os import getenv, remove
+from pathlib import Path
 from smtplib import SMTPAuthenticationError, SMTPException
 from typing import Callable
 
@@ -30,32 +31,31 @@ def main() -> None:
     send_log()
 
 
-def db_backup_name(prod_db: str) -> str:
+def db_backup_name(prod_db: Path) -> Path:
     """Get backup db name based on date."""
     if date.today().day == 1:
-        backup_db = path.splitext(prod_db)[0] + "_backup_monthly.db"
         logger.debug("Monthly backup")
-    elif date.today().isoweekday() == 1:
-        backup_db = path.splitext(prod_db)[0] + "_backup_weekly.db"
+        return prod_db.with_stem(prod_db.stem + "_backup_monthly")
+    if date.today().isoweekday() == 1:
         logger.debug("Weekly backup")
-    else:
-        backup_db = path.splitext(prod_db)[0] + "_backup_daily.db"
-    return backup_db
+        return prod_db.with_stem(prod_db.stem + "_backup_weekly")
+    return prod_db.with_stem(prod_db.stem + "_backup_daily")
 
 
 def db_backup() -> None:
     """Backup and vacuum the database."""
-    prod_db = dbSession.kw["bind"].url.database # pylint: disable=no-member
-    orig_db = path.splitext(prod_db)[0] + "_orig.db"
-    if path.isfile(orig_db):
+    prod_db = Path(
+        dbSession.kw["bind"].url.database) # pylint: disable=no-member
+    orig_db = prod_db.with_stem(prod_db.stem + "_orig")
+    if orig_db.exists():
         logger.info("No need to backup database as it will be reinitialised")
         return
     backup_db = db_backup_name(prod_db)
     try:
-        if not path.isfile(prod_db):
+        if not prod_db.exists():
             raise FileNotFoundError("Database doesn't exist")
         source = sqlite3.connect(prod_db)
-        if not path.isfile(backup_db):
+        if not backup_db.exists():
             logger.debug("Starting first-time backup")
         # sqlite3.connect creates the file if it doesn't exist
         dest = sqlite3.connect(backup_db)
@@ -77,12 +77,13 @@ def db_backup() -> None:
 
 def db_reinit() -> None:
     """Reinitialise the database from original if it exists."""
-    prod_db = dbSession.kw["bind"].url.database # pylint: disable=no-member
-    orig_db = path.splitext(prod_db)[0] + "_orig.db"
-    if path.isfile(orig_db):
+    prod_db = Path(
+        dbSession.kw["bind"].url.database) # pylint: disable=no-member
+    orig_db = prod_db.with_stem(prod_db.stem + "_orig")
+    if orig_db.exists():
         try:
             source = sqlite3.connect(orig_db)
-            if not path.isfile(prod_db):
+            if not prod_db.exists():
                 raise FileNotFoundError("Database doesn't exist")
             dest = sqlite3.connect(prod_db)
             # reinit db
@@ -224,9 +225,9 @@ def send_admins_notif() -> None:
 def send_log() -> None:
     """Send log file."""
     recipient = getenv("ADMIN_EMAIL")
-    log_file = logger.handlers[0].baseFilename
-    daily_log = path.splitext(log_file)[0] + "_daily.log"
-    if recipient and path.isfile(log_file):
+    log_file = Path(logger.handlers[0].baseFilename)
+    daily_log = log_file.with_stem(log_file.stem + "_daily")
+    if recipient and log_file.exists():
         # filter records from yesterday to today
         yesterday = date.today() - timedelta(days=1)
         with open(file=log_file, mode="r", encoding="UTF-8") as log:
