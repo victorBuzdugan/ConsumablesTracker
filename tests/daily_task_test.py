@@ -7,7 +7,7 @@ from shutil import copyfile
 
 import pytest
 from freezegun import freeze_time
-from hypothesis import given, settings
+from hypothesis import given
 from hypothesis import strategies as st
 from pytest import LogCaptureFixture
 from sqlalchemy import select
@@ -237,7 +237,6 @@ def test_failed_db_backup(caplog: LogCaptureFixture):
 
 
 # region: reinit
-@settings(max_examples=2)
 @given(user = st.sampled_from([user for user in test_users
                                if not user["has_products"]]))
 def test_db_reinit(caplog: LogCaptureFixture, user: dict):
@@ -776,7 +775,6 @@ def test_update_indiv_schedule_2(caplog: LogCaptureFixture):
 # region: email notifications
 @pytest.mark.mail
 @freeze_time("2023-11-03")
-@settings(max_examples=2)
 @given(data = st.data())
 def test_send_user_notifications_email(
         caplog: LogCaptureFixture, data: st.DataObject):

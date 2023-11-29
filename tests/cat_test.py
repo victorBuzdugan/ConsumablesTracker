@@ -6,7 +6,7 @@ from html import unescape
 import pytest
 from flask import g, session, url_for
 from flask.testing import FlaskClient
-from hypothesis import assume, example, given, settings
+from hypothesis import assume, example, given
 from hypothesis import strategies as st
 from sqlalchemy import select
 
@@ -70,7 +70,6 @@ def test_categories_page_admin_logged_in(
 
 
 # region: new category
-@settings(max_examples=5)
 @given(name=st.text(min_size=Constant.Category.Name.min_length),
        details=st.text())
 @example(name=ValidCategory.name,
@@ -139,7 +138,6 @@ def _test_failed_new_category(
             assert not db_session.scalar(select(Category).filter_by(name=name))
 
 
-@settings(max_examples=3)
 @given(name=st.text(min_size=1,
                     max_size=Constant.Category.Name.min_length - 1))
 @example("")
@@ -156,7 +154,6 @@ def test_failed_new_category_invalid_name(request, name: str):
                               flash_message=flash_message)
 
 
-@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories))
 def test_failed_new_category_duplicate_name(request, category):
     """Duplicate category name."""
@@ -169,7 +166,6 @@ def test_failed_new_category_duplicate_name(request, category):
 
 
 # region: edit category
-@settings(max_examples=10)
 @given(category=st.sampled_from(test_categories),
        new_name=st.text(min_size=Constant.Category.Name.min_length),
        new_details=st.text())
@@ -257,7 +253,6 @@ def _test_failed_edit_category(
         assert cat.in_use == category["in_use"]
 
 
-@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories),
        new_name=st.text(min_size=1,
                         max_size=Constant.Category.Name.min_length - 1))
@@ -279,7 +274,6 @@ def test_failed_edit_category_invalid_name(
                                flash_message=flash_message)
 
 
-@settings(max_examples=3)
 @given(category=st.sampled_from(test_categories),
        name=st.sampled_from([category["name"] for category in test_categories]))
 def test_failed_edit_category_duplicate_name(
@@ -293,7 +287,6 @@ def test_failed_edit_category_duplicate_name(
                                flash_message=flash_message)
 
 
-@settings(max_examples=3)
 @given(category=st.sampled_from([category for category in test_categories
                                  if category["has_products"]]))
 def test_failed_edit_category_with_products_not_in_use(
@@ -355,7 +348,6 @@ def test_delete_category(client: FlaskClient, admin_logged_in: User):
         assert not db_session.get(Category, cat.id)
 
 
-@settings(max_examples=3)
 @given(category=st.sampled_from([category for category in test_categories
                                  if category["has_products"]]))
 def test_failed_delete_category_with_products(
@@ -385,7 +377,6 @@ def test_failed_delete_category_with_products(
 
 
 # region: reassign category
-@settings(max_examples=1)
 @given(cat = st.sampled_from(test_categories))
 def test_landing_page_from_category_edit(
         client: FlaskClient, admin_logged_in: User, cat:dict):
@@ -462,7 +453,6 @@ def test_reassign_category(client: FlaskClient, admin_logged_in: User):
         db_session.commit()
 
 
-@settings(max_examples=3)
 @given(new_responsible_id=st.integers(min_value=len(test_users)))
 @example(new_responsible_id=0)
 @example(new_responsible_id=test_users.index(

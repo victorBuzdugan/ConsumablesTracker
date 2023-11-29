@@ -20,9 +20,15 @@ from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
 mail.state.suppress = True
 hypothesis.settings.register_profile(
     "default",
+    max_examples=3,
     deadline=3000,
     suppress_health_check=[hypothesis.HealthCheck.function_scoped_fixture])
+hypothesis.settings.register_profile(
+    name="long",
+    parent=hypothesis.settings.get_profile("default"),
+    max_examples=200)
 hypothesis.settings.load_profile("default")
+# hypothesis.settings.load_profile("long")
 
 
 @pytest.fixture(scope="session")
