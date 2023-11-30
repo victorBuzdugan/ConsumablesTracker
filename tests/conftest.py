@@ -27,8 +27,15 @@ hypothesis.settings.register_profile(
     name="long",
     parent=hypothesis.settings.get_profile("default"),
     max_examples=200)
+hypothesis.settings.register_profile(
+    name="debug",
+    parent=hypothesis.settings.get_profile("default"),
+    max_examples=10,
+    deadline=None,
+    verbosity=hypothesis.Verbosity.debug)
 hypothesis.settings.load_profile("default")
 # hypothesis.settings.load_profile("long")
+# hypothesis.settings.load_profile("debug")
 
 
 @pytest.fixture(scope="session")
