@@ -255,7 +255,7 @@ class User(Base):
             if (user_sat_group_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=sat_sch_info.name_en,
+                        name=str(sat_sch_info.name),
                         elem_id=self.sat_group))):
                 return (user_sat_group_date.isocalendar().week ==
                         date.today().isocalendar().week)
@@ -268,7 +268,7 @@ class User(Base):
             if (user_cleaning_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=clean_sch_info.name_en,
+                        name=str(clean_sch_info.name),
                         elem_id=self.id))):
                 return (user_cleaning_date.isocalendar().week ==
                         date.today().isocalendar().week)
@@ -423,7 +423,7 @@ class User(Base):
     def validate_sat_group(self, key: str, value: int) -> Optional[int]:
         """Validate saturday group"""
         # pylint: disable=unused-argument
-        if value not in {1, 2}:
+        if value not in {1, 2} or isinstance(value, bool):
             raise ValueError("Invalid sat_group")
         return value
 
