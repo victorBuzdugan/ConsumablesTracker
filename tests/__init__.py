@@ -1,6 +1,7 @@
 """Tests constants and helpers."""
 
 from dataclasses import dataclass
+from datetime import date, timedelta
 from os import getenv
 from pathlib import Path
 
@@ -9,6 +10,7 @@ from werkzeug.test import TestResponse
 from constants import Constant
 from daily_task import db_backup_name
 from helpers import logger
+from blueprints.sch import clean_sch_info, sat_sch_info
 
 TEST_DB_NAME = "." + Constant.Basic.db_name
 
@@ -48,6 +50,7 @@ class ValidUser:
     name: str = "x" * Constant.User.Name.min_length
     password: str = "P@ssw0rd"
     email: str = "email@example.com"
+    sat_group: int = 1
 
 @dataclass(frozen=True)
 class InvalidUser:
@@ -896,5 +899,29 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": False
     }
+)
+# endregion
+
+
+# region: schedules
+@dataclass(frozen=True)
+class ValidSchedule:
+    """Valid schedule data."""
+    name: str = "x"
+    type: str = "group"
+    elem_id: int = 1
+    next_date: date = date.today()
+    update_date: date = date.today()+timedelta(days=1)
+    update_interval: int = 1
+
+test_schedules: tuple[dict[str, str|int|bool]] = (
+    {
+        "details": "Group schedule",
+        "name": str(sat_sch_info.name),
+    },
+    {
+        "details": "Individual schedule",
+        "name": str(clean_sch_info.name),
+    },
 )
 # endregion

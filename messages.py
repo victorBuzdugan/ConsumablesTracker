@@ -221,7 +221,7 @@ def _strikethrough(element: str) -> Markup:
     return Markup(html_text)
 
 def _inv_message(requested_inv: bool, done_inventory: bool) -> Markup:
-    """Return message if the user nedds to check inventory."""
+    """Return message if the user needs to check inventory."""
     if requested_inv:
         html_text = _SPAN_YELLOW
         html_text += lazy_gettext("You requested inventorying")
@@ -303,7 +303,7 @@ class Message:
                         min=Constant.User.Name.min_length)
                 )
             Required = _Msg(
-                description="Displayed at user creation and authentification",
+                description="Displayed at user creation and authentication",
                 tested=True,
                 category=_Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -360,7 +360,7 @@ class Message:
                         symbols=Constant.User.Password.symbols)
                 )
             Required = _Msg(
-                description="Displayed at user creation and authentification",
+                description="Displayed at user creation and authentication",
                 tested=True,
                 category=_Color.RED.value,
                 message=lambda : lazy_gettext(
@@ -910,8 +910,10 @@ class Message:
                 tested=True,
                 category=_Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "The product minimum stock must be ≥ %(value)s",
-                    value=Constant.Product.MinStock.min_value)
+                    "The product minimum stock must be between "
+                    "%(min)s and %(max)s",
+                    min=Constant.Product.MinStock.min_value,
+                    max=Constant.SQLite.Int.max_value)
             )
         class OrdQty:
             """Product ord_qty attr messages"""
@@ -925,8 +927,10 @@ class Message:
                 tested=True,
                 category=_Color.RED.value,
                 message=lambda : lazy_gettext(
-                    "The product order quantity must be ≥ %(value)s",
-                    value=Constant.Product.OrdQty.min_value)
+                    "The product order quantity must be between "
+                    "%(min)s and %(max)s",
+                    min=Constant.Product.OrdQty.min_value,
+                    max=Constant.SQLite.Int.max_value)
             )
         class ToOrder:
             """Product to_order attr messages"""
@@ -1032,7 +1036,7 @@ class Message:
                     "The language was changed")
             )
         class Auth:
-            """Authentification blueprint"""
+            """Authentication blueprint"""
             LoginReq = _Msg(
                 tested=True,
                 category=_Color.YELLOW.value,

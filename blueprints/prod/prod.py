@@ -94,6 +94,7 @@ class CreateProdForm(FlaskForm):
             InputRequired(Message.Product.MinStock.Required()),
             NumberRange(
                 min=Constant.Product.MinStock.min_value,
+                max=Constant.SQLite.Int.max_value,
                 message=Message.Product.MinStock.Invalid())],
         render_kw={
             "class": "form-control",
@@ -106,6 +107,7 @@ class CreateProdForm(FlaskForm):
             InputRequired(Message.Product.OrdQty.Required()),
             NumberRange(
                 min=Constant.Product.OrdQty.min_value,
+                max=Constant.SQLite.Int.max_value,
                 message=Message.Product.OrdQty.Invalid())],
         render_kw={
             "class": "form-control",

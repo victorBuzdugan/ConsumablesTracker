@@ -234,7 +234,7 @@ def test_failed_group_schedule_creation_duplicate(caplog: LogCaptureFixture):
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
         start_date=date.today()).register()
-    assert f"Schedule '{str(sat_sch_info.name)}' (register): allready exists"\
+    assert f"Schedule '{str(sat_sch_info.name)}' (register): already exists"\
         in caplog.messages
 
 
@@ -694,7 +694,7 @@ def test_failed_indiv_schedule_creation_duplicate(caplog: LogCaptureFixture):
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
         start_date=date.today()).register()
-    assert f"Schedule '{str(clean_sch_info.name)}' (register): allready exists"\
+    assert f"Schedule '{str(clean_sch_info.name)}' (register): already exists"\
         in caplog.messages
 
 
@@ -881,7 +881,7 @@ def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
      "err_msg"), (
         # name
         (str(clean_sch_info.name), [1, 2, 3, 4, 7], date.today(),
-         f"Schedule '{str(clean_sch_info.name)}' (register): allready exists"),
+         f"Schedule '{str(clean_sch_info.name)}' (register): already exists"),
         # user_ids_order
         ("test_sch", [1, 2, 3, 7], date.today(),
          "Schedule 'test_sch' (register): list of id's provided is invalid"),

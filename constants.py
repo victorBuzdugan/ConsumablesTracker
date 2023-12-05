@@ -47,3 +47,8 @@ class Constant:
         class OrdQty:
             """Product order quantity constants"""
             min_value = 1
+    class SQLite:
+        """Database constants"""
+        class Int:
+            """Integer limits"""
+            max_value = 9223372036854775807

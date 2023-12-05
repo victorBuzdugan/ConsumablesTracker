@@ -646,7 +646,7 @@ class Product(Base):
     def validate_responsible_id(self, key: str, user_id: int) -> Optional[int]:
         """Check for empty, not existing, not in use and last product."""
         # pylint: disable=unused-argument
-        if not user_id:
+        if not isinstance(user_id, int):
             raise ValueError(Message.Product.Responsible.Delete())
         with dbSession() as db_session:
             user = db_session.get(User, user_id)
@@ -695,7 +695,7 @@ class Product(Base):
                              ) -> Optional[int]:
         """Check for empty, not existing or not in use."""
         # pylint: disable=unused-argument
-        if not category_id:
+        if not isinstance(category_id, int):
             raise ValueError(Message.Product.Category.Delete())
         with dbSession() as db_session:
             category = db_session.get(Category, category_id)
@@ -725,7 +725,7 @@ class Product(Base):
                              ) -> Optional[int]:
         """Check for empty, not existing or not in use."""
         # pylint: disable=unused-argument
-        if not supplier_id:
+        if not isinstance(supplier_id, int):
             raise ValueError(Message.Product.Supplier.Delete())
         with dbSession() as db_session:
             supplier = db_session.get(Supplier, supplier_id)
@@ -758,10 +758,11 @@ class Product(Base):
 
     @validates("min_stock")
     def validate_min_stock(self, key: str, value: int) -> Optional[int]:
-        """Validate int value and >= 0."""
+        """Validate int value and limits."""
         # pylint: disable=unused-argument
         try:
-            if not value >= 0:
+            if not (Constant.Product.MinStock.min_value <= value
+                    <= Constant.SQLite.Int.max_value):
                 raise ValueError(Message.Product.MinStock.Invalid())
         except TypeError as err:
             raise ValueError(
@@ -770,10 +771,11 @@ class Product(Base):
 
     @validates("ord_qty")
     def validate_ord_qty(self, key: str, value: int) -> Optional[int]:
-        """Validate int value and >= 1."""
+        """Validate int value and limits."""
         # pylint: disable=unused-argument
         try:
-            if not value >= 1:
+            if not (Constant.Product.OrdQty.min_value <= value
+                    <= Constant.SQLite.Int.max_value):
                 raise ValueError(Message.Product.OrdQty.Invalid())
         except TypeError as err:
             raise ValueError(
@@ -854,9 +856,7 @@ class Schedule(Base):
         """Check for empty or less then 1 elem_id and
         unique name-elem_id combination."""
         # pylint: disable=unused-argument
-        if not value:
-            raise ValueError("The schedule must have an element id")
-        if int(value) < 1:
+        if not isinstance(value, int) or value < 1:
             raise ValueError("Schedule elem_id is invalid")
 
         with dbSession() as db_session:
@@ -869,8 +869,6 @@ class Schedule(Base):
     def validate_next_date(self, key: str, value: date) -> Optional[date]:
         """Check for empty value."""
         # pylint: disable=unused-argument
-        if not value:
-            raise ValueError("The schedule must have a next date")
         if not isinstance(value, date):
             raise TypeError("Schedule's next date is invalid")
         if value < date.fromisocalendar(
@@ -885,8 +883,6 @@ class Schedule(Base):
     def validate_update_date(self, key: str, value: date) -> Optional[date]:
         """Check for empty value or value older than `next_date` or today."""
         # pylint: disable=unused-argument
-        if not value:
-            raise ValueError("The schedule must have an update day")
         if not isinstance(value, date):
             raise TypeError("Schedule's update date is invalid")
         if value <= date.today():
@@ -902,10 +898,8 @@ class Schedule(Base):
             self, key: str, value: int) -> Optional[int]:
         """Check for empty value."""
         # pylint: disable=unused-argument
-        if not value:
-            raise ValueError("The schedule must have an update interval")
-        if int(value) < 1:
-            raise ValueError("Schedule update interval is invalid")
+        if not isinstance(value, int) or value < 1:
+            raise ValueError("Schedule's update interval is invalid")
         return value
 
 

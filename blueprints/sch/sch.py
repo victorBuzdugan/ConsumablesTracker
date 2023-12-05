@@ -138,7 +138,7 @@ class GroupSchedule(BaseSchedule):
     def register(self) -> None:
         """Register the schedule in the database."""
         if self._is_registered():
-            logger.warning("Schedule '%s' (register): allready exists",
+            logger.warning("Schedule '%s' (register): already exists",
                         self.name)
             return
         schedule_records = []
@@ -280,14 +280,14 @@ class IndivSchedule(BaseSchedule):
                  ) -> bool:
         """Register or modify the schedule in the database.
         
-        :param user_ids_order: optional order in wich to create or modify the
+        :param user_ids_order: optional order in which to create or modify the
             schedule (list of user id's)
         :param start_date: optional first next_date; can be in the past but
             has to be this week
         :param operation: register or modify
         """
         if self._is_registered():
-            logger.warning("Schedule '%s' (%s): allready exists",
+            logger.warning("Schedule '%s' (%s): already exists",
                            self.name, operation)
             return False
 
@@ -370,7 +370,7 @@ class IndivSchedule(BaseSchedule):
                  ) -> None:
         """Register the schedule in the database.
         
-        :param user_ids_order: optional order in wich to create the schedule
+        :param user_ids_order: optional order in which to create the schedule
             (list of user id's)
         :param start_date: optional first next_date; can be in the past but
             has to be this week
