@@ -135,8 +135,8 @@ def _global_stats(element: str,
     return Markup(html_text)
 
 def _indiv_stats(element: str,
-          all_products: int,
-          in_use_products: int) -> Markup:
+          all_products: int = -1,
+          in_use_products: int = -1) -> Markup:
     """Build the individual stat message based on the arguments.
     
     :param element: user, category, supplier

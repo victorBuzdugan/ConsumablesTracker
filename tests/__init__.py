@@ -31,14 +31,11 @@ def redirected_to(final_url: str,
     :param response: the client response
     :param total_redirects: the history length
     """
-    try:
-        assert len(response.history) == total_redirects
-        for num in range(total_redirects):
-            assert response.history[num].status_code == 302
-        assert response.status_code == 200
-        assert response.request.path == final_url
-    except AssertionError:
-        return False
+    assert len(response.history) == total_redirects
+    for num in range(total_redirects):
+        assert response.history[num].status_code == 302
+    assert response.status_code == 200
+    assert response.request.path == final_url
     return True
 # endregion
 

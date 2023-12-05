@@ -1206,6 +1206,8 @@ def test_failed_product_creation_invalid_description(
 @given(responsible = st.sampled_from(
         [user for user in test_users
             if user["reg_req"] or not user["in_use"]]))
+@example(responsible = [user for user in test_users if user["reg_req"]][0])
+@example(responsible = [user for user in test_users if not user["in_use"]][0])
 def test_failed_product_creation_invalid_responsible(
         responsible: dict[str]):
     """test_failed_product_creation_invalid_responsible"""
