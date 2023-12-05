@@ -1,4 +1,4 @@
-"""Authentification blueprint."""
+"""Authentication blueprint."""
 
 from flask import (Blueprint, flash, redirect, render_template, request,
                    session, url_for)
@@ -176,13 +176,10 @@ def login():
                 user.password, login_form.password.data):
             if user.in_use or user.name == "Admin":
                 if not user.reg_req:
-                    language = session.get("language")
-                    session.clear()
+                    clear_session()
                     session["user_id"] = user.id
                     session["admin"] = user.admin
                     session["user_name"] = user.name
-                    if language:
-                        session["language"] = language
                     flash(**Message.User.Login.flash(user.name))
                     return redirect(url_for("main.index"))
                 else:

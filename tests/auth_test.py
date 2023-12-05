@@ -37,13 +37,23 @@ def test_registration_landing_page_user_not_logged_in(client: FlaskClient):
 def test_clear_session_if_user_logged_in(
         client: FlaskClient, user_logged_in: User):
     """test_clear_session_if_user_logged_in"""
+    with client.session_transaction() as this_session:
+        this_session["language"] = "ro"
     with client:
         client.get("/")
         assert session.get("user_id") == user_logged_in.id
+        assert session.get("language")
         response = client.get(url_for("auth.register"))
         assert response.status_code == 200
         assert str(Message.User.Logout()) in response.text
         assert not session.get("user_id")
+        assert session.get("language")
+    # teardown
+    with client.session_transaction() as this_session:
+        this_session.clear()
+    with client:
+        client.get("/")
+        assert not session.get("language")
 
 
 # region: failed registration
@@ -186,55 +196,92 @@ def test_failed_registration_existing_username(
                               flash_message=flash_message)
 
 
-@given(valid_email=st.emails(), st_random = st.randoms())
-def test_failed_registration_invalid_email(
-        client: FlaskClient, valid_email, st_random):
-    """test_failed_registration_invalid_email"""
-    invalid_chars = " @()[]:;\"\\,"
-    def remove_local(email: str) -> str:
-        """Remove the local part from email"""
-        return "@" + email.split("@")[1]
-    def remove_at_symbol(email: str) -> str:
-        """Remove the @ symbol from email"""
-        return email.replace("@", "")
-    def remove_domain(email: str) -> str:
-        """Remove the domain part from email"""
-        return email.split("@")[0] + "@"
-    def remove_top_level_domain(email: str) -> str:
-        """Remove the top level domain (.com) from the email"""
-        return email.rsplit(".")[0]
-    def add_invalid_char_local(email: str) -> str:
-        """Add an invalid character to the local part"""
-        return (email.split("@")[0] +
-                st_random.choice(invalid_chars) +
-                "@" +
-                email.split("@")[1])
-    def add_invalid_char_domain(email: str) -> str:
-        """Add an invalid character to the domain part"""
-        return (email.split("@")[0] +
-                "@" +
-                st_random.choice(invalid_chars) +
-                email.split("@")[1])
-    def exceed_local_max_length(email: str) -> str:
-        """Add chars in order to exceed 64 octets local part limit"""
-        return "x" * 65 + "@" + email.split("@")[1]
-    def exceed_domain_max_length(email: str) -> str:
-        """Add chars in order to exceed 255 octets domain part limit"""
-        return (email.split("@")[0] + "@" +
-                "x" * 256 +
-                "." + email.rsplit(".")[1])
+# region: invalid email
+def _test_failed_registration_invalid_email(
+        client: FlaskClient, invalid_email: str):
+    """Common logic for invalid email."""
     flash_message = str(Message.User.Email.Invalid())
-    invalidate_email = st_random.choice([remove_local,
-                                      remove_at_symbol,
-                                      remove_domain,
-                                      remove_top_level_domain,
-                                      add_invalid_char_local,
-                                      add_invalid_char_domain,
-                                      exceed_local_max_length,
-                                      exceed_domain_max_length])
     _test_failed_registration(client=client,
-                              email=invalidate_email(valid_email),
+                              email=invalid_email,
                               flash_message=flash_message)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_remove_local(
+        client: FlaskClient, email: str):
+    """Remove the local part from email."""
+    invalid_email = "@" + email.split("@")[1]
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_remove_at_symbol(
+        client: FlaskClient, email: str):
+    """Remove the @ symbol from email."""
+    invalid_email = email.replace("@", "")
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_remove_domain(
+        client: FlaskClient, email: str):
+    """Remove the domain part from email."""
+    invalid_email = email.split("@")[0] + "@"
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_remove_top_level_domain(
+        client: FlaskClient, email: str):
+    """Remove the top level domain (.com) from the email."""
+    invalid_email = email.rsplit(".")[0]
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails(), st_random = st.randoms())
+def test_failed_registration_invalid_email_add_invalid_char_local(
+        client: FlaskClient, email: str, st_random):
+    """Add an invalid character to the local part."""
+    invalid_chars = " @()[]:;\"\\,"
+    invalid_email = (email.split("@")[0] + st_random.choice(invalid_chars) +
+                     "@" + email.split("@")[1])
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails(), st_random = st.randoms())
+def test_failed_registration_invalid_email_add_invalid_char_domain(
+        client: FlaskClient, email: str, st_random):
+    """Add an invalid character to the domain part."""
+    invalid_chars = " @()[]:;\"\\,"
+    invalid_email = (email.split("@")[0] + "@" +
+                     st_random.choice(invalid_chars) + email.split("@")[1])
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_exceed_local_max_length(
+        client: FlaskClient, email: str):
+    """Add chars in order to exceed 64 octets local part limit."""
+    invalid_email = "x" * 65 + "@" + email.split("@")[1]
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+
+
+@given(email=st.emails())
+def test_failed_registration_invalid_email_exceed_domain_max_length(
+        client: FlaskClient, email: str):
+    """Add chars in order to exceed 255 octets domain part limit."""
+    invalid_email = (email.split("@")[0] + "@" + "x" * 256 + "." +
+                     email.rsplit(".")[1])
+    _test_failed_registration_invalid_email(client=client,
+                                            invalid_email=invalid_email)
+# endregion
 # endregion
 
 
