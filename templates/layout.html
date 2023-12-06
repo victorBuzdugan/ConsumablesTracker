@@ -21,43 +21,43 @@
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session["user_id"] is defined %}
                     <ul class="navbar-nav me-auto mt-2">
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("inv.inventory") }}>{{ gettext("Inventory") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("sch.schedules") }}>{{ gettext("Schedule") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("guide.guide") }}>{{ gettext("Guide") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('inv.inventory') }}">{{ gettext("Inventory") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('sch.schedules') }}">{{ gettext("Schedule") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('guide.guide') }}">{{ gettext("Guide") }}</a></li>
                         <li class="m-1"></li>
                         {% if session["admin"] %}
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("cat.categories") }}>{{ gettext("Categories") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("sup.suppliers") }}>{{ gettext("Suppliers") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("prod.products", ordered_by="code") }}>{{ gettext("Products") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("prod.products_to_order") }}>{{ gettext("Order") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('cat.categories') }}">{{ gettext("Categories") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('sup.suppliers') }}">{{ gettext("Suppliers") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('prod.products', ordered_by='code') }}">{{ gettext("Products") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('prod.products_to_order') }}">{{ gettext("Order") }}</a></li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ gettext("New") }}</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href={{ url_for("users.new_user") }}>{{ gettext("User") }}</a></li>
-                                <li><a class="dropdown-item" href={{ url_for("cat.new_category") }}>{{ gettext("Category") }}</a></li>
-                                <li><a class="dropdown-item" href={{ url_for("sup.new_supplier") }}>{{ gettext("Supplier") }}</a></li>
-                                <li><a class="dropdown-item" href={{ url_for("prod.new_product") }}>{{ gettext("Product") }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('users.new_user') }}">{{ gettext("User") }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('cat.new_category') }}">{{ gettext("Category") }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('sup.new_supplier') }}">{{ gettext("Supplier") }}</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('prod.new_product') }}">{{ gettext("Product") }}</a></li>
                             </ul>
                         </li>
                         {% endif %}
                     </ul>
                     <ul class="navbar-nav ms-auto mt-2">
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("auth.change_password") }}>{{ gettext("Change password") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("auth.logout") }}>Log Out</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.change_password') }}">{{ gettext("Change password") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.logout') }}">Log Out</a></li>
                 {% else %}
                     <ul class="navbar-nav ms-auto mt-2">
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("auth.register") }}>{{ gettext("Register") }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href={{ url_for("auth.login") }}>Log In</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.register') }}">{{ gettext("Register") }}</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{{ url_for('auth.login') }}">Log In</a></li>
                 {% endif %}
                         <li class="nav-item dropdown">
                         {% if session["language"] == "ro" %}
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><img src="/static/images/RO-flag.png" alt="RO"></a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href={{ url_for("set_language", language="en") }}><img src="/static/images/UK-flag.png" alt="UK"></a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('set_language', language='en') }}"><img src="/static/images/UK-flag.png" alt="UK"></a></li>
                         {% else %}
                             <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><img src="/static/images/UK-flag.png" alt="UK"></a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href={{ url_for("set_language", language="ro") }}><img src="/static/images/RO-flag.png" alt="RO"></a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('set_language', language='ro') }}"><img src="/static/images/RO-flag.png" alt="RO"></a></li>
                         {% endif %}
                             </ul>
                         </li>
