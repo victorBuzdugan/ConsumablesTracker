@@ -1084,6 +1084,8 @@ def test_change_product_attrs(
         new_meas_unit: str, new_min_stock: int, new_ord_qty: int,
         new_to_order: bool, new_critical: bool):
     """test_change_product_attrs"""
+    if new_to_order:
+        assume(product["in_use"])
     with dbSession() as db_session:
         db_prod = db_session.get(Product, product["id"])
         db_prod.name = new_name

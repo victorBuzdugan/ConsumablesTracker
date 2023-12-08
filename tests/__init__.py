@@ -4,13 +4,14 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from os import getenv
 from pathlib import Path
+from urllib.parse import quote
 
 from werkzeug.test import TestResponse
 
+from blueprints.sch import clean_sch_info, sat_sch_info
 from constants import Constant
 from daily_task import db_backup_name
 from helpers import logger
-from blueprints.sch import clean_sch_info, sat_sch_info
 
 TEST_DB_NAME = "." + Constant.Basic.db_name
 
@@ -35,7 +36,7 @@ def redirected_to(final_url: str,
     for num in range(total_redirects):
         assert response.history[num].status_code == 302
     assert response.status_code == 200
-    assert response.request.path == final_url
+    assert quote(response.request.path) == final_url
     return True
 # endregion
 
@@ -246,7 +247,7 @@ test_categories: tuple[dict[str, str|int|bool]] = (
     {
         "details": "Disabled category",
         "id": 8,
-        "name": "Others",
+        "name": "Other category",
         "in_use": False,
         "has_products": False,
     },
@@ -299,7 +300,7 @@ test_suppliers: tuple[dict[str, str|int|bool]] = (
     {
         "details": "Disabled supplier",
         "id": 5,
-        "name": "Other",
+        "name": "Other supplier",
         "in_use": False,
         "has_products": False,
     },
@@ -330,9 +331,9 @@ class InvalidProduct:
     long_name: str = "x" * (Constant.Product.Name.max_length + 1)
     short_description: str = "x" * (Constant.Product.Description.min_length - 1)
     long_description: str = "x" * (Constant.Product.Description.max_length + 1)
-    responsible_id: int = len(test_users)
-    category_id: int = len(test_categories)
-    supplier_id: int = len(test_suppliers)
+    responsible_id: int = [user["id"] for user in test_users][-1] + 1
+    category_id: int = [cat["id"] for cat in test_categories][-1] + 1
+    supplier_id: int = [sup["id"] for sup in test_suppliers][-1] + 1
     small_min_stock: int = Constant.Product.MinStock.min_value - 1
     small_ord_qty: int = Constant.Product.OrdQty.min_value - 1
 
@@ -402,7 +403,7 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": True
     },
-    {   "name": "Bathroom cleaner",
+    {   "name": "BathroomCleaner",
         "description": "Bathroom cleaner",
         "id": 6,
         "responsible_id": 2,
@@ -493,7 +494,7 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": True
     },
-    {   "name": "Laundry Detergent",
+    {   "name": "Laundry Deterg",
         "description": "Powder Laundry Detergent",
         "id": 13,
         "responsible_id": 2,
@@ -558,7 +559,7 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": True
     },
-    {   "name": "Photo printer cartridge",
+    {   "name": "PhPr cartridge",
         "description": "Photo printer ink cartridge",
         "id": 18,
         "responsible_id": 1,
@@ -571,7 +572,7 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": True
     },
-    {   "name": "Photo printer paper",
+    {   "name": "PhPr paper",
         "description": "Photo printer paper",
         "id": 19,
         "responsible_id": 1,
@@ -883,8 +884,8 @@ test_products: tuple[dict[str, str|int|bool]] = (
         "critical": False,
         "in_use": True
     },
-    {   "name": "Other",
-        "description": "Other",
+    {   "name": "Other product",
+        "description": "Other product",
         "id": 43,
         "responsible_id": 1,
         "category_id": 3,
