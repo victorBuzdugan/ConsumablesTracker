@@ -205,9 +205,9 @@ def create_test_group_schedule():
     """Mock into db a 2 group 1 week interval schedule."""
     print("\nCreate test group schedule")
     saturday_sch.sch_day = (date.today()
-                            .isocalendar()[2])
+                            .isoweekday())
     saturday_sch.sch_day_update = ((date.today() + timedelta(days=1))
-                                   .isocalendar()[2])
+                                   .isoweekday())
     saturday_sch.switch_interval = timedelta(weeks=1)
     saturday_sch.register()
 
@@ -217,8 +217,8 @@ def create_test_individual_schedule():
     """Mock into db a 1 week interval individual schedule."""
     print("\nCreate test individual schedule")
     cleaning_sch.sch_day = (date.today()
-                            .isocalendar()[2])
+                            .isoweekday())
     cleaning_sch.sch_day_update = ((date.today() + timedelta(days=1))
-                                   .isocalendar()[2])
+                                   .isoweekday())
     cleaning_sch.register()
 # endregion

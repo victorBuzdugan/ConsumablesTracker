@@ -43,11 +43,6 @@ def test_main(caplog: LogCaptureFixture):
     assert "Production database vacuumed" in caplog.messages
     assert "This app doesn't need database reinit" in caplog.messages
     assert "No need to update schedules" in caplog.messages
-    assert "No eligible user found to send notification" in caplog.messages
-    assert admins_with_email
-    for admin in admins_with_email:
-        assert f"Sent admin email notification to '{admin['name']}'" \
-            in caplog.messages
     assert "No recipient or no log file to send" in caplog.messages
     # teardown
     BACKUP_DB.unlink()

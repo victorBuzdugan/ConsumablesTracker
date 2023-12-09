@@ -175,8 +175,7 @@ create_prod_button = re.compile(r'input.*type="submit".*value="Create product"')
            .map(lambda x: x.strip())
            .filter(lambda x: len(x) > Constant.Product.Description.min_length),
        responsible_id = st.sampled_from(
-           [user["id"] for user in test_users
-                if user["in_use"] and not user["reg_req"]]),
+           [user["id"] for user in test_users if user["active"]]),
        category_id = st.sampled_from(
            [cat["id"] for cat in test_categories if cat["in_use"]]),
        supplier_id = st.sampled_from(
@@ -359,7 +358,7 @@ def test_failed_new_product_invalid_description(
         st.text(alphabet=string.ascii_letters),
         st.integers()
         .filter(lambda x: x not in [user["id"] for user in test_users
-                                    if user["in_use"] and not user["reg_req"]])
+                                    if user["active"]])
 ))
 @example(responsible_id = InvalidProduct.responsible_id)
 @example(responsible_id = [user["id"] for user in test_users
@@ -503,8 +502,7 @@ delete_prod_button = re.compile(r'input.*type="submit".*value="Delete"')
            .map(lambda x: x.strip())
            .filter(lambda x: len(x) > Constant.Product.Description.min_length),
        new_responsible_id = st.sampled_from(
-           [user["id"] for user in test_users
-                if user["in_use"] and not user["reg_req"]]),
+           [user["id"] for user in test_users if user["active"]]),
        new_category_id = st.sampled_from(
            [cat["id"] for cat in test_categories if cat["in_use"]]),
        new_supplier_id = st.sampled_from(

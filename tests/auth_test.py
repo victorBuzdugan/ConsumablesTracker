@@ -449,10 +449,9 @@ def test_failed_login_password(client: FlaskClient):
                         flash_message=flash_message)
 
 
-@given(user=st.sampled_from(test_users))
+@given(user=st.sampled_from([user for user in test_users if user["active"]]))
 def test_login_and_logout(client: FlaskClient, user: dict):
     """Login and then logout"""
-    assume(user["in_use"] and not user["reg_req"])
     with client:
         client.get("/")
         client.get(url_for("auth.login"))
@@ -475,8 +474,7 @@ def test_login_and_logout(client: FlaskClient, user: dict):
 
 
 @given(csrf=st.text(min_size=1),
-       user=st.sampled_from([user for user in test_users
-                             if user["in_use"] and not user["reg_req"]]))
+       user=st.sampled_from([user for user in test_users if user["active"]]))
 @example(csrf=None, user=test_users[1])
 @example(csrf="", user=test_users[1])
 def test_failed_login_wrong_csrf(client: FlaskClient, csrf, user):
@@ -522,11 +520,10 @@ def test_change_password_landing_page_if_not_logged_in(client: FlaskClient):
         assert not change_passw_btn.search(response.text)
 
 
-@given(user=st.sampled_from(test_users))
+@given(user=st.sampled_from([user for user in test_users if user["active"]]))
 def test_change_password_landing_page_if_user_logged_in(
         client: FlaskClient, user: dict):
     """test_change_password_landing_page_if_user_logged_in"""
-    assume(user["in_use"] and not user["reg_req"])
     change_passw_btn = re.compile(
         r'<input.*type="submit".*value="Change password">')
     with client.session_transaction() as this_session:

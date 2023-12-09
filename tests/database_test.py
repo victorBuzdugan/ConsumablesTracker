@@ -265,8 +265,7 @@ def test_sat_group_this_week_property():
 
 def test_clean_this_week_property():
     """test_clean_this_week_property"""
-    users_in_use = [user for user in test_users
-                    if user["in_use"] and not user["reg_req"]]
+    users_in_use = [user for user in test_users if user["active"]]
     with dbSession() as db_session:
         assert db_session.get(User, users_in_use[0]["id"]).clean_this_week
         for user in users_in_use[1:]:
@@ -941,8 +940,7 @@ def test_validate_supplier_products(sup: dict[str]):
            .map(lambda x: x.strip())
            .filter(lambda x: len(x)>1),
        responsible_id = st.sampled_from(
-           [user["id"] for user in test_users
-                if user["in_use"] and not user["reg_req"]]),
+           [user["id"] for user in test_users if user["active"]]),
        category_id = st.sampled_from(
            [cat["id"] for cat in test_categories if cat["in_use"]]),
        supplier_id = st.sampled_from(
@@ -1060,8 +1058,7 @@ def test_bulk_product_insertion(product_data):
            .map(lambda x: x.strip())
            .filter(lambda x: len(x)>1),
        new_responsible_id = st.sampled_from(
-           [user["id"] for user in test_users
-                if user["in_use"] and not user["reg_req"]]),
+           [user["id"] for user in test_users if user["active"]]),
        new_category_id = st.sampled_from(
            [cat["id"] for cat in test_categories if cat["in_use"]]),
        new_supplier_id = st.sampled_from(
@@ -1206,8 +1203,7 @@ def test_failed_product_creation_invalid_description(
 
 
 @given(responsible = st.sampled_from(
-        [user for user in test_users
-            if user["reg_req"] or not user["in_use"]]))
+        [user for user in test_users if not user["active"]]))
 @example(responsible = [user for user in test_users if user["reg_req"]][0])
 @example(responsible = [user for user in test_users if not user["in_use"]][0])
 def test_failed_product_creation_invalid_responsible(

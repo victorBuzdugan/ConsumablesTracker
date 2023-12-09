@@ -9,6 +9,7 @@ from urllib.parse import quote
 from werkzeug.test import TestResponse
 
 from blueprints.sch import clean_sch_info, sat_sch_info
+from database import User
 from constants import Constant
 from daily_task import db_backup_name
 from helpers import logger
@@ -78,6 +79,8 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "",
         "sat_group": 1,
         "has_products": False,
+        # user is in use and not requested registration
+        "active": False,
     },
     {
         "details": "Admin user with products",
@@ -92,6 +95,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user1@gmail.com",
         "sat_group": 1,
         "has_products": True,
+        "active": True,
     },
     {
         "details": "Admin user with products",
@@ -106,6 +110,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user2@gmail.com",
         "sat_group": 2,
         "has_products": True,
+        "active": True,
     },
     {
         "details": "Normal user with products",
@@ -120,6 +125,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user3@gmail.com",
         "sat_group": 1,
         "has_products": True,
+        "active": True,
     },
     {
         "details": "Normal user with products",
@@ -134,6 +140,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user4@gmail.com",
         "sat_group": 2,
         "has_products": True,
+        "active": True,
     },
     {
         "details": "Normal user that requested registration",
@@ -148,6 +155,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user5@gmail.com",
         "sat_group": 1,
         "has_products": False,
+        "active": False,
     },
     {
         "details": "Normal user that is retired",
@@ -162,6 +170,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "consumablestracker+user6@gmail.com",
         "sat_group": 1,
         "has_products": False,
+        "active": False,
     },
     {
         "details": "Normal user without products",
@@ -176,6 +185,7 @@ test_users: tuple[dict[str, str|int|bool]] = (
         "email": "",
         "sat_group": 1,
         "has_products": False,
+        "active": True,
     },
 )
 # endregion
@@ -911,15 +921,26 @@ class ValidSchedule:
     next_date: date = date.today()
     update_date: date = date.today()+timedelta(days=1)
     update_interval: int = 1
+    # Base Schedule / Individual Schedule
+    sch_day: int = date.today().isoweekday()
+    sch_day_update: int = (date.today() + timedelta(days=1)).isoweekday()
+    switch_interval: timedelta = timedelta(weeks=1)
+    start_date: date = date.today()
+    # Group Schedule
+    user_attr: str = User.sat_group.name
+    num_groups: int = 2
+    first_group: int = 1
 
 test_schedules: tuple[dict[str, str|int|bool]] = (
     {
         "details": "Group schedule",
         "name": str(sat_sch_info.name),
+        "type": "group"
     },
     {
         "details": "Individual schedule",
         "name": str(clean_sch_info.name),
+        "type": "individual"
     },
 )
 # endregion

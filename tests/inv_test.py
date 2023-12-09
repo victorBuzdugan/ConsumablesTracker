@@ -310,7 +310,7 @@ def test_inv_oth_user_no_check_inventory(
 
 
 @given(user = st.sampled_from(
-    [user for user in test_users if not user["in_use"] or user["reg_req"]]))
+    [user for user in test_users if not user["active"]]))
 @example(user = [user for user in test_users if not user["in_use"]][0])
 @example(user = [user for user in test_users if user["reg_req"]][0])
 def test_failed_inv_oth_user_special_users(
