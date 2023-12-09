@@ -1,31 +1,36 @@
 """Schedules blueprint tests."""
 
+import re
+import string
 from datetime import date, timedelta
 
 import pytest
 from flask import session, url_for
 from flask.testing import FlaskClient
 from freezegun import freeze_time
+from hypothesis import assume, example, given
+from hypothesis import strategies as st
 from pytest import LogCaptureFixture
 from sqlalchemy import select
 
-from blueprints.sch import clean_sch_info, sat_sch_info
 from blueprints.sch.sch import (BaseSchedule, GroupSchedule, IndivSchedule,
-                                cleaning_sch)
+                                cleaning_sch, saturday_sch)
+from constants import Constant
 from database import Schedule, User, dbSession
+from tests import ValidSchedule, test_schedules, test_users
 
 pytestmark = pytest.mark.sch
 
 
 # region: base schedule
 def test_base_schedule():
-    """Test base schedule not implemented"""
+    """Test base schedule not implemented methods"""
     test_sch = BaseSchedule(
-        name="test_sch",
-        sch_day=1,
-        sch_day_update=1,
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today())
+        name=ValidSchedule.name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date)
     with pytest.raises(NotImplementedError):
         test_sch.register()
     with pytest.raises(NotImplementedError):
@@ -34,45 +39,63 @@ def test_base_schedule():
 
 
 # region: group schedule
-@pytest.mark.parametrize(
-    ("num_groups", "first_group", "sch_day", "sch_day_update",
-     "switch_interval", "start_date"), (
-        (2, 1, 6, 1,
-         timedelta(weeks=2), date.today()),
-        (3, 2, 1, 3,
-         timedelta(weeks=1), date.today() + timedelta(weeks=1)),
-        (4, 4, 5, 4,
-         timedelta(weeks=2), date.today()),
-))
+@given(name = st.text(min_size=1)
+           .map(lambda x: x.strip())
+           .filter(lambda x: len(x) > 1)
+           .filter(lambda x: x not in [sch["name"] for sch in test_schedules]),
+       num_groups = st.integers(min_value=2,
+                                max_value=len([user for user in test_users
+                                               if user["in_use"]])),
+       first_group = st.integers(min_value=1,
+                                 max_value=len([user for user in test_users
+                                                if user["in_use"]])),
+       sch_day = st.integers(min_value=1, max_value=7),
+       sch_day_update = st.integers(min_value=1, max_value=7),
+       switch_interval = st.timedeltas(min_value=timedelta(weeks=1),
+                                       max_value=timedelta(weeks=8)),
+       start_date = st.dates(min_value=date.today(),
+                             max_value=date.today() + timedelta(days=365)))
+@example(name = ValidSchedule.name,
+         num_groups = ValidSchedule.num_groups,
+         first_group = ValidSchedule.first_group,
+         sch_day = ValidSchedule.sch_day,
+         sch_day_update = ValidSchedule.sch_day_update,
+         switch_interval = ValidSchedule.switch_interval,
+         start_date = ValidSchedule.start_date)
 def test_group_schedule_creation(
-        num_groups, first_group, sch_day, sch_day_update,
-        switch_interval, start_date):
+        name: str,
+        num_groups: int,
+        first_group: int,
+        sch_day: int,
+        sch_day_update: int,
+        switch_interval: timedelta,
+        start_date: date):
     """test_group_schedule_creation"""
-    sch_name = "test_sch"
+    assume(first_group <= num_groups)
+    elem_id = first_group
+    next_date: date = start_date
+    while next_date.isoweekday() != sch_day:
+        next_date += timedelta(days=1)
+    update_date = next_date + timedelta(days=1)
+    while update_date.isoweekday() != sch_day_update:
+        update_date += timedelta(days=1)
     GroupSchedule(
-        name=sch_name,
+        name=name,
         user_attr=User.sat_group.name,
         num_groups=num_groups,
         first_group=first_group,
         sch_day=sch_day,
         sch_day_update=sch_day_update,
         switch_interval=switch_interval,
-        start_date=start_date).register()
+        start_date=start_date
+    ).register()
     with dbSession() as db_session:
         # check name
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name=sch_name)).all()
+            .filter_by(name=name)).all()
         # check num_groups
         assert len(schedules) == num_groups
-
-        elem_id = first_group
-        next_date: date = start_date
-        while next_date.isoweekday() != sch_day:
-            next_date += timedelta(days=1)
-        update_date = next_date
-        while update_date.isoweekday() != sch_day_update:
-            update_date += timedelta(days=1)
         for schedule in schedules:
             # check type
             assert schedule.type == "group"
@@ -95,29 +118,26 @@ def test_group_schedule_creation(
             db_session.delete(schedule)
         db_session.commit()
 
-
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_1(caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 2 weeks interval"""
-    name = "Test saturday working"
-    num_groups = 2
-    switch_interval = timedelta(weeks=2)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
-        name=name,
-        user_attr=User.sat_group.name,
-        num_groups=num_groups,
+        name=ValidSchedule.name,
+        user_attr=ValidSchedule.user_attr,
+        num_groups=2,
         first_group=1,
         sch_day=6,
         sch_day_update=1,
-        switch_interval=switch_interval,
-        start_date=date.today()).register()
-    assert f"Schedule '{name}' created" in caplog.messages
+        switch_interval=timedelta(weeks=2),
+        start_date=date.today()
+    ).register()
+    assert f"Schedule '{ValidSchedule.name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name=name)).all()
+            .filter_by(name=ValidSchedule.name)).all()
     # schedule group 1
     schedule = schedules[0]
     assert schedule.elem_id == 1
@@ -140,25 +160,22 @@ def test_explicit_group_schedule_creation_1(caplog: LogCaptureFixture):
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_2(caplog: LogCaptureFixture):
     """Explicit date checking 2 groups 1 week interval"""
-    name = "Test sunday movie"
-    num_groups = 2
-    switch_interval = timedelta(weeks=1)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
-        name=name,
+        name=ValidSchedule.name,
         user_attr=User.sat_group.name,
-        num_groups=num_groups,
+        num_groups=2,
         first_group=2,
         sch_day=7,
         sch_day_update=1,
-        switch_interval=switch_interval,
+        switch_interval=timedelta(weeks=1),
         start_date=date(2023, 10, 14)).register()
-    assert f"Schedule '{name}' created" in caplog.messages
+    assert f"Schedule '{ValidSchedule.name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name=name)).all()
+            .filter_by(name=ValidSchedule.name)).all()
     # schedule group 2
     schedule = schedules[0]
     assert schedule.elem_id == 2
@@ -181,25 +198,22 @@ def test_explicit_group_schedule_creation_2(caplog: LogCaptureFixture):
 @freeze_time("2023-10-05")
 def test_explicit_group_schedule_creation_3(caplog: LogCaptureFixture):
     """Explicit date checking 3 groups 3 weeks interval"""
-    name = "Test some other schedule"
-    num_groups = 3
-    switch_interval = timedelta(weeks=3)
     assert date.today() == date(2023, 10, 5)
     assert date.today().isoweekday() == 4
     GroupSchedule(
-        name=name,
+        name=ValidSchedule.name,
         user_attr=User.sat_group.name,
-        num_groups=num_groups,
+        num_groups=3,
         first_group=2,
         sch_day=4,
         sch_day_update=6,
-        switch_interval=switch_interval,
+        switch_interval=timedelta(weeks=3),
         start_date=date.today()).register()
-    assert f"Schedule '{name}' created" in caplog.messages
+    assert f"Schedule '{ValidSchedule.name}' created" in caplog.messages
     with dbSession() as db_session:
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name=name)).all()
+            .filter_by(name=ValidSchedule.name)).all()
     # schedule group 2
     schedule = schedules[0]
     assert schedule.elem_id == 2
@@ -225,94 +239,34 @@ def test_explicit_group_schedule_creation_3(caplog: LogCaptureFixture):
         db_session.commit()
 
 
-def test_failed_group_schedule_creation_duplicate(caplog: LogCaptureFixture):
-    """test_failed_group_schedule_creation_duplicate"""
+# region: failed schedule creation
+@given(name = st.sampled_from([sch["name"] for sch in test_schedules]))
+def test_failed_group_schedule_creation_name_duplicate(
+        caplog: LogCaptureFixture, name: str):
+    """test_failed_group_schedule_creation_name_duplicate"""
     GroupSchedule(
-        name=str(sat_sch_info.name),
-        user_attr=User.sat_group.name,
-        sch_day=6,
-        sch_day_update=1,
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()).register()
-    assert f"Schedule '{str(sat_sch_info.name)}' (register): already exists"\
-        in caplog.messages
+        name=name,
+        user_attr=ValidSchedule.user_attr,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
+        ).register()
+    assert f"Schedule '{name}' (register): already exists" in caplog.messages
 
 
-@pytest.mark.parametrize(
-    ("name", "user_attr", "num_groups", "first_group",
-     "sch_day", "sch_day_update", "switch_interval", "start_date",
-     "err_msg"), (
-        # name
-        ("", "sat_group", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "The schedule must have a name"),
-        (" ", "sat_group", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "The schedule must have a name"),
-        (None, "sat_group", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "'NoneType' object has no attribute 'strip'"),
-        # user_attr
-        ("test_sch", "", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "User has no attribute"),
-        ("test_sch", " ", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "User has no attribute"),
-        ("test_sch", "wrong_attr", 2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "User has no attribute"),
-        # num_groups
-        ("test_sch", "sat_group", 1, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "You must have at least two groups"),
-        ("test_sch", "sat_group", -2, 1,
-         6, 1, timedelta(weeks=2), date.today(),
-         "You must have at least two groups"),
-        # first_group
-        ("test_sch", "sat_group", 2, 0,
-         6, 1, timedelta(weeks=2), date.today(),
-         "First group attribute is not valid"),
-        ("test_sch", "sat_group", 2, 3,
-         6, 1, timedelta(weeks=2), date.today(),
-         "First group attribute is not valid"),
-        ("test_sch", "sat_group", 2, -2,
-         6, 1, timedelta(weeks=2), date.today(),
-         "First group attribute is not valid"),
-        # sch_day
-        ("test_sch", "sat_group", 2, 1,
-         0, 1, timedelta(weeks=2), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", "sat_group", 2, 1,
-         -2, 1, timedelta(weeks=2), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", "sat_group", 2, 1,
-         9, 1, timedelta(weeks=2), date.today(),
-         "Schedule day attribute is not valid"),
-        # sch_day_update
-        ("test_sch", "sat_group", 2, 1,
-         6, 0, timedelta(weeks=2), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", "sat_group", 2, 1,
-         6, -2, timedelta(weeks=2), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", "sat_group", 2, 1,
-         6, 9, timedelta(weeks=2), date.today(),
-         "Schedule day change attribute is not valid"),
-        # group switch_interval
-        ("test_sch", "sat_group", 2, 1,
-         6, 1, timedelta(hours=23), date.today(),
-         "Schedule switch interval is not valid"),
-        # start_date
-        ("test_sch", "sat_group", 2, 1,
-         6, 1, timedelta(weeks=2), date.today() - timedelta(days=1),
-         "Schedule start date cannot be in the past"),
-))
-def test_failed_group_schedule_creation(
-        name, user_attr, num_groups, first_group,
-        sch_day, sch_day_update, switch_interval, start_date,
-        err_msg, caplog: LogCaptureFixture):
-    """test_failed_group_schedule_creation"""
+def _test_failed_group_schedule_creation(
+        caplog: LogCaptureFixture,
+        err_msg: str,
+        name = ValidSchedule.name,
+        user_attr = ValidSchedule.user_attr,
+        num_groups = ValidSchedule.num_groups,
+        first_group = ValidSchedule.first_group,
+        sch_day = ValidSchedule.sch_day,
+        sch_day_update = ValidSchedule.sch_day_update,
+        switch_interval = ValidSchedule.switch_interval,
+        start_date = ValidSchedule.start_date):
+    """Common logic for group schedule creation"""
     with pytest.raises((ValueError, AttributeError), match=err_msg):
         GroupSchedule(
             name=name,
@@ -322,23 +276,167 @@ def test_failed_group_schedule_creation(
             sch_day=sch_day,
             sch_day_update=sch_day_update,
             switch_interval=switch_interval,
-            start_date=start_date).register()
+            start_date=start_date
+        ).register()
     assert f"Schedule '{name}' created" not in caplog.messages
 
 
-def test_group_schedule_unregister(caplog: LogCaptureFixture):
-    """test_group_schedule_unregister"""
-    sch_name = "test_sch"
+@given(name = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(max_size=0),
+    st.integers()
+))
+@example(name = " ")
+def test_failed_group_schedule_creation_invalid_name(
+        caplog: LogCaptureFixture, name):
+    """test_failed_group_schedule_creation_invalid_name"""
+    err_msg = "The schedule must have a valid name"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        name=name
+    )
+
+
+@given(user_attr = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(alphabet=string.ascii_lowercase),
+    st.integers()
+))
+def test_failed_group_schedule_creation_invalid_user_attr(
+        caplog: LogCaptureFixture, user_attr):
+    """test_failed_group_schedule_creation_invalid_user_attr"""
+    if isinstance(user_attr, str):
+        assume(not hasattr(User, user_attr))
+    err_msg = f"Invalid user attribute '{user_attr}'"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        user_attr=user_attr
+    )
+
+
+@given(num_groups = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(),
+    st.integers(max_value=1)
+))
+def test_failed_group_schedule_creation_invalid_num_groups(
+        caplog: LogCaptureFixture, num_groups):
+    """test_failed_group_schedule_creation_invalid_num_groups"""
+    err_msg = "You must have at least two groups"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        num_groups=num_groups
+    )
+
+
+@given(first_group = st.one_of(
+    st.none(),
+    st.text(),
+    st.integers(max_value=0),
+    st.integers(min_value=ValidSchedule.num_groups + 1)
+))
+def test_failed_group_schedule_creation_invalid_first_group(
+        caplog: LogCaptureFixture, first_group):
+    """test_failed_group_schedule_creation_invalid_first_group"""
+    err_msg = "First group attribute is not valid"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        first_group=first_group
+    )
+
+
+@given(sch_day = st.one_of(
+    st.none(),
+    st.text(),
+    st.integers(max_value=0),
+    st.integers(min_value=8)
+))
+def test_failed_group_schedule_creation_invalid_sch_day(
+        caplog: LogCaptureFixture, sch_day):
+    """test_failed_group_schedule_creation_invalid_sch_day"""
+    err_msg = "Schedule day attribute is not valid"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_day=sch_day
+    )
+
+
+@given(sch_day_update = st.one_of(
+    st.none(),
+    st.text(),
+    st.integers(max_value=0),
+    st.integers(min_value=8)
+))
+def test_failed_group_schedule_creation_invalid_sch_day_update(
+        caplog: LogCaptureFixture, sch_day_update):
+    """test_failed_group_schedule_creation_invalid_sch_day_update"""
+    err_msg = "Schedule day change attribute is not valid"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_day_update=sch_day_update
+    )
+
+
+@given(switch_interval = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(),
+    st.integers(),
+    st.timedeltas(max_value=timedelta(days=7) - timedelta(microseconds=1))
+))
+def test_failed_group_schedule_creation_invalid_switch_interval(
+        caplog: LogCaptureFixture, switch_interval):
+    """test_failed_group_schedule_creation_invalid_switch_interval"""
+    err_msg = "Schedule switch interval is not valid"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        switch_interval=switch_interval
+    )
+
+
+@given(start_date = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(),
+    st.integers(),
+    st.dates(max_value=date.today() - timedelta(days=1))
+))
+def test_failed_group_schedule_creation_invalid_start_date(
+        caplog: LogCaptureFixture, start_date):
+    """test_failed_group_schedule_creation_invalid_start_date"""
+    err_msg = "Schedule start date is not valid"
+    _test_failed_group_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        start_date=start_date
+    )
+# endregion
+
+
+def test_group_schedule_auto_register_and_unregister(caplog: LogCaptureFixture):
+    """Test auto-register when accessing data method and unregister"""
+    sch_name = ValidSchedule.name
     test_schedule = GroupSchedule(
         name=sch_name,
-        user_attr=User.sat_group.name,
-        sch_day=6,
-        sch_day_update=1,
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today())
-    # test auto-registering
-    test_schedule.data()
+        user_attr=ValidSchedule.user_attr,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date)
     with dbSession() as db_session:
+        assert not db_session.scalar(select(Schedule).filter_by(name=sch_name))
+        # test auto-registering when accessing data method
+        test_schedule.data()
         assert db_session.scalar(select(Schedule).filter_by(name=sch_name))
         assert f"Schedule '{sch_name}' created" in caplog.messages
         test_schedule.unregister()
@@ -348,22 +446,35 @@ def test_group_schedule_unregister(caplog: LogCaptureFixture):
 
 
 # region: individual schedule
-@pytest.mark.parametrize(
-        ("sch_day", "sch_day_update", "switch_interval", "start_date"), (
-            (1, 1, timedelta(weeks=1), date.today()),
-            (7, 1, timedelta(weeks=2), date.today() + timedelta(weeks=1)),
-            (2, 6, timedelta(weeks=3), date.today()),
-))
+@given(name = st.text(min_size=1)
+           .map(lambda x: x.strip())
+           .filter(lambda x: len(x) > 1)
+           .filter(lambda x: x not in [sch["name"] for sch in test_schedules]),
+       sch_day = st.integers(min_value=1, max_value=7),
+       sch_day_update = st.integers(min_value=1, max_value=7),
+       switch_interval = st.timedeltas(min_value=timedelta(weeks=1),
+                                       max_value=timedelta(weeks=8)),
+       start_date = st.dates(min_value=date.today(),
+                             max_value=date.today() + timedelta(days=365)))
+@example(name = ValidSchedule.name,
+         sch_day = ValidSchedule.sch_day,
+         sch_day_update = ValidSchedule.sch_day_update,
+         switch_interval = ValidSchedule.switch_interval,
+         start_date = ValidSchedule.start_date)
 def test_individual_schedule_creation(
-        sch_day, sch_day_update, switch_interval, start_date):
-    """Test individual schedule creation with different attributes."""
-    sch_name = "test_sch"
+        name: str,
+        sch_day: int,
+        sch_day_update: int,
+        switch_interval: timedelta,
+        start_date: date):
+    """Test individual schedule creation"""
     IndivSchedule(
-        name=sch_name,
+        name=name,
         sch_day=sch_day,
         sch_day_update=sch_day_update,
         switch_interval=switch_interval,
-        start_date=start_date).register()
+        start_date=start_date
+    ).register()
     next_date: date = start_date
     while next_date.isoweekday() != sch_day:
         next_date += timedelta(days=1)
@@ -374,7 +485,7 @@ def test_individual_schedule_creation(
         # check name
         schedules = db_session.scalars(
             select(Schedule)
-            .filter_by(name=sch_name)).all()
+            .filter_by(name=name)).all()
         users_ids = db_session.scalars(
             select(User.id)
             .filter_by(in_use= True, reg_req=False)).all()
@@ -405,7 +516,7 @@ def test_explicit_individual_schedule_creation_1(caplog: LogCaptureFixture):
     assert date.today() == date(2023, 10, 12)
     assert date.today().isoweekday() == 4
     indiv_schedule = IndivSchedule(
-        name="Test cleaning schedule",
+        name=ValidSchedule.name,
         sch_day=1,
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
@@ -457,32 +568,34 @@ def test_explicit_individual_schedule_creation_1(caplog: LogCaptureFixture):
         ["user3", date(2023, 11, 6).strftime("%d.%m.%Y")]
     ]
     # add user
+    user = [user for user in test_users if user["reg_req"]][0]
     with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = False
+        db_session.get(User, user["id"]).reg_req = False
         db_session.commit()
-        indiv_schedule.add_user(5)
+        indiv_schedule.add_user(user["id"])
         schedules = db_session.scalars(
             select(Schedule)
             .filter_by(name=indiv_schedule.name)).all()
-    assert f"Schedule '{indiv_schedule.name}' added 'user5'" in caplog.text
+    assert f"Schedule '{indiv_schedule.name}' added '{user['name']}'" \
+        in caplog.text
     schedule = schedules[-1]
-    assert schedule.elem_id == 5
+    assert schedule.elem_id == user["id"]
     assert schedule.next_date == date(2023, 11, 13)
     assert schedule.update_date == date(2023, 11, 20)
     assert schedule.update_interval == 7
     # remove user
     with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = True
+        db_session.get(User, user["id"]).reg_req = True
         db_session.commit()
-        indiv_schedule.remove_user(5)
+        indiv_schedule.remove_user(user["id"])
         schedules = db_session.scalars(
             select(Schedule)
             .filter_by(name=indiv_schedule.name)).all()
         assert not db_session.scalar(
             select(Schedule)
-            .filter_by(name=indiv_schedule.name, elem_id=5))
+            .filter_by(name=indiv_schedule.name, elem_id=user["id"]))
     assert (f"Schedule '{indiv_schedule.name}' " +
-            "removed user with id '5'") in caplog.text
+            f"removed user with id '{user['id']}'") in caplog.text
     schedule = schedules[0]
     assert schedule.elem_id == 4
     assert schedule.next_date == date(2023, 10, 9)
@@ -549,7 +662,7 @@ def test_explicit_individual_schedule_creation_2(caplog: LogCaptureFixture):
     assert date.today() == date(2023, 10, 4)
     assert date.today().isoweekday() == 3
     indiv_schedule = IndivSchedule(
-        name="Test some schedule",
+        name=ValidSchedule.name,
         sch_day=1,
         sch_day_update=6,
         switch_interval=timedelta(weeks=2),
@@ -601,32 +714,34 @@ def test_explicit_individual_schedule_creation_2(caplog: LogCaptureFixture):
         ["user1", date(2023, 12, 4).strftime("%d.%m.%Y")]
     ]
     # add user
+    user = [user for user in test_users if user["reg_req"]][0]
     with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = False
+        db_session.get(User, user["id"]).reg_req = False
         db_session.commit()
-        indiv_schedule.add_user(5)
+        indiv_schedule.add_user(user["id"])
         schedules = db_session.scalars(
             select(Schedule)
             .filter_by(name=indiv_schedule.name)).all()
-    assert f"Schedule '{indiv_schedule.name}' added 'user5'" in caplog.text
+    assert f"Schedule '{indiv_schedule.name}' added '{user['name']}'" \
+        in caplog.text
     schedule = schedules[-1]
-    assert schedule.elem_id == 5
+    assert schedule.elem_id == user["id"]
     assert schedule.next_date == date(2023, 12, 18)
     assert schedule.update_date == date(2023, 12, 23)
     assert schedule.update_interval == 14
     # remove user
     with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = True
+        db_session.get(User, user["id"]).reg_req = True
         db_session.commit()
-        indiv_schedule.remove_user(5)
+        indiv_schedule.remove_user(user["id"])
         schedules = db_session.scalars(
             select(Schedule)
             .filter_by(name=indiv_schedule.name)).all()
         assert not db_session.scalar(
             select(Schedule)
-            .filter_by(name=indiv_schedule.name, elem_id=5))
+            .filter_by(name=indiv_schedule.name, elem_id=user["id"]))
     assert (f"Schedule '{indiv_schedule.name}' " +
-            "removed user with id '5'") in caplog.text
+            f"removed user with id '{user['id']}'") in caplog.text
     schedule = schedules[0]
     assert schedule.elem_id == 3
     assert schedule.next_date == date(2023, 10, 9)
@@ -686,148 +801,150 @@ def test_explicit_individual_schedule_creation_2(caplog: LogCaptureFixture):
         db_session.commit()
 
 
-def test_failed_indiv_schedule_creation_duplicate(caplog: LogCaptureFixture):
-    """test_failed_individual_schedule_creation_duplicate"""
+# region: failed schedule creation
+@given(name = st.sampled_from([sch["name"] for sch in test_schedules]))
+def test_failed_indiv_schedule_creation_duplicate(
+        caplog: LogCaptureFixture, name: str):
+    """test_failed_indiv_schedule_creation_duplicate"""
     IndivSchedule(
-        name=str(clean_sch_info.name),
-        sch_day=1,
-        sch_day_update=1,
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()).register()
-    assert f"Schedule '{str(clean_sch_info.name)}' (register): already exists"\
-        in caplog.messages
+        name=name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
+    ).register()
+    assert f"Schedule '{name}' (register): already exists" in caplog.messages
 
 
-@pytest.mark.parametrize(
-    ("name", "sch_day", "sch_day_update",
-     "switch_interval", "start_date",
-     "err_msg"), (
-        # name
-        ("", 1, 1,
-         timedelta(weeks=1), date.today(),
-         "The schedule must have a name"),
-        (" ", 1, 1,
-         timedelta(weeks=1), date.today(),
-         "The schedule must have a name"),
-        (None, 1, 1,
-         timedelta(weeks=1), date.today(),
-         "'NoneType' object has no attribute 'strip'"),
-        # sch_day
-        ("test_sch", 0, 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", -2, 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", 9, 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", None, 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", "", 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", " ", 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        ("test_sch", "a", 1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day attribute is not valid"),
-        # sch_day_update
-        ("test_sch", 1, 0,
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, -1,
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, 8,
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, None,
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, "",
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, " ",
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        ("test_sch", 1, "c",
-         timedelta(weeks=1), date.today(),
-         "Schedule day change attribute is not valid"),
-        # group switch_interval
-        ("test_sch", 1, 1,
-         timedelta(hours=12), date.today(),
-         "Schedule switch interval is not valid"),
-        ("test_sch", 1, 1,
-         None, date.today(),
-         "'<' not supported between instances of 'NoneType' and"),
-        ("test_sch", 1, 1,
-         "", date.today(),
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         " ", date.today(),
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         "a", date.today(),
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         2, date.today(),
-         "'<' not supported between instances of 'int' and"),
-        # start_date
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), date.today() - timedelta(days=1),
-         "Schedule start date cannot be in the past"),
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), None,
-         "'<' not supported between instances of 'NoneType' and"),
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), "",
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), " ",
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), "a",
-         "'<' not supported between instances of 'str' and"),
-        ("test_sch", 1, 1,
-         timedelta(weeks=1), 3,
-         "'<' not supported between instances of 'int' and"),
-))
-def test_failed_individual_schedule_creation(
-    name, sch_day, sch_day_update, switch_interval, start_date, err_msg,
-    caplog: LogCaptureFixture):
-    """test_failed_individual_schedule_creation"""
+def _test_failed_individual_schedule_creation(
+        caplog: LogCaptureFixture,
+        err_msg: str,
+        name = ValidSchedule.name,
+        sch_day = ValidSchedule.sch_day,
+        sch_day_update = ValidSchedule.sch_day_update,
+        switch_interval = ValidSchedule.switch_interval,
+        start_date = ValidSchedule.start_date):
+    """Common logic for individual schedule creation"""
     with pytest.raises((ValueError, AttributeError, TypeError), match=err_msg):
         IndivSchedule(
             name=name,
             sch_day=sch_day,
             sch_day_update=sch_day_update,
             switch_interval=switch_interval,
-            start_date=start_date).register()
+            start_date=start_date
+        ).register()
     assert f"Schedule '{name}' registered" not in caplog.messages
+
+
+@given(name = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(max_size=0),
+    st.integers()
+))
+@example(name = " ")
+def test_failed_indiv_schedule_creation_invalid_name(
+        caplog: LogCaptureFixture, name):
+    """test_failed_indiv_schedule_creation_invalid_name"""
+    err_msg = "The schedule must have a valid name"
+    _test_failed_individual_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        name=name
+    )
+
+
+@given(sch_day = st.one_of(
+    st.none(),
+    st.text(),
+    st.integers(max_value=0),
+    st.integers(min_value=8)
+))
+def test_failed_indiv_schedule_creation_invalid_sch_day(
+        caplog: LogCaptureFixture, sch_day):
+    """test_failed_indiv_schedule_creation_invalid_sch_day"""
+    err_msg = "Schedule day attribute is not valid"
+    _test_failed_individual_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_day=sch_day
+    )
+
+
+@given(sch_day_update = st.one_of(
+    st.none(),
+    st.text(),
+    st.integers(max_value=0),
+    st.integers(min_value=8)
+))
+def test_failed_indiv_schedule_creation_invalid_sch_day_update(
+        caplog: LogCaptureFixture, sch_day_update):
+    """test_failed_indiv_schedule_creation_invalid_sch_day_update"""
+    err_msg = "Schedule day change attribute is not valid"
+    _test_failed_individual_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_day_update=sch_day_update
+    )
+
+
+@given(switch_interval = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(),
+    st.integers(),
+    st.timedeltas(max_value=timedelta(days=7) - timedelta(microseconds=1))
+))
+def test_failed_indiv_schedule_creation_invalid_switch_interval(
+        caplog: LogCaptureFixture, switch_interval):
+    """test_failed_indiv_schedule_creation_invalid_switch_interval"""
+    err_msg = "Schedule switch interval is not valid"
+    _test_failed_individual_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        switch_interval=switch_interval
+    )
+
+
+@given(start_date = st.one_of(
+    st.none(),
+    st.booleans(),
+    st.text(),
+    st.integers(),
+    st.dates(max_value=date.today() - timedelta(days=1))
+))
+def test_failed_indiv_schedule_creation_invalid_start_date(
+        caplog: LogCaptureFixture, start_date):
+    """test_failed_indiv_schedule_creation_invalid_start_date"""
+    err_msg = "Schedule start date is not valid"
+    _test_failed_individual_schedule_creation(
+        caplog=caplog,
+        err_msg=err_msg,
+        start_date=start_date
+    )
+# endregion
 
 
 def test_individual_schedule_unregister(caplog: LogCaptureFixture):
     """test_individual_schedule_unregister"""
-    sch_name = "test_sch"
     test_schedule = IndivSchedule(
-        name=sch_name,
-        sch_day=6,
-        sch_day_update=1,
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today())
+        name=ValidSchedule.name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date)
     test_schedule.unregister()
-    assert (f"Cannot unregister schedule '{test_schedule.name}' " +
-        "as it was not found in the database") in caplog.text
+    assert (f"Cannot unregister schedule '{ValidSchedule.name}' " +
+            "as it was not found in the database") in caplog.text
     test_schedule.register()
+    assert f"Schedule '{ValidSchedule.name}' registered" in caplog.text
     with dbSession() as db_session:
-        assert db_session.scalar(select(Schedule).filter_by(name=sch_name))
-        assert f"Schedule '{sch_name}' registered" in caplog.text
+        assert db_session.scalar(select(Schedule)
+                                 .filter_by(name=ValidSchedule.name))
         test_schedule.unregister()
-        assert not db_session.scalar(select(Schedule).filter_by(name=sch_name))
-        assert f"Schedule '{sch_name}' deleted" in caplog.text
+        assert not db_session.scalar(select(Schedule)
+                                     .filter_by(name=ValidSchedule.name))
+    assert f"Schedule '{ValidSchedule.name}' deleted" in caplog.text
 
 
 def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
@@ -835,32 +952,35 @@ def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
     # register a schedule in the past to force auto update
     with freeze_time(date.today() - timedelta(weeks=2)):
         indiv_schedule = IndivSchedule(
-            name="test_sch",
-            sch_day=date.today().isocalendar()[2],
-            sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
+            name=ValidSchedule.name,
+            sch_day=date.today().isoweekday(),
+            sch_day_update=(date.today() + timedelta(days=1)).isoweekday(),
             switch_interval=timedelta(weeks=1),
             start_date=date.today())
         indiv_schedule.register()
     assert f"Schedule '{indiv_schedule.name}' registered" in caplog.text
     caplog.clear()
     assert indiv_schedule.current_order() == [1, 2, 3, 4, 7]
+    # add a user to the schedule
+    user = [user for user in test_users if user["reg_req"]][0]
     with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = False
+        db_session.get(User, user["id"]).reg_req = False
         db_session.commit()
-    indiv_schedule.add_user(5)
-    assert f"Schedule '{indiv_schedule.name}' added 'user5'" in caplog.text
+    indiv_schedule.add_user(user["id"])
+    assert f"Schedule '{indiv_schedule.name}' added '{user['name']}'" \
+        in caplog.text
     caplog.clear()
     assert indiv_schedule.current_order() == [1, 2, 3, 4, 7, 5]
     # advance 1 week - force 1 update - test remove_user
     with freeze_time(date.today() - timedelta(weeks=1)):
         with dbSession() as db_session:
-            db_session.get(User, 5).reg_req = True
+            db_session.get(User, user["id"]).reg_req = True
             db_session.commit()
-        indiv_schedule.remove_user(5)
+        indiv_schedule.remove_user(user["id"])
     assert (f"Schedule '{indiv_schedule.name}' (modify): " +
             "next date auto-updated") in caplog.text
-    assert f"Schedule '{indiv_schedule.name}' removed user with id '5'" \
-        in caplog.text
+    assert (f"Schedule '{indiv_schedule.name}' removed user " +
+            f"with id '{user['id']}'") in caplog.text
     caplog.clear()
     assert indiv_schedule.current_order() == [2, 3, 4, 7, 1]
     # advance to today - force 1 update - test change_user_pos
@@ -876,227 +996,275 @@ def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
     assert f"Schedule '{indiv_schedule.name}' deleted" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("name", "user_ids_order", "start_date",
-     "err_msg"), (
-        # name
-        (str(clean_sch_info.name), [1, 2, 3, 4, 7], date.today(),
-         f"Schedule '{str(clean_sch_info.name)}' (register): already exists"),
-        # user_ids_order
-        ("test_sch", [1, 2, 3, 7], date.today(),
-         "Schedule 'test_sch' (register): list of id's provided is invalid"),
-        ("test_sch", [1, 2, 3, 4, 5], date.today(),
-         "Schedule 'test_sch' (register): list of id's provided is invalid"),
-        # start_date
-        ("test_sch", [1, 2, 3, 4, 7], date.today() + timedelta(days=1),
-         "Schedule 'test_sch' (register): start date " +
-         f"'{(date.today() + timedelta(days=1)).isoformat()}' " +
-         "provided is invalid"),
-))
-def test_failed_individual_schedule_registration(
-        name, user_ids_order, start_date, err_msg,
-        caplog: LogCaptureFixture):
-    """failed_individual_schedule_registration"""
+# region: failed individual schedule registration
+def _test_failed_individual_schedule_registration(
+        caplog: LogCaptureFixture,
+        err_msg: str,
+        user_ids_order: list[int] = [user["id"] for user in test_users
+                                     if user["active"]],
+        reg_start_date: date = ValidSchedule.start_date):
+    """Common logic for individual schedule registration"""
     IndivSchedule(
-        name=name,
-        sch_day=date.today().isocalendar()[2],
-        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()
+        name=ValidSchedule.name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
     ).register(
         user_ids_order=user_ids_order,
-        start_date=start_date)
+        start_date=reg_start_date)
     assert err_msg in caplog.messages
-    assert f"Schedule '{name}' registered" not in caplog.messages
+    assert f"Schedule '{ValidSchedule.name}' registered" not in caplog.messages
+
+
+@given(user_ids_order = st.lists(st.integers(), min_size=1))
+def test_failed_individual_schedule_registration_user_ids_order(
+        caplog: LogCaptureFixture, user_ids_order: list[int]):
+    """test_failed_individual_schedule_registration_user_ids_order"""
+    err_msg = (f"Schedule '{ValidSchedule.name}' (register): " +
+               "list of id's provided is invalid")
+    _test_failed_individual_schedule_registration(
+        caplog=caplog,
+        err_msg=err_msg,
+        user_ids_order=user_ids_order
+    )
+
+
+@given(reg_start_date = st.dates()
+       .filter(lambda x: x.isoweekday() != ValidSchedule.sch_day))
+def test_failed_individual_schedule_registration_start_date(
+        caplog: LogCaptureFixture, reg_start_date: date):
+    """test_failed_individual_schedule_registration_start_date"""
+    err_msg = (f"Schedule '{ValidSchedule.name}' (register): " +
+               f"start date '{reg_start_date.isoformat()}' " +
+               "provided is invalid")
+    _test_failed_individual_schedule_registration(
+        caplog=caplog,
+        err_msg=err_msg,
+        reg_start_date=reg_start_date
+    )
+# endregion
 
 
 def test_failed_individual_schedule_data(caplog: LogCaptureFixture):
     """test_failed_individual_schedule_data"""
-    IndivSchedule(
-        name="test_sch",
-        sch_day=date.today().isocalendar()[2],
-        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()
-    ).data()
-    assert "Schedule 'test_sch' (data): is not registered" in caplog.messages
+    test_schedule = IndivSchedule(
+        name=ValidSchedule.name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date)
+    # failed add user to an unregistered schedule
+    test_schedule.add_user(1)
+    assert f"Schedule '{ValidSchedule.name}' (add_user): is not registered" \
+        in caplog.messages
+    # failed remove user from an unregistered schedule
+    test_schedule.remove_user(1)
+    assert (f"Schedule '{ValidSchedule.name}' (remove_user): "
+            "is not registered") in caplog.messages
+    # failed change user position in an unregistered schedule
+    test_schedule.change_user_pos(1, 1)
+    assert (f"Schedule '{ValidSchedule.name}' (change_user_pos): "
+            "is not registered") in caplog.messages
+    # failed get data of an unregistered schedule
+    test_schedule.data()
+    assert f"Schedule '{ValidSchedule.name}' (data): is not registered" \
+        in caplog.messages
 
 
-@pytest.mark.parametrize(
-    ("name", "user_id",
-     "err_msg"), (
-        # name
-        ("test_sch", 1,
-         "Schedule 'test_sch' (add_user): is not registered"),
-        # user_id
-        (str(clean_sch_info.name), 5,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), None,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), "",
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), " ",
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), "a",
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), 22,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), 0,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), -6,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): invalid user_id"),
-        (str(clean_sch_info.name), 1,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): user with id " +
-         "'1' is already scheduled"),
-        (str(clean_sch_info.name), 3,
-         f"Schedule '{str(clean_sch_info.name)}' (add_user): user with id " +
-         "'3' is already scheduled"),
-))
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]),
+       user_id = st.one_of(st.integers(min_value=-100,
+                                       max_value=Constant.SQLite.Int.max_value),
+                           st.none(),
+                           st.text()))
+@example(sch_name = [sch["name"] for sch in test_schedules
+                     if sch["type"] == "individual"][0],
+         user_id = [user["id"] for user in test_users if user["active"]][0])
 def test_failed_individual_schedule_add_user(
-        name, user_id, err_msg, caplog: LogCaptureFixture):
-    """test_failed_add_user"""
+        caplog: LogCaptureFixture, sch_name, user_id):
+    """test_failed_individual_schedule_add_user"""
+    if user_id in [user["id"] for user in test_users if user["active"]]:
+        err_msg = (f"Schedule '{sch_name}' (add_user): user with id " +
+                        f"'{user_id}' is already scheduled")
+    else:
+        err_msg = f"Schedule '{sch_name}' (add_user): invalid user_id"
     IndivSchedule(
-        name=name,
-        sch_day=date.today().isocalendar()[2],
-        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()
+        name=sch_name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
     ).add_user(user_id)
     assert err_msg in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("name", "user_id",
-     "err_msg"), (
-        # name
-        ("test_sch", 1,
-         "Schedule 'test_sch' (remove_user): is not registered"),
-        # user_id (tested thoroughly at failed add user)
-        (str(clean_sch_info.name), "a",
-         f"Schedule '{str(clean_sch_info.name)}' (remove_user): " +
-         "invalid user_id"),
-         # not in schedule
-        (str(clean_sch_info.name), 5,
-         f"Schedule '{str(clean_sch_info.name)}' (remove_user): " +
-         "user with id '5' is not in the schedule"),
-))
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]),
+       user_id = st.one_of(
+           st.integers(min_value=-100,
+                       max_value=Constant.SQLite.Int.max_value)
+            .filter(lambda x : x not in [user["id"] for user in test_users
+                                         if user["active"]]),
+           st.none(),
+           st.text()))
+@example(sch_name = [sch["name"] for sch in test_schedules
+                     if sch["type"] == "individual"][0],
+         user_id = [user["id"] for user in test_users if not user["in_use"]][0])
 def test_failed_individual_schedule_remove_user(
-        name, user_id, err_msg, caplog: LogCaptureFixture):
+        caplog: LogCaptureFixture, sch_name, user_id):
     """test_failed_individual_schedule_remove_user"""
+    if isinstance(user_id, int):
+        err_msg = (f"Schedule '{sch_name}' (remove_user): " +
+                        f"user with id '{user_id}' is not in the schedule")
+    else:
+        err_msg = f"Schedule '{sch_name}' (remove_user): invalid user_id"
     IndivSchedule(
-        name=name,
-        sch_day=date.today().isocalendar()[2],
-        sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-        switch_interval=timedelta(weeks=1),
-        start_date=date.today()
+        name=sch_name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
     ).remove_user(user_id)
     assert err_msg in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("name", "user_id", "new_pos",
-     "err_msg"), (
-        # name
-        ("test_sch", 1, 1,
-         "Schedule 'test_sch' (change_user_pos): is not registered"),
-        # user_id (tested thoroughly at failed add user)
-        (str(clean_sch_info.name), 6, 2,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid user_id"),
-        # new_pos
-        (str(clean_sch_info.name), 1, None,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        (str(clean_sch_info.name), 1, "",
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        (str(clean_sch_info.name), 1, " ",
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        (str(clean_sch_info.name), 1, "a",
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        (str(clean_sch_info.name), 1, 5,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        (str(clean_sch_info.name), 1, -2,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "invalid new position"),
-        # not in schedule
-        (str(clean_sch_info.name), 5, 0,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "user with id '5' is not in the schedule"),
-        # already at position
-        (str(clean_sch_info.name), 1, 0,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "user with id '1' is already at position"),
-        (str(clean_sch_info.name), 3, 2,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "user with id '3' is already at position"),
-        (str(clean_sch_info.name), 7, 4,
-         f"Schedule '{str(clean_sch_info.name)}' (change_user_pos): " +
-         "user with id '7' is already at position"),
-))
-def test_failed_individual_schedule_change_user_position(
-        name, user_id, new_pos, err_msg, caplog: LogCaptureFixture):
-    """test_failed_individual_schedule_change_user_position"""
-    with dbSession() as db_session:
-        db_session.get(User, 5).reg_req = False
-        db_session.commit()
-        IndivSchedule(
-            name=name,
-            sch_day=date.today().isocalendar()[2],
-            sch_day_update=(date.today() + timedelta(days=1)).isocalendar()[2],
-            switch_interval=timedelta(weeks=1),
-            start_date=date.today()
-        ).change_user_pos(user_id, new_pos)
-        # teardown
-        db_session.get(User, 5).reg_req = True
-        db_session.commit()
+# region: failed individual schedule change user position
+def _test_failed_individual_schedule_change_user_position(
+        caplog: LogCaptureFixture,
+        err_msg: str,
+        sch_name: str,
+        user_id: int = [user["id"] for user in test_users if user["active"]][0],
+        new_pos: int = 0):
+    """Common logic for individual schedule change user position"""
+    IndivSchedule(
+        name=sch_name,
+        sch_day=ValidSchedule.sch_day,
+        sch_day_update=ValidSchedule.sch_day_update,
+        switch_interval=ValidSchedule.switch_interval,
+        start_date=ValidSchedule.start_date
+    ).change_user_pos(user_id, new_pos)
     assert err_msg in caplog.text
+
+
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]),
+       user_id = st.one_of(
+           st.integers(min_value=-100,
+                       max_value=Constant.SQLite.Int.max_value)
+            .filter(lambda x : x not in [user["id"] for user in test_users
+                                         if user["active"]]),
+           st.none(),
+           st.text()))
+def test_failed_individual_schedule_change_user_position_user_id(
+        caplog: LogCaptureFixture, sch_name, user_id):
+    """test_failed_individual_schedule_change_user_position_user_id"""
+    err_msg = (f"Schedule '{sch_name}' (change_user_pos): " +
+                    f"invalid user_id '{user_id}'")
+    _test_failed_individual_schedule_change_user_position(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_name=sch_name,
+        user_id=user_id
+    )
+
+
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]))
+def test_failed_individual_schedule_change_user_position_unregistered_user_id(
+        caplog: LogCaptureFixture, sch_name):
+    """Failed change pos of a user that is not registered in the schedule"""
+    # make a user viable to be added to the schedule
+    user = [user for user in test_users if user["reg_req"]][0]
+    with dbSession() as db_session:
+        db_session.get(User, user["id"]).reg_req = False
+        db_session.commit()
+    err_msg = (f"Schedule '{sch_name}' (change_user_pos): " +
+                    f"user with id '{user['id']}' is not in the schedule")
+    _test_failed_individual_schedule_change_user_position(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_name=sch_name,
+        user_id=user["id"]
+    )
+    with dbSession() as db_session:
+        db_session.get(User, user["id"]).reg_req = True
+        db_session.commit()
+
+
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]),
+       new_pos = st.one_of(
+           st.integers(min_value=-100,
+                       max_value=Constant.SQLite.Int.max_value)
+            .filter(lambda x : x not in range(len(
+                [user["id"] for user in test_users if user["active"]]))),
+           st.none(),
+           st.text()))
+def test_failed_individual_schedule_change_user_position_new_pos(
+        caplog: LogCaptureFixture, sch_name, new_pos):
+    """test_failed_individual_schedule_change_user_position_new_pos"""
+    err_msg = (f"Schedule '{sch_name}' (change_user_pos): " +
+                    f"invalid new position '{new_pos}'")
+    _test_failed_individual_schedule_change_user_position(
+        caplog=caplog,
+        err_msg=err_msg,
+        sch_name=sch_name,
+        new_pos=new_pos
+    )
+
+
+@given(sch_name = st.sampled_from([sch["name"] for sch in test_schedules
+                                   if sch["type"] == "individual"]))
+def test_failed_individual_schedule_change_user_position_alr_at_pos(
+        caplog: LogCaptureFixture, sch_name):
+    """User already at position"""
+    user_ids = [user["id"] for user in test_users if user["active"]]
+    for pos, user_id in enumerate(user_ids):
+        err_msg = (f"Schedule '{sch_name}' (change_user_pos): " +
+                    f"user with id '{user_id}' is already at position {pos}")
+        _test_failed_individual_schedule_change_user_position(
+            caplog=caplog,
+            err_msg=err_msg,
+            sch_name=sch_name,
+            user_id=user_id,
+            new_pos=pos
+        )
+# endregion
 # endregion
 
 
 # region: schedule page
+edit_user_link = re.compile(r'<a.*href="/user/edit/.*</a>')
+
+
 def test_schedule_page_user_logged_in(
         client: FlaskClient, user_logged_in: User):
-    """test_schedule_page_group_schedule_user_logged_in"""
+    """test_schedule_page_user_logged_in"""
     with client:
         client.get("/")
         assert session["user_name"] == user_logged_in.name
         assert not session["admin"]
         response = client.get(url_for("sch.schedules"))
         assert response.status_code == 200
-        assert "Schedules" in response.text
-        assert str(sat_sch_info.name) in response.text
+        for schedule in test_schedules:
+            assert schedule["name"] in response.text
         assert "Group 1" in response.text
         assert "Group 2" in response.text
-        assert str(clean_sch_info.name) in response.text
-        assert f'<span class="fw-bolder">{session["user_name"]}</span>' \
-            in response.text
-        assert url_for("users.edit_user", username=session["user_name"]) \
-            not in response.text
-        with dbSession() as db_session:
-            users_in_use = db_session.scalars(
-                select(User.name)
-                .filter_by(in_use=True, reg_req=False)).all()
-            users_not_in_use = db_session.scalars(
-                select(User.name)
-                .filter_by(in_use=False)).all()
-            users_reg_req = db_session.scalars(
-                select(User.name)
-                .filter_by(reg_req=True)).all()
-        for username in users_in_use:
-            assert username in response.text
-        for username in users_not_in_use:
-            assert username not in response.text
-        for username in users_reg_req:
-            assert username not in response.text
+        assert re.search(fr'<span.*fw-bolder.*{user_logged_in.name}</span>',
+                         response.text)
+        assert not edit_user_link.search(response.text)
+        for user in test_users:
+            if user["active"]:
+                assert user["name"] in response.text
+            else:
+                assert user["name"] not in response.text
         # group schedule dates
-        assert f"<b>{date.today().strftime('%d.%m.%Y')}</b>" in response.text
+        assert f"<b>{saturday_sch.start_date.strftime('%d.%m.%Y')}</b>" \
+            in response.text
         for week in range(1, 6):
-            assert (date.today() + timedelta(weeks=week)).strftime("%d.%m.%Y")\
-                in response.text
+            assert (saturday_sch.start_date + timedelta(weeks=week)
+                    ).strftime("%d.%m.%Y") in response.text
         # individual schedule dates
         # pylint: disable=protected-access
         first_date = cleaning_sch._first_date()
@@ -1108,25 +1276,32 @@ def test_schedule_page_user_logged_in(
                     elem_id=user_logged_in.id))
         assert f"<b>{this_user_date.strftime('%d.%m.%Y')}</b>" \
             in response.text
-        for week in range(len(users_in_use)):
-            assert (first_date + timedelta(weeks=week)
-                    ).strftime("%d.%m.%Y") in response.text
+        for week in range(len([user for user in test_users if user["active"]])):
+            assert (first_date + timedelta(weeks=week)).strftime("%d.%m.%Y") \
+                in response.text
 
 
-def test_schedule_page_group_schedule_admin_logged_in(
+def test_schedule_page_admin_logged_in(
         client: FlaskClient, admin_logged_in: User):
-    """test_schedule_page_group_schedule_admin_logged_in"""
+    """test_schedule_page_admin_logged_in"""
     with client:
         client.get("/")
         assert session["user_name"] == admin_logged_in.name
         assert session["admin"]
         response = client.get(url_for("sch.schedules"))
         assert response.status_code == 200
-        assert "Schedules" in response.text
-        assert str(sat_sch_info.name) in response.text
-        assert str(clean_sch_info.name) in response.text
+        for schedule in test_schedules:
+            assert schedule["name"] in response.text
         assert "Group 1" in response.text
         assert "Group 2" in response.text
+        assert re.search(fr'<span.*fw-bolder.*{admin_logged_in.name}</a>',
+                         response.text, re.S)
+        assert edit_user_link.search(response.text)
+        for user in test_users:
+            if user["active"]:
+                assert user["name"] in response.text
+            else:
+                assert user["name"] not in response.text
         assert f"<b>{date.today().strftime('%d.%m.%Y')}</b>" \
             in response.text
         with freeze_time(date.today() + timedelta(weeks=1)):
@@ -1141,4 +1316,83 @@ def test_schedule_page_group_schedule_admin_logged_in(
         first_date = cleaning_sch._first_date()
         assert f"<b>{first_date.strftime('%d.%m.%Y')}</b>" \
             in response.text
+
+
+@given(user = st.sampled_from([user for user in test_users if user["reg_req"]]))
+def test_schedule_page_group_schedule_add_and_remove_user(
+        client: FlaskClient, admin_logged_in: User, user: dict[str]):
+    """test_schedule_page_group_schedule_add_and_remove_user"""
+    with client:
+        # initial check
+        client.get("/")
+        assert session["user_name"] == admin_logged_in.name
+        assert session["admin"]
+        user_edit_link = re.compile(
+            fr'<a.*href="{url_for("users.edit_user", username=user["name"])}"' +
+            fr'>{user["name"]}</a>')
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert not user_edit_link.search(response.text)
+        # add a user to the group schedule
+        with dbSession() as db_session:
+            db_session.get(User, user["id"]).reg_req = False
+            db_session.commit()
+        # check the user in schedules page
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert user_edit_link.search(response.text)
+        # remove the user from the group schedule
+        with dbSession() as db_session:
+            db_session.get(User, user["id"]).reg_req = True
+            db_session.commit()
+        # check the user in schedules page
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert not user_edit_link.search(response.text)
+
+
+@given(user = st.sampled_from([user for user in test_users if user["reg_req"]]))
+def test_schedule_page_individual_schedule_add_and_remove_user(
+        client: FlaskClient, caplog: LogCaptureFixture,
+        admin_logged_in: User, user: dict[str]):
+    """test_schedule_page_individual_schedule_add_and_remove_user"""
+    with client:
+        # initial check
+        client.get("/")
+        assert session["user_name"] == admin_logged_in.name
+        assert session["admin"]
+        user_edit_link = re.compile(
+            fr'<a.*href="{url_for("users.edit_user", username=user["name"])}"' +
+            fr'>{user["name"]}</a>')
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert not user_edit_link.search(response.text)
+        # make user eligible to be added to the individual schedule
+        with dbSession() as db_session:
+            db_session.get(User, user["id"]).reg_req = False
+            db_session.commit()
+        # automatically gets added to the group schedule
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert len(user_edit_link.findall(response.text)) == 1
+        # add user to the individual schedule
+        cleaning_sch.add_user(user["id"])
+        assert f"Schedule '{cleaning_sch.name}' added '{user['name']}'" \
+            in caplog.messages
+        # check the user in schedules page
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert len(user_edit_link.findall(response.text)) == 2
+        # remove the user from the group schedule
+        with dbSession() as db_session:
+            db_session.get(User, user["id"]).reg_req = True
+            db_session.commit()
+        # check the user in schedules page
+        response = client.get(url_for("sch.schedules"))
+        assert response.status_code == 200
+        assert len(user_edit_link.findall(response.text)) == 1
+        # remove the user from the individual schedule
+        cleaning_sch.remove_user(user["id"])
+        assert (f"Schedule '{cleaning_sch.name}' removed user "
+                f"with id '{user['id']}'") in caplog.messages
 # endregion

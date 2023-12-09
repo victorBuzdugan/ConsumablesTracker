@@ -45,16 +45,20 @@ class BaseSchedule():
 
     def __post_init__(self):
         """Validate class data."""
-        if not self.name.strip():
-            raise ValueError("The schedule must have a name")
-        if self.sch_day not in range(1, 8):
+        if not isinstance(self.name, str) or not self.name.strip():
+            raise ValueError("The schedule must have a valid name")
+        if (not isinstance(self.sch_day, int) or
+                self.sch_day not in range(1, 8)):
             raise ValueError("Schedule day attribute is not valid")
-        if self.sch_day_update not in range(1, 8):
+        if (not isinstance(self.sch_day_update, int)
+                or self.sch_day_update not in range(1, 8)):
             raise ValueError("Schedule day change attribute is not valid")
-        if self.switch_interval < timedelta(days=7):
+        if (not isinstance(self.switch_interval, timedelta) or
+                self.switch_interval < timedelta(days=7)):
             raise ValueError("Schedule switch interval is not valid")
-        if self.start_date < date.today():
-            raise ValueError("Schedule start date cannot be in the past")
+        if (not isinstance(self.start_date, date) or
+                self.start_date < date.today()):
+            raise ValueError("Schedule start date is not valid")
 
     def _is_registered(self) -> bool:
         """Check if the schedule is registered."""
@@ -120,11 +124,13 @@ class GroupSchedule(BaseSchedule):
     def __post_init__(self):
         """Validate class data."""
         super().__post_init__()
-        if not hasattr(User, self.user_attr):
-            raise AttributeError(f"User has no attribute '{self.user_attr}'")
-        if self.num_groups < 2:
+        if (not isinstance(self.user_attr, str) or
+                not hasattr(User, self.user_attr)):
+            raise AttributeError(f"Invalid user attribute '{self.user_attr}'")
+        if not isinstance(self.num_groups, int) or self.num_groups < 2:
             raise ValueError("You must have at least two groups")
-        if self.first_group not in range(1, self.num_groups + 1):
+        if (not isinstance(self.first_group, int) or
+                self.first_group not in range(1, self.num_groups + 1)):
             raise ValueError("First group attribute is not valid")
 
     def _group_order(self) -> list[int]:
@@ -252,25 +258,19 @@ class IndivSchedule(BaseSchedule):
 
     def _valid_user_id(self, user_id: int) -> bool:
         """Validate user id argument."""
-        try:
-            with dbSession() as db_session:
-                if not db_session.scalar(
-                        select(User.id)
-                        .filter_by(in_use=True,
-                                    reg_req=False,
-                                    id=int(user_id))):
-                    raise ValueError()
-        except (ValueError, TypeError):
-            return False
+        with dbSession() as db_session:
+            if not db_session.scalar(
+                    select(User.id)
+                    .filter_by(in_use=True,
+                                reg_req=False,
+                                id=user_id)):
+                return False
         return True
 
     def _valid_pos(self, pos: int) -> bool:
         """Validate a new position in the list of id's"""
-        try:
-            if 0 <= int(pos) < len(self.current_order()):
-                return True
-        except (ValueError, TypeError):
-            pass
+        if 0 <= pos < len(self.current_order()):
+            return True
         return False
 
     def _reg_mod(self,
@@ -417,7 +417,7 @@ class IndivSchedule(BaseSchedule):
             logger.warning("Schedule '%s' (add_user): is not registered",
                            self.name)
             return
-        if not self._valid_user_id(user_id):
+        if not isinstance(user_id, int) or not self._valid_user_id(user_id):
             logger.warning("Schedule '%s' (add_user): invalid user_id '%s'",
                            self.name, user_id)
             return
@@ -451,15 +451,14 @@ class IndivSchedule(BaseSchedule):
                            self.name)
             return
         users_order = self.current_order()
-        try:
-            if int(user_id) not in users_order:
-                logger.warning("Schedule '%s' (remove_user): " +
-                            "user with id '%d' is not in the schedule",
-                            self.name, user_id)
-                return
-        except (ValueError, TypeError):
+        if not isinstance(user_id, int):
             logger.warning("Schedule '%s' (remove_user): invalid user_id '%s'",
                            self.name, user_id)
+            return
+        if user_id not in users_order:
+            logger.warning("Schedule '%s' (remove_user): " +
+                        "user with id '%d' is not in the schedule",
+                        self.name, user_id)
             return
 
         # remove the user
@@ -484,11 +483,11 @@ class IndivSchedule(BaseSchedule):
             logger.warning("Schedule '%s' (change_user_pos): is not registered",
                            self.name)
             return
-        if not self._valid_user_id(user_id):
+        if not isinstance(user_id, int) or not self._valid_user_id(user_id):
             logger.warning("Schedule '%s' (change_user_pos): " +
                            "invalid user_id '%s'", self.name, user_id)
             return
-        if not self._valid_pos(new_pos):
+        if not isinstance(new_pos, int) or not self._valid_pos(new_pos):
             logger.warning("Schedule '%s' (change_user_pos): " +
                            "invalid new position '%s'", self.name, new_pos)
             return
