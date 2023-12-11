@@ -948,9 +948,9 @@ def test_individual_schedule_unregister(caplog: LogCaptureFixture):
 
 
 def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
-    """Test auto update schedule date on remove_user or change_pos"""
+    """Test auto update schedule date on add_user, remove_user or change_pos"""
     # register a schedule in the past to force auto update
-    with freeze_time(date.today() - timedelta(weeks=2)):
+    with freeze_time(date.today() - timedelta(weeks=3)):
         indiv_schedule = IndivSchedule(
             name=ValidSchedule.name,
             sch_day=date.today().isoweekday(),
@@ -958,39 +958,55 @@ def test_individual_schedule_update_date_in_the_past(caplog: LogCaptureFixture):
             switch_interval=timedelta(weeks=1),
             start_date=date.today())
         indiv_schedule.register()
-    assert f"Schedule '{indiv_schedule.name}' registered" in caplog.text
-    caplog.clear()
-    assert indiv_schedule.current_order() == [1, 2, 3, 4, 7]
-    # add a user to the schedule
-    user = [user for user in test_users if user["reg_req"]][0]
-    with dbSession() as db_session:
-        db_session.get(User, user["id"]).reg_req = False
-        db_session.commit()
-    indiv_schedule.add_user(user["id"])
+        assert f"Schedule '{indiv_schedule.name}' registered" in caplog.text
+        caplog.clear()
+        current_order = [user["id"] for user in test_users if user["active"]]
+        assert indiv_schedule.current_order() == current_order
+     # advance 1 week - force 1 update - test add_user
+    with freeze_time(date.today() - timedelta(weeks=2)):
+        user = [user for user in test_users if user["reg_req"]][0]
+        with dbSession() as db_session:
+            db_session.get(User, user["id"]).reg_req = False
+            db_session.commit()
+        indiv_schedule.add_user(user["id"])
+    assert re.search(fr"Schedule '{indiv_schedule.name}' user.*will be updated",
+                     caplog.text)
     assert f"Schedule '{indiv_schedule.name}' added '{user['name']}'" \
         in caplog.text
     caplog.clear()
-    assert indiv_schedule.current_order() == [1, 2, 3, 4, 7, 5]
+    # order rotation and add user to the end
+    current_order.append(current_order.pop(0))
+    current_order.append(user["id"])
+    assert indiv_schedule.current_order() == current_order
     # advance 1 week - force 1 update - test remove_user
     with freeze_time(date.today() - timedelta(weeks=1)):
         with dbSession() as db_session:
             db_session.get(User, user["id"]).reg_req = True
             db_session.commit()
         indiv_schedule.remove_user(user["id"])
-    assert (f"Schedule '{indiv_schedule.name}' (modify): " +
-            "next date auto-updated") in caplog.text
+    assert re.search(fr"Schedule '{indiv_schedule.name}' user.*will be updated",
+                     caplog.text)
     assert (f"Schedule '{indiv_schedule.name}' removed user " +
             f"with id '{user['id']}'") in caplog.text
     caplog.clear()
-    assert indiv_schedule.current_order() == [2, 3, 4, 7, 1]
+    # order rotation and remove user
+    current_order.append(current_order.pop(0))
+    current_order.pop(current_order.index(user["id"]))
+    assert indiv_schedule.current_order() == current_order
     # advance to today - force 1 update - test change_user_pos
-    indiv_schedule.change_user_pos(3, 3)
-    assert (f"Schedule '{indiv_schedule.name}' (modify): " +
-            "next date auto-updated") in caplog.text
-    assert (f"Schedule '{indiv_schedule.name}' changed user with id '3' " +
-            "position to '3'") in caplog.text
+    user_id = current_order[0]
+    new_pos = 1
+    indiv_schedule.change_user_pos(user_id, new_pos)
+    assert re.search(fr"Schedule '{indiv_schedule.name}' user.*will be updated",
+                     caplog.text)
+    assert (f"Schedule '{indiv_schedule.name}' changed user with id " +
+            f"'{current_order[0]}' position to '1'") in caplog.text
+    # order rotation and change user position
+    current_order.append(current_order.pop(0))
+    current_order.insert(new_pos,
+                         current_order.pop(current_order.index(user_id)))
     caplog.clear()
-    assert indiv_schedule.current_order() == [4, 7, 3, 1, 2]
+    assert indiv_schedule.current_order() == current_order
     # teardown
     indiv_schedule.unregister()
     assert f"Schedule '{indiv_schedule.name}' deleted" in caplog.text
@@ -1267,7 +1283,7 @@ def test_schedule_page_user_logged_in(
                     ).strftime("%d.%m.%Y") in response.text
         # individual schedule dates
         # pylint: disable=protected-access
-        first_date = cleaning_sch._first_date()
+        first_date = cleaning_sch._determine_first_date()
         with dbSession() as db_session:
             this_user_date = db_session.scalar(
                 select(Schedule.next_date)
@@ -1313,7 +1329,7 @@ def test_schedule_page_admin_logged_in(
         assert url_for("users.edit_user", username=session["user_name"]) \
             in response.text
         # pylint: disable=protected-access
-        first_date = cleaning_sch._first_date()
+        first_date = cleaning_sch._determine_first_date()
         assert f"<b>{first_date.strftime('%d.%m.%Y')}</b>" \
             in response.text
 

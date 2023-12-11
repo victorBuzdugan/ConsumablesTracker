@@ -1,5 +1,6 @@
 """Schedules blueprint."""
 
+import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable
@@ -18,6 +19,41 @@ sch_bp = Blueprint(
     __name__,
     url_prefix="/schedule",
     template_folder="templates")
+
+
+def update_schedules() -> None:
+    """Check update_date in schedules and update if necessary."""
+    with dbSession() as db_session:
+        all_schedules = db_session.scalars(
+            select(Schedule)
+            .filter(Schedule.update_date <= date.today())
+        ).all()
+        if not all_schedules:
+            logger.info("No need to update schedules")
+            return
+        for schedule in all_schedules:
+            # count all the schedules with this name and type
+            sch_count = db_session.scalar(
+                select(func.count(Schedule.id))
+                .filter_by(type=schedule.type, name=schedule.name))
+            sch_increment = timedelta(
+                days=schedule.update_interval * sch_count)
+            diff = math.ceil(
+                (date.today() - schedule.next_date).days / sch_increment.days)
+            schedule.next_date += sch_increment * diff
+            schedule.update_date += sch_increment * diff
+            if schedule.type == "group":
+                logger.debug("Schedule '%s' group '%d' will be updated",
+                            schedule.name, schedule.elem_id)
+            else:
+                logger.debug("Schedule '%s' user '%s' will be updated",
+                            schedule.name,
+                            db_session.get(User, schedule.elem_id).name)
+        db_session.commit()
+        if len(all_schedules) == 1:
+            logger.info("1 schedule updated")
+        else:
+            logger.info("%d schedules updated", len(all_schedules))
 
 
 @sch_bp.before_request
@@ -67,21 +103,53 @@ class BaseSchedule():
                 return True
         return False
 
-    def _first_date(self) -> date:
-        """Calculate first schedule start date
+    def _determine_first_date(self) -> date:
+        """Figure out schedule's first start date
         based on `start_date` and `sch_day`."""
         first_date = self.start_date
         while first_date.isoweekday() != self.sch_day:
             first_date += timedelta(days=1)
         return first_date
 
-    def _update_date(self, ref_date: date) -> date:
+    def _determine_update_date(self, ref_date: date) -> date:
         """Return schedule specific update date based on a reference date."""
         # make sure update date is not the same day as next date
         update_date = ref_date + timedelta(days=1)
         while update_date.isoweekday() != self.sch_day_update:
             update_date += timedelta(days=1)
         return update_date
+
+    def _registered_first_date(self) -> date:
+        """Get schedule's registered first next date"""
+        with dbSession() as db_session:
+            return db_session.scalar(
+                select(Schedule.next_date)
+                .filter_by(name=self.name)
+                .order_by(Schedule.next_date))
+
+    def _registered_last_date(self) -> date:
+        """Get schedule's registered last next date"""
+        with dbSession() as db_session:
+            return db_session.scalar(
+                select(Schedule.next_date)
+                .filter_by(name=self.name)
+                .order_by(Schedule.next_date.desc()))
+
+    def _registered_first_update_date(self) -> date:
+        """Get schedule's registered first update date"""
+        with dbSession() as db_session:
+            return db_session.scalar(
+                select(Schedule.update_date)
+                .filter_by(name=self.name)
+                .order_by(Schedule.update_date))
+
+    def _registered_last_update_date(self) -> date:
+        """Get schedule's registered last update date"""
+        with dbSession() as db_session:
+            return db_session.scalar(
+                select(Schedule.update_date)
+                .filter_by(name=self.name)
+                .order_by(Schedule.update_date.desc()))
 
     def register(self) -> None:
         """Register the schedule in the database."""
@@ -148,8 +216,8 @@ class GroupSchedule(BaseSchedule):
                         self.name)
             return
         schedule_records = []
-        next_date = self._first_date()
-        update_date = self._update_date(next_date)
+        next_date = self._determine_first_date()
+        update_date = self._determine_update_date(next_date)
         for group_no in self._group_order():
             schedule_records.append(
                 Schedule(
@@ -238,24 +306,6 @@ class IndivSchedule(BaseSchedule):
                 .filter_by(name=self.name)
                 .order_by(Schedule.next_date)).all()
 
-    def _get_first_date(self) -> date:
-        """Get schedule's registered first next date"""
-        with dbSession() as db_session:
-            return db_session.scalar(
-                select(Schedule.next_date)
-                .filter_by(
-                    name=self.name,
-                    elem_id=self.current_order()[0]))
-
-    def _get_last_date(self) -> date:
-        """Get schedule's registered last next date"""
-        with dbSession() as db_session:
-            return db_session.scalar(
-                select(Schedule.next_date)
-                .filter_by(
-                    name=self.name,
-                    elem_id=self.current_order()[-1]))
-
     def _valid_user_id(self, user_id: int) -> bool:
         """Validate user id argument."""
         with dbSession() as db_session:
@@ -310,29 +360,14 @@ class IndivSchedule(BaseSchedule):
             if start_date.isoweekday() != self.sch_day:
                 logger.error("Schedule '%s' (%s): start date '%s' " +
                              "provided is invalid",
-                             self.name,
-                             operation,
-                             start_date.isoformat())
+                             self.name, operation, start_date.isoformat())
                 return False
             next_date = start_date
-            # if update_date is not in the future update the schedule
-            update_date = self._update_date(start_date)
-            if update_date <= date.today():
-                diff = 0
-                while update_date <= date.today():
-                    next_date += self.switch_interval
-                    update_date += self.switch_interval
-                    diff += 1
-                for _ in range(diff):
-                    user_ids_order.append(user_ids_order.pop(0))
-                logger.warning("Schedule '%s' (%s): next date auto-updated",
-                               self.name,
-                               operation)
         else:
-            next_date = self._first_date()
+            next_date = self._determine_first_date()
 
         # register schedule
-        update_date = self._update_date(next_date)
+        update_date = self._determine_update_date(next_date)
         schedule_records = []
         for user_id in user_ids_order:
             schedule_records.append(
@@ -411,12 +446,16 @@ class IndivSchedule(BaseSchedule):
         return data
 
     def add_user(self, user_id: int) -> None:
-        """Add a new user to the schedule."""
+        """Add a new user to the schedule.
+        
+        :param user_id: id of the user that will be added"""
         # prechecks
         if not self._is_registered():
             logger.warning("Schedule '%s' (add_user): is not registered",
                            self.name)
             return
+        if self._registered_first_update_date() <= date.today():
+            update_schedules()
         if not isinstance(user_id, int) or not self._valid_user_id(user_id):
             logger.warning("Schedule '%s' (add_user): invalid user_id '%s'",
                            self.name, user_id)
@@ -427,8 +466,8 @@ class IndivSchedule(BaseSchedule):
                            self.name, user_id)
             return
 
-        next_date = self._get_last_date() + self.switch_interval
-        update_date = self._update_date(next_date)
+        next_date = self._registered_last_date() + self.switch_interval
+        update_date = self._registered_last_update_date() + self.switch_interval
         with dbSession() as db_session:
             db_session.add(
                 Schedule(
@@ -444,17 +483,21 @@ class IndivSchedule(BaseSchedule):
                          db_session.get(User, user_id).name)
 
     def remove_user(self, user_id: int) -> None:
-        """Remove a user from the schedule."""
+        """Remove a user from the schedule.
+        
+        :param user_id: id of the user that will be removed"""
         # prechecks
         if not self._is_registered():
             logger.warning("Schedule '%s' (remove_user): is not registered",
                            self.name)
             return
-        users_order = self.current_order()
+        if self._registered_first_update_date() <= date.today():
+            update_schedules()
         if not isinstance(user_id, int):
             logger.warning("Schedule '%s' (remove_user): invalid user_id '%s'",
                            self.name, user_id)
             return
+        users_order = self.current_order()
         if user_id not in users_order:
             logger.warning("Schedule '%s' (remove_user): " +
                         "user with id '%d' is not in the schedule",
@@ -464,7 +507,7 @@ class IndivSchedule(BaseSchedule):
         # remove the user
         users_order.pop(users_order.index(user_id))
         # register the new order
-        first_date = self._get_first_date()
+        first_date = self._registered_first_date()
         self.unregister()
         self._modify(
             user_ids_order=users_order,
@@ -475,7 +518,7 @@ class IndivSchedule(BaseSchedule):
     def change_user_pos(self, user_id: int, new_pos: int) -> None:
         """Change a user position in the schedule.
         
-        :param user_id: the user's that changes position id
+        :param user_id: id of the user that will change position
         :param new_pos: the new user's position (0 indexed)
         """
         # prechecks
@@ -483,6 +526,8 @@ class IndivSchedule(BaseSchedule):
             logger.warning("Schedule '%s' (change_user_pos): is not registered",
                            self.name)
             return
+        if self._registered_first_update_date() <= date.today():
+            update_schedules()
         if not isinstance(user_id, int) or not self._valid_user_id(user_id):
             logger.warning("Schedule '%s' (change_user_pos): " +
                            "invalid user_id '%s'", self.name, user_id)
@@ -507,7 +552,7 @@ class IndivSchedule(BaseSchedule):
         users_order.pop(users_order.index(user_id))
         users_order.insert(new_pos, user_id)
         # register the new order
-        first_date = self._get_first_date()
+        first_date = self._registered_first_date()
         self.unregister()
         self._modify(
             user_ids_order=users_order,

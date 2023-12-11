@@ -1,24 +1,21 @@
 """Daily tasks."""
 # pylint: disable=broad-exception-caught
 
-import math
 import sqlite3
 from datetime import date, timedelta
 from os import getenv, remove
 from pathlib import Path
 from smtplib import SMTPAuthenticationError, SMTPException
-from typing import Callable
 
 from flask import render_template
 from flask_mail import Message
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 from app import app, mail
+from blueprints.sch.sch import update_schedules
 from constants import Constant
-from database import Product, Schedule, User, dbSession
+from database import Product, User, dbSession
 from helpers import logger
-
-func: Callable
 
 
 def main() -> None:
@@ -97,44 +94,6 @@ def db_reinit() -> None:
             logger.debug(err)
     else:
         logger.debug("This app doesn't need database reinit")
-
-
-def update_schedules() -> None:
-    """Check update_date in schedules and update if necessary.
-
-    :param base_date: date to check against the update date; used for testing
-    """
-    with dbSession() as db_session:
-        schedules = db_session.scalars(
-            select(Schedule)
-            .filter(Schedule.update_date <= date.today())
-        ).all()
-        if not schedules:
-            logger.info("No need to update schedules")
-            return
-        for schedule in schedules:
-            # count all the schedules with this name and type
-            sch_count = db_session.scalar(
-                select(func.count(Schedule.id))
-                .filter_by(type=schedule.type, name=schedule.name))
-            sch_increment = timedelta(
-                days=schedule.update_interval * sch_count)
-            diff = math.ceil(
-                (date.today() - schedule.next_date).days / sch_increment.days)
-            schedule.next_date += sch_increment * diff
-            schedule.update_date += sch_increment * diff
-            if schedule.type == "group":
-                logger.debug("Schedule '%s' group '%d' will be updated",
-                            schedule.name, schedule.elem_id)
-            else:
-                logger.debug("Schedule '%s' user '%s' will be updated",
-                            schedule.name,
-                            db_session.get(User, schedule.elem_id).name)
-        db_session.commit()
-        if len(schedules) == 1:
-            logger.info("1 schedule updated")
-        else:
-            logger.info("%d schedules updated", len(schedules))
 
 
 def send_users_notif() -> None:

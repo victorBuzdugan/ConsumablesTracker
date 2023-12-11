@@ -13,9 +13,9 @@ from pytest import LogCaptureFixture
 from sqlalchemy import select
 
 from app import mail
-from blueprints.sch.sch import IndivSchedule
+from blueprints.sch.sch import IndivSchedule, update_schedules
 from daily_task import (db_backup, db_reinit, main, send_admins_notif,
-                        send_log, send_users_notif, update_schedules)
+                        send_log, send_users_notif)
 from database import Product, Schedule, User, dbSession
 from tests import BACKUP_DB, LOG_FILE, ORIG_DB, PROD_DB, TEMP_DB, test_users
 
