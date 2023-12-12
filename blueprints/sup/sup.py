@@ -154,9 +154,11 @@ def edit_supplier(supplier):
 
     if edit_sup_form.validate_on_submit():
         with dbSession() as db_session:
+            # join load products to prevent flushing
             sup = db_session.scalar(
                 select(Supplier)
-                .filter_by(name=escape(supplier)))
+                .filter_by(name=escape(supplier))
+                .options(joinedload(Supplier.products), raiseload("*")))
             if edit_sup_form.delete.data:
                 if sup.all_products:
                     flash(**Message.Supplier.NoDelete.flash())

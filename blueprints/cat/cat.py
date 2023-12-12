@@ -154,9 +154,11 @@ def edit_category(category):
 
     if edit_cat_form.validate_on_submit():
         with dbSession() as db_session:
+            # join load products to prevent flushing
             cat = db_session.scalar(
                 select(Category)
-                .filter_by(name=escape(category)))
+                .filter_by(name=escape(category))
+                .options(joinedload(Category.products), raiseload("*")))
             if edit_cat_form.delete.data:
                 if cat.all_products:
                     flash(**Message.Category.NoDelete.flash())

@@ -7,6 +7,7 @@ from flask_babel import gettext, lazy_gettext, ngettext
 from flask_wtf import FlaskForm
 from markupsafe import escape
 from sqlalchemy import func, select
+from sqlalchemy.orm import joinedload, raiseload
 from wtforms import (BooleanField, EmailField, IntegerField, PasswordField,
                      SelectField, StringField, SubmitField, TextAreaField)
 from wtforms.validators import (Email, InputRequired, Length, NumberRange,
@@ -267,9 +268,11 @@ def edit_user(username):
 
     if edit_user_form.validate_on_submit():
         with dbSession() as db_session:
+            # join load products to prevent flushing
             user = db_session.scalar(
                 select(User)
-                .filter_by(name=escape(username)))
+                .filter_by(name=escape(username))
+                .options(joinedload(User.products), raiseload("*")))
             if edit_user_form.delete.data:
                 if user.all_products:
                     flash(**Message.User.NoDelete.flash())
