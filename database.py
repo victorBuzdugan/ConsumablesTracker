@@ -255,7 +255,7 @@ class User(Base):
             if (user_sat_group_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=str(sat_sch_info.name),
+                        name=sat_sch_info.en_name,
                         elem_id=self.sat_group))):
                 return (user_sat_group_date.isocalendar().week ==
                         date.today().isocalendar().week)
@@ -268,7 +268,7 @@ class User(Base):
             if (user_cleaning_date := db_session.scalar(
                     select(Schedule.next_date)
                     .filter_by(
-                        name=str(clean_sch_info.name),
+                        name=clean_sch_info.en_name,
                         elem_id=self.id))):
                 return (user_cleaning_date.isocalendar().week ==
                         date.today().isocalendar().week)

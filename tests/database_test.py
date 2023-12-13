@@ -252,14 +252,14 @@ def test_sat_group_this_week_property():
         schedule = db_session.scalar(
             select(Schedule)
             .filter_by(
-                name=str(sat_sch_info.name),
+                name=sat_sch_info.en_name,
                 elem_id=1))
         schedule.name = "renamed"
         db_session.commit()
         for user in test_users:
             assert not db_session.get(User, user["id"]).sat_group_this_week
         # teardown
-        schedule.name = str(sat_sch_info.name)
+        schedule.name = sat_sch_info.en_name
         db_session.commit()
 
 
@@ -274,14 +274,14 @@ def test_clean_this_week_property():
         schedule = db_session.scalar(
             select(Schedule)
             .filter_by(
-                name=str(clean_sch_info.name),
+                name=clean_sch_info.en_name,
                 elem_id=1))
         schedule.name = "renamed"
         db_session.commit()
         for user in users_in_use:
             assert not db_session.get(User, user["id"]).clean_this_week
         # teardown
-        schedule.name = str(clean_sch_info.name)
+        schedule.name = clean_sch_info.en_name
         db_session.commit()
 
 

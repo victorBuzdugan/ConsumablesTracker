@@ -15,7 +15,8 @@ class ScheduleInfo(NamedTuple):
     """Centralized app schedules information.
 
     :param type: type of the schedule (group | individual)
-    :param name: schedule name
+    :param en_name: english schedule name
+    :param name: translatable schedule name
     :param positive: schedule positive message
     :param negative: schedule negative message
     :param sch_day: day of the week when the schedule starts
@@ -23,6 +24,7 @@ class ScheduleInfo(NamedTuple):
     :param switch_interval: switching time interval (weeks)
     """
     type: str
+    en_name: str
     name: str
     positive: str
     negative: str
@@ -33,6 +35,7 @@ class ScheduleInfo(NamedTuple):
 
 sat_sch_info = ScheduleInfo(
     type="group",
+    en_name="Saturday movie",
     name=lazy_gettext("Saturday movie"),
     positive=lazy_gettext("You're choosing the movie this saturday"),
     negative=lazy_gettext("You're not choosing the movie this saturday"),
@@ -43,6 +46,7 @@ sat_sch_info = ScheduleInfo(
 
 clean_sch_info = ScheduleInfo(
     type="individual",
+    en_name="Cleaning schedule",
     name=lazy_gettext("Cleaning schedule"),
     positive=lazy_gettext("You're scheduled for cleaning this week"),
     negative=lazy_gettext("You're not scheduled for cleaning this week"),

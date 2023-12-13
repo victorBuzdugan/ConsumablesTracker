@@ -9,9 +9,9 @@ from urllib.parse import quote
 from werkzeug.test import TestResponse
 
 from blueprints.sch import clean_sch_info, sat_sch_info
-from database import User
 from constants import Constant
 from daily_task import db_backup_name
+from database import User
 from helpers import logger
 
 TEST_DB_NAME = "." + Constant.Basic.db_name
@@ -936,12 +936,12 @@ class ValidSchedule:
 test_schedules: tuple[dict[str, str|int|bool]] = (
     {
         "details": "Group schedule",
-        "name": str(sat_sch_info.name),
+        "name": sat_sch_info.en_name,
         "type": "group"
     },
     {
         "details": "Individual schedule",
-        "name": str(clean_sch_info.name),
+        "name": clean_sch_info.en_name,
         "type": "individual"
     },
 )

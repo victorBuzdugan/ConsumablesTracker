@@ -563,7 +563,7 @@ class IndivSchedule(BaseSchedule):
 
 # region: group schedules init
 saturday_sch = GroupSchedule(
-    name=str(sat_sch_info.name),
+    name=sat_sch_info.en_name,
     user_attr=User.sat_group.name,
     num_groups=2,
     first_group=1,
@@ -576,7 +576,7 @@ saturday_sch = GroupSchedule(
 
 # region: individual schedules init
 cleaning_sch = IndivSchedule(
-    name=str(clean_sch_info.name),
+    name=clean_sch_info.en_name,
     sch_day=clean_sch_info.sch_day,
     sch_day_update=clean_sch_info.sch_day_update,
     switch_interval=timedelta(weeks=clean_sch_info.switch_interval),
