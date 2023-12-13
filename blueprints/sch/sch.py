@@ -1,6 +1,5 @@
 """Schedules blueprint."""
 
-import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Callable
@@ -38,10 +37,14 @@ def update_schedules() -> None:
                 .filter_by(type=schedule.type, name=schedule.name))
             sch_increment = timedelta(
                 days=schedule.update_interval * sch_count)
-            diff = math.ceil(
-                (date.today() - schedule.next_date).days / sch_increment.days)
-            schedule.next_date += sch_increment * diff
-            schedule.update_date += sch_increment * diff
+            # increment dates until update date is in the future
+            next_date = schedule.next_date
+            update_date = schedule.update_date
+            while update_date <= date.today():
+                next_date += sch_increment
+                update_date += sch_increment
+            schedule.next_date = next_date
+            schedule.update_date = update_date
             if schedule.type == "group":
                 logger.debug("Schedule '%s' group '%d' will be updated",
                             schedule.name, schedule.elem_id)

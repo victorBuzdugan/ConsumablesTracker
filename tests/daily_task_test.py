@@ -305,9 +305,17 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' group '2' will be updated" \
             not in caplog.messages
         assert "updated" not in caplog.messages
-        caplog.clear()
+    with dbSession() as db_session:
+        schedules: list[Schedule] = db_session.scalars(
+            select(Schedule)
+            .filter_by(name=name)).all()
+        assert schedules[0].next_date == date(2023, 5, 6)
+        assert schedules[0].update_date == date(2023, 5, 8)
+        assert schedules[1].next_date == date(2023, 5, 20)
+        assert schedules[1].update_date == date(2023, 5, 22)
+    caplog.clear()
     # advance time to group 1 update date
-    with freeze_time(date.today() + timedelta(days=2)):
+    with freeze_time(date(2023, 5, 8)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -315,9 +323,17 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' group '2' will be updated" \
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
-        caplog.clear()
+    with dbSession() as db_session:
+        schedules: list[Schedule] = db_session.scalars(
+            select(Schedule)
+            .filter_by(name=name)).all()
+        assert schedules[0].next_date == date(2023, 6, 3)
+        assert schedules[0].update_date == date(2023, 6, 5)
+        assert schedules[1].next_date == date(2023, 5, 20)
+        assert schedules[1].update_date == date(2023, 5, 22)
+    caplog.clear()
     # advance time to 1 day before group 2 update date
-    with freeze_time(date.today() + timedelta(days=15)):
+    with freeze_time(date(2023, 5, 21)):
         update_schedules()
         assert "No need to update schedules" in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -325,9 +341,17 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' group '2' will be updated" \
             not in caplog.messages
         assert "updated" not in caplog.messages
-        caplog.clear()
-    # advance time to group 2 update date
-    with freeze_time(date.today() + timedelta(days=16)):
+    with dbSession() as db_session:
+        schedules: list[Schedule] = db_session.scalars(
+            select(Schedule)
+            .filter_by(name=name)).all()
+        assert schedules[0].next_date == date(2023, 6, 3)
+        assert schedules[0].update_date == date(2023, 6, 5)
+        assert schedules[1].next_date == date(2023, 5, 20)
+        assert schedules[1].update_date == date(2023, 5, 22)
+    caplog.clear()
+    # advance time to 1 day past group 2 update date
+    with freeze_time(date(2023, 5, 23)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -335,9 +359,17 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' group '2' will be updated" \
             in caplog.messages
         assert "1 schedule updated" in caplog.messages
-        caplog.clear()
+    with dbSession() as db_session:
+        schedules: list[Schedule] = db_session.scalars(
+            select(Schedule)
+            .filter_by(name=name)).all()
+        assert schedules[0].next_date == date(2023, 6, 3)
+        assert schedules[0].update_date == date(2023, 6, 5)
+        assert schedules[1].next_date == date(2023, 6, 17)
+        assert schedules[1].update_date == date(2023, 6, 19)
+    caplog.clear()
     # advance time past group 1 and group 2 update date
-    with freeze_time(date(2023, 10, 9)):
+    with freeze_time(date(2023, 11, 9)):
         update_schedules()
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' group '1' will be updated" \
@@ -352,12 +384,12 @@ def test_update_group_schedules_1(caplog: LogCaptureFixture):
             select(Schedule)
             .filter_by(name=name)).all()
         assert schedules[0].elem_id == 1
-        assert schedules[0].next_date == date(2023, 10, 21)
-        assert schedules[0].update_date == date(2023, 10, 23)
+        assert schedules[0].next_date == date(2023, 11, 18)
+        assert schedules[0].update_date == date(2023, 11, 20)
         assert schedules[0].update_interval == 14
         assert schedules[1].elem_id == 2
-        assert schedules[1].next_date == date(2023, 11, 4)
-        assert schedules[1].update_date == date(2023, 11, 6)
+        assert schedules[1].next_date == date(2023, 12, 2)
+        assert schedules[1].update_date == date(2023, 12, 4)
         assert schedules[1].update_interval == 14
         # teardown
         for schedule in schedules:
@@ -470,13 +502,13 @@ def test_update_group_schedules_2(caplog: LogCaptureFixture):
         db_session.commit()
 
 
-@freeze_time("2023-08-04")
+@freeze_time("2023-03-03")
 def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
     """Explicit date checking 1 week interval"""
     # constants
     name = "test_schedule"
     # setup
-    assert date.today() == date(2023, 8, 4)
+    assert date.today() == date(2023, 3, 3)
     assert date.today().isoweekday() == 5
     test_sch = IndivSchedule(
         name=name,
@@ -484,15 +516,29 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         sch_day_update=1,
         switch_interval=timedelta(weeks=1),
         start_date=date.today())
-    test_sch.register(start_date=date(2023, 7, 31))
+    test_sch.register(start_date=date(2023, 2, 27))
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
     # run test
     update_schedules()
     assert "No need to update schedules" in caplog.messages
+    with dbSession() as db_session:
+        schedules: list[Schedule] = db_session.scalars(
+            select(Schedule)
+            .filter_by(name=name)).all()
+        assert schedules[0].next_date == date(2023, 2, 27)
+        assert schedules[0].update_date == date(2023, 3, 6)
+        assert schedules[1].next_date == date(2023, 3, 6)
+        assert schedules[1].update_date == date(2023, 3, 13)
+        assert schedules[2].next_date == date(2023, 3, 13)
+        assert schedules[2].update_date == date(2023, 3, 20)
+        assert schedules[3].next_date == date(2023, 3, 20)
+        assert schedules[3].update_date == date(2023, 3, 27)
+        assert schedules[4].next_date == date(2023, 3, 27)
+        assert schedules[4].update_date == date(2023, 4, 3)
     caplog.clear()
     assert test_sch.current_order() == [1, 2, 3, 4, 7]
     # advance time to 1 day before update
-    with freeze_time(date.today() + timedelta(days=2)):
+    with freeze_time(date(2023, 3, 5)):
         update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
@@ -507,10 +553,24 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "updated" not in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[0].next_date == date(2023, 2, 27)
+            assert schedules[0].update_date == date(2023, 3, 6)
+            assert schedules[1].next_date == date(2023, 3, 6)
+            assert schedules[1].update_date == date(2023, 3, 13)
+            assert schedules[2].next_date == date(2023, 3, 13)
+            assert schedules[2].update_date == date(2023, 3, 20)
+            assert schedules[3].next_date == date(2023, 3, 20)
+            assert schedules[3].update_date == date(2023, 3, 27)
+            assert schedules[4].next_date == date(2023, 3, 27)
+            assert schedules[4].update_date == date(2023, 4, 3)
         caplog.clear()
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
     # advance time to update day
-    with freeze_time(date.today() + timedelta(days=3)):
+    with freeze_time(date(2023, 3, 6)):
         update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
@@ -525,10 +585,24 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[1].next_date == date(2023, 3, 6)
+            assert schedules[1].update_date == date(2023, 3, 13)
+            assert schedules[2].next_date == date(2023, 3, 13)
+            assert schedules[2].update_date == date(2023, 3, 20)
+            assert schedules[3].next_date == date(2023, 3, 20)
+            assert schedules[3].update_date == date(2023, 3, 27)
+            assert schedules[4].next_date == date(2023, 3, 27)
+            assert schedules[4].update_date == date(2023, 4, 3)
+            assert schedules[0].next_date == date(2023, 4, 3)
+            assert schedules[0].update_date == date(2023, 4, 10)
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
     # advance time to 1 day before update
-    with freeze_time(date.today() + timedelta(weeks=1, days=2)):
+    with freeze_time(date(2023, 3, 12)):
         update_schedules()
         assert date.today().isoweekday() == 7
         assert "No need to update schedules" in caplog.messages
@@ -543,12 +617,26 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "updated" not in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[1].next_date == date(2023, 3, 6)
+            assert schedules[1].update_date == date(2023, 3, 13)
+            assert schedules[2].next_date == date(2023, 3, 13)
+            assert schedules[2].update_date == date(2023, 3, 20)
+            assert schedules[3].next_date == date(2023, 3, 20)
+            assert schedules[3].update_date == date(2023, 3, 27)
+            assert schedules[4].next_date == date(2023, 3, 27)
+            assert schedules[4].update_date == date(2023, 4, 3)
+            assert schedules[0].next_date == date(2023, 4, 3)
+            assert schedules[0].update_date == date(2023, 4, 10)
         caplog.clear()
         assert test_sch.current_order() == [2, 3, 4, 7, 1]
-    # advance time to update day
-    with freeze_time(date.today() + timedelta(weeks=1, days=3)):
+    # advance time 2 days past update day
+    with freeze_time(date(2023, 3, 15)):
         update_schedules()
-        assert date.today().isoweekday() == 1
+        assert date.today().isoweekday() == 3
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
             not in caplog.messages
@@ -561,10 +649,24 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[2].next_date == date(2023, 3, 13)
+            assert schedules[2].update_date == date(2023, 3, 20)
+            assert schedules[3].next_date == date(2023, 3, 20)
+            assert schedules[3].update_date == date(2023, 3, 27)
+            assert schedules[4].next_date == date(2023, 3, 27)
+            assert schedules[4].update_date == date(2023, 4, 3)
+            assert schedules[0].next_date == date(2023, 4, 3)
+            assert schedules[0].update_date == date(2023, 4, 10)
+            assert schedules[1].next_date == date(2023, 4, 10)
+            assert schedules[1].update_date == date(2023, 4, 17)
         caplog.clear()
         assert test_sch.current_order() == [3, 4, 7, 1, 2]
     # advance time to update day
-    with freeze_time(date.today() + timedelta(weeks=2, days=3)):
+    with freeze_time(date(2023, 3, 20)):
         update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
@@ -579,12 +681,26 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "1 schedule updated" in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[3].next_date == date(2023, 3, 20)
+            assert schedules[3].update_date == date(2023, 3, 27)
+            assert schedules[4].next_date == date(2023, 3, 27)
+            assert schedules[4].update_date == date(2023, 4, 3)
+            assert schedules[0].next_date == date(2023, 4, 3)
+            assert schedules[0].update_date == date(2023, 4, 10)
+            assert schedules[1].next_date == date(2023, 4, 10)
+            assert schedules[1].update_date == date(2023, 4, 17)
+            assert schedules[2].next_date == date(2023, 4, 17)
+            assert schedules[2].update_date == date(2023, 4, 24)
         caplog.clear()
         assert test_sch.current_order() == [4, 7, 1, 2, 3]
     # advance time past two updates
-    with freeze_time(date.today() + timedelta(weeks=4, days=3)):
+    with freeze_time(date(2023, 4, 6)):
         update_schedules()
-        assert date.today().isoweekday() == 1
+        assert date.today().isoweekday() == 4
         assert "No need to update schedules" not in caplog.messages
         assert f"Schedule '{name}' user 'user1' will be updated" \
             not in caplog.messages
@@ -597,10 +713,24 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             in caplog.messages
         assert "2 schedules updated" in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[0].next_date == date(2023, 4, 3)
+            assert schedules[0].update_date == date(2023, 4, 10)
+            assert schedules[1].next_date == date(2023, 4, 10)
+            assert schedules[1].update_date == date(2023, 4, 17)
+            assert schedules[2].next_date == date(2023, 4, 17)
+            assert schedules[2].update_date == date(2023, 4, 24)
+            assert schedules[3].next_date == date(2023, 4, 24)
+            assert schedules[3].update_date == date(2023, 5, 1)
+            assert schedules[4].next_date == date(2023, 5, 1)
+            assert schedules[4].update_date == date(2023, 5, 8)
         caplog.clear()
         assert test_sch.current_order() == [1, 2, 3, 4, 7]
     # advance time past four updates
-    with freeze_time(date.today() + timedelta(weeks=8, days=3)):
+    with freeze_time(date(2023, 5, 1)):
         update_schedules()
         assert date.today().isoweekday() == 1
         assert "No need to update schedules" not in caplog.messages
@@ -615,6 +745,20 @@ def test_update_indiv_schedule_1(caplog: LogCaptureFixture):
         assert f"Schedule '{name}' user 'user7' will be updated" \
             not in caplog.messages
         assert "4 schedules updated" in caplog.messages
+        with dbSession() as db_session:
+            schedules: list[Schedule] = db_session.scalars(
+                select(Schedule)
+                .filter_by(name=name)).all()
+            assert schedules[4].next_date == date(2023, 5, 1)
+            assert schedules[4].update_date == date(2023, 5, 8)
+            assert schedules[0].next_date == date(2023, 5, 8)
+            assert schedules[0].update_date == date(2023, 5, 15)
+            assert schedules[1].next_date == date(2023, 5, 15)
+            assert schedules[1].update_date == date(2023, 5, 22)
+            assert schedules[2].next_date == date(2023, 5, 22)
+            assert schedules[2].update_date == date(2023, 5, 29)
+            assert schedules[3].next_date == date(2023, 5, 29)
+            assert schedules[3].update_date == date(2023, 6, 5)
         caplog.clear()
         assert test_sch.current_order() == [7, 1, 2, 3, 4]
     # teardown
