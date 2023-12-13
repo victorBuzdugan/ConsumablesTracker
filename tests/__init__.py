@@ -50,6 +50,8 @@ class ValidUser:
     password: str = "P@ssw0rd"
     email: str = "email@example.com"
     sat_group: int = 1
+    details = ""
+    admin = True
 
 @dataclass(frozen=True)
 class InvalidUser:

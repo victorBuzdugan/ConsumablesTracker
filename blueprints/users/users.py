@@ -114,7 +114,7 @@ class EditUserForm(CreateUserForm):
     password = PasswordField(
         label=lazy_gettext("Password"),
         validators=[
-            Optional(),
+            Optional(strip_whitespace=False),
             Length(
                 min=Constant.User.Password.min_length,
                 message=Message.User.Password.LenLimit()),
