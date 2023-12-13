@@ -1,7 +1,7 @@
 """UI Messages"""
 
 from dataclasses import dataclass
-from enum import StrEnum
+from enum import Enum
 from typing import Callable, Optional
 
 from flask import url_for
@@ -12,7 +12,7 @@ from constants import Constant
 
 
 # region: helpers
-class _Color(StrEnum):
+class _Color(Enum):
     """Mapping message category to color"""
     GREEN  = "message"
     BLUE   = "info"
