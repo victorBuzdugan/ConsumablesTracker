@@ -1,6 +1,5 @@
 """Pytest app fixtures and configuration."""
 
-import pathlib
 from datetime import date, timedelta
 from os import path
 
@@ -13,9 +12,9 @@ from app import app, babel, mail
 from blueprints.sch.sch import cleaning_sch, saturday_sch
 from constants import Constant
 from database import Base, Category, Product, Supplier, User, dbSession
-from helpers import log_handler
-from tests import (BACKUP_DB, ORIG_DB, PROD_DB, TEMP_DB, TEST_DB_NAME,
-                   test_categories, test_products, test_suppliers, test_users)
+from tests import (BACKUP_DB, LOG_FILE, ORIG_DB, PROD_DB, TEMP_DB,
+                   TEST_DB_NAME, test_categories, test_products,
+                   test_suppliers, test_users)
 
 mail.state.suppress = True
 hypothesis.settings.register_profile(
@@ -43,11 +42,11 @@ def create_test_db():
     """Configure dbSession to a test database. """
     # run with pytest -s
     print("\nCreate test db")
-    pathlib.Path.unlink(log_handler.baseFilename, missing_ok=True)
-    pathlib.Path.unlink(PROD_DB, missing_ok=True)
-    pathlib.Path.unlink(BACKUP_DB, missing_ok=True)
-    pathlib.Path.unlink(ORIG_DB, missing_ok=True)
-    pathlib.Path.unlink(TEMP_DB, missing_ok=True)
+    LOG_FILE.unlink(missing_ok=True)
+    PROD_DB.unlink(missing_ok=True)
+    BACKUP_DB.unlink(missing_ok=True)
+    ORIG_DB.unlink(missing_ok=True)
+    TEMP_DB.unlink(missing_ok=True)
     db_url = URL.create(
         drivername="sqlite",
         database=path.join(Constant.Basic.current_dir, TEST_DB_NAME))
@@ -72,11 +71,11 @@ def fixture_client() -> FlaskClient:
     yield app.test_client()
     # teardown
     # delete log file and test database
-    pathlib.Path.unlink(log_handler.baseFilename, missing_ok=True)
-    pathlib.Path.unlink(PROD_DB, missing_ok=True)
-    pathlib.Path.unlink(BACKUP_DB, missing_ok=True)
-    pathlib.Path.unlink(ORIG_DB, missing_ok=True)
-    pathlib.Path.unlink(TEMP_DB, missing_ok=True)
+    LOG_FILE.unlink(missing_ok=True)
+    PROD_DB.unlink(missing_ok=True)
+    BACKUP_DB.unlink(missing_ok=True)
+    ORIG_DB.unlink(missing_ok=True)
+    TEMP_DB.unlink(missing_ok=True)
 
 
 # region: users fixtures
