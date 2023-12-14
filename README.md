@@ -10,13 +10,13 @@ There are a lot of consumables that need to be tracked at home and easy to forge
 Based on the business, there can be a lot of consumables that you would want to track. Starting with basic things like paper, printer cartridges and office consumables, coffee, sugar and finishing with screws or filters or some other business specifics consumables.
 
 ## Language
-The app is available in english and romanian, but can also be translated to other languages because of already existing _.pot_ file and _gettext_ methods.
+The app is available in english and romanian, but can also be translated to other languages because of already existing _.pot_ file and _gettext_ methods. Also features a unified messages file from where all the user flashed messages are pulled from making it easy to customise and adapt the text and a unified constants file where all the constraints are defined.
 
 ## Schedules
 The app includes a group schedule that allows the users to be split in two or more groups and flexible time interval between groups. Also includes an individual schedule where users are rotated on a flexible time interval.
 
 ## Email notifications
-Send email notifications to users and app status notifications to admins.
+Send email notifications to users, app status notifications to admins and daily log file if needed.
 
 # Live demo
 
@@ -59,7 +59,7 @@ The project comes with a demo `inventory.db` SQLite database.
 
 Because of the 'closed' environment nature of the app (users need to be approved by an admin after registration), if you edit the database with [sqlite3 command line shell](https://sqlite.org/cli.html) or a software like [DB Browser for SQLite](https://sqlitebrowser.org) be careful to **leave at least one admin user** in the database.
 
-Empty generated databases (delete demo `inventory.db` and run) will be populated with a [hidden admin](https://github.com/victorBuzdugan/ConsumablesTracker#hidden-admin).
+Empty generated databases (delete demo `inventory.db` and run) could optionally be populated with a [hidden admin](https://github.com/victorBuzdugan/ConsumablesTracker#hidden-admin).
 
 ## Login credentials
 Login credentials for demo `inventory.db` SQLite database are the same as for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#login-credentials).
@@ -72,7 +72,7 @@ Take a look at the [wiki page](https://github.com/victorBuzdugan/ConsumablesTrac
 # User
 A user is a normal user without administrative rights.
 
-## Authentification
+## Authentication
 
 ### Registering
 Follow the `Register` link in the main menu and provide a username and password (follow the highlighted rules). If the username is available an alert message will tell you that a registration request was sent and you will be redirected to the [login](https://github.com/victorBuzdugan/ConsumablesTracker#login) page.
@@ -88,15 +88,15 @@ Follow the `Change password` link in the main menu. After successfully providing
 ## Inventorying
 
 ### Request inventory check
-If you see a `Request inventory` button on the main page you can request a inventory check by pressing it. Following the `Inventory` link in main menu will display an alert that you inventory check is not required, the swiches and the submit button will be greyed out.
+If you see a `Request inventory` button on the main page you can request a inventory check by pressing it. Following the `Inventory` link in main menu will display an alert that you inventory check is not required, the switches and the submit button will be greyed out.
 
-If you see a yellow `You requested a inventory check` text then it means you sent an inventory request. Following the `Inventory` link in main menu will display an alert that you inventory check is not required, the swiches and the submit button will be greyed out. Contact an admin in order to release inventory check for you.
+If you see a yellow `You requested a inventory check` text then it means you sent an inventory request. Following the `Inventory` link in main menu will display an alert that you inventory check is not required, the switches and the submit button will be greyed out. Contact an admin in order to release inventory check for you.
 
 If you see a red `Check inventory` link on the main page that means you need to check inventory. Click on this link or the `Inventory` link in main menu and proceed with inventorying.
 
 ### Inventorying
 After an admin has approved inventory check proceed to `Inventory` page by following the link in main menu or the red `Check inventory` link on the main page.
-The swiches will not be greyed out and the submit button will display `Submit inventory`. Critical products are displayed in red.
+The switches will not be greyed out and the submit button will display `Submit inventory`. Critical products are displayed in red.
 
 Proceed with inventorying selecting to order only the products that are less than the minimal stock displayed. If all the products assigned to you are above the minimal stock don't select anything. After finishing inventorying press the `Submit inventory` button. You will be redirected to the main page and an alert message will tell you that you successfully submitted the inventory.
 
@@ -106,8 +106,8 @@ On the schedule page users can check the current schedules.
 # Admin
 An admin is a user with administrative rights.
 
-## Authentification
-Authentification is similar to [user authentification](https://github.com/victorBuzdugan/ConsumablesTracker#authentification) with the following difference: an admin requests registration as a 'normal' user and is given administrative rights by another admin in the `Edit user` page.
+## Authentication
+Authentication is similar to [user authentication](https://github.com/victorBuzdugan/ConsumablesTracker#authentication) with the following difference: an admin requests registration as a 'normal' user and is given administrative rights by another admin in the `Edit user` page.
 
 An admin can also be created by another admin in the `New` -> `User` menu option and checking `Admin` option.
 
@@ -162,7 +162,7 @@ Clicking on a user name opens the edit user page for this user.
 You can also see how many products each user was assigned and a user status as described in [admin dashboard](https://github.com/victorBuzdugan/ConsumablesTracker#admin-dashboard)
 
 ### Categories and Suppliers page
-You can acces each of the page by selecting the appropiate menu item in the main menu.
+You can access each of the page by selecting the appropriate menu item in the main menu.
 Displays a list of all Categories or Suppliers along with details and a statistic of how many products are assigned to each Category or Supplier.
 
 Clicking on a category or supplier name opens the edit page for that element.
@@ -189,7 +189,7 @@ Select the `New` link in the main menu. Select from the submenu the type of elem
 
 Underlined fields are mandatory.
 
-Take note of fields lenght such as product code which must have at least 3 characters but not more than 15.
+Take note of fields length such as product code which must have at least 3 characters but not more than 15.
 
 ### New user
 To create a new user you must provide at least a unique username and a password. Check also the schedules data. You can provide extra details and decide if this user will be an admin or not.
@@ -203,7 +203,7 @@ Provide a product code, a description, select the responsible, category and supp
 
 Users will check when inventorying if, on the 'shelf', there are less than the value you enter in `minimum stock`. If there are less then they will mark the product as 'to order'. In the orders page you will see the `order quantity` you provided here. If, on the 'shelf', there are a number of this product less than `minimum stock` then we need to order `order quantity`.
 
-Also decide if this is a critical product (critical products will be diplayed in red in the inventory page and products page).
+Also decide if this is a critical product (critical products will be displayed in red in the inventory page and products page).
 
 ## Edit user, category, supplier or product
 You can edit each element by clicking on it's name in the page(users, categories, suppliers, products and order pages).
@@ -211,7 +211,7 @@ You can edit each element by clicking on it's name in the page(users, categories
 ### In use and delete
 Elements that are not in use anymore are displayed with strikethrough text.
 
-The concept of `in use` is similar to delete. They both make the element unusable... For example a retired user can't log in, can't have products attached and so on, or a product that it's not in use anymore won't appear in the inventory list. Obviously deleting an element can't be undone but a retired user can allways be brought back by flipping a switch.
+The concept of `in use` is similar to delete. They both make the element unusable... For example a retired user can't log in, can't have products attached and so on, or a product that it's not in use anymore won't appear in the inventory list. Obviously deleting an element can't be undone but a retired user can always be brought back by flipping a switch.
 
 If you are sure that you won't need this element in the (at least) near future (or the pages are filled with strikethrough items) then delete the item
 (it's not really that complicated to recreate it in the future). If you are not sure then 'retire' the element by off flipping the in use switch.
@@ -241,7 +241,7 @@ It's automatically created when database initialises, with the password provided
 The app has every feature tested with `pytest` including property-testing with `hypothesis`. The tests are provided in the repo. The target coverage of test is 100%.
 
 ## Daily tasks
-Some platforms like [pythonanywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
+Some platforms like [PythonAnywhere](https://eu.pythonanywhere.com) allow usage of scheduled tasks.
 
 The app provides a file (`daily_task.py`) that includes tasks like daily database backup, daily database reinitialization, schedules update or user and admin email notifications.
 
@@ -254,7 +254,7 @@ There are 3 instances of backups:
 - a daily backup
 
 ### Re-init function
-Reintializes the database to a preset state (as used for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#website)). In order to use this function a file with the same name as the database file but with __orig_ suffix has to exist in the working directory (ex: if the database name is `inventory.db` the preset state database name should be `inventory_orig.db`). This function, also doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
+Reinitialises the database to a preset state (as used for the [demo website](https://github.com/victorBuzdugan/ConsumablesTracker#website)). In order to use this function a file with the same name as the database file but with __orig_ suffix has to exist in the working directory (ex: if the database name is `inventory.db` the preset state database name should be `inventory_orig.db`). This function, also doesn't just copy the file but instead makes use of [python sqlite3 module backup](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
 
 ### Update schedules function
 Checks in the database for schedules that need to be updated by comparing the `Update date` of the schedule with the current date.
@@ -270,9 +270,9 @@ The log records have timezone configuration and also point to the user that prod
 The log level is preset on `DEBUG`.
 
 ## Schedules
-The app features group schedules allowing the users to be split in two or more groups or individual schedules. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, wich group should be first and a date for when the schedule should start.
+The app features group schedules allowing the users to be split in two or more groups or individual schedules. You can specify a name, day of the week for the schedule, a day of the week for when to update the schedule, number of groups, group switching interval, which group should be first and a date for when the schedule should start.
 
-The demo website features a "Saturday movie" schedule in wich users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week and a "Cleaning schedule" where users are rotated weekly.
+The demo website features a "Saturday movie" schedule in which users are split in two groups, with saturday as a scheduled day, monday for the day when the schedule should update and a group switching interval of one week and a "Cleaning schedule" where users are rotated weekly.
 
 ## Guide page
 A guide page for presenting general guidelines, rules and other informations.
