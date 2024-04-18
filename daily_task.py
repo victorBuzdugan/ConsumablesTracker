@@ -25,7 +25,7 @@ def main() -> None:
     update_schedules()
     send_users_notif()
     send_admins_notif()
-    send_log()
+    # send_log()
 
 
 def db_backup_name(prod_db: Path) -> Path:
